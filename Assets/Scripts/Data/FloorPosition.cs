@@ -3,8 +3,8 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
-[Serializable]
+[GenerateAuthoringComponent]
 public struct FloorPosition : IComponentData
 {
-    public float value;
+    public float Value;
 }

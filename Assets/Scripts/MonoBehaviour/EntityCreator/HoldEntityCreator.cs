@@ -31,7 +31,7 @@ public class HoldEntityCreator : MonoBehaviour
 
             float x = Convert.TrackToX(hold.track);
             float y = 0;
-            float z = -200;
+            float z = 0;
 
             float scalex = 1.53f;
             float endFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.endTiming, hold.timingGroup);
@@ -39,13 +39,15 @@ public class HoldEntityCreator : MonoBehaviour
             float scaley = (endFloorPosition - startFloorPosition) / 3790f;
             float scalez = 1;
 
-            entityManager.SetComponentData<Translation>(holdEntity, new Translation{
+            entityManager.SetComponentData<Translation>(holdEntity, new Translation(){
                 Value = new float3(x, y, z)
             });
-            entityManager.SetComponentData<NonUniformScale>(holdEntity, new NonUniformScale{
+            entityManager.SetComponentData<NonUniformScale>(holdEntity, new NonUniformScale(){
                 Value = new float3(scalex, scaley, scalez)
             });
+            entityManager.SetComponentData<FloorPosition>(holdEntity, new FloorPosition(){
+                Value = startFloorPosition
+            });
         }
-        //todo: scale stuff idk
     }
 }

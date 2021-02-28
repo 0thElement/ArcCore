@@ -36,7 +36,7 @@ public class ArcEntityCreator : MonoBehaviour
     {
         Vector3 fromPos = new float3(0, 0, 0);
         Vector3 toPos = new float3(0, 0, -1);
-        float offset = 0.15f;
+        float offset = 0.9f;
 
         Vector3[] vertices = new Vector3[6];
         Vector2[] uv = new Vector2[6];
@@ -69,6 +69,7 @@ public class ArcEntityCreator : MonoBehaviour
         {
             Material arcColorMaterialInstance = Instantiate(arcMaterial);
             arcColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId++]);
+            Debug.Log(arcColorMaterialInstance.renderQueue);
 
             List<float3> connectedArcsIdEndpoint = new List<float3>();
 
@@ -97,7 +98,6 @@ public class ArcEntityCreator : MonoBehaviour
                 }
 
                 //Generate arc segments and shadow segment(each segment is its own entity)
-                
                 int duration = arc.endTiming - arc.timing;
                 int v1 = duration < 1000 ? 14 : 7;
                 float v2 = 1f / (v1 * duration / 1000f);
@@ -127,6 +127,15 @@ public class ArcEntityCreator : MonoBehaviour
                         mesh = arcMesh,
                         material = arcColorMaterialInstance
                     });
+                    entityManager.SetComponentData<StartEndPosition>(arcEntity, new StartEndPosition()
+                    {
+                        startPosition = start,
+                        endPosition = end
+                    });
+                    entityManager.SetComponentData<FloorPosition>(arcEntity, new FloorPosition()
+                    {
+                        Value = start.z 
+                    });
                 }
 
                 start = end;
@@ -141,6 +150,15 @@ public class ArcEntityCreator : MonoBehaviour
                 {
                     mesh = arcMesh,
                     material = arcColorMaterialInstance
+                });
+                entityManager.SetComponentData<StartEndPosition>(tailArcEntity, new StartEndPosition()
+                {
+                    startPosition = start,
+                    endPosition = end
+                });
+                entityManager.SetComponentData<FloorPosition>(tailArcEntity, new FloorPosition()
+                {
+                    Value = start.z
                 });
             }
         }

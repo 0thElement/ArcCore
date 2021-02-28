@@ -105,7 +105,6 @@ public class Conductor : MonoBehaviour
     }
     public float GetFloorPositionFromTiming(int timing, int timingGroup)
     {
-        Debug.Log(timingEventGroups.Count);
         List<TimingEvent> group = timingEventGroups[timingGroup];
         //caching the index so we dont have to loop the entire thing every time
         //list access should be largely local anyway

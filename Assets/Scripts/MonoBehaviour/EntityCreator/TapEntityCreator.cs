@@ -31,9 +31,12 @@ public class TapEntityCreator : MonoBehaviour
 
             float x = Convert.TrackToX(tap.track);
             float y = 0;
-            float z = -200;
-            entityManager.SetComponentData<Translation>(tapEntity, new Translation{ 
+            float z = 0;
+            entityManager.SetComponentData<Translation>(tapEntity, new Translation(){ 
                 Value = new float3(x, y, z)
+            });
+            entityManager.SetComponentData<FloorPosition>(tapEntity, new FloorPosition(){
+                Value = Conductor.Instance.GetFloorPositionFromTiming(tap.timing, tap.timingGroup)
             });
         }
     }
