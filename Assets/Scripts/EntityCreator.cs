@@ -22,6 +22,7 @@ public class EntityCreator : MonoBehaviour
     // [SerializeField] private GameObject arcHeadPrefab;
     // [SerializeField] private GameObject traceHeadPrefab;
     // [SerializeField] private GameObject beatlinePrefab;
+    [SerializeField] private Color[] arcColors;
     private Entity tapNoteEntityPrefab;
     private Entity holdNoteEntityPrefab;
     private Entity arcNoteEntityPrefab;
@@ -35,10 +36,12 @@ public class EntityCreator : MonoBehaviour
 
     private World defaultWorld;
     private EntityManager entityManager;
+    private int colorShaderId;
 
     private void Awake()
     {
         Instance = this;
+        colorShaderId = Shader.PropertyToID("_Color");
         PrepareEntityPrefabConversion();
     }
     private void PrepareEntityPrefabConversion()
@@ -218,9 +221,14 @@ public class EntityCreator : MonoBehaviour
     }
     public void CreateArcEntities(List<List<AffArc>> affArcList)
     {
+        int colorId=0;
         foreach (List<AffArc> listByColor in affArcList)
         {
+            Material arcColorMaterialInstance = Instantiate(arcMaterial);
+            arcColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId++]);
+
             List<float3> connectedArcsIdEndpoint = new List<float3>();
+
             foreach (AffArc arc in listByColor)
             {
                 //Precalc and assign a connected arc id to avoid having to figure out connection during gameplay
