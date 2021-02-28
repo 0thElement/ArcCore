@@ -16,6 +16,7 @@ public class ArcEntityCreator : MonoBehaviour
     private Entity arcNoteEntityPrefab;
     private World defaultWorld;
     private EntityManager entityManager;
+    private Mesh arcMesh;
     private int colorShaderId;
     private void Awake()
     {
@@ -24,23 +25,17 @@ public class ArcEntityCreator : MonoBehaviour
         entityManager = defaultWorld.EntityManager;
         GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
         arcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcNotePrefab, settings);
-
-        Mesh arcMesh = CreateBaseArcSegmentMesh();
+        arcMesh = CreateBaseArcSegmentMesh();
         //Remove these component to allow direct access to localtoworld matrices
         //idk if this is a good way to set up an entity prefab in this case but this will do for now
         entityManager.RemoveComponent<Translation>(arcNoteEntityPrefab);
         entityManager.RemoveComponent<Rotation>(arcNoteEntityPrefab);
-        entityManager.SetSharedComponentData<RenderMesh>(arcNoteEntityPrefab, new RenderMesh(){
-            mesh = CreateBaseArcSegmentMesh(),
-            material = arcMaterial
-        });
-
         colorShaderId = Shader.PropertyToID("_Color");
     }
     public Mesh CreateBaseArcSegmentMesh()
     {
-        Vector3 fromPos = new Vector3(0, 0, 0);
-        Vector3 toPos = new Vector3(0, 0, -1);
+        Vector3 fromPos = new float3(0, 0, 0);
+        Vector3 toPos = new float3(0, 0, -1);
         float offset = 0.15f;
 
         Vector3[] vertices = new Vector3[6];
@@ -109,8 +104,8 @@ public class ArcEntityCreator : MonoBehaviour
                 int segSize = (int)(duration * v2);
                 int segmentCount = (segSize == 0 ? 0 : duration / segSize) + 1;
 
-                Vector3 start;
-                Vector3 end = new Vector3(
+                float3 start;
+                float3 end = new float3(
                     Convert.GetWorldX(arc.startX),
                     Convert.GetWorldY(arc.startY),
                     Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
@@ -120,21 +115,33 @@ public class ArcEntityCreator : MonoBehaviour
                 {
                     int t = (i + 1) * segSize;
                     start = end;
-                    end = new Vector3(
+                    end = new float3(
                         Convert.GetWorldX(Convert.GetXAt((float)t/duration, arc.startX, arc.endX, arc.easing)),
                         Convert.GetWorldY(Convert.GetYAt((float)t/duration, arc.startY, arc.endY, arc.easing)),
                         Conductor.Instance.GetFloorPositionFromTiming(arc.timing + t, arc.timingGroup)
                     );
-                    //todo: actually make an entity
+
+                    Entity arcEntity = entityManager.Instantiate(arcNoteEntityPrefab);
+                    entityManager.SetSharedComponentData<RenderMesh>(arcEntity, new RenderMesh()
+                    {
+                        mesh = arcMesh,
+                        material = arcColorMaterialInstance
+                    });
                 }
 
                 start = end;
-                end = new Vector3(
+                end = new float3(
                     Convert.GetWorldX(arc.endX),
                     Convert.GetWorldY(arc.endY),
                     Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                 );
-                //todo: actuallymake an entity
+
+                Entity tailArcEntity = entityManager.Instantiate(arcNoteEntityPrefab);
+                entityManager.SetSharedComponentData<RenderMesh>(tailArcEntity, new RenderMesh()
+                {
+                    mesh = arcMesh,
+                    material = arcColorMaterialInstance
+                });
             }
         }
     }
