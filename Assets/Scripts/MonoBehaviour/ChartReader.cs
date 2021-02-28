@@ -175,16 +175,15 @@ public class ChartReader : MonoBehaviour
             i++;
         }
 
-        EntityCreator.Instance.SetupTiming(affTimingList);
-        EntityCreator.Instance.CreateTapEntities(affTapList);
-        EntityCreator.Instance.CreateArcTapEntities(affArcTapList);
-        EntityCreator.Instance.CreateHoldEntities(affHoldList);
+        Conductor.Instance.SetupTiming(affTimingList);
+        TapEntityCreator.Instance.CreateEntities(affTapList);
+        HoldEntityCreator.Instance.CreateEntities(affHoldList);
+        ArcEntityCreator.Instance.CreateEntities(affArcList);
     }
 
     private void SetAudioOffset(int offset)
     {
         Conductor.Instance.SetOffset(offset);
-        Debug.Log(offset);
     }
 
     private void AddTiming(StringParser lineParser, int currentTimingGroup)
