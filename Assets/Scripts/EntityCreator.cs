@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
+using Unity.Rendering;
 using UnityEngine;
 using Arcaoid.Utility;
 
@@ -12,7 +13,9 @@ public class EntityCreator : MonoBehaviour
     [SerializeField] private GameObject tapNotePrefab;
     [SerializeField] private GameObject holdNotePrefab;
     [SerializeField] private GameObject arcNotePrefab;
-    // [SerializeField] private GameObject traceNotePrefab;
+    [SerializeField] private GameObject traceNotePrefab;
+    [SerializeField] private Material arcMaterial;
+    [SerializeField] private Material traceMaterial;
     // [SerializeField] private GameObject arcTapNotePrefab;
     // [SerializeField] private GameObject tapToArcTapConnectLinePrefab;
     // [SerializeField] private GameObject arcHeightIndicatorPrefab;
@@ -22,7 +25,7 @@ public class EntityCreator : MonoBehaviour
     private Entity tapNoteEntityPrefab;
     private Entity holdNoteEntityPrefab;
     private Entity arcNoteEntityPrefab;
-    // private Entity traceNoteEntityPrefab;
+    private Entity traceNoteEntityPrefab;
     // private Entity arcTapNoteEntityPrefab;
     // private Entity tapToArcTapConnectLineEntityPrefab;
     // private Entity arcHeightIndicatorEntityPrefab;
@@ -47,15 +50,63 @@ public class EntityCreator : MonoBehaviour
         tapNoteEntityPrefab                = GameObjectConversionUtility.ConvertGameObjectHierarchy(tapNotePrefab, settings);
         holdNoteEntityPrefab               = GameObjectConversionUtility.ConvertGameObjectHierarchy(holdNotePrefab, settings);
         arcNoteEntityPrefab                = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcNotePrefab, settings);
-        // traceNoteEntityPrefab              = GameObjectConversionUtility.ConvertGameObjectHierarchy(traceNotePrefab, settings);
+        traceNoteEntityPrefab              = GameObjectConversionUtility.ConvertGameObjectHierarchy(traceNotePrefab, settings);
         // arcTapNoteEntityPrefab             = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcTapNotePrefab, settings);
         // tapToArcTapConnectLineEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(tapToArcTapConnectLinePrefab, settings);
         // arcHeightIndicatorEntityPrefab     = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcHeightIndicatorPrefab, settings);
         // arcHeadEntityPrefab                = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcHeadPrefab, settings);
         // traceHeadEntityPrefab              = GameObjectConversionUtility.ConvertGameObjectHierarchy(traceHeadPrefab, settings);
         // beatlineEntityPrefab               = GameObjectConversionUtility.ConvertGameObjectHierarchy(beatlinePrefab, settings);
-    }
 
+        Mesh arcMesh = CreateBaseArcSegmentMesh(false);
+        Mesh traceMesh = CreateBaseArcSegmentMesh(true);
+        //Remove these component to allow direct access to localtoworld matrices
+        //idk if this is a good way to set up an entity prefab in this case but this will do for now
+        entityManager.RemoveComponent<Translation>(arcNoteEntityPrefab);
+        entityManager.RemoveComponent<Rotation>(arcNoteEntityPrefab);
+        entityManager.RemoveComponent<Scale>(arcNoteEntityPrefab);
+        entityManager.SetSharedComponentData<RenderMesh>(arcNoteEntityPrefab, new RenderMesh(){
+            mesh = CreateBaseArcSegmentMesh(false),
+            material = arcMaterial
+        });
+        
+        entityManager.RemoveComponent<Translation>(traceNoteEntityPrefab);
+        entityManager.RemoveComponent<Rotation>(traceNoteEntityPrefab);
+        entityManager.RemoveComponent<Scale>(traceNoteEntityPrefab);
+        entityManager.SetSharedComponentData<RenderMesh>(traceNoteEntityPrefab, new RenderMesh(){
+            mesh = CreateBaseArcSegmentMesh(false),
+            material = traceMaterial
+        });
+    }
+    public Mesh CreateBaseArcSegmentMesh(bool isTrace)
+    {
+        Vector3 fromPos = new Vector3(0, 0, 0);
+        Vector3 toPos = new Vector3(0, 0, -1);
+        float offset = isTrace ? 0.15f : 0.9f;
+
+        Vector3[] vertices = new Vector3[6];
+        Vector2[] uv = new Vector2[6];
+        int[] triangles = new int[] { 0, 3, 2, 0, 2, 1, 0, 5, 4, 0, 4, 1 };
+
+        vertices[0] = fromPos + new Vector3(0, offset / 2, 0);
+        uv[0] = new Vector2();
+        vertices[1] = toPos + new Vector3(0, offset / 2, 0);
+        uv[1] = new Vector2(0, 1);
+        vertices[2] = toPos + new Vector3(offset, -offset / 2, 0);
+        uv[2] = new Vector2(1, 1);
+        vertices[3] = fromPos + new Vector3(offset, -offset / 2, 0);
+        uv[3] = new Vector2(1, 0);
+        vertices[4] = toPos + new Vector3(-offset, -offset / 2, 0);
+        uv[4] = new Vector2(1, 1);
+        vertices[5] = fromPos + new Vector3(-offset, -offset / 2, 0);
+        uv[5] = new Vector2(1, 0);
+
+        return new Mesh(){
+            vertices = vertices,
+            uv = uv,
+            triangles = triangles
+        };
+    }
     public void SetupTiming(List<List<AffTiming>> timingGroups)
     {
         //precalculate floorposition value for timing events
@@ -218,8 +269,6 @@ public class EntityCreator : MonoBehaviour
                         Convert.GetWorldY(Convert.GetYAt((float)t/duration, arc.startY, arc.endY, arc.easing)),
                         Conductor.Instance.GetFloorPositionFromTiming(arc.timing + t, arc.timingGroup)
                     );
-                    CreateArcSegmentMesh(start, end, false);
-                    
                     //todo: actually make an entity
                 }
 
@@ -229,39 +278,8 @@ public class EntityCreator : MonoBehaviour
                     Convert.GetWorldY(arc.endY),
                     Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                 );
-                CreateArcSegmentMesh(start, end, false);
                 //todo: actuallymake an entity
             }
         }
-    }
-        
-    public Mesh CreateArcSegmentMesh(Vector3 start, Vector3 end, bool isTrace)
-    {
-        Vector3 fromPos = new Vector3(0, 0, 0);
-        Vector3 toPos = end - start;
-        float offset = isTrace ? 0.15f : 0.9f;
-
-        Vector3[] vertices = new Vector3[6];
-        Vector2[] uv = new Vector2[6];
-        int[] triangles = new int[] { 0, 3, 2, 0, 2, 1, 0, 5, 4, 0, 4, 1 };
-
-        vertices[0] = fromPos + new Vector3(0, offset / 2, 0);
-        uv[0] = new Vector2();
-        vertices[1] = toPos + new Vector3(0, offset / 2, 0);
-        uv[1] = new Vector2(0, 1);
-        vertices[2] = toPos + new Vector3(offset, -offset / 2, 0);
-        uv[2] = new Vector2(1, 1);
-        vertices[3] = fromPos + new Vector3(offset, -offset / 2, 0);
-        uv[3] = new Vector2(1, 0);
-        vertices[4] = toPos + new Vector3(-offset, -offset / 2, 0);
-        uv[4] = new Vector2(1, 1);
-        vertices[5] = fromPos + new Vector3(-offset, -offset / 2, 0);
-        uv[5] = new Vector2(1, 0);
-
-        return new Mesh(){
-            vertices = vertices,
-            uv = uv,
-            triangles = triangles
-        };
     }
 }
