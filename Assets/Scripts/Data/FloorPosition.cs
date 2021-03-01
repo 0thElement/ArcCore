@@ -1,14 +1,17 @@
 using Unity.Entities;
 
-/// <summary>
-/// The component used to store the "floor position" of notes.
-/// It holds a single double.
-/// </summary>
-[GenerateAuthoringComponent]
-public struct FloorPosition : IComponentData
+namespace ArcCore.Data
 {
     /// <summary>
-    /// The value of the floor position.
+    /// The component used to store the "floor position" of notes.
+    /// It holds a single double.
     /// </summary>
-    public double Value { get; set; }
+    [GenerateAuthoringComponent]
+    public struct FloorPosition : IComponentData
+    {
+        /// <summary>
+        /// The value of the floor position.
+        /// </summary>
+        public double value;
+    }
 }

@@ -1,7 +1,8 @@
+using ArcCore.MonoBehaviors;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace Arcaoid.Utility
+namespace ArcCore.Utility
 {
     public class Convert
     {
