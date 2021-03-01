@@ -15,21 +15,21 @@
             => pos += length;
         public void SkipPast(string terminator = null)
             => pos += TerminatorOrDefaultEndIndex(terminator) - pos + 1;
-        public bool ReadFloat(out float value, string terminator = null)
+        public bool ParseFloat(out float value, string terminator = null)
         {
             int end = terminator is null ? str.Length : str.IndexOf(terminator, pos);
             bool success = float.TryParse(str.Substring(pos, end - pos), out value);
             pos += end - pos + 1;
             return success;
         }
-        public bool ReadInt(out int value, string terminator = null)
+        public bool ParseInt(out int value, string terminator = null)
         {
             int end = TerminatorOrDefaultEndIndex(terminator);
             bool success = int.TryParse(str.Substring(pos, end - pos), out value);
             pos += end - pos + 1;
             return success;
         }
-        public bool ReadBool(out bool value, string terminator = null)
+        public bool ParseBool(out bool value, string terminator = null)
         {
             int end = TerminatorOrDefaultEndIndex(terminator);
             bool success = bool.TryParse(str.Substring(pos, end - pos), out value);

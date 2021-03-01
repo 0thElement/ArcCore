@@ -153,7 +153,7 @@ public class ChartReader : MonoBehaviour
                 switch (option)
                 {
                     case "AudioOffset":
-                        if (!lineParser.ReadInt(out int audioOff))
+                        if (!lineParser.ParseInt(out int audioOff))
                             return new AffError(AffErrorType.improper_int, i);
                         SetAudioOffset(audioOff);
                         break;
@@ -230,13 +230,13 @@ public class ChartReader : MonoBehaviour
 
     private AffErrorType AddTiming(StringParser lineParser, int currentTimingGroup)
     {
-        if (!lineParser.ReadInt(out int timing, ","))
+        if (!lineParser.ParseInt(out int timing, ","))
             return AffErrorType.improper_int;
 
-        if (!lineParser.ReadFloat(out float bpm, ","))
+        if (!lineParser.ParseFloat(out float bpm, ","))
             return AffErrorType.improper_float;
 
-        if (!lineParser.ReadFloat(out float divisor, ")"))
+        if (!lineParser.ParseFloat(out float divisor, ")"))
             return AffErrorType.improper_float;
 
         affTimingList[currentTimingGroup].Add(new AffTiming(){timing = timing, bpm = bpm, divisor = divisor});
@@ -245,10 +245,10 @@ public class ChartReader : MonoBehaviour
 
     private AffErrorType AddTap(StringParser lineParser, int currentTimingGroup)
     {
-        if (!lineParser.ReadInt(out int timing, ","))
+        if (!lineParser.ParseInt(out int timing, ","))
             return AffErrorType.improper_int;
         
-        if (lineParser.ReadInt(out int track, ")"))
+        if (lineParser.ParseInt(out int track, ")"))
             return AffErrorType.improper_int;
 
         affTapList.Add(new AffTap(){timing = timing, track = track, timingGroup = currentTimingGroup});
@@ -257,13 +257,13 @@ public class ChartReader : MonoBehaviour
 
     private AffErrorType AddHold(StringParser lineParser, int currentTimingGroup)
     {
-        if (!lineParser.ReadInt(out int timing, ","))
+        if (!lineParser.ParseInt(out int timing, ","))
             return AffErrorType.improper_int;
 
-        if (!lineParser.ReadInt(out int endTiming, ","))
+        if (!lineParser.ParseInt(out int endTiming, ","))
             return AffErrorType.improper_int;
         
-        if (!lineParser.ReadInt(out int track, ")"))
+        if (!lineParser.ParseInt(out int track, ")"))
             return AffErrorType.improper_int;
 
         affHoldList.Add(new AffHold(){timing = timing, endTiming = endTiming, track = track, timingGroup = currentTimingGroup});
@@ -273,33 +273,33 @@ public class ChartReader : MonoBehaviour
     private AffErrorType AddArc(StringParser lineParser, int currentTimingGroup)
     {
 
-        if (!lineParser.ReadInt(out int timing, ","))
+        if (!lineParser.ParseInt(out int timing, ","))
             return AffErrorType.improper_int;
 
-        if (!lineParser.ReadInt(out int endTiming, ","))
+        if (!lineParser.ParseInt(out int endTiming, ","))
             return AffErrorType.improper_int;
 
-        if (!lineParser.ReadFloat(out float startX, ","))
+        if (!lineParser.ParseFloat(out float startX, ","))
             return AffErrorType.improper_float;
 
-        if (!lineParser.ReadFloat(out float endX, ","))
+        if (!lineParser.ParseFloat(out float endX, ","))
             return AffErrorType.improper_float;
 
         if (!GetEasingType(out ArcEasing easing, lineParser.ReadString(",")))
             return AffErrorType.improper_arctype;
 
-        if (!lineParser.ReadFloat(out float startY, ","))
+        if (!lineParser.ParseFloat(out float startY, ","))
             return AffErrorType.improper_float;
 
-        if (!lineParser.ReadFloat(out float endY, ","))
+        if (!lineParser.ParseFloat(out float endY, ","))
             return AffErrorType.improper_float;
 
-        if (!lineParser.ReadInt(out int color, ","))
+        if (!lineParser.ParseInt(out int color, ","))
             return AffErrorType.improper_int;
 
         lineParser.SkipPast(",");
 
-        if (!lineParser.ReadBool(out bool isTrace, ")"))
+        if (!lineParser.ParseBool(out bool isTrace, ")"))
             return AffErrorType.improper_boolean;
 
         if (isTrace)
@@ -336,7 +336,7 @@ public class ChartReader : MonoBehaviour
             do
             {
                 lineParser.Skip(8);
-                if (!lineParser.ReadInt(out int t, ")"))
+                if (!lineParser.ParseInt(out int t, ")"))
                     return AffErrorType.improper_int;
 
                 float x = Convert.GetXAt(t, startX, endX, easing);
@@ -393,33 +393,33 @@ public class ChartReader : MonoBehaviour
 
     private AffErrorType AddCamera(StringParser lineParser)
     {
-        if (!lineParser.ReadInt(out int timing, ","))
+        if (!lineParser.ParseInt(out int timing, ","))
             return AffErrorType.improper_int;
 
-        if (!lineParser.ReadFloat(out float xpos, ","))
+        if (!lineParser.ParseFloat(out float xpos, ","))
             return AffErrorType.improper_float;
 
-        if (!lineParser.ReadFloat(out float ypos, ","))
+        if (!lineParser.ParseFloat(out float ypos, ","))
             return AffErrorType.improper_float;
 
-        if (!lineParser.ReadFloat(out float zpos, ","))
+        if (!lineParser.ParseFloat(out float zpos, ","))
             return AffErrorType.improper_float;
 
         //Arcade's coordinate system seems to be different to arcaea's
 
-        if (!lineParser.ReadFloat(out float yrot, ","))
+        if (!lineParser.ParseFloat(out float yrot, ","))
             return AffErrorType.improper_float;
 
-        if (!lineParser.ReadFloat(out float xrot, ","))
+        if (!lineParser.ParseFloat(out float xrot, ","))
             return AffErrorType.improper_float;
 
-        if (!lineParser.ReadFloat(out float zrot, ","))
+        if (!lineParser.ParseFloat(out float zrot, ","))
             return AffErrorType.improper_float;
 
         if (!GetCameraEasing(out CameraEasing easing, lineParser.ReadString(",")))
             return AffErrorType.improper_camtype;
 
-        if (!lineParser.ReadInt(out int duration, ","))
+        if (!lineParser.ParseInt(out int duration, ","))
             return AffErrorType.improper_int;
 
         affCameraList.Add(new AffCamera()
