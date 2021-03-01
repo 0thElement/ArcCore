@@ -4,6 +4,18 @@ using UnityEngine;
 using Unity.Mathematics;
 using Arcaoid.Utility;
 
+public class AffError
+{
+    public AffErrorType type;
+    public int line;
+
+    public AffError(AffErrorType type, int line)
+    {
+        this.type = type;
+        this.line = line;
+    }
+}
+
 public struct AffTiming
 {
     public int timing;
@@ -92,6 +104,17 @@ public enum CameraEasing
     reset
 }
 
+public enum AffErrorType
+{
+    none,
+    invalid_line,
+    improper_int,
+    improper_float,
+    improper_boolean,
+    improper_arctype,
+    improper_camtype,
+}
+
 public class ChartReader : MonoBehaviour
 {
     public static ChartReader Instance { get; private set; }
@@ -115,7 +138,7 @@ public class ChartReader : MonoBehaviour
         ReadChart(path);
     }
 
-    private void ReadChart(string path)
+    private AffError ReadChart(string path)
     {
         string[] lines = File.ReadAllLines(path);
 
@@ -130,7 +153,9 @@ public class ChartReader : MonoBehaviour
                 switch (option)
                 {
                     case "AudioOffset":
-                        SetAudioOffset(lineParser.ReadInt());
+                        if (!lineParser.ReadInt(out int audioOff))
+                            return new AffError(AffErrorType.improper_int, i);
+                        SetAudioOffset(audioOff);
                         break;
                 }
             }
@@ -145,31 +170,46 @@ public class ChartReader : MonoBehaviour
 
             StringParser lineParser = new StringParser(lines[i]);
             string type = lineParser.ReadString("(");
+            AffErrorType errorType;
 
             switch (type)
             {
                 case "timing":
-                    AddTiming(lineParser,currentTimingGroup);
+                    errorType = AddTiming(lineParser, currentTimingGroup);
+                    if (errorType != AffErrorType.none)
+                        return new AffError(errorType, i);
                     break;
                 case "":
-                    AddTap(lineParser,currentTimingGroup);
+                    errorType = AddTap(lineParser,currentTimingGroup);
+                    if (errorType != AffErrorType.none)
+                        return new AffError(errorType, i);
                     break;
                 case "hold":
-                    AddHold(lineParser,currentTimingGroup);
+                    errorType = AddHold(lineParser,currentTimingGroup);
+                    if (errorType != AffErrorType.none)
+                        return new AffError(errorType, i);
                     break;
                 case "arc":
-                    AddArc(lineParser,currentTimingGroup);
+                    errorType = AddArc(lineParser,currentTimingGroup);
+                    if (errorType != AffErrorType.none)
+                        return new AffError(errorType, i);
                     break;
                 case "camera":
-                    AddCamera(lineParser);
+                    errorType = AddCamera(lineParser);
+                    if (errorType != AffErrorType.none)
+                        return new AffError(errorType, i);
                     break;
                 case "scenecontrol":
-                    AddSceneControlEvent(lineParser);
+                    errorType = AddSceneControlEvent(lineParser);
+                    if (errorType != AffErrorType.none)
+                        return new AffError(errorType, i);
                     break;
                 case "timinggroup":
                     currentTimingGroup++;
                     affTimingList.Add(new List<AffTiming>());
                     break;
+                default:
+                    return new AffError(AffErrorType.invalid_line, i); 
             }
             
             i++;
@@ -179,6 +219,8 @@ public class ChartReader : MonoBehaviour
         TapEntityCreator.Instance.CreateEntities(affTapList);
         HoldEntityCreator.Instance.CreateEntities(affHoldList);
         ArcEntityCreator.Instance.CreateEntities(affArcList);
+
+        return null;
     }
 
     private void SetAudioOffset(int offset)
@@ -186,40 +228,135 @@ public class ChartReader : MonoBehaviour
         Conductor.Instance.SetOffset(offset);
     }
 
-    private void AddTiming(StringParser lineParser, int currentTimingGroup)
+    private AffErrorType AddTiming(StringParser lineParser, int currentTimingGroup)
     {
-        int timing = lineParser.ReadInt(",");
-        float bpm = lineParser.ReadFloat(",");
-        float divisor = lineParser.ReadFloat(")");
+        if (!lineParser.ReadInt(out int timing, ","))
+            return AffErrorType.improper_int;
+
+        if (!lineParser.ReadFloat(out float bpm, ","))
+            return AffErrorType.improper_float;
+
+        if (!lineParser.ReadFloat(out float divisor, ")"))
+            return AffErrorType.improper_float;
 
         affTimingList[currentTimingGroup].Add(new AffTiming(){timing = timing, bpm = bpm, divisor = divisor});
+        return AffErrorType.none;
     }
 
-    private void AddTap(StringParser lineParser, int currentTimingGroup)
+    private AffErrorType AddTap(StringParser lineParser, int currentTimingGroup)
     {
-        int timing = lineParser.ReadInt(",");
-        int track = lineParser.ReadInt(")");
+        if (!lineParser.ReadInt(out int timing, ","))
+            return AffErrorType.improper_int;
+        
+        if (lineParser.ReadInt(out int track, ")"))
+            return AffErrorType.improper_int;
 
         affTapList.Add(new AffTap(){timing = timing, track = track, timingGroup = currentTimingGroup});
+        return AffErrorType.none;
     }
 
-    private void AddHold(StringParser lineParser, int currentTimingGroup)
+    private AffErrorType AddHold(StringParser lineParser, int currentTimingGroup)
     {
-        int timing = lineParser.ReadInt(",");
-        int endTiming = lineParser.ReadInt(",");
-        int track = lineParser.ReadInt(")");
+        if (!lineParser.ReadInt(out int timing, ","))
+            return AffErrorType.improper_int;
+
+        if (!lineParser.ReadInt(out int endTiming, ","))
+            return AffErrorType.improper_int;
+        
+        if (!lineParser.ReadInt(out int track, ")"))
+            return AffErrorType.improper_int;
 
         affHoldList.Add(new AffHold(){timing = timing, endTiming = endTiming, track = track, timingGroup = currentTimingGroup});
+        return AffErrorType.none;
     }
 
-    private void AddArc(StringParser lineParser, int currentTimingGroup)
+    private AffErrorType AddArc(StringParser lineParser, int currentTimingGroup)
     {
-        int timing = lineParser.ReadInt(",");
-        int endTiming = lineParser.ReadInt(",");
-        float startX = lineParser.ReadFloat(",");
-        float endX = lineParser.ReadFloat(",");
-        string easingString = lineParser.ReadString(",");
-        ArcEasing easing;
+
+        if (!lineParser.ReadInt(out int timing, ","))
+            return AffErrorType.improper_int;
+
+        if (!lineParser.ReadInt(out int endTiming, ","))
+            return AffErrorType.improper_int;
+
+        if (!lineParser.ReadFloat(out float startX, ","))
+            return AffErrorType.improper_float;
+
+        if (!lineParser.ReadFloat(out float endX, ","))
+            return AffErrorType.improper_float;
+
+        if (!GetEasingType(out ArcEasing easing, lineParser.ReadString(",")))
+            return AffErrorType.improper_arctype;
+
+        if (!lineParser.ReadFloat(out float startY, ","))
+            return AffErrorType.improper_float;
+
+        if (!lineParser.ReadFloat(out float endY, ","))
+            return AffErrorType.improper_float;
+
+        if (!lineParser.ReadInt(out int color, ","))
+            return AffErrorType.improper_int;
+
+        lineParser.SkipPast(",");
+
+        if (!lineParser.ReadBool(out bool isTrace, ")"))
+            return AffErrorType.improper_boolean;
+
+        if (isTrace)
+        {
+            while (affArcList.Count < color + 1) affArcList.Add(new List<AffArc>());
+            affArcList[color].Add(new AffArc()
+            {
+                timing = timing,
+                endTiming = endTiming,
+                startX = startX,
+                endX = endX,
+                easing = easing,
+                startY = startY,
+                endY = endY,
+                timingGroup = currentTimingGroup
+            });
+        }
+        else affTraceList.Add(new AffTrace()
+        {
+            timing = timing,
+            endTiming = endTiming,
+            startX = startX,
+            endX = endX,
+            easing = easing,
+            startY = startY,
+            endY = endY,
+            color = color,
+            timingGroup = currentTimingGroup
+        });
+
+        if (lineParser.Current != ";")
+        {
+            //parse arctap
+            do
+            {
+                lineParser.Skip(8);
+                if (!lineParser.ReadInt(out int t, ")"))
+                    return AffErrorType.improper_int;
+
+                float x = Convert.GetXAt(t, startX, endX, easing);
+                float y = Convert.GetYAt(t, startY, endY, easing);
+
+                affArcTapList.Add(new AffArcTap()
+                {
+                    timing = t,
+                    position = new float2(x, y)
+                });
+
+            } while (lineParser.Current == ",");
+        }
+
+        return AffErrorType.none;
+
+    }
+
+    public bool GetEasingType(out ArcEasing easing, string easingString)
+    {
         switch (easingString)
         {
             case "b":
@@ -248,72 +385,57 @@ public class ChartReader : MonoBehaviour
                 break;
             default:
                 easing = ArcEasing.b;
-                break;
+                return false;
         }
-        float startY = lineParser.ReadFloat(",");
-        float endY = lineParser.ReadFloat(",");
-        int color = lineParser.ReadInt(",");
-        lineParser.ReadString(",");
-        bool isTrace = lineParser.ReadBool(")");
 
-        if (isTrace) {
-            while (affArcList.Count < color + 1) affArcList.Add(new List<AffArc>());
-            affArcList[color].Add(new AffArc()
-            {
-                timing = timing, 
-                endTiming = endTiming,
-                startX = startX,
-                endX = endX,
-                easing = easing,
-                startY = startY,
-                endY = endY,
-                timingGroup = currentTimingGroup
-            });
-        }
-        else affTraceList.Add(new AffTrace()
-        {
-            timing = timing,
-            endTiming = endTiming,
-            startX = startX,
-            endX = endX,
-            easing = easing,
-            startY = startY,
-            endY = endY,
-            color = color,
-            timingGroup = currentTimingGroup
-        });
-        
-        if (lineParser.Current != ";") {
-            //parse arctap
-            do
-            {
-                lineParser.Skip(8);
-                int t = lineParser.ReadInt(")");
-
-                float x = Convert.GetXAt(t, startX, endX, easing);
-                float y = Convert.GetYAt(t, startY, endY, easing);
-                
-                affArcTapList.Add(new AffArcTap()
-                {
-                    timing = t,
-                    position = new float2(x, y)
-                });
-
-            } while (lineParser.Current==",");
-        }
+        return true;
     }
 
-    private void AddCamera(StringParser lineParser)
+    private AffErrorType AddCamera(StringParser lineParser)
     {
-        int timing = lineParser.ReadInt(",");
-        //Arcade's coordinate system seems to be different to arcaea's
-        float3 position = new float3(-lineParser.ReadFloat(","), lineParser.ReadFloat(","), lineParser.ReadFloat(","));
-        float rotateY = -lineParser.ReadFloat(",");    
-        float rotateX = -lineParser.ReadFloat(",");    
-        float3 rotate = new float3(rotateX, rotateY, lineParser.ReadFloat(","));
+        if (!lineParser.ReadInt(out int timing, ","))
+            return AffErrorType.improper_int;
 
-        string easingString = lineParser.ReadString(",");
-        CameraEasing easing;
+        if (!lineParser.ReadFloat(out float xpos, ","))
+            return AffErrorType.improper_float;
+
+        if (!lineParser.ReadFloat(out float ypos, ","))
+            return AffErrorType.improper_float;
+
+        if (!lineParser.ReadFloat(out float zpos, ","))
+            return AffErrorType.improper_float;
+
+        //Arcade's coordinate system seems to be different to arcaea's
+
+        if (!lineParser.ReadFloat(out float yrot, ","))
+            return AffErrorType.improper_float;
+
+        if (!lineParser.ReadFloat(out float xrot, ","))
+            return AffErrorType.improper_float;
+
+        if (!lineParser.ReadFloat(out float zrot, ","))
+            return AffErrorType.improper_float;
+
+        if (!GetCameraEasing(out CameraEasing easing, lineParser.ReadString(",")))
+            return AffErrorType.improper_camtype;
+
+        if (!lineParser.ReadInt(out int duration, ","))
+            return AffErrorType.improper_int;
+
+        affCameraList.Add(new AffCamera()
+        {
+            timing = timing,
+            position = new float3(-xpos, ypos, zpos),
+            rotate = new float3(-xrot, -yrot, zrot),
+            easing = easing,
+            duration = duration
+        });
+
+        return AffErrorType.none;
+    }
+
+    private static bool GetCameraEasing(out CameraEasing easing, string easingString)
+    {
         switch (easingString)
         {
             case "l":
@@ -333,23 +455,15 @@ public class ChartReader : MonoBehaviour
                 break;
             default:
                 easing = CameraEasing.reset;
-                break;
+                return false;
         }
 
-        int duration = lineParser.ReadInt(")");
-
-        affCameraList.Add(new AffCamera()
-        {
-            timing = timing,
-            position = position,
-            rotate = rotate,
-            easing = easing,
-            duration = duration
-        });
+        return true;
     }
 
-    public void AddSceneControlEvent(StringParser lineParser)
+    public AffErrorType AddSceneControlEvent(StringParser lineParser)
     {
-    //todo: scenecontrol support, maybe 
+        //todo: scenecontrol support, maybe 
+        return AffErrorType.none;
     }
 }

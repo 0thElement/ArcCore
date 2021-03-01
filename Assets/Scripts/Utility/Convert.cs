@@ -1,3 +1,4 @@
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace Arcaoid.Utility
@@ -20,23 +21,19 @@ namespace Arcaoid.Utility
                     return 6.375f;
             }
         }
-        public static float S(float start, float end, float t)
-        {
-            return (1 - t) * start + end * t;
-        }
-        public static float O(float start, float end, float t)
-        {
-            return start + (end - start) * (1 - Mathf.Cos(1.5707963f * t));
-        }
+        
+        public static float S(float start, float end, float t) 
+            => start * (1 - t) + end * t;
+        public static float O(float start, float end, float t) 
+            => start + (end - start) * (1 - Mathf.Cos(1.5707963f * t));
         public static float I(float start, float end, float t)
-        {
-            return start + (end - start) * (Mathf.Sin(1.5707963f * t));
-        }
+            => start + (end - start) * (Mathf.Sin(1.5707963f * t));
         public static float B(float start, float end, float t)
         {
             float o = 1 - t;
-            return Mathf.Pow(o, 3) * start + 3 * Mathf.Pow(o, 2) * t * start + 3 * o * Mathf.Pow(t, 2) * end + Mathf.Pow(t, 3) * end;
+            return (o * o * o * start) + (3 * o * o * t * start) + (3 * o * t * t * end) + (t * t * t * end);
         }
+
         public static float GetXAt(float t, float startX, float endX, ArcEasing easing)
         {
             switch (easing)
@@ -75,13 +72,13 @@ namespace Arcaoid.Utility
                     return O(startY, endY, t);
             }
         }
-        public static float GetWorldX(float x)
-        {
-            return -8.5f * x + 4.25f;
-        }
-        public static float GetWorldY(float y)
-        {
-            return 1 + 4.5f * y;
-        }
+
+        public static float2 GetPosAt(float t, float2 start, float2 end, ArcEasing easing)
+            => new float2(GetXAt(t, start.x, end.x, easing), GetYAt(t, start.y, end.y, easing));
+
+        public static float GetWorldX(float x) 
+            => -8.5f * x + 4.25f;
+        public static float GetWorldY(float y) 
+            => 4.5f * y + 1f;
     }
 }
