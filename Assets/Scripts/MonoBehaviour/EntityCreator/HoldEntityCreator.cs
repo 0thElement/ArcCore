@@ -30,14 +30,14 @@ public class HoldEntityCreator : MonoBehaviour
             Entity holdEntity = entityManager.Instantiate(holdNoteEntityPrefab);
 
             float x = Convert.TrackToX(hold.track);
-            float y = 0;
-            float z = 0;
+            const float y = 0;
+            const float z = 0;
 
-            float scalex = 1.53f;
+            const float scalex = 1.53f;
             float endFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.endTiming, hold.timingGroup);
             float startFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.timing, hold.timingGroup);
             float scaley = (endFloorPosition - startFloorPosition) / 3790f;
-            float scalez = 1;
+            const float scalez = 1;
 
             entityManager.SetComponentData<Translation>(holdEntity, new Translation(){
                 Value = new float3(x, y, z)

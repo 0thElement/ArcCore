@@ -1,52 +1,53 @@
 ﻿namespace Arcaoid.Utility
 {
+    /// <summary>
+    /// A class to read a string and parse string-ified primitives
+    /// </summary>
     public class StringParser
     {
         private int pos;
-        private string str;
+        private readonly string str;
         public StringParser(string str)
         {
             this.str = str;
         }
         public void Skip(int length)
+            => pos += length;
+        public void SkipPast(string terminator = null)
+            => pos += TerminatorOrDefaultEndIndex(terminator) - pos + 1;
+        public bool ReadFloat(out float value, string terminator = null)
         {
-            pos += length;
+            int end = terminator is null ? str.Length : str.IndexOf(terminator, pos);
+            bool success = float.TryParse(str.Substring(pos, end - pos), out value);
+            pos += end - pos + 1;
+            return success;
         }
-        public float ReadFloat(string ternimator = null)
+        public bool ReadInt(out int value, string terminator = null)
         {
-            int end = ternimator != null ? str.IndexOf(ternimator, pos) : (str.Length);
-            float value = float.Parse(str.Substring(pos, end - pos));
-            pos += (end - pos + 1);
-            return value;
+            int end = TerminatorOrDefaultEndIndex(terminator);
+            bool success = int.TryParse(str.Substring(pos, end - pos), out value);
+            pos += end - pos + 1;
+            return success;
         }
-        public int ReadInt(string ternimator = null)
+        public bool ReadBool(out bool value, string terminator = null)
         {
-            int end = ternimator != null ? str.IndexOf(ternimator, pos) : (str.Length);
-            int value = int.Parse(str.Substring(pos, end - pos));
-            pos += (end - pos + 1);
-            return value;
+            int end = TerminatorOrDefaultEndIndex(terminator);
+            bool success = bool.TryParse(str.Substring(pos, end - pos), out value);
+            pos += end - pos + 1;
+            return success;
         }
-        public bool ReadBool(string ternimator = null)
+        public string ReadString(string terminator = null)
         {
-            int end = ternimator != null ? str.IndexOf(ternimator, pos) : (str.Length);
-            bool value = bool.Parse(str.Substring(pos, end - pos));
-            pos += (end - pos + 1);
-            return value;
-        }
-        public string ReadString(string ternimator = null)
-        {
-            int end = ternimator != null ? str.IndexOf(ternimator, pos) : (str.Length);
+            int end = TerminatorOrDefaultEndIndex(terminator);
             string value = str.Substring(pos, end - pos);
-            pos += (end - pos + 1);
+            pos += end - pos + 1;
             return value;
         }
-        public string Current
-        {
-            get
-            {
-                return str[pos].ToString();
-            }
-        }
+
+        public int TerminatorOrDefaultEndIndex(string terminator) 
+            => terminator is null ? str.Length : str.IndexOf(terminator, pos);
+
+        public string Current => str[pos].ToString();
         public string Peek(int count)
         {
             return str.Substring(pos, count);

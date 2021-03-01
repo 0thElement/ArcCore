@@ -101,8 +101,8 @@ public class ArcEntityCreator : MonoBehaviour
                 int duration = arc.endTiming - arc.timing;
                 int v1 = duration < 1000 ? 14 : 7;
                 float v2 = 1f / (v1 * duration / 1000f);
-                int segSize = (int)(duration * v2);
-                int segmentCount = (segSize == 0 ? 0 : duration / segSize) + 1;
+                float segmentLength = duration * v2;
+                int segmentCount = (int)(segmentLength == 0 ? 0 : duration / segmentLength) + 1;
 
                 float3 start;
                 float3 end = new float3(
@@ -113,29 +113,15 @@ public class ArcEntityCreator : MonoBehaviour
 
                 for (int i=0; i<segmentCount - 1; i++)
                 {
-                    int t = (i + 1) * segSize;
+                    int t = (int)((i + 1) * segmentLength);
                     start = end;
                     end = new float3(
-                        Convert.GetWorldX(Convert.GetXAt((float)t/duration, arc.startX, arc.endX, arc.easing)),
-                        Convert.GetWorldY(Convert.GetYAt((float)t/duration, arc.startY, arc.endY, arc.easing)),
+                        Convert.GetWorldX(Convert.GetXAt((float)t / duration, arc.startX, arc.endX, arc.easing)),
+                        Convert.GetWorldY(Convert.GetYAt((float)t / duration, arc.startY, arc.endY, arc.easing)),
                         Conductor.Instance.GetFloorPositionFromTiming(arc.timing + t, arc.timingGroup)
                     );
 
-                    Entity arcEntity = entityManager.Instantiate(arcNoteEntityPrefab);
-                    entityManager.SetSharedComponentData<RenderMesh>(arcEntity, new RenderMesh()
-                    {
-                        mesh = arcMesh,
-                        material = arcColorMaterialInstance
-                    });
-                    entityManager.SetComponentData<StartEndPosition>(arcEntity, new StartEndPosition()
-                    {
-                        startPosition = start,
-                        endPosition = end
-                    });
-                    entityManager.SetComponentData<FloorPosition>(arcEntity, new FloorPosition()
-                    {
-                        Value = start.z 
-                    });
+                    CreateSegment(arcColorMaterialInstance, start, end);
                 }
 
                 start = end;
@@ -145,22 +131,27 @@ public class ArcEntityCreator : MonoBehaviour
                     Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                 );
 
-                Entity tailArcEntity = entityManager.Instantiate(arcNoteEntityPrefab);
-                entityManager.SetSharedComponentData<RenderMesh>(tailArcEntity, new RenderMesh()
-                {
-                    mesh = arcMesh,
-                    material = arcColorMaterialInstance
-                });
-                entityManager.SetComponentData<StartEndPosition>(tailArcEntity, new StartEndPosition()
-                {
-                    startPosition = start,
-                    endPosition = end
-                });
-                entityManager.SetComponentData<FloorPosition>(tailArcEntity, new FloorPosition()
-                {
-                    Value = start.z
-                });
+                CreateSegment(arcColorMaterialInstance, start, end);
             }
         }
+    }
+
+    private void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end)
+    {
+        Entity arcEntity = entityManager.Instantiate(arcNoteEntityPrefab);
+        entityManager.SetSharedComponentData<RenderMesh>(arcEntity, new RenderMesh()
+        {
+            mesh = arcMesh,
+            material = arcColorMaterialInstance
+        });
+        entityManager.SetComponentData<StartEndPosition>(arcEntity, new StartEndPosition()
+        {
+            StartPosition = start,
+            EndPosition = end
+        });
+        entityManager.SetComponentData<FloorPosition>(arcEntity, new FloorPosition()
+        {
+            Value = start.z
+        });
     }
 }
