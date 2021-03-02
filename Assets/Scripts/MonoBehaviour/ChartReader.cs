@@ -135,7 +135,8 @@ public class ChartReader : MonoBehaviour
         Instance = this;
         // Temporary
         path = Path.Combine(Application.dataPath, "TempAssets", "2.aff");
-        ReadChart(path);
+        AffError status = ReadChart(path);
+        Debug.Log(status.line + ": error of type " + status.type);
     }
 
     private AffError ReadChart(string path)
@@ -177,32 +178,32 @@ public class ChartReader : MonoBehaviour
                 case "timing":
                     errorType = AddTiming(lineParser, currentTimingGroup);
                     if (errorType != AffErrorType.none)
-                        return new AffError(errorType, i);
+                        return new AffError(errorType, i+1);
                     break;
                 case "":
                     errorType = AddTap(lineParser,currentTimingGroup);
                     if (errorType != AffErrorType.none)
-                        return new AffError(errorType, i);
+                        return new AffError(errorType, i+1);
                     break;
                 case "hold":
                     errorType = AddHold(lineParser,currentTimingGroup);
                     if (errorType != AffErrorType.none)
-                        return new AffError(errorType, i);
+                        return new AffError(errorType, i+1);
                     break;
                 case "arc":
                     errorType = AddArc(lineParser,currentTimingGroup);
                     if (errorType != AffErrorType.none)
-                        return new AffError(errorType, i);
+                        return new AffError(errorType, i+1);
                     break;
                 case "camera":
                     errorType = AddCamera(lineParser);
                     if (errorType != AffErrorType.none)
-                        return new AffError(errorType, i);
+                        return new AffError(errorType, i+1);
                     break;
                 case "scenecontrol":
                     errorType = AddSceneControlEvent(lineParser);
                     if (errorType != AffErrorType.none)
-                        return new AffError(errorType, i);
+                        return new AffError(errorType, i+1);
                     break;
                 case "timinggroup":
                     currentTimingGroup++;
@@ -215,6 +216,12 @@ public class ChartReader : MonoBehaviour
             i++;
         }
 
+        Debug.Log("Timing notes: " + affTimingList[0].Count);
+        Debug.Log("Tap notes:"+ affTapList.Count);
+        Debug.Log("Hold notes:"+ affHoldList.Count);
+        Debug.Log("Blue arc notes:"+ affArcList[0].Count);
+        Debug.Log("Red arc notes:"+ affArcList[1].Count);
+        Debug.Log("Arctap notes:"+ affArcTapList.Count);
         Conductor.Instance.SetupTiming(affTimingList);
         TapEntityCreator.Instance.CreateEntities(affTapList);
         HoldEntityCreator.Instance.CreateEntities(affHoldList);
@@ -248,7 +255,7 @@ public class ChartReader : MonoBehaviour
         if (!lineParser.ParseInt(out int timing, ","))
             return AffErrorType.improper_int;
         
-        if (lineParser.ParseInt(out int track, ")"))
+        if (!lineParser.ParseInt(out int track, ")"))
             return AffErrorType.improper_int;
 
         affTapList.Add(new AffTap(){timing = timing, track = track, timingGroup = currentTimingGroup});
