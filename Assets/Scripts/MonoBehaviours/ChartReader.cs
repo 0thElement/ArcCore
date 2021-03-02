@@ -17,6 +17,8 @@ namespace ArcCore.MonoBehaviours
             this.type = type;
             this.line = line;
         }
+
+        public override string ToString() => $"{type} @ line {line}";
     }
 
     public struct AffTiming
@@ -145,7 +147,9 @@ namespace ArcCore.MonoBehaviours
             Instance = this;
             // Temporary
             path = Path.Combine(Application.dataPath, "TempAssets", "2.aff");
-            ReadChart(path);
+            AffError err;
+            if ((err = ReadChart(path)) != null)
+                Debug.LogError(err);
         }
 
         private AffError ReadChart(string path)
@@ -275,10 +279,10 @@ namespace ArcCore.MonoBehaviours
             if (!lineParser.ParseInt(out int timing, ","))
                 return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_time);
 
-            if (lineParser.ParseInt(out int track, ")"))
+            if (!lineParser.ParseInt(out int track, ")"))
                 return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_lane);
 
-            if (track < 0 || track > 3)
+            if (track < 1 || track > 4)
                 return AffErrorType.invalid_lane;
 
             affTapList.Add(new AffTap() { timing = timing, track = track, timingGroup = currentTimingGroup });
@@ -293,10 +297,10 @@ namespace ArcCore.MonoBehaviours
             if (!lineParser.ParseInt(out int endTiming, ","))
                 return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_time);
 
-            if (lineParser.ParseInt(out int track, ")"))
+            if (!lineParser.ParseInt(out int track, ")"))
                 return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_lane);
 
-            if (track < 0 || track > 3)
+            if (track < 1 || track > 4)
                 return AffErrorType.invalid_lane;
 
             affHoldList.Add(new AffHold() { timing = timing, endTiming = endTiming, track = track, timingGroup = currentTimingGroup });

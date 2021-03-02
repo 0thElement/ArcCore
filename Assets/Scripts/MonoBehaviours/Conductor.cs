@@ -140,7 +140,7 @@ namespace ArcCore.MonoBehaviours
             => timingEventGroups[timingGroup][timing];
 
         public TimingEvent? GetNextTimingEventOrNull(int index, int timingGroup)
-            => index + 1 >= timingEventGroups[timingGroup].Count ? null : timingEventGroups[timingGroup][index + 1];
+            => index + 1 >= timingEventGroups[timingGroup].Count ? (TimingEvent?)null : timingEventGroups[timingGroup][index + 1];
 
         public int TimingEventListLength(int timingGroup)
             => timingEventGroups[timingGroup].Count;

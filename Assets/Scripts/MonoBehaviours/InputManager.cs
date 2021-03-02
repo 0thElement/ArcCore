@@ -38,11 +38,16 @@ namespace ArcCore.MonoBehaviours
         public TouchPoint[] touchPoints = new TouchPoint[MaxTouches];
 
         public Camera cameraCast;
+        [HideInInspector]
         public float yLeniency;
 
         void Awake()
         {
             Instance = this;
+        }
+
+        void Start()
+        {
             CreateConnection();
         }
 
