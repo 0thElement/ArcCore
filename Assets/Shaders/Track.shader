@@ -9,6 +9,7 @@
 	SubShader
 	{
 		Tags { "Queue" = "Background+1"  "RenderType"="Opaque" "CanUseSpriteAtlas"="true"  }
+		Cull Off
 		ZWrite Off
 		Blend SrcAlpha OneMinusSrcAlpha
 

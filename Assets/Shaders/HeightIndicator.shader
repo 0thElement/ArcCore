@@ -1,15 +1,13 @@
-﻿Shader "Arcade/Arc"
+﻿Shader "Unlit/HeightIndicator"
 {
-	Properties
+    Properties
 	{
 		_MainTex ("Texture", 2D) = "white" {}
 		_Color ("Color", Color) = (1,1,1,1)
-		_From ("From", Float) = 0
-		_To ("To", Float) = 1 
 	}
 	SubShader
 	{
-		Tags { "Queue" = "Transparent+1"  "RenderType" = "Transparent" "CanUseSpriteAtlas"="true"  }
+		Tags { "Queue" = "Transparent"  "RenderType" = "Transparent" "CanUseSpriteAtlas"="true"  }
 
         Cull Off
         Lighting Off
@@ -40,7 +38,6 @@
 			};
 			 
 			int _Highlight;
-			float _From,_To;
 			float4 _Color;
             float4 _MainTex_ST;
 			sampler2D _MainTex;
@@ -56,7 +53,6 @@
 
 			half4 frag (v2f i) : SV_Target
 			{
-			    if(i.uv.y < _From || i.uv.y > _To) return 0;
 				float4 c = tex2D(_MainTex,i.uv) ; 
 				float4 inColor = i.color;
 				c *= inColor;  

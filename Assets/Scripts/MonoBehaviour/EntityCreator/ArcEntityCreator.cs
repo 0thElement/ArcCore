@@ -11,12 +11,18 @@ public class ArcEntityCreator : MonoBehaviour
 {
     public static ArcEntityCreator Instance { get; private set; }
     [SerializeField] private GameObject arcNotePrefab;
+    [SerializeField] private GameObject headArcNotePrefab;
+    [SerializeField] private GameObject heightIndicatorPrefab;
     [SerializeField] private Material arcMaterial;
+    [SerializeField] private Material heightMaterial;
     [SerializeField] private Color[] arcColors;
     private Entity arcNoteEntityPrefab;
+    private Entity headArcNoteEntityPrefab;
+    private Entity heightIndicatorEntityPrefab;
     private World defaultWorld;
     private EntityManager entityManager;
     private Mesh arcMesh;
+    private Mesh headMesh;
     private int colorShaderId;
     private void Awake()
     {
@@ -30,11 +36,16 @@ public class ArcEntityCreator : MonoBehaviour
         //idk if this is a good way to set up an entity prefab in this case but this will do for now
         entityManager.RemoveComponent<Translation>(arcNoteEntityPrefab);
         entityManager.RemoveComponent<Rotation>(arcNoteEntityPrefab);
+
+        headMesh = CreateBaseHeadArcSegmentMesh();
+        headArcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headArcNotePrefab, settings);
+
+        heightIndicatorEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(heightIndicatorPrefab, settings);
+
         colorShaderId = Shader.PropertyToID("_Color");
     }
     public Mesh CreateBaseArcSegmentMesh()
     {
-        Vector3 fromPos = new float3(0, 0, 0);
         Vector3 toPos = new float3(0, 0, -1);
         float offset = 0.9f;
 
@@ -42,18 +53,42 @@ public class ArcEntityCreator : MonoBehaviour
         Vector2[] uv = new Vector2[6];
         int[] triangles = new int[] { 0, 3, 2, 0, 2, 1, 0, 5, 4, 0, 4, 1 };
 
-        vertices[0] = fromPos + new Vector3(0, offset / 2, 0);
+        vertices[0] = new Vector3(0, offset / 2, 0);
         uv[0] = new Vector2();
-        vertices[1] = toPos + new Vector3(0, offset / 2, 0);
+        vertices[1] = new Vector3(0, offset / 2, -1);
         uv[1] = new Vector2(0, 1);
-        vertices[2] = toPos + new Vector3(offset, -offset / 2, 0);
+        vertices[2] = new Vector3(offset, -offset / 2, -1);
         uv[2] = new Vector2(1, 1);
-        vertices[3] = fromPos + new Vector3(offset, -offset / 2, 0);
+        vertices[3] = new Vector3(offset, -offset / 2, 0);
         uv[3] = new Vector2(1, 0);
-        vertices[4] = toPos + new Vector3(-offset, -offset / 2, 0);
+        vertices[4] = new Vector3(-offset, -offset / 2, -1);
         uv[4] = new Vector2(1, 1);
-        vertices[5] = fromPos + new Vector3(-offset, -offset / 2, 0);
+        vertices[5] = new Vector3(-offset, -offset / 2, 0);
         uv[5] = new Vector2(1, 0);
+
+        return new Mesh(){
+            vertices = vertices,
+            uv = uv,
+            triangles = triangles
+        };
+    }
+
+    public Mesh CreateBaseHeadArcSegmentMesh()
+    {
+        float offset = 0.9f;
+
+        Vector3[] vertices = new Vector3[4];
+        Vector2[] uv = new Vector2[4];
+        int[] triangles = new int[] { 0, 2, 1, 0, 3, 2, 0, 1, 2, 0, 2, 3 };
+
+        vertices[0] = new Vector3(0, offset / 2, 0);
+        uv[0] = new Vector2();
+        vertices[1] = new Vector3(offset, -offset / 2, 0);
+        uv[1] = new Vector2(1, 0);
+        vertices[2] = new Vector3(0, -offset / 2, offset / 2);
+        uv[2] = new Vector2(1, 1);
+        vertices[3] = new Vector3(-offset, -offset / 2, 0);
+        uv[3] = new Vector2(1, 1);
 
         return new Mesh(){
             vertices = vertices,
@@ -68,7 +103,10 @@ public class ArcEntityCreator : MonoBehaviour
         foreach (List<AffArc> listByColor in affArcList)
         {
             Material arcColorMaterialInstance = Instantiate(arcMaterial);
-            arcColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId++]);
+            Material heightIndicatorColorMaterialInstance = Instantiate(heightMaterial);
+            arcColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
+            heightIndicatorColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
+            colorId++;
 
             List<float3> connectedArcsIdEndpoint = new List<float3>();
 
@@ -94,6 +132,8 @@ public class ArcEntityCreator : MonoBehaviour
                     //todo: create Archead and height indicator
                     arcId = connectedArcsIdEndpoint.Count;
                     connectedArcsIdEndpoint.Add(arcEndPoint);
+                    CreateHeightIndicator(arc, heightIndicatorColorMaterialInstance);
+                    CreateHeadSegment(arc, arcColorMaterialInstance);
                 }
 
                 //Generate arc segments and shadow segment(each segment is its own entity)
@@ -151,6 +191,57 @@ public class ArcEntityCreator : MonoBehaviour
         entityManager.SetComponentData<FloorPosition>(arcEntity, new FloorPosition()
         {
             Value = start.z
+        });
+    }
+
+    private void CreateHeightIndicator(AffArc arc, Material material)
+    {
+        Entity heightEntity = entityManager.Instantiate(heightIndicatorEntityPrefab);
+
+        float height = Convert.GetWorldY(arc.startY) - 0.45f;
+
+        float x = Convert.GetWorldX(arc.startX); 
+        float y = height / 2;
+        const float z = 0;
+
+        const float scaleX = 2.34f;
+        float scaleY = height;
+        const float scaleZ = 1;
+
+        Mesh mesh = entityManager.GetSharedComponentData<RenderMesh>(heightEntity).mesh; 
+        entityManager.SetSharedComponentData<RenderMesh>(heightEntity, new RenderMesh()
+        {
+            mesh = mesh,
+            material = material 
+        });
+
+        entityManager.SetComponentData<Translation>(heightEntity, new Translation()
+        {
+            Value = new float3(x, y, z)
+        });
+        entityManager.AddComponentData<NonUniformScale>(heightEntity, new NonUniformScale()
+        {
+            Value = new float3(scaleX, scaleY, scaleZ)
+        });
+    }
+    private void CreateHeadSegment(AffArc arc, Material material)
+    {
+        Entity headEntity = entityManager.Instantiate(headArcNoteEntityPrefab);
+        entityManager.SetSharedComponentData<RenderMesh>(headEntity, new RenderMesh(){
+            mesh = headMesh,
+            material = material
+        });
+        entityManager.SetComponentData<FloorPosition>(headEntity, new FloorPosition()
+        {
+            Value = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
+        });
+
+        float x = Convert.GetWorldX(arc.startX); 
+        float y = Convert.GetWorldY(arc.startY); 
+        const float z = 0;
+        entityManager.SetComponentData<Translation>(headEntity, new Translation()
+        {
+            Value = new float3(x, y, z)
         });
     }
 }
