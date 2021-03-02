@@ -39,7 +39,6 @@
 				float2 uv : TEXCOORD0;
 			};
 			 
-			int _Highlight;
 			float _From,_To;
 			float4 _Color;
             float4 _MainTex_ST;
@@ -59,7 +58,7 @@
 			    if(i.uv.y < _From || i.uv.y > _To) return 0;
 				float4 c = tex2D(_MainTex,i.uv) ; 
 				float4 inColor = i.color;
-				c *= inColor;  
+				c *= inColor;
 				return c;
 			}
 			ENDCG

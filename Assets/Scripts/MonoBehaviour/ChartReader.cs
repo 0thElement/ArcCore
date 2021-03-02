@@ -221,6 +221,7 @@ public class ChartReader : MonoBehaviour
         TapEntityCreator.Instance.CreateEntities(affTapList);
         HoldEntityCreator.Instance.CreateEntities(affHoldList);
         ArcEntityCreator.Instance.CreateEntities(affArcList);
+        TraceEntityCreator.Instance.CreateEntities(affTraceList);
 
         return null;
     }

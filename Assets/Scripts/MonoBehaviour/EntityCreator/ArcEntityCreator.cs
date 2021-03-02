@@ -129,12 +129,12 @@ public class ArcEntityCreator : MonoBehaviour
 
                 if (isHeadArc)
                 {
-                    //todo: create Archead and height indicator
                     arcId = connectedArcsIdEndpoint.Count;
                     connectedArcsIdEndpoint.Add(arcEndPoint);
-                    CreateHeightIndicator(arc, heightIndicatorColorMaterialInstance);
                     CreateHeadSegment(arc, arcColorMaterialInstance);
                 }
+                if (isHeadArc || arc.startY != arc.endY)
+                    CreateHeightIndicator(arc, heightIndicatorColorMaterialInstance);
 
                 //Generate arc segments and shadow segment(each segment is its own entity)
                 int duration = arc.endTiming - arc.timing;
@@ -224,6 +224,7 @@ public class ArcEntityCreator : MonoBehaviour
             Value = new float3(scaleX, scaleY, scaleZ)
         });
     }
+
     private void CreateHeadSegment(AffArc arc, Material material)
     {
         Entity headEntity = entityManager.Instantiate(headArcNoteEntityPrefab);
