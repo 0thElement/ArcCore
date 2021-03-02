@@ -304,7 +304,7 @@ public class ChartReader : MonoBehaviour
         if (!lineParser.ParseBool(out bool isTrace, ")"))
             return AffErrorType.improper_boolean;
 
-        if (isTrace)
+        if (!isTrace)
         {
             while (affArcList.Count < color + 1) affArcList.Add(new List<AffArc>());
             affArcList[color].Add(new AffArc()
