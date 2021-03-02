@@ -110,12 +110,19 @@ namespace ArcCore.MonoBehaviours
     public enum AffErrorType
     {
         none,
-        invalid_line,
+        invalid_note_type,
         improper_int,
         improper_float,
         improper_boolean,
         improper_arctype,
         improper_camtype,
+        invalid_header_option,
+        invalid_audio_offset,
+        invalid_line_format,
+        no_found_item,
+        improper_lane,
+        invalid_lane,
+        improper_time,
     }
 
     public class ChartReader : MonoBehaviour
@@ -147,21 +154,29 @@ namespace ArcCore.MonoBehaviours
 
             //Read all header options
             int i = 0;
+
+            //Local funcs cuz f*ck this
+            AffError getError(AffErrorType t)
+                => new AffError(t, i);
+
             while (i < lines.Length && lines[i][0] != '-')
             {
                 if (lines[i].IndexOf(":") != -1)
                 {
                     StringParser lineParser = new StringParser(lines[i]);
 
-                    string option = lineParser.ReadString(":");
+                    if (!lineParser.ReadString(out string option, ":"))
+                        return getError(AffErrorType.no_found_item);
 
                     switch (option)
                     {
                         case "AudioOffset":
                             if (!lineParser.ParseInt(out int audioOff))
-                                return new AffError(AffErrorType.improper_int, i);
+                                return getError(AffErrorType.invalid_audio_offset);
                             SetAudioOffset(audioOff);
                             break;
+                        default:
+                            return getError(AffErrorType.invalid_header_option);
                     }
                 }
                 i++;
@@ -175,7 +190,10 @@ namespace ArcCore.MonoBehaviours
             {
 
                 StringParser lineParser = new StringParser(lines[i]);
-                string type = lineParser.ReadString("(");
+
+                if (!lineParser.ReadString(out string type, "("))
+                    return getError(AffErrorType.invalid_line_format);
+
                 AffErrorType errorType;
 
                 switch (type)
@@ -183,39 +201,39 @@ namespace ArcCore.MonoBehaviours
                     case "timing":
                         errorType = AddTiming(lineParser, currentTimingGroup);
                         if (errorType != AffErrorType.none)
-                            return new AffError(errorType, i);
+                            return getError(errorType);
                         break;
                     case "":
                         errorType = AddTap(lineParser, currentTimingGroup);
                         if (errorType != AffErrorType.none)
-                            return new AffError(errorType, i);
+                            return getError(errorType);
                         break;
                     case "hold":
                         errorType = AddHold(lineParser, currentTimingGroup);
                         if (errorType != AffErrorType.none)
-                            return new AffError(errorType, i);
+                            return getError(errorType);
                         break;
                     case "arc":
                         errorType = AddArc(lineParser, currentTimingGroup);
                         if (errorType != AffErrorType.none)
-                            return new AffError(errorType, i);
+                            return getError(errorType);
                         break;
                     case "camera":
                         errorType = AddCamera(lineParser);
                         if (errorType != AffErrorType.none)
-                            return new AffError(errorType, i);
+                            return getError(errorType);
                         break;
                     case "scenecontrol":
                         errorType = AddSceneControlEvent(lineParser);
                         if (errorType != AffErrorType.none)
-                            return new AffError(errorType, i);
+                            return getError(errorType);
                         break;
                     case "timinggroup":
                         currentTimingGroup++;
                         affTimingList.Add(new List<AffTiming>());
                         break;
                     default:
-                        return new AffError(AffErrorType.invalid_line, i);
+                        return getError(AffErrorType.invalid_note_type);
                 }
 
                 i++;
@@ -234,16 +252,19 @@ namespace ArcCore.MonoBehaviours
             Conductor.Instance.SetOffset(offset);
         }
 
+        private AffErrorType NoFoundOr(StringParser.Status status, AffErrorType t)
+            => status == StringParser.Status.failure_invalid_terminator ? AffErrorType.no_found_item : t;
+
         private AffErrorType AddTiming(StringParser lineParser, int currentTimingGroup)
         {
             if (!lineParser.ParseInt(out int timing, ","))
-                return AffErrorType.improper_int;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_time);
 
             if (!lineParser.ParseFloat(out float bpm, ","))
-                return AffErrorType.improper_float;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_float);
 
             if (!lineParser.ParseFloat(out float divisor, ")"))
-                return AffErrorType.improper_float;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_float);
 
             affTimingList[currentTimingGroup].Add(new AffTiming() { timing = timing, bpm = bpm, divisor = divisor });
             return AffErrorType.none;
@@ -252,10 +273,13 @@ namespace ArcCore.MonoBehaviours
         private AffErrorType AddTap(StringParser lineParser, int currentTimingGroup)
         {
             if (!lineParser.ParseInt(out int timing, ","))
-                return AffErrorType.improper_int;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_time);
 
             if (lineParser.ParseInt(out int track, ")"))
-                return AffErrorType.improper_int;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_lane);
+
+            if (track < 0 || track > 3)
+                return AffErrorType.invalid_lane;
 
             affTapList.Add(new AffTap() { timing = timing, track = track, timingGroup = currentTimingGroup });
             return AffErrorType.none;
@@ -264,13 +288,16 @@ namespace ArcCore.MonoBehaviours
         private AffErrorType AddHold(StringParser lineParser, int currentTimingGroup)
         {
             if (!lineParser.ParseInt(out int timing, ","))
-                return AffErrorType.improper_int;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_time);
 
             if (!lineParser.ParseInt(out int endTiming, ","))
-                return AffErrorType.improper_int;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_time);
 
-            if (!lineParser.ParseInt(out int track, ")"))
-                return AffErrorType.improper_int;
+            if (lineParser.ParseInt(out int track, ")"))
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_lane);
+
+            if (track < 0 || track > 3)
+                return AffErrorType.invalid_lane;
 
             affHoldList.Add(new AffHold() { timing = timing, endTiming = endTiming, track = track, timingGroup = currentTimingGroup });
             return AffErrorType.none;
@@ -280,33 +307,36 @@ namespace ArcCore.MonoBehaviours
         {
 
             if (!lineParser.ParseInt(out int timing, ","))
-                return AffErrorType.improper_int;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_time);
 
             if (!lineParser.ParseInt(out int endTiming, ","))
-                return AffErrorType.improper_int;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_time);
 
             if (!lineParser.ParseFloat(out float startX, ","))
-                return AffErrorType.improper_float;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_float);
 
             if (!lineParser.ParseFloat(out float endX, ","))
-                return AffErrorType.improper_float;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_float);
 
-            if (!GetEasingType(out ArcEasing easing, lineParser.ReadString(",")))
+            if (!lineParser.ReadString(out string vl, ","))
+                return AffErrorType.no_found_item;
+
+            if (!GetEasingType(out ArcEasing easing, vl))
                 return AffErrorType.improper_arctype;
 
             if (!lineParser.ParseFloat(out float startY, ","))
-                return AffErrorType.improper_float;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_float);
 
             if (!lineParser.ParseFloat(out float endY, ","))
-                return AffErrorType.improper_float;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_float);
 
             if (!lineParser.ParseInt(out int color, ","))
-                return AffErrorType.improper_int;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_int);
 
             lineParser.SkipPast(",");
 
             if (!lineParser.ParseBool(out bool isTrace, ")"))
-                return AffErrorType.improper_boolean;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_boolean);
 
             if (isTrace)
             {
@@ -343,7 +373,7 @@ namespace ArcCore.MonoBehaviours
                 {
                     lineParser.Skip(8);
                     if (!lineParser.ParseInt(out int t, ")"))
-                        return AffErrorType.improper_int;
+                        return AffErrorType.no_found_item;
 
                     float x = Convert.GetXAt(t, startX, endX, easing);
                     float y = Convert.GetYAt(t, startY, endY, easing);
@@ -400,33 +430,36 @@ namespace ArcCore.MonoBehaviours
         private AffErrorType AddCamera(StringParser lineParser)
         {
             if (!lineParser.ParseInt(out int timing, ","))
-                return AffErrorType.improper_int;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_time);
 
             if (!lineParser.ParseFloat(out float xpos, ","))
-                return AffErrorType.improper_float;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_float);
 
             if (!lineParser.ParseFloat(out float ypos, ","))
-                return AffErrorType.improper_float;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_float);
 
             if (!lineParser.ParseFloat(out float zpos, ","))
-                return AffErrorType.improper_float;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_float);
 
             //Arcade's coordinate system seems to be different to arcaea's
 
             if (!lineParser.ParseFloat(out float yrot, ","))
-                return AffErrorType.improper_float;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_float);
 
             if (!lineParser.ParseFloat(out float xrot, ","))
-                return AffErrorType.improper_float;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_float);
 
             if (!lineParser.ParseFloat(out float zrot, ","))
-                return AffErrorType.improper_float;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_float);
 
-            if (!GetCameraEasing(out CameraEasing easing, lineParser.ReadString(",")))
+            if (!lineParser.ReadString(out string ce, ","))
+                return AffErrorType.no_found_item;
+
+            if (!GetCameraEasing(out CameraEasing easing, ce))
                 return AffErrorType.improper_camtype;
 
             if (!lineParser.ParseInt(out int duration, ","))
-                return AffErrorType.improper_int;
+                return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_int);
 
             affCameraList.Add(new AffCamera()
             {

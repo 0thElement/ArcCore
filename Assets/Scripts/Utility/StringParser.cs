@@ -5,8 +5,17 @@
     /// </summary>
     public class StringParser
     {
+
+        public enum Status
+        {
+            success,
+            failure_invalid_terminator,
+            failure_invalid_literal
+        }
+
         private int pos;
         private readonly string str;
+        public Status LastStatus { get; private set; }
         public StringParser(string str)
         {
             this.str = str;
@@ -17,31 +26,86 @@
             => pos += TerminatorOrDefaultEndIndex(terminator) - pos + 1;
         public bool ParseFloat(out float value, string terminator = null)
         {
+            value = default;
             int end = terminator is null ? str.Length : str.IndexOf(terminator, pos);
-            bool success = float.TryParse(str.Substring(pos, end - pos), out value);
+
+            if (end == -1)
+            {
+                LastStatus = Status.failure_invalid_terminator;
+                return false;
+            }
+
+            if (!float.TryParse(str.Substring(pos, end - pos), out value))
+            {
+                LastStatus = Status.failure_invalid_literal;
+                return false;
+            }
+
             pos += end - pos + 1;
-            return success;
+
+            LastStatus = Status.success;
+            return true;
         }
         public bool ParseInt(out int value, string terminator = null)
         {
-            int end = TerminatorOrDefaultEndIndex(terminator);
-            bool success = int.TryParse(str.Substring(pos, end - pos), out value);
+            value = default;
+            int end = terminator is null ? str.Length : str.IndexOf(terminator, pos);
+
+            if (end == -1)
+            {
+                LastStatus = Status.failure_invalid_terminator;
+                return false;
+            }
+
+            if (!int.TryParse(str.Substring(pos, end - pos), out value))
+            {
+                LastStatus = Status.failure_invalid_literal;
+                return false;
+            }
+
             pos += end - pos + 1;
-            return success;
+
+            LastStatus = Status.success;
+            return true;
         }
         public bool ParseBool(out bool value, string terminator = null)
         {
-            int end = TerminatorOrDefaultEndIndex(terminator);
-            bool success = bool.TryParse(str.Substring(pos, end - pos), out value);
+            value = default;
+            int end = terminator is null ? str.Length : str.IndexOf(terminator, pos);
+
+            if (end == -1)
+            {
+                LastStatus = Status.failure_invalid_terminator;
+                return false;
+            }
+
+            if (!bool.TryParse(str.Substring(pos, end - pos), out value))
+            {
+                LastStatus = Status.failure_invalid_literal;
+                return false;
+            }
+
             pos += end - pos + 1;
-            return success;
+
+            LastStatus = Status.success;
+            return true;
         }
-        public string ReadString(string terminator = null)
+        public bool ReadString(out string value, string terminator = null)
         {
+            value = null;
             int end = TerminatorOrDefaultEndIndex(terminator);
-            string value = str.Substring(pos, end - pos);
+
+            if (end == -1)
+            {
+                LastStatus = Status.failure_invalid_terminator;
+                return false;
+            }
+
+            value = str.Substring(pos, end - pos);
             pos += end - pos + 1;
-            return value;
+
+            LastStatus = Status.success;
+            return true;
         }
 
         public int TerminatorOrDefaultEndIndex(string terminator) 
