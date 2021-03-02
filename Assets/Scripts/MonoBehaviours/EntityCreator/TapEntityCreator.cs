@@ -5,8 +5,9 @@ using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Utility;
 using ArcCore.Data;
+using ArcCore.MonoBehaviours;
 
-namespace ArcCore.MonoBehaviors.EntityCreation
+namespace ArcCore.MonoBehaviours.EntityCreation
 {
     public class TapEntityCreator : MonoBehaviour
     {
@@ -41,6 +42,18 @@ namespace ArcCore.MonoBehaviors.EntityCreation
                 {
                     value = Conductor.Instance.GetFloorPositionFromTiming(tap.timing, tap.timingGroup)
                 });
+
+                Entity judgeEntity = entityManager.CreateEntity(typeof(JudgeTime), typeof(JudgeLane));
+                entityManager.SetComponentData<JudgeTime>(judgeEntity, new JudgeTime()
+                {
+                    time = tap.timing
+                });;
+                entityManager.SetComponentData<JudgeLane>(judgeEntity, new JudgeLane()
+                {
+                    lane = tap.track
+                });
+
+                ScoreManager.Instance.maxCombo++;
             }
         }
     }

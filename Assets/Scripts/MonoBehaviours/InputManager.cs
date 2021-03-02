@@ -3,22 +3,31 @@ using System.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace ArcCore.MonoBehaviors
+namespace ArcCore.MonoBehaviours
 {
-    public class TouchPoint
+    public enum TouchStatus
+    {
+        NONE,
+        PRESSED,
+        HELD
+    }
+
+    public struct TouchPoint
     {
         public float2 inputPlanePoint;
         public int lane;
         public float time;
-        public bool tapped;
+        public TouchStatus status;
 
-        public TouchPoint(float2 inputPlanePoint, int lane, float time, bool tapped)
+        public TouchPoint(float2 inputPlanePoint, int lane, float time, TouchStatus status)
         {
             this.inputPlanePoint = inputPlanePoint;
             this.lane  = lane;
             this.time = time;
-            this.tapped = tapped;
+            this.status = status;
         }
+
+        public bool IsValid => status != TouchStatus.NONE;
     }
     public class InputManager : MonoBehaviour
     {
@@ -27,6 +36,7 @@ namespace ArcCore.MonoBehaviors
         public const int MaxTouches = 10;
 
         public TouchPoint[] touchPoints = new TouchPoint[MaxTouches];
+
         public Camera cameraCast;
         public float yLeniency;
 
@@ -58,16 +68,16 @@ namespace ArcCore.MonoBehaviors
                     (float2 ipt, int lane) = PerformRayCast(t);
                     //UNSURE IF FINGER ID IS ZERO-INDEXED, TEST LATER
                     //UNSURE IF DELTA-TIME AND TIME ARE OF MISMATCHED TIME UNITS, FRICK
-                    touchPoints[t.fingerId - 1] = new TouchPoint(ipt, lane, time - t.deltaTime, true);
+                    touchPoints[t.fingerId - 1] = new TouchPoint(ipt, lane, time - t.deltaTime, TouchStatus.PRESSED);
                 } 
-                else if (touchPoints[t.fingerId - 1].tapped && t.phase == TouchPhase.Stationary)
+                else if (t.phase == TouchPhase.Stationary)
                 {
-                    touchPoints[t.fingerId - 1].tapped = false;
+                    touchPoints[t.fingerId - 1].status = TouchStatus.HELD;
                     touchPoints[t.fingerId - 1].time = time - t.deltaTime;
                 } 
                 else if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled)
                 {
-                    touchPoints[t.fingerId - 1] = null;
+                    touchPoints[t.fingerId - 1].status = TouchStatus.NONE;
                 }
             }
         }

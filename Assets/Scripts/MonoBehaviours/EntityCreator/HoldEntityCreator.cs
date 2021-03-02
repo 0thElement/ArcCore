@@ -6,7 +6,7 @@ using UnityEngine;
 using ArcCore.Utility;
 using ArcCore.Data;
 
-namespace ArcCore.MonoBehaviors.EntityCreation
+namespace ArcCore.MonoBehaviours.EntityCreation
 {
     public class HoldEntityCreator : MonoBehaviour
     {
@@ -52,6 +52,26 @@ namespace ArcCore.MonoBehaviors.EntityCreation
                 {
                     value = startFloorPosition
                 });
+
+                float time = hold.timing;
+                TimingEvent timingEvent = Conductor.Instance.GetTimingEventFromTiming(hold.timing, hold.timingGroup);
+
+                while (time < hold.endTiming)
+                {
+                    time += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
+
+                    Entity judgeEntity = entityManager.CreateEntity(typeof(JudgeTime), typeof(JudgeLane), typeof(Tags.JudgeHold));
+                    entityManager.SetComponentData<JudgeTime>(judgeEntity, new JudgeTime()
+                    {
+                        time = (int)time
+                    });
+                    entityManager.SetComponentData<JudgeLane>(judgeEntity, new JudgeLane()
+                    {
+                        lane = hold.track
+                    });
+
+                    ScoreManager.Instance.maxCombo++;
+                }
             }
         }
     }

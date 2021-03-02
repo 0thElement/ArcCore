@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Mathematics;
 using ArcCore.Utility;
-using ArcCore.MonoBehaviors.EntityCreation;
+using ArcCore.MonoBehaviours.EntityCreation;
 
-namespace ArcCore.MonoBehaviors
+namespace ArcCore.MonoBehaviours
 {
     public class AffError
     {

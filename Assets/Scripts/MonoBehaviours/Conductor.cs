@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace ArcCore.MonoBehaviors
+namespace ArcCore.MonoBehaviours
 {
     public struct TimingEvent
     {
@@ -117,5 +117,33 @@ namespace ArcCore.MonoBehaviors
 
             return group[i].floorPosition + (timing - group[i].timing) * group[i].bpm;
         }
+
+        public int GetTimingEventIndexFromTiming(int timing, int timingGroup)
+        {
+            int maxIdx = timingEventGroups[timingGroup].Count;
+
+            for (int i = 1; i < maxIdx; i++)
+            {
+                if (timingEventGroups[timingGroup][i].timing > timing)
+                {
+                    return i - 1;
+                }
+            }
+
+            return maxIdx - 1;
+        }
+
+        public TimingEvent GetTimingEventFromTiming(int timing, int timingGroup)
+            => timingEventGroups[timingGroup][GetTimingEventIndexFromTiming(timing, timingGroup)];
+
+        public TimingEvent GetTimingEvent(int timing, int timingGroup)
+            => timingEventGroups[timingGroup][timing];
+
+        public TimingEvent? GetNextTimingEventOrNull(int index, int timingGroup)
+            => index + 1 >= timingEventGroups[timingGroup].Count ? null : timingEventGroups[timingGroup][index + 1];
+
+        public int TimingEventListLength(int timingGroup)
+            => timingEventGroups[timingGroup].Count;
+
     }
 }
