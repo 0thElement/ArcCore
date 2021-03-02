@@ -69,7 +69,6 @@ public class ArcEntityCreator : MonoBehaviour
         {
             Material arcColorMaterialInstance = Instantiate(arcMaterial);
             arcColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId++]);
-            Debug.Log(arcColorMaterialInstance.renderQueue);
 
             List<float3> connectedArcsIdEndpoint = new List<float3>();
 

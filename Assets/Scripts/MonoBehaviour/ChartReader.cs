@@ -136,7 +136,6 @@ public class ChartReader : MonoBehaviour
         // Temporary
         path = Path.Combine(Application.dataPath, "TempAssets", "2.aff");
         AffError status = ReadChart(path);
-        Debug.Log(status.line + ": error of type " + status.type);
     }
 
     private AffError ReadChart(string path)
@@ -216,12 +215,6 @@ public class ChartReader : MonoBehaviour
             i++;
         }
 
-        Debug.Log("Timing notes: " + affTimingList[0].Count);
-        Debug.Log("Tap notes:"+ affTapList.Count);
-        Debug.Log("Hold notes:"+ affHoldList.Count);
-        Debug.Log("Blue arc notes:"+ affArcList[0].Count);
-        Debug.Log("Red arc notes:"+ affArcList[1].Count);
-        Debug.Log("Arctap notes:"+ affArcTapList.Count);
         Conductor.Instance.SetupTiming(affTimingList);
         TapEntityCreator.Instance.CreateEntities(affTapList);
         HoldEntityCreator.Instance.CreateEntities(affHoldList);
