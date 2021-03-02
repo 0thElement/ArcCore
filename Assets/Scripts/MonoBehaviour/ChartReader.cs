@@ -136,6 +136,8 @@ public class ChartReader : MonoBehaviour
         // Temporary
         path = Path.Combine(Application.dataPath, "TempAssets", "2.aff");
         AffError status = ReadChart(path);
+        if (status != null)
+            Debug.Log("Error at line " + status.line + " of type: " + status.type);
     }
 
     private AffError ReadChart(string path)
@@ -209,7 +211,7 @@ public class ChartReader : MonoBehaviour
                     affTimingList.Add(new List<AffTiming>());
                     break;
                 default:
-                    return new AffError(AffErrorType.invalid_line, i); 
+                    return new AffError(AffErrorType.invalid_line, i+1); 
             }
             
             i++;
