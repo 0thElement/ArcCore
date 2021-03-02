@@ -6,7 +6,7 @@
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags { "RenderType"="Transparent" "Queue" = "Background+2"}
 		Blend SrcAlpha OneMinusSrcAlpha
 		ZWrite Off
         Cull Off

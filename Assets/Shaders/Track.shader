@@ -8,7 +8,7 @@
 	}
 	SubShader
 	{
-		Tags { "Queue" = "Transparent"  "RenderType"="Transparent" "CanUseSpriteAtlas"="true"  }
+		Tags { "Queue" = "Background+1"  "RenderType"="Opaque" "CanUseSpriteAtlas"="true"  }
 		ZWrite Off
 		Blend SrcAlpha OneMinusSrcAlpha
 
