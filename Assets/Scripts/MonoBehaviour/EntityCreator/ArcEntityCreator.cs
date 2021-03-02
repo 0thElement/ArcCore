@@ -113,6 +113,8 @@ public class ArcEntityCreator : MonoBehaviour
             foreach (AffArc arc in listByColor)
             {
                 //Precalc and assign a connected arc id to avoid having to figure out connection during gameplay
+                //TODO: Fix this so that arcs from different timinggroup can't connect
+                //Also sort the list before hand
                 float3 arcStartPoint = new float3((float)arc.timing, arc.startX, arc.startY);
                 float3 arcEndPoint = new float3((float)arc.endTiming, arc.endX, arc.endY);
                 int arcId = -1;

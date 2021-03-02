@@ -67,6 +67,7 @@ public struct AffArcTap
 {
     public int timing;
     public float2 position;
+    public int timingGroup;
 }
 
 public struct AffCamera
@@ -222,6 +223,7 @@ public class ChartReader : MonoBehaviour
         HoldEntityCreator.Instance.CreateEntities(affHoldList);
         ArcEntityCreator.Instance.CreateEntities(affArcList);
         TraceEntityCreator.Instance.CreateEntities(affTraceList);
+        ArcTapEntityCreator.Instance.CreateEntities(affArcTapList);
 
         return null;
     }
@@ -341,14 +343,17 @@ public class ChartReader : MonoBehaviour
                 lineParser.Skip(8);
                 if (!lineParser.ParseInt(out int t, ")"))
                     return AffErrorType.improper_int;
+                
+                float p = (t - timing) / (endTiming - timing);
 
-                float x = Convert.GetXAt(t, startX, endX, easing);
-                float y = Convert.GetYAt(t, startY, endY, easing);
+                float x = Convert.GetXAt(p, startX, endX, easing);
+                float y = Convert.GetYAt(p, startY, endY, easing);
 
                 affArcTapList.Add(new AffArcTap()
                 {
                     timing = t,
-                    position = new float2(x, y)
+                    position = new float2(x, y),
+                    timingGroup = currentTimingGroup
                 });
 
             } while (lineParser.Current == ",");
