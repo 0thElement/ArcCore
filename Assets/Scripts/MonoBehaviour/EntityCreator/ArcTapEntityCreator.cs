@@ -35,7 +35,7 @@ public class ArcTapEntityCreator : MonoBehaviour
             Entity tapEntity = entityManager.Instantiate(arcTapNoteEntityPrefab);
 
             float x = Convert.GetWorldX(arctap.position.x);
-            float y = Convert.GetWorldY(arctap.position.y) - 0.5f;
+            float y = Convert.GetWorldY(arctap.position.y);
             const float z = 0;
             entityManager.SetComponentData<Translation>(tapEntity, new Translation(){ 
                 Value = new float3(x, y, z)
@@ -69,7 +69,7 @@ public class ArcTapEntityCreator : MonoBehaviour
         Entity lineEntity = entityManager.Instantiate(connectionLineEntityPrefab);
 
         float x = Convert.GetWorldX(arctap.position.x);
-        float y = Convert.GetWorldX(arctap.position.y);
+        float y = Convert.GetWorldX(arctap.position.y) - 0.5f;
         const float z = 0;
 
         float dx = Convert.GetWorldX(Convert.TrackToX(tap.track) - arctap.position.x);

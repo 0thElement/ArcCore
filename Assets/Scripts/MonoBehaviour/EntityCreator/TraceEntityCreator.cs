@@ -12,12 +12,12 @@ public class TraceEntityCreator : MonoBehaviour
     [SerializeField] private GameObject traceNotePrefab;
     [SerializeField] private GameObject headTraceNotePrefab;
     [SerializeField] private Material traceMaterial;
+    [SerializeField] private Mesh traceMesh;
+    [SerializeField] private Mesh headMesh;
     private Entity traceNoteEntityPrefab;
     private Entity headTraceNoteEntityPrefab;
     private World defaultWorld;
     private EntityManager entityManager;
-    private Mesh traceMesh;
-    private Mesh headMesh;
     private int colorShaderId;
     private void Awake()
     {
@@ -26,69 +26,14 @@ public class TraceEntityCreator : MonoBehaviour
         entityManager = defaultWorld.EntityManager;
         GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
         traceNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(traceNotePrefab, settings);
-        traceMesh = CreateBaseTraceSegmentMesh();
         //Remove these component to allow direct access to localtoworld matrices
         //idk if this is a good way to set up an entity prefab in this case but this will do for now
         entityManager.RemoveComponent<Translation>(traceNoteEntityPrefab);
         entityManager.RemoveComponent<Rotation>(traceNoteEntityPrefab);
 
-        headMesh = CreateBaseHeadTraceSegmentMesh();
         headTraceNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headTraceNotePrefab, settings);
 
         colorShaderId = Shader.PropertyToID("_Color");
-    }
-    //Keeping this separate in the event i want trace's shape to be different
-    public Mesh CreateBaseTraceSegmentMesh()
-    {
-        Vector3 toPos = new float3(0, 0, -1);
-        float offset = 0.15f;
-
-        Vector3[] vertices = new Vector3[6];
-        Vector2[] uv = new Vector2[6];
-        int[] triangles = new int[] { 0, 3, 2, 0, 2, 1, 0, 5, 4, 0, 4, 1 };
-
-        vertices[0] = new Vector3(0, offset / 2, 0);
-        uv[0] = new Vector2();
-        vertices[1] = new Vector3(0, offset / 2, -1);
-        uv[1] = new Vector2(0, 1);
-        vertices[2] = new Vector3(offset, -offset / 2, -1);
-        uv[2] = new Vector2(1, 1);
-        vertices[3] = new Vector3(offset, -offset / 2, 0);
-        uv[3] = new Vector2(1, 0);
-        vertices[4] = new Vector3(-offset, -offset / 2, -1);
-        uv[4] = new Vector2(1, 1);
-        vertices[5] = new Vector3(-offset, -offset / 2, 0);
-        uv[5] = new Vector2(1, 0);
-
-        return new Mesh(){
-            vertices = vertices,
-            uv = uv,
-            triangles = triangles
-        };
-    }
-
-    public Mesh CreateBaseHeadTraceSegmentMesh()
-    {
-        float offset = 0.15f;
-
-        Vector3[] vertices = new Vector3[4];
-        Vector2[] uv = new Vector2[4];
-        int[] triangles = new int[] { 0, 2, 1, 0, 3, 2, 0, 1, 2, 0, 2, 3 };
-
-        vertices[0] = new Vector3(0, offset / 2, 0);
-        uv[0] = new Vector2();
-        vertices[1] = new Vector3(offset, -offset / 2, 0);
-        uv[1] = new Vector2(1, 0);
-        vertices[2] = new Vector3(0, -offset / 2, offset / 2);
-        uv[2] = new Vector2(1, 1);
-        vertices[3] = new Vector3(-offset, -offset / 2, 0);
-        uv[3] = new Vector2(1, 1);
-
-        return new Mesh(){
-            vertices = vertices,
-            uv = uv,
-            triangles = triangles
-        };
     }
     //Similar to arc creation
     public void CreateEntities(List<AffTrace> affTraceList)

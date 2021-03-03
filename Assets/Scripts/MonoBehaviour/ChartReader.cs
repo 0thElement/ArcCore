@@ -134,6 +134,9 @@ public class ChartReader : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+    }
+    private void Start()
+    {
         // Temporary
         path = Path.Combine(Application.dataPath, "TempAssets", "2.aff");
         AffError status = ReadChart(path);
