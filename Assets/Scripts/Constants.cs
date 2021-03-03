@@ -14,5 +14,10 @@ namespace ArcCore
         public const float InputMaxX =  8.5f;
         public const float ArcYZero  =  1f;
 
+        public const int MaxPureWindow = 25;
+        public const int PureWindow    = 50;
+        public const int FarWindow     = 100;
+        public const int LostWindow    = 120;
+
     }
 }

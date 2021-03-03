@@ -162,12 +162,12 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                         entityManager.SetComponentData<JudgeStartEndPosition>(judgeEntity, new JudgeStartEndPosition()
                         {
                             startPosition = new float2(
-                                Convert.GetXAt(Convert.RatioBetween(arc.timing, arc.endTiming, time - 100), arc.startX, arc.endX, arc.easing),
-                                Convert.GetYAt(Convert.RatioBetween(arc.timing, arc.endTiming, time - 100), arc.startY, arc.endY, arc.easing)
+                                Convert.GetXAt(Convert.RatioBetween(arc.timing, arc.endTiming, time - Constants.FarWindow), arc.startX, arc.endX, arc.easing),
+                                Convert.GetYAt(Convert.RatioBetween(arc.timing, arc.endTiming, time - Constants.FarWindow), arc.startY, arc.endY, arc.easing)
                             ),
                             endPosition = new float2(
-                                Convert.GetXAt(Convert.RatioBetween(arc.timing, arc.endTiming, time + 100), arc.startX, arc.endX, arc.easing),
-                                Convert.GetYAt(Convert.RatioBetween(arc.timing, arc.endTiming, time + 100), arc.startY, arc.endY, arc.easing)
+                                Convert.GetXAt(Convert.RatioBetween(arc.timing, arc.endTiming, time + Constants.FarWindow), arc.startX, arc.endX, arc.easing),
+                                Convert.GetYAt(Convert.RatioBetween(arc.timing, arc.endTiming, time + Constants.FarWindow), arc.startY, arc.endY, arc.easing)
                             )
                         });
                         entityManager.SetComponentData<JudgeArc>(judgeEntity, new JudgeArc()
