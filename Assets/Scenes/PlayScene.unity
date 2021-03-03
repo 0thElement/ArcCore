@@ -393,6 +393,10 @@ MonoBehaviour:
   headTraceNotePrefab: {fileID: 4008384927795449545, guid: 9b24d1c1972c41248a79cdcf8945cede,
     type: 3}
   traceMaterial: {fileID: 2100000, guid: 34c3ab2db1945b848a3df9cf1ea5c654, type: 2}
+  traceMesh: {fileID: -1560609305294098807, guid: 56628ddc1173d5e4f95bed1bd71f73fd,
+    type: 3}
+  headMesh: {fileID: 2682099171716125172, guid: 56628ddc1173d5e4f95bed1bd71f73fd,
+    type: 3}
 --- !u!1 &478726823
 GameObject:
   m_ObjectHideFlags: 0
@@ -779,6 +783,9 @@ MonoBehaviour:
   - {r: 0.047058824, g: 0.83137256, b: 0.83137256, a: 0.8509804}
   - {r: 1, g: 0.5882353, b: 0.8627451, a: 0.8509804}
   - {r: 0, g: 1, b: 0.4745098, a: 0.8509804}
+  arcMesh: {fileID: 5628013574231025859, guid: 56628ddc1173d5e4f95bed1bd71f73fd, type: 3}
+  headMesh: {fileID: -4335921442542054854, guid: 56628ddc1173d5e4f95bed1bd71f73fd,
+    type: 3}
 --- !u!1 &935366972
 GameObject:
   m_ObjectHideFlags: 0
@@ -1113,6 +1120,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   arcTapNotePrefab: {fileID: 6915217587042562500, guid: 1916ae4801f8520438e76fb06614e538,
     type: 3}
+  connectionLinePrefab: {fileID: 0}
 --- !u!1 &1879273769
 GameObject:
   m_ObjectHideFlags: 0
