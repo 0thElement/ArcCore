@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 
 public struct TimingEvent
 {
@@ -18,7 +19,7 @@ public class Conductor : MonoBehaviour
     private AudioSource audioSource;
 
     [SerializeField]
-    private float offset;
+    public float offset;
 
     [HideInInspector]
     private float dspStartPlayingTime;
@@ -28,11 +29,13 @@ public class Conductor : MonoBehaviour
     public List<float> groupFloorPosition;
     private List<List<TimingEvent>> timingEventGroups;
     private List<int> groupIndexCache;
+    public int songLength;
     
     public void Awake()
     {
         Instance = this;
         audioSource = GetComponent<AudioSource>();      
+        songLength = (int)Mathf.Round(audioSource.clip.length*1000);
         PlayMusic();
     }
     
@@ -52,13 +55,9 @@ public class Conductor : MonoBehaviour
     }
     public void SetupTiming(List<List<AffTiming>> timingGroups) {
         //precalculate floorposition value for timing events
-        //Unrolling the first loop. first one will also take on the job of creating beat divisor
         timingEventGroups = new List<List<TimingEvent>>(timingGroups.Count); 
 
-        SetupTimingGroup(timingGroups,0);
-        //todo: beat divisor
-
-        for (int i=1; i<timingGroups.Count; i++)
+        for (int i=0; i<timingGroups.Count; i++)
         {
             SetupTimingGroup(timingGroups, i);
         }

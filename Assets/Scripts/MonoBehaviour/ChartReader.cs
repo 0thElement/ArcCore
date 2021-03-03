@@ -222,6 +222,7 @@ public class ChartReader : MonoBehaviour
         }
 
         Conductor.Instance.SetupTiming(affTimingList);
+        BeatlineEntityCreator.Instance.CreateEntities(affTimingList[0]);
         TapEntityCreator.Instance.CreateEntities(affTapList);
         HoldEntityCreator.Instance.CreateEntities(affHoldList);
         ArcEntityCreator.Instance.CreateEntities(affArcList);
