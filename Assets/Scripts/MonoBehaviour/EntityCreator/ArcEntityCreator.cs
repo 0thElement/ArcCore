@@ -109,15 +109,14 @@ public class ArcEntityCreator : MonoBehaviour
             heightIndicatorColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
             colorId++;
 
-            List<float3> connectedArcsIdEndpoint = new List<float3>();
+            List<float4> connectedArcsIdEndpoint = new List<float4>();
 
             foreach (AffArc arc in listByColor)
             {
                 //Precalc and assign a connected arc id to avoid having to figure out connection during gameplay
-                //TODO: Fix this so that arcs from different timinggroup can't connect
-                //Also sort the list before hand
-                float3 arcStartPoint = new float3((float)arc.timing, arc.startX, arc.startY);
-                float3 arcEndPoint = new float3((float)arc.endTiming, arc.endX, arc.endY);
+                //this is really dumb but i don't want to split this into another class
+                float4 arcStartPoint = new float4((float)arc.timingGroup, (float)arc.timing, arc.startX, arc.startY);
+                float4 arcEndPoint = new float4((float)arc.timingGroup, (float)arc.endTiming, arc.endX, arc.endY);
                 int arcId = -1;
                 bool isHeadArc = true;
                 for (int id = 0; id < connectedArcsIdEndpoint.Count; id++)

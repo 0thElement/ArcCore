@@ -90,16 +90,16 @@ public class TraceEntityCreator : MonoBehaviour
             triangles = triangles
         };
     }
-    //Similar to trace creation
+    //Similar to arc creation
     public void CreateEntities(List<AffTrace> affTraceList)
     {
         affTraceList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
-        List<float3> connectedTracesIdEndpoint = new List<float3>();
+        List<float4> connectedTracesIdEndpoint = new List<float4>();
 
         foreach (AffTrace trace in affTraceList)
         {
-            float3 traceStartPoint = new float3((float)trace.timing, trace.startX, trace.startY);
-            float3 traceEndPoint = new float3((float)trace.endTiming, trace.endX, trace.endY);
+            float4 traceStartPoint = new float4((float)trace.timingGroup, (float)trace.timing, trace.startX, trace.startY);
+            float4 traceEndPoint = new float4((float)trace.timingGroup, (float)trace.endTiming, trace.endX, trace.endY);
             int traceId = -1;
             bool isHeadTrace = true;
             for (int id = 0; id < connectedTracesIdEndpoint.Count; id++)
