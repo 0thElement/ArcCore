@@ -1,10 +1,14 @@
-using System;
-using Unity.Collections;
 using Unity.Entities;
-using Unity.Mathematics;
 
-[Serializable]
+/// <summary>
+/// The component used to store the "floor position" of notes.
+/// It holds a single double.
+/// </summary>
+[GenerateAuthoringComponent]
 public struct FloorPosition : IComponentData
 {
-    public float value;
+    /// <summary>
+    /// The value of the floor position.
+    /// </summary>
+    public double Value { get; set; }
 }
