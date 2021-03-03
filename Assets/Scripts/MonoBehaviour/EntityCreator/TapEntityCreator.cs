@@ -1,9 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
-using Unity.Rendering;
 using UnityEngine;
 using Arcaoid.Utility;
 
@@ -25,6 +23,8 @@ public class TapEntityCreator : MonoBehaviour
 
     public void CreateEntities(List<AffTap> affTapList)
     {
+        affTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+
         foreach (AffTap tap in affTapList)
         {
             Entity tapEntity = entityManager.Instantiate(tapNoteEntityPrefab);

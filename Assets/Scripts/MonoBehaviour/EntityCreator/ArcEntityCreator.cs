@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
@@ -102,6 +101,8 @@ public class ArcEntityCreator : MonoBehaviour
         int colorId=0;
         foreach (List<AffArc> listByColor in affArcList)
         {
+            listByColor.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+
             Material arcColorMaterialInstance = Instantiate(arcMaterial);
             Material heightIndicatorColorMaterialInstance = Instantiate(heightMaterial);
             arcColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);

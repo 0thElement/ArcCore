@@ -1,9 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
-using Unity.Rendering;
 using UnityEngine;
 using Arcaoid.Utility;
 
@@ -25,6 +23,8 @@ public class HoldEntityCreator : MonoBehaviour
 
     public void CreateEntities(List<AffHold> affHoldList)
     {
+        affHoldList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+
         foreach(AffHold hold in affHoldList)
         {
             Entity holdEntity = entityManager.Instantiate(holdNoteEntityPrefab);

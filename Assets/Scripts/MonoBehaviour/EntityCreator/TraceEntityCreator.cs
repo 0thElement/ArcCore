@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
@@ -94,6 +93,7 @@ public class TraceEntityCreator : MonoBehaviour
     //Similar to trace creation
     public void CreateEntities(List<AffTrace> affTraceList)
     {
+        affTraceList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
         List<float3> connectedTracesIdEndpoint = new List<float3>();
 
         foreach (AffTrace trace in affTraceList)
