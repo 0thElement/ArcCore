@@ -347,7 +347,7 @@ public class ChartReader : MonoBehaviour
                 if (!lineParser.ParseInt(out int t, ")"))
                     return AffErrorType.improper_int;
                 
-                float p = (t - timing) / (endTiming - timing);
+                float p = (float)(t - timing) / (endTiming - timing);
 
                 float x = Convert.GetXAt(p, startX, endX, easing);
                 float y = Convert.GetYAt(p, startY, endY, easing);
