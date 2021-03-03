@@ -21,7 +21,7 @@ public class ArcTapEntityCreator : MonoBehaviour
         entityManager = defaultWorld.EntityManager;
         GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
         arcTapNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcTapNotePrefab, settings);
-        // connectionLineEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(connectionLinePrefab, settings);
+        connectionLineEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(connectionLinePrefab, settings);
     }
 
     public void CreateEntities(List<AffArcTap> affArcTapList, List<AffTap> affTapList)
@@ -66,28 +66,28 @@ public class ArcTapEntityCreator : MonoBehaviour
 
     public void CreateConnections(AffArcTap arctap, AffTap tap)
     {
-        // Entity lineEntity = entityManager.Instantiate(connectionLineEntityPrefab);
+        Entity lineEntity = entityManager.Instantiate(connectionLineEntityPrefab);
 
-        // float x = Convert.GetWorldX(arctap.position.x);
-        // float y = Convert.GetWorldX(arctap.position.y) - 0.5f;
-        // const float z = 0;
+        float x = Convert.GetWorldX(arctap.position.x);
+        float y = Convert.GetWorldY(arctap.position.y) - 0.5f;
+        const float z = 0;
 
-        // float dx = Convert.GetWorldX(Convert.TrackToX(tap.track) - arctap.position.x);
-        // float dy = Convert.GetWorldY(arctap.position.y);
+        float dx = Convert.TrackToX(tap.track) - x;
+        float dy = -y;
 
-        // float3 direction = new float3(dx, dy, 0);
-        // float length = math.sqrt(dx*dx + dy*dy);
+        float3 direction = new float3(dx, dy, 0);
+        float length = math.sqrt(dx*dx + dy*dy);
 
-        // entityManager.SetComponentData<Translation>(lineEntity, new Translation(){
-        //     Value = new float3(x, y, z)
-        // });
+        entityManager.SetComponentData<Translation>(lineEntity, new Translation(){
+            Value = new float3(x, y, z)
+        });
 
-        // entityManager.SetComponentData<NonUniformScale>(lineEntity, new NonUniformScale(){
-        //     Value = new float3(0.1f, length, 1f)
-        // });
+        entityManager.AddComponentData<NonUniformScale>(lineEntity, new NonUniformScale(){
+            Value = new float3(1f, 1f, length)
+        });
         
-        // entityManager.SetComponentData<Rotation>(lineEntity, new Rotation(){
-        //     Value = quaternion.LookRotationSafe(direction, Vector3.up)
-        // });
+        entityManager.SetComponentData<Rotation>(lineEntity, new Rotation(){
+            Value = quaternion.LookRotationSafe(direction, new Vector3(0,0,1))
+        });
     }
 }
