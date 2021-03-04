@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Audio;
 
 public struct TimingEvent
 {
@@ -15,21 +14,16 @@ public class Conductor : MonoBehaviour
     //Conductor is responsible for playing the audio and making sure gameplay syncs. Most systems will refer to this class to get the current timing
 
     public static Conductor Instance { get; private set; }
-
     private AudioSource audioSource;
 
-    [SerializeField]
-    public float offset;
-
-    [HideInInspector]
-    private float dspStartPlayingTime;
-    [HideInInspector]
-    public float receptorTime;
-    [HideInInspector]
-    public List<float> groupFloorPosition;
+    [SerializeField] public float offset;
+    [HideInInspector] private float dspStartPlayingTime;
+    [HideInInspector] public float receptorTime;
+    [HideInInspector] public List<float> groupFloorPosition;
     private List<List<TimingEvent>> timingEventGroups;
     private List<int> groupIndexCache;
     public int songLength;
+    public List<float> currentFloorPosition;
     
     public void Awake()
     {
@@ -48,6 +42,7 @@ public class Conductor : MonoBehaviour
     public void Update()
     {
         receptorTime = (float)(AudioSettings.dspTime - dspStartPlayingTime - offset);
+        UpdateCurrentFloorPosition();
     }
     public void SetOffset(int value)
     {
@@ -56,6 +51,8 @@ public class Conductor : MonoBehaviour
     public void SetupTiming(List<List<AffTiming>> timingGroups) {
         //precalculate floorposition value for timing events
         timingEventGroups = new List<List<TimingEvent>>(timingGroups.Count); 
+
+        currentFloorPosition = new List<float>(new float[timingGroups.Count]);
 
         for (int i=0; i<timingGroups.Count; i++)
         {
@@ -108,5 +105,15 @@ public class Conductor : MonoBehaviour
         groupIndexCache[timingGroup] = i;
 
         return group[i].floorPosition + (timing - group[i].timing) * group[i].bpm;
+    }   
+
+    public void UpdateCurrentFloorPosition()
+    {
+        int timeInt = (int)Mathf.Round(receptorTime*1000);
+        //Might separate the output array into its own singleton class or entity
+        for (int group=0; group < timingEventGroups.Count; group++)
+        {
+            currentFloorPosition[group] = GetFloorPositionFromTiming(timeInt, group);
+        }
     }
 }
