@@ -8,6 +8,7 @@
 	{
 		Tags { "Queue" = "Overlay+1"  "RenderType"="Opaque" "CanUseSpriteAtlas"="true"  }
 		Cull Off
+		ZTest Always
 		Blend SrcAlpha OneMinusSrcAlpha
 
 		Pass

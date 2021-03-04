@@ -9,11 +9,8 @@
 	}
 	SubShader
 	{
-		Tags { "Queue" = "Overlay"  "RenderType" = "Transparent" "CanUseSpriteAtlas"="true"  }
-
+		Tags { "Queue" = "Transparent"  "RenderType" = "Transparent" "CanUseSpriteAtlas"="true"  }
         Cull Off
-        Lighting Off
-		ZWrite Off 
 		Blend SrcAlpha OneMinusSrcAlpha
   
 		Pass
