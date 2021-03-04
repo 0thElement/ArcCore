@@ -215,6 +215,7 @@ MonoBehaviour:
   receptorTime: 0
   groupFloorPosition: []
   songLength: 0
+  currentFloorPosition: []
 --- !u!82 &72529308
 AudioSource:
   m_ObjectHideFlags: 0
@@ -227,7 +228,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: a1f41b4bb7015e8469d0faf1685f623a, type: 3}
   m_PlayOnAwake: 0
-  m_Volume: 0
+  m_Volume: 0.235
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -515,7 +516,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 504385587}
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: -0.5}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1700, y: 3.7, z: 1}
   m_Children: []
   m_Father: {fileID: 2077348794}
