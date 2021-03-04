@@ -44,10 +44,13 @@ public class ArcTapEntityCreator : MonoBehaviour
                 Value = Conductor.Instance.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup)
             });
 
-            while (arctap.timing > affTapList[lowBound].timing)
+            while (lowBound < affTapList.Count && arctap.timing > affTapList[lowBound].timing)
             {
                 lowBound++;
             }
+            //Iterated the whole list without finding anything
+            if (lowBound == affTapList.Count) continue;
+
             int highBound=lowBound;
             while (arctap.timing == affTapList[highBound].timing)
             {

@@ -174,7 +174,11 @@ public class ChartReader : MonoBehaviour
         affTimingList.Add(new List<AffTiming>());
         while (i<lines.Length) {
 
-            if (lines[i][0] == '}' || lines[i][0] == '{') continue;
+            if (lines[i][0] == '}' || lines[i][0] == '{') 
+            {
+                i++;
+                continue;
+            }
 
             StringParser lineParser = new StringParser(lines[i]);
             string type = lineParser.ReadString("(");
