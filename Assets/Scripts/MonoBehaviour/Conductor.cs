@@ -18,10 +18,10 @@ public class Conductor : MonoBehaviour
 
     [SerializeField] public float offset;
     [HideInInspector] private float dspStartPlayingTime;
-    [HideInInspector] public float receptorTime;
     [HideInInspector] public List<float> groupFloorPosition;
     private List<List<TimingEvent>> timingEventGroups;
     private List<int> groupIndexCache;
+    public float receptorTime;
     public int songLength;
     public List<float> currentFloorPosition;
     
@@ -35,14 +35,13 @@ public class Conductor : MonoBehaviour
     
     public void PlayMusic()
     {
-        dspStartPlayingTime = (float)AudioSettings.dspTime;
-        audioSource.Play();
+        dspStartPlayingTime = (float)AudioSettings.dspTime + 1;
+        audioSource.PlayScheduled(dspStartPlayingTime);
     }
 
     public void Update()
     {
-        // receptorTime = (float)(AudioSettings.dspTime - dspStartPlayingTime - offset);
-        receptorTime = audioSource.time;
+        receptorTime = (float)(AudioSettings.dspTime - dspStartPlayingTime - offset);
         UpdateCurrentFloorPosition();
     }
     public void SetOffset(int value)
