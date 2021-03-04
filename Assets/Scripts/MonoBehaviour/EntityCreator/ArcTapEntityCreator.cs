@@ -89,5 +89,8 @@ public class ArcTapEntityCreator : MonoBehaviour
         entityManager.SetComponentData<Rotation>(lineEntity, new Rotation(){
             Value = quaternion.LookRotationSafe(direction, new Vector3(0,0,1))
         });
+        entityManager.AddComponentData<FloorPosition>(lineEntity, new FloorPosition(){
+            Value = Conductor.Instance.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup)
+        });
     }
 }

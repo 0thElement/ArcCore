@@ -32,6 +32,7 @@ public class TapEntityCreator : MonoBehaviour
             float x = Convert.TrackToX(tap.track);
             const float y = 0;
             const float z = 0;
+
             entityManager.SetComponentData<Translation>(tapEntity, new Translation(){ 
                 Value = new float3(x, y, z)
             });

@@ -46,7 +46,7 @@ public class Conductor : MonoBehaviour
     }
     public void SetOffset(int value)
     {
-        offset = value; 
+        offset = (float)value/1000; 
     }
     public void SetupTiming(List<List<AffTiming>> timingGroups) {
         //precalculate floorposition value for timing events
@@ -88,6 +88,8 @@ public class Conductor : MonoBehaviour
     }
     public float GetFloorPositionFromTiming(int timing, int timingGroup)
     {
+        if (timing<0) return timingEventGroups[0][0].bpm*timing;
+
         List<TimingEvent> group = timingEventGroups[timingGroup];
         //caching the index so we dont have to loop the entire thing every time
         //list access should be largely local anyway
@@ -101,10 +103,12 @@ public class Conductor : MonoBehaviour
         {
             i++;
         }
+        if (i < group.Count-1 && (group[i].timing > timing || timing > group[i+1].timing))
+            Debug.Log(i + ": " + group[i].timing + " - " + timing);
 
         groupIndexCache[timingGroup] = i;
 
-        return group[i].floorPosition + (timing - group[i].timing) * group[i].bpm;
+        return (group[i].floorPosition + (timing - group[i].timing) * group[i].bpm) / -13000f;
     }   
 
     public void UpdateCurrentFloorPosition()
@@ -116,4 +120,5 @@ public class Conductor : MonoBehaviour
             currentFloorPosition[group] = GetFloorPositionFromTiming(timeInt, group);
         }
     }
+
 }

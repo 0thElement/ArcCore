@@ -171,6 +171,10 @@ public class ArcEntityCreator : MonoBehaviour
         {
             Value = new float3(scaleX, scaleY, scaleZ)
         });
+        entityManager.AddComponentData<FloorPosition>(heightEntity, new FloorPosition()
+        {
+            Value = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
+        });
     }
 
     private void CreateHeadSegment(AffArc arc, Material material)
