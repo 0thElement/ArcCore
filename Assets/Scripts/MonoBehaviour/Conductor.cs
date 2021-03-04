@@ -41,7 +41,8 @@ public class Conductor : MonoBehaviour
 
     public void Update()
     {
-        receptorTime = (float)(AudioSettings.dspTime - dspStartPlayingTime - offset);
+        // receptorTime = (float)(AudioSettings.dspTime - dspStartPlayingTime - offset);
+        receptorTime = audioSource.time;
         UpdateCurrentFloorPosition();
     }
     public void SetOffset(int value)
