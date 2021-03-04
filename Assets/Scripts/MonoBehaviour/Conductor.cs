@@ -30,7 +30,6 @@ public class Conductor : MonoBehaviour
         Instance = this;
         audioSource = GetComponent<AudioSource>();      
         songLength = (int)Mathf.Round(audioSource.clip.length*1000);
-        PlayMusic();
     }
     
     public void PlayMusic()
@@ -113,6 +112,7 @@ public class Conductor : MonoBehaviour
 
     public void UpdateCurrentFloorPosition()
     {
+        if (timingEventGroups == null) return;
         int timeInt = (int)Mathf.Round(receptorTime*1000);
         //Might separate the output array into its own singleton class or entity
         for (int group=0; group < timingEventGroups.Count; group++)
