@@ -10,5 +10,5 @@ public struct FloorPosition : IComponentData
     /// <summary>
     /// The value of the floor position.
     /// </summary>
-    public float Value { get; set; }
+    public float Value;
 }

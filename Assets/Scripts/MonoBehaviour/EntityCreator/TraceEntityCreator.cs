@@ -109,14 +109,28 @@ public class TraceEntityCreator : MonoBehaviour
             mesh = traceMesh,
             material = traceMaterial
         });
-        entityManager.SetComponentData<StartEndPosition>(traceEntity, new StartEndPosition()
+        entityManager.SetComponentData<ArcStartPosition>(traceEntity, new ArcStartPosition()
         {
-            StartPosition = start,
-            EndPosition = end
+            Value = new float2(start.x, start.y),
         });
         entityManager.SetComponentData<FloorPosition>(traceEntity, new FloorPosition()
         {
             Value = start.z
+        });
+
+        float dx = start.x - end.x;
+        float dy = start.y - end.y;
+        float dz = start.z - end.z;
+
+        //Shear along xy + scale along z matrix
+        entityManager.SetComponentData<LocalToWorld>(traceEntity, new LocalToWorld()
+        {
+            Value = new float4x4(
+                1, 0, dx, 0,
+                0, 1, dy, 0,
+                0, 0, dz, 0,
+                0, 0, 0,  1
+            )
         });
     }
 

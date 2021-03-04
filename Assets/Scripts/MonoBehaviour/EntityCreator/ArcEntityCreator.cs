@@ -131,14 +131,28 @@ public class ArcEntityCreator : MonoBehaviour
             mesh = arcMesh,
             material = arcColorMaterialInstance
         });
-        entityManager.SetComponentData<StartEndPosition>(arcEntity, new StartEndPosition()
+        entityManager.SetComponentData<ArcStartPosition>(arcEntity, new ArcStartPosition()
         {
-            StartPosition = start,
-            EndPosition = end
+            Value = new float2(start.x, start.y),
         });
         entityManager.SetComponentData<FloorPosition>(arcEntity, new FloorPosition()
         {
             Value = start.z
+        });
+
+        float dx = start.x - end.x;
+        float dy = start.y - end.y;
+        float dz = start.z - end.z;
+
+        //Shear along xy + scale along z matrix
+        entityManager.SetComponentData<LocalToWorld>(arcEntity, new LocalToWorld()
+        {
+            Value = new float4x4(
+                1, 0, dx, 0,
+                0, 1, dy, 0,
+                0, 0, dz, 0,
+                0, 0, 0,  1
+            )
         });
     }
 

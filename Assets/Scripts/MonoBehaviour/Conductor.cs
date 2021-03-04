@@ -108,7 +108,7 @@ public class Conductor : MonoBehaviour
 
         groupIndexCache[timingGroup] = i;
 
-        return (group[i].floorPosition + (timing - group[i].timing) * group[i].bpm) / -13000f;
+        return (group[i].floorPosition + (timing - group[i].timing) * group[i].bpm) / -1300f;
     }   
 
     public void UpdateCurrentFloorPosition()
