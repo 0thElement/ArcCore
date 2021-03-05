@@ -138,7 +138,7 @@ public class ChartReader : MonoBehaviour
     private void Start()
     {
         // Temporary
-        path = Path.Combine(Application.dataPath, "TempAssets", "2.aff");
+        path = Path.Combine(Application.dataPath, "TempAssets", "3.aff");
         AffError status = ReadChart(path);
         if (status != null)
             Debug.Log("Error at line " + status.line + " of type: " + status.type);
@@ -173,6 +173,12 @@ public class ChartReader : MonoBehaviour
         int currentTimingGroup = 0;
         affTimingList.Add(new List<AffTiming>());
         while (i<lines.Length) {
+
+            if (lines[i][0] == '}' || lines[i][0] == '{') 
+            {
+                i++;
+                continue;
+            }
 
             StringParser lineParser = new StringParser(lines[i]);
             string type = lineParser.ReadString("(");
@@ -228,6 +234,8 @@ public class ChartReader : MonoBehaviour
         ArcEntityCreator.Instance.CreateEntities(affArcList);
         TraceEntityCreator.Instance.CreateEntities(affTraceList);
         ArcTapEntityCreator.Instance.CreateEntities(affArcTapList, affTapList);
+
+        Conductor.Instance.PlayMusic();
 
         return null;
     }
@@ -431,7 +439,7 @@ public class ChartReader : MonoBehaviour
         if (!GetCameraEasing(out CameraEasing easing, lineParser.ReadString(",")))
             return AffErrorType.improper_camtype;
 
-        if (!lineParser.ParseInt(out int duration, ","))
+        if (!lineParser.ParseInt(out int duration, ")"))
             return AffErrorType.improper_int;
 
         affCameraList.Add(new AffCamera()

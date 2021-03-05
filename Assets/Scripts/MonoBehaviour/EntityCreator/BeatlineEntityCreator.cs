@@ -79,7 +79,7 @@ public class BeatlineEntityCreator : MonoBehaviour
 
         Entity lineEntity = entityManager.Instantiate(BeatlineEntityPrefab);
 
-        double floorposition = Conductor.Instance.GetFloorPositionFromTiming(timing, 0);
+        float floorposition = Conductor.Instance.GetFloorPositionFromTiming(timing, 0);
 
         entityManager.SetComponentData<FloorPosition>(lineEntity, new FloorPosition(){
             Value = floorposition

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Audio;
+using Unity.Collections;
 
 public struct TimingEvent
 {
@@ -15,47 +15,44 @@ public class Conductor : MonoBehaviour
     //Conductor is responsible for playing the audio and making sure gameplay syncs. Most systems will refer to this class to get the current timing
 
     public static Conductor Instance { get; private set; }
-
     private AudioSource audioSource;
 
-    [SerializeField]
-    public float offset;
-
-    [HideInInspector]
-    private float dspStartPlayingTime;
-    [HideInInspector]
-    public float receptorTime;
-    [HideInInspector]
-    public List<float> groupFloorPosition;
+    [SerializeField] public float offset;
+    [HideInInspector] private float dspStartPlayingTime;
+    [HideInInspector] public List<float> groupFloorPosition;
     private List<List<TimingEvent>> timingEventGroups;
     private List<int> groupIndexCache;
+    public float receptorTime;
     public int songLength;
+    public NativeArray<float> currentFloorPosition;
     
     public void Awake()
     {
         Instance = this;
         audioSource = GetComponent<AudioSource>();      
         songLength = (int)Mathf.Round(audioSource.clip.length*1000);
-        PlayMusic();
     }
     
     public void PlayMusic()
     {
-        dspStartPlayingTime = (float)AudioSettings.dspTime;
-        audioSource.Play();
+        dspStartPlayingTime = (float)AudioSettings.dspTime + 1;
+        audioSource.PlayScheduled(dspStartPlayingTime);
     }
 
     public void Update()
     {
         receptorTime = (float)(AudioSettings.dspTime - dspStartPlayingTime - offset);
+        UpdateCurrentFloorPosition();
     }
     public void SetOffset(int value)
     {
-        offset = value; 
+        offset = (float)value/1000; 
     }
     public void SetupTiming(List<List<AffTiming>> timingGroups) {
         //precalculate floorposition value for timing events
         timingEventGroups = new List<List<TimingEvent>>(timingGroups.Count); 
+
+        currentFloorPosition = new NativeArray<float>(new float[timingGroups.Count], Allocator.Persistent);
 
         for (int i=0; i<timingGroups.Count; i++)
         {
@@ -91,6 +88,8 @@ public class Conductor : MonoBehaviour
     }
     public float GetFloorPositionFromTiming(int timing, int timingGroup)
     {
+        if (timing<0) return timingEventGroups[0][0].bpm*timing;
+
         List<TimingEvent> group = timingEventGroups[timingGroup];
         //caching the index so we dont have to loop the entire thing every time
         //list access should be largely local anyway
@@ -104,9 +103,27 @@ public class Conductor : MonoBehaviour
         {
             i++;
         }
+        if (i < group.Count-1 && (group[i].timing > timing || timing > group[i+1].timing))
+            Debug.Log(i + ": " + group[i].timing + " - " + timing);
 
         groupIndexCache[timingGroup] = i;
 
-        return group[i].floorPosition + (timing - group[i].timing) * group[i].bpm;
+        return (group[i].floorPosition + (timing - group[i].timing) * group[i].bpm) / -1300f;
+    }   
+
+    public void UpdateCurrentFloorPosition()
+    {
+        if (timingEventGroups == null) return;
+        int timeInt = (int)Mathf.Round(receptorTime*1000);
+        //Might separate the output array into its own singleton class or entity
+        for (int group=0; group < timingEventGroups.Count; group++)
+        {
+            currentFloorPosition[group] = GetFloorPositionFromTiming(timeInt, group);
+        }
+    }
+
+    public void DisposeFloorPositionArray()
+    {
+        currentFloorPosition.Dispose();
     }
 }

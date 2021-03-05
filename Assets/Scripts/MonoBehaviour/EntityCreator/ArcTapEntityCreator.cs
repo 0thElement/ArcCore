@@ -43,11 +43,19 @@ public class ArcTapEntityCreator : MonoBehaviour
             entityManager.SetComponentData<FloorPosition>(tapEntity, new FloorPosition(){
                 Value = Conductor.Instance.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup)
             });
+            entityManager.SetComponentData<TimingGroup>(tapEntity, new TimingGroup()
+            {
+                Value = arctap.timingGroup
+            });
 
-            while (arctap.timing > affTapList[lowBound].timing)
+            //Connection line
+            while (lowBound < affTapList.Count && arctap.timing > affTapList[lowBound].timing)
             {
                 lowBound++;
             }
+            //Iterated the whole list without finding anything
+            if (lowBound == affTapList.Count) continue;
+
             int highBound=lowBound;
             while (arctap.timing == affTapList[highBound].timing)
             {
@@ -88,6 +96,13 @@ public class ArcTapEntityCreator : MonoBehaviour
         
         entityManager.SetComponentData<Rotation>(lineEntity, new Rotation(){
             Value = quaternion.LookRotationSafe(direction, new Vector3(0,0,1))
+        });
+        entityManager.AddComponentData<FloorPosition>(lineEntity, new FloorPosition(){
+            Value = Conductor.Instance.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup)
+        });
+        entityManager.SetComponentData<TimingGroup>(lineEntity, new TimingGroup()
+        {
+            Value = arctap.timingGroup
         });
     }
 }

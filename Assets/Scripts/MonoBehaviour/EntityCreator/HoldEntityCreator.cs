@@ -37,7 +37,7 @@ public class HoldEntityCreator : MonoBehaviour
             const float scaley = 1;
             float endFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.endTiming, hold.timingGroup);
             float startFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.timing, hold.timingGroup);
-            float scalez = endFloorPosition - startFloorPosition;
+            float scalez = - endFloorPosition + startFloorPosition;
 
             entityManager.SetComponentData<Translation>(holdEntity, new Translation(){
                 Value = new float3(x, y, z)
@@ -47,6 +47,9 @@ public class HoldEntityCreator : MonoBehaviour
             });
             entityManager.SetComponentData<FloorPosition>(holdEntity, new FloorPosition(){
                 Value = startFloorPosition
+            });
+            entityManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(){
+                Value = hold.timingGroup
             });
         }
     }

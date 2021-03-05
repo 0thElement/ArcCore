@@ -6,8 +6,9 @@
 	}
 	SubShader
 	{
-		Tags { "Queue" = "Overlay+1"  "RenderType"="Opaque" "CanUseSpriteAtlas"="true"  }
-		Cull Off
+		Tags { "Queue" = "Overlay+1"  "RenderType"="Transparent" "CanUseSpriteAtlas"="true"  }
+		Cull Front
+		ZTest Always
 		Blend SrcAlpha OneMinusSrcAlpha
 
 		Pass

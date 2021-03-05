@@ -108,7 +108,7 @@ public class ArcEntityCreator : MonoBehaviour
                         Conductor.Instance.GetFloorPositionFromTiming(arc.timing + t, arc.timingGroup)
                     );
 
-                    CreateSegment(arcColorMaterialInstance, start, end);
+                    CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup);
                 }
 
                 start = end;
@@ -118,12 +118,12 @@ public class ArcEntityCreator : MonoBehaviour
                     Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                 );
 
-                CreateSegment(arcColorMaterialInstance, start, end);
+                CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup);
             }
         }
     }
 
-    private void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end)
+    private void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end, int timingGroup)
     {
         Entity arcEntity = entityManager.Instantiate(arcNoteEntityPrefab);
         entityManager.SetSharedComponentData<RenderMesh>(arcEntity, new RenderMesh()
@@ -131,14 +131,29 @@ public class ArcEntityCreator : MonoBehaviour
             mesh = arcMesh,
             material = arcColorMaterialInstance
         });
-        entityManager.SetComponentData<StartEndPosition>(arcEntity, new StartEndPosition()
-        {
-            StartPosition = start,
-            EndPosition = end
-        });
         entityManager.SetComponentData<FloorPosition>(arcEntity, new FloorPosition()
         {
             Value = start.z
+        });
+
+        float dx = start.x - end.x;
+        float dy = start.y - end.y;
+        float dz = start.z - end.z;
+
+        //Shear along xy + scale along z matrix
+        entityManager.SetComponentData<LocalToWorld>(arcEntity, new LocalToWorld()
+        {
+            Value = new float4x4(
+                1, 0, dx, start.x,
+                0, 1, dy, start.y,
+                0, 0, dz, 0,
+                0, 0, 0,  1
+            )
+        });
+
+        entityManager.SetComponentData<TimingGroup>(arcEntity, new TimingGroup()
+        {
+            Value = timingGroup
         });
     }
 
@@ -171,6 +186,14 @@ public class ArcEntityCreator : MonoBehaviour
         {
             Value = new float3(scaleX, scaleY, scaleZ)
         });
+        entityManager.AddComponentData<FloorPosition>(heightEntity, new FloorPosition()
+        {
+            Value = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
+        });
+        entityManager.SetComponentData<TimingGroup>(heightEntity, new TimingGroup()
+        {
+            Value = arc.timingGroup
+        });
     }
 
     private void CreateHeadSegment(AffArc arc, Material material)
@@ -191,6 +214,10 @@ public class ArcEntityCreator : MonoBehaviour
         entityManager.SetComponentData<Translation>(headEntity, new Translation()
         {
             Value = new float3(x, y, z)
+        });
+        entityManager.SetComponentData<TimingGroup>(headEntity, new TimingGroup()
+        {
+            Value = arc.timingGroup
         });
     }
 }
