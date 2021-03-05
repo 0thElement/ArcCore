@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Collections;
+using ArcCore.Structs;
 
 namespace ArcCore.MonoBehaviours
 {
     public struct TimingEvent
     {
         public int timing;
-        public float floorPosition;
+        public fixed_dec floorPosition;
         public float bpm;
     }
 
@@ -26,7 +27,7 @@ namespace ArcCore.MonoBehaviours
         private List<int> groupIndexCache;
         public float receptorTime;
         public int songLength;
-        public NativeArray<float> currentFloorPosition;
+        public NativeArray<fixed_dec> currentFloorPosition;
 
         public delegate void TimeCalculatedAction(float time);
         public event TimeCalculatedAction OnTimeCalculated;
@@ -57,7 +58,7 @@ namespace ArcCore.MonoBehaviours
             //precalculate floorposition value for timing events
             timingEventGroups = new List<List<TimingEvent>>(timingGroups.Count); 
 
-            currentFloorPosition = new NativeArray<float>(new float[timingGroups.Count], Allocator.Persistent);
+            currentFloorPosition = new NativeArray<fixed_dec>(new fixed_dec[timingGroups.Count], Allocator.Persistent);
 
             for (int i=0; i<timingGroups.Count; i++)
             {
@@ -84,7 +85,7 @@ namespace ArcCore.MonoBehaviours
                 timingEventGroups[i].Add(new TimingEvent()
                 {
                     timing = timingGroups[i][j].timing,
-                    floorPosition = timingGroups[i][j - 1].bpm
+                    floorPosition = (fixed_dec)timingGroups[i][j - 1].bpm
                                 * (timingGroups[i][j].timing - timingGroups[i][j - 1].timing)
                                 + timingEventGroups[i][j - 1].floorPosition,
                     bpm = timingGroups[i][j].bpm
@@ -92,9 +93,9 @@ namespace ArcCore.MonoBehaviours
             }
         }
 
-        public float GetFloorPositionFromTiming(int timing, int timingGroup)
+        public fixed_dec GetFloorPositionFromTiming(int timing, int timingGroup)
         {
-            if (timing<0) return timingEventGroups[0][0].bpm*timing;
+            if (timing<0) return (fixed_dec)timingEventGroups[0][0].bpm*timing;
 
             List<TimingEvent> group = timingEventGroups[timingGroup];
             //caching the index so we dont have to loop the entire thing every time

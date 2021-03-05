@@ -6,7 +6,7 @@ using Unity.Rendering;
 using UnityEngine;
 using ArcCore.Utility;
 using ArcCore.Data;
-
+using ArcCore.Structs;
 
 namespace ArcCore.MonoBehaviours.EntityCreation
 {
@@ -81,32 +81,38 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     Convert.GetWorldY(trace.startY),
                     Conductor.Instance.GetFloorPositionFromTiming(trace.timing, trace.timingGroup)
                 );
+                fixed_dec floorpos;
 
                 for (int i=0; i<segmentCount - 1; i++)
                 {
                     int t = (int)((i + 1) * segmentLength);
+
+                    floorpos = Conductor.Instance.GetFloorPositionFromTiming(trace.timing + t, trace.timingGroup);
+
                     start = end;
                     end = new float3(
                         Convert.GetWorldX(Convert.GetXAt((float)t / duration, trace.startX, trace.endX, trace.easing)),
                         Convert.GetWorldY(Convert.GetYAt((float)t / duration, trace.startY, trace.endY, trace.easing)),
-                        Conductor.Instance.GetFloorPositionFromTiming(trace.timing + t, trace.timingGroup)
+                        floorpos
                     );
 
-                    CreateSegment(start, end, trace.timingGroup);
+                    CreateSegment(floorpos, start, end, trace.timingGroup);
                 }
+
+                floorpos = Conductor.Instance.GetFloorPositionFromTiming(trace.endTiming, trace.timingGroup);
 
                 start = end;
                 end = new float3(
                     Convert.GetWorldX(trace.endX),
                     Convert.GetWorldY(trace.endY),
-                    Conductor.Instance.GetFloorPositionFromTiming(trace.endTiming, trace.timingGroup)
+                    floorpos
                 );
 
-                CreateSegment(start, end, trace.timingGroup);
+                CreateSegment(floorpos, start, end, trace.timingGroup);
             }
         }
 
-        private void CreateSegment(float3 start, float3 end, int timingGroup)
+        private void CreateSegment(fixed_dec floorpos, float3 start, float3 end, int timingGroup)
         {
             Entity traceEntity = entityManager.Instantiate(traceNoteEntityPrefab);
             entityManager.SetSharedComponentData<RenderMesh>(traceEntity, new RenderMesh()
@@ -116,7 +122,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             });
             entityManager.SetComponentData<FloorPosition>(traceEntity, new FloorPosition()
             {
-                Value = start.z
+                Value = floorpos
             });
 
             float dx = start.x - end.x;

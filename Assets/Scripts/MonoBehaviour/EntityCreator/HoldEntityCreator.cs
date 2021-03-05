@@ -5,6 +5,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Utility;
 using ArcCore.Data;
+using ArcCore.Structs;
 
 namespace ArcCore.MonoBehaviours.EntityCreation
 {
@@ -38,42 +39,46 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
                 const float scalex = 1;
                 const float scaley = 1;
-                float endFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.endTiming, hold.timingGroup);
-                float startFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.timing, hold.timingGroup);
-                float scalez = - endFloorPosition + startFloorPosition;
+                fixed_dec endFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.endTiming, hold.timingGroup);
+                fixed_dec startFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.timing, hold.timingGroup);
+                float scalez = -endFloorPosition + startFloorPosition;
 
-                entityManager.SetComponentData<Translation>(holdEntity, new Translation(){
+                entityManager.SetComponentData<Translation>(holdEntity, new Translation() {
                     Value = new float3(x, y, z)
                 });
-                entityManager.AddComponentData<NonUniformScale>(holdEntity, new NonUniformScale(){
+                entityManager.AddComponentData<NonUniformScale>(holdEntity, new NonUniformScale() {
                     Value = new float3(scalex, scaley, scalez)
                 });
-                entityManager.SetComponentData<FloorPosition>(holdEntity, new FloorPosition(){
+                entityManager.SetComponentData<FloorPosition>(holdEntity, new FloorPosition() {
                     Value = startFloorPosition
                 });
-                entityManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(){
+                entityManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup() {
                     Value = hold.timingGroup
                 });
 
-                float time = hold.timing;
-                TimingEvent timingEvent = Conductor.Instance.GetTimingEventFromTiming(hold.timing, hold.timingGroup);
+            }
+        }
 
-                while (time < hold.endTiming)
+        public void CreateJudgeEntities(AffHold hold)
+        {
+            float time = hold.timing;
+            TimingEvent timingEvent = Conductor.Instance.GetTimingEventFromTiming(hold.timing, hold.timingGroup);
+
+            while (time < hold.endTiming)
+            {
+                time += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
+
+                Entity judgeEntity = entityManager.CreateEntity(typeof(JudgeTime), typeof(JudgeLane), typeof(Tags.JudgeHold));
+                entityManager.SetComponentData<JudgeTime>(judgeEntity, new JudgeTime()
                 {
-                    time += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
+                    time = (int)time
+                });
+                entityManager.SetComponentData<JudgeLane>(judgeEntity, new JudgeLane()
+                {
+                    lane = hold.track
+                });
 
-                    Entity judgeEntity = entityManager.CreateEntity(typeof(JudgeTime), typeof(JudgeLane), typeof(Tags.JudgeHold));
-                    entityManager.SetComponentData<JudgeTime>(judgeEntity, new JudgeTime()
-                    {
-                        time = (int)time
-                    });
-                    entityManager.SetComponentData<JudgeLane>(judgeEntity, new JudgeLane()
-                    {
-                        lane = hold.track
-                    });
-
-                    ScoreManager.Instance.maxCombo++;
-                }
+                ScoreManager.Instance.maxCombo++;
             }
         }
     }

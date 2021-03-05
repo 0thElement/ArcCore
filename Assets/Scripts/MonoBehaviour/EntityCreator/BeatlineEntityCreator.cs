@@ -3,6 +3,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Data;
+using ArcCore.Structs;
 
 namespace ArcCore.MonoBehaviours.EntityCreation
 {
@@ -52,7 +53,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 float distanceBetweenTwoLine = currentTiming.bpm == 0 ? float.MaxValue : 
                                                                         60000f / math.abs(currentTiming.bpm) * currentTiming.divisor;
 
-                if (distanceBetweenTwoLine == 0) continue;
+                if (distanceBetweenTwoLine == 0 || distanceBetweenTwoLine > limit - currentTiming.timing) continue;
                 
                 for (float timing = currentTiming.timing; timing < limit; timing+=distanceBetweenTwoLine)
                 {
@@ -68,9 +69,9 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 float distanceBetweenTwoLine = lastTiming.bpm == 0 ? float.MaxValue : 
                                                                     60000f / math.abs(lastTiming.bpm) * lastTiming.divisor;
 
-                if (distanceBetweenTwoLine == 0) return;
+                if (distanceBetweenTwoLine == 0 || distanceBetweenTwoLine > limit - lastTiming.timing) return;
                 
-                for (float timing = lastTiming.timing; timing < limit; timing+=distanceBetweenTwoLine)
+                for (float timing = lastTiming.timing; timing < limit; timing += distanceBetweenTwoLine)
                 {
                     CreateLineAt(lastTiming, timing);
                 }
@@ -83,7 +84,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
             Entity lineEntity = entityManager.Instantiate(BeatlineEntityPrefab);
 
-            float floorposition = Conductor.Instance.GetFloorPositionFromTiming(timing, 0);
+            fixed_dec floorposition = Conductor.Instance.GetFloorPositionFromTiming(timing, 0);
 
             entityManager.SetComponentData<FloorPosition>(lineEntity, new FloorPosition(){
                 Value = floorposition

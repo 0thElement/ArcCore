@@ -73,6 +73,19 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     if (arctap.timingGroup == affTapList[i].timingGroup)
                         CreateConnections(arctap, affTapList[i]);
                 }
+
+                //Create judgement entity
+                Entity judgeEntity = entityManager.CreateEntity(typeof(JudgeTime), typeof(JudgePosition));
+                entityManager.SetComponentData<JudgeTime>(judgeEntity, new JudgeTime()
+                {
+                    time = arctap.timing
+                }); ;
+                entityManager.SetComponentData<JudgePosition>(judgeEntity, new JudgePosition()
+                {
+                    position = new float2(x, y)
+                });
+
+                ScoreManager.Instance.maxCombo++;
             }
         }
 

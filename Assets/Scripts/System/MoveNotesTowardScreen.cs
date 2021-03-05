@@ -5,12 +5,13 @@ using Unity.Jobs;
 using Unity.Transforms;
 using ArcCore.Data;
 using ArcCore.MonoBehaviours;
+using ArcCore.Structs;
 
 public class MoveNotesTowardScreen : SystemBase
 {
     protected override void OnUpdate()
     {
-        NativeArray<float> currentFloorPosition = Conductor.Instance.currentFloorPosition;
+        NativeArray<fixed_dec> currentFloorPosition = Conductor.Instance.currentFloorPosition;
 
         //All note except arcs
         Entities.ForEach((ref Translation translation, in FloorPosition floorPosition, in TimingGroup group) => {
