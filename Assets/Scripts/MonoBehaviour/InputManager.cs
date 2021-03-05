@@ -25,6 +25,13 @@ namespace ArcCore.MonoBehaviours
         }
     }
 
+    public enum LaneState
+    {
+        pressed,
+        held,
+        released
+    }
+
     //ORDERING IS IMPORTANT HERE; POLL_INPUT MUST OCCUR BEFORE ALL JUDGING.
     //UNSURE HOW TO DO THIS
     public class InputManager : MonoBehaviour
@@ -34,6 +41,7 @@ namespace ArcCore.MonoBehaviours
         public const int MaxTouches = 10;
 
         public NativeArray<TouchPoint> touchPoints;
+        public NativeArray<LaneState> laneStates;
         public int safeIndex = 0;
 
         public Camera cameraCast;
@@ -44,7 +52,9 @@ namespace ArcCore.MonoBehaviours
         void Awake()
         {
             Instance = this;
+
             touchPoints = new NativeArray<TouchPoint>(new TouchPoint[MaxTouches], Allocator.Persistent);
+            laneStates = new NativeArray<LaneState>(new LaneState[4], Allocator.Persistent);
 
             //ENSURE THAT CAMERA IS RESET BEFORE CALLING THIS
             BaseYLenDist = GetYLeniencyDist();
@@ -81,6 +91,9 @@ namespace ArcCore.MonoBehaviours
         {
             CalculateYLeniency(); //SHOULDNT BE RECALCULATED FOR CHARTS WITHOUT CAMERA MOTION
 
+            for (int ls = 0; ls < 4; ls++)
+                laneStates[ls] = LaneState.released;
+
             for(int i = 0; i < Input.touchCount; i++)
             {
                 Touch t = Input.touches[i];
@@ -91,6 +104,8 @@ namespace ArcCore.MonoBehaviours
                     (float2 ipt, int lane) = PerformRayCast(t);
                     int timeT = (int)math.round((time - t.deltaTime) * 1000);
                     touchPoints[safeIndex] = new TouchPoint(ipt, lane, timeT, true, t.fingerId);
+                    if (lane != -1)
+                        laneStates[lane] = LaneState.held;
 
                 } 
                 else if (t.phase == TouchPhase.Moved)
@@ -109,6 +124,9 @@ namespace ArcCore.MonoBehaviours
                         tp.pressed = false;
 
                         touchPoints[index] = tp;
+
+                        if (lane != -1 && laneStates[lane] == LaneState.released)
+                            laneStates[lane] = LaneState.held;
                     }
 
                 }
@@ -126,6 +144,9 @@ namespace ArcCore.MonoBehaviours
                         tp.pressed = false;
 
                         touchPoints[index] = tp;
+
+                        if (tp.lane != -1 && laneStates[tp.lane] == LaneState.released)
+                            laneStates[tp.lane] = LaneState.held;
                     }
 
                 } 
@@ -179,7 +200,7 @@ namespace ArcCore.MonoBehaviours
                 ipt = new float2(ray.origin.x - ray.direction.x * ratio, ray.origin.y - ray.direction.y * ratio);
             }
 
-            int lane = 0;
+            int lane = -1;
             if (ipt.y < Constants.ArcYZero * yLeniency)
             {
                 ratio = ray.origin.y / ray.direction.y;

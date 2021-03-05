@@ -44,7 +44,12 @@ namespace ArcCore.Utility
             }
         }
         public static int XToTrack(float x)
-            => Mathf.RoundToInt((x - 2.125f) / 4.25f);
+        {
+            int t = (int)math.round((x - 2.125f) / 4.25f);
+            if (t > 4 || t < 1)
+                return -1;
+            return t;
+        }
 
         public static float RatioBetween(float start, float end, float val)
             => (val - start) / (val - end);
