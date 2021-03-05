@@ -138,7 +138,7 @@ public class ChartReader : MonoBehaviour
     private void Start()
     {
         // Temporary
-        path = Path.Combine(Application.dataPath, "TempAssets", "2.aff");
+        path = Path.Combine(Application.dataPath, "TempAssets", "3.aff");
         AffError status = ReadChart(path);
         if (status != null)
             Debug.Log("Error at line " + status.line + " of type: " + status.type);

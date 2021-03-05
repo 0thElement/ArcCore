@@ -6,8 +6,8 @@
     }
     SubShader
     {
-        Tags { "Queue" = "Background"}
-        LOD 100
+        Tags { "Queue" = "Background" }
+        ZWrite Off 
 
         Pass
         {
