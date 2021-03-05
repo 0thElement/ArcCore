@@ -125,7 +125,7 @@ namespace ArcCore.MonoBehaviours
         private void Start()
         {
             // Temporary
-            path = Path.Combine(Application.dataPath, "TempAssets", "2.aff");
+            path = Path.Combine(Application.dataPath, "TempAssets", "4.aff");
             AffError err;
             if ((err = ReadChart(path)) != null)
                 Debug.LogError(err);
@@ -452,7 +452,7 @@ namespace ArcCore.MonoBehaviours
             if (!GetCameraEasing(out CameraEasing easing, ce))
                 return AffErrorType.improper_camtype;
 
-            if (!lineParser.ParseInt(out int duration, ","))
+            if (!lineParser.ParseInt(out int duration, ")"))
                 return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_int);
 
             affCameraList.Add(new AffCamera()
