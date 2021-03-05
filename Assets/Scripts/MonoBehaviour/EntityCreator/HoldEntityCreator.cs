@@ -41,7 +41,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 const float scaley = 1;
                 fixed_dec endFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.endTiming, hold.timingGroup);
                 fixed_dec startFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.timing, hold.timingGroup);
-                float scalez = -endFloorPosition + startFloorPosition;
+                float scalez = (endFloorPosition - startFloorPosition) / 1300;
 
                 entityManager.SetComponentData<Translation>(holdEntity, new Translation() {
                     Value = new float3(x, y, z)

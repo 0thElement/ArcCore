@@ -60,11 +60,11 @@ namespace ArcCore.Structs
         public static implicit operator fixed_dec(long v)
             => new fixed_dec(v * 100);
         public static explicit operator fixed_dec(float v)
-            => new fixed_dec((long)(v / 100));
+            => new fixed_dec((long)(v * 100));
         public static explicit operator fixed_dec(double v)
-            => new fixed_dec((long)(v / 100));
+            => new fixed_dec((long)(v * 100));
         public static explicit operator fixed_dec(decimal v)
-            => new fixed_dec((long)(v / 100));
+            => new fixed_dec((long)(v * 100));
 
         public static explicit operator int(fixed_dec v)
             => (int)(v.repr / 100);

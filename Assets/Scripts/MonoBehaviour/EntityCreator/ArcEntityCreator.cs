@@ -95,8 +95,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     float segmentLength = duration * v2;
                     int segmentCount = (int)(segmentLength == 0 ? 0 : duration / segmentLength) + 1;
 
-                    float3 start;
-                    float3 end = new float3(
+                    float_xy_fixed_z start;
+                    float_xy_fixed_z end = new float_xy_fixed_z(
                         Convert.GetWorldX(arc.startX),
                         Convert.GetWorldY(arc.startY),
                         Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
@@ -110,32 +110,31 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                         floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.timing + t, arc.timingGroup);
 
                         start = end;
-                        end = new float3(
+                        end = new float_xy_fixed_z(
                             Convert.GetWorldX(Convert.GetXAt((float)t / duration, arc.startX, arc.endX, arc.easing)),
                             Convert.GetWorldY(Convert.GetYAt((float)t / duration, arc.startY, arc.endY, arc.easing)),
                             floorpos
                         );
 
-                        CreateSegment(arcColorMaterialInstance, floorpos, start, end, arc.timingGroup);
+                        CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup);
                     }
 
                     floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup);
 
                     start = end;
-                    end = new float3(
+                    end = new float_xy_fixed_z(
                         Convert.GetWorldX(arc.endX),
                         Convert.GetWorldY(arc.endY),
                         floorpos
                     );
 
-                    CreateSegment(arcColorMaterialInstance, floorpos, start, end, arc.timingGroup);
+                    CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup);
                     CreateJudgeEntities(arc, colorId);
                 }
-                colorId++;
             }
         }
 
-        private void CreateSegment(Material arcColorMaterialInstance, fixed_dec floorpos, float3 start, float3 end, int timingGroup)
+        private void CreateSegment(Material arcColorMaterialInstance, float_xy_fixed_z start, float_xy_fixed_z end, int timingGroup)
         {
             Entity arcEntity = entityManager.Instantiate(arcNoteEntityPrefab);
             entityManager.SetSharedComponentData<RenderMesh>(arcEntity, new RenderMesh()
@@ -145,12 +144,12 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             });
             entityManager.SetComponentData<FloorPosition>(arcEntity, new FloorPosition()
             {
-                Value = floorpos
+                Value = start.z
             });
 
             float dx = start.x - end.x;
             float dy = start.y - end.y;
-            float dz = start.z - end.z;
+            float dz = (start.z - end.z) / -1300f;
 
             //Shear along xy + scale along z matrix
             entityManager.SetComponentData<LocalToWorld>(arcEntity, new LocalToWorld()

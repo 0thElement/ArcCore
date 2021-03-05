@@ -95,7 +95,7 @@ namespace ArcCore.MonoBehaviours
 
         public fixed_dec GetFloorPositionFromTiming(int timing, int timingGroup)
         {
-            if (timing<0) return (fixed_dec)timingEventGroups[0][0].bpm*timing / 1300;
+            if (timing<0) return (fixed_dec)timingEventGroups[0][0].bpm*timing;
 
             List<TimingEvent> group = timingEventGroups[timingGroup];
             //caching the index so we dont have to loop the entire thing every time
@@ -113,7 +113,7 @@ namespace ArcCore.MonoBehaviours
 
             groupIndexCache[timingGroup] = i;
 
-            return (group[i].floorPosition + (timing - group[i].timing) * group[i].bpm) / -1300;
+            return (group[i].floorPosition + (timing - group[i].timing) * (fixed_dec)group[i].bpm);
         }
 
         public int GetTimingEventIndexFromTiming(int timing, int timingGroup)

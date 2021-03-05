@@ -75,8 +75,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 float segmentLength = duration * v2;
                 int segmentCount = (int)(segmentLength == 0 ? 0 : duration / segmentLength) + 1;
 
-                float3 start;
-                float3 end = new float3(
+                float_xy_fixed_z start;
+                float_xy_fixed_z end = new float_xy_fixed_z(
                     Convert.GetWorldX(trace.startX),
                     Convert.GetWorldY(trace.startY),
                     Conductor.Instance.GetFloorPositionFromTiming(trace.timing, trace.timingGroup)
@@ -90,29 +90,29 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     floorpos = Conductor.Instance.GetFloorPositionFromTiming(trace.timing + t, trace.timingGroup);
 
                     start = end;
-                    end = new float3(
+                    end = new float_xy_fixed_z(
                         Convert.GetWorldX(Convert.GetXAt((float)t / duration, trace.startX, trace.endX, trace.easing)),
                         Convert.GetWorldY(Convert.GetYAt((float)t / duration, trace.startY, trace.endY, trace.easing)),
                         floorpos
                     );
 
-                    CreateSegment(floorpos, start, end, trace.timingGroup);
+                    CreateSegment(start, end, trace.timingGroup);
                 }
 
                 floorpos = Conductor.Instance.GetFloorPositionFromTiming(trace.endTiming, trace.timingGroup);
 
                 start = end;
-                end = new float3(
+                end = new float_xy_fixed_z(
                     Convert.GetWorldX(trace.endX),
                     Convert.GetWorldY(trace.endY),
                     floorpos
                 );
 
-                CreateSegment(floorpos, start, end, trace.timingGroup);
+                CreateSegment(start, end, trace.timingGroup);
             }
         }
 
-        private void CreateSegment(fixed_dec floorpos, float3 start, float3 end, int timingGroup)
+        private void CreateSegment(float_xy_fixed_z start, float_xy_fixed_z end, int timingGroup)
         {
             Entity traceEntity = entityManager.Instantiate(traceNoteEntityPrefab);
             entityManager.SetSharedComponentData<RenderMesh>(traceEntity, new RenderMesh()
@@ -122,12 +122,12 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             });
             entityManager.SetComponentData<FloorPosition>(traceEntity, new FloorPosition()
             {
-                Value = floorpos
+                Value = start.z
             });
 
             float dx = start.x - end.x;
             float dy = start.y - end.y;
-            float dz = start.z - end.z;
+            float dz = (start.z - end.z) / -1300f;
 
             //Shear along xy + scale along z matrix
             entityManager.SetComponentData<LocalToWorld>(traceEntity, new LocalToWorld()
