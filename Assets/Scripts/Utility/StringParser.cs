@@ -1,4 +1,4 @@
-﻿namespace Arcaoid.Utility
+﻿namespace ArcCore.Utility
 {
     /// <summary>
     /// A class to read a string and parse string-ified primitives

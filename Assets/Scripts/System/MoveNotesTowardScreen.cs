@@ -2,8 +2,9 @@
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
-using Unity.Mathematics;
 using Unity.Transforms;
+using ArcCore.Data;
+using ArcCore.MonoBehavious;
 
 public class MoveNotesTowardScreen : SystemBase
 {
