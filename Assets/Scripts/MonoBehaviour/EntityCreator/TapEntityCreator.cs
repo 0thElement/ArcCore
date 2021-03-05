@@ -7,7 +7,7 @@ using ArcCore.Utility;
 using ArcCore.Data;
 using ArcCore.MonoBehaviours;
 
-namespace ArcCore.MonoBehavious.EntityCreation
+namespace ArcCore.MonoBehaviours.EntityCreation
 {
 
     public class TapEntityCreator : MonoBehaviour

@@ -112,7 +112,7 @@ namespace ArcCore.MonoBehaviours
 
             groupIndexCache[timingGroup] = i;
 
-            return group[i].floorPosition + (timing - group[i].timing) * group[i].bpm;
+            return (group[i].floorPosition + (timing - group[i].timing) * group[i].bpm) / -1300;
         }
 
         public int GetTimingEventIndexFromTiming(int timing, int timingGroup)

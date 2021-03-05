@@ -69,6 +69,7 @@ namespace ArcCore.MonoBehaviours
     {
         public int timing;
         public float2 position;
+        public int timingGroup;
     }
 
     public struct AffCamera
@@ -366,8 +367,10 @@ namespace ArcCore.MonoBehaviours
                     if (!lineParser.ParseInt(out int t, ")"))
                         return AffErrorType.no_found_item;
 
-                    float x = Convert.GetXAt(t, startX, endX, easing);
-                    float y = Convert.GetYAt(t, startY, endY, easing);
+                    float p = (float) (t - timing) / (endTiming - timing);
+
+                    float x = Convert.GetXAt(p, startX, endX, easing);
+                    float y = Convert.GetYAt(p, startY, endY, easing);
 
                     affArcTapList.Add(new AffArcTap()
                     {

@@ -4,7 +4,7 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Transforms;
 using ArcCore.Data;
-using ArcCore.MonoBehavious;
+using ArcCore.MonoBehaviours;
 
 public class MoveNotesTowardScreen : SystemBase
 {
