@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Collections;
 
-namespace ArcCore.MonoBehavious
+namespace ArcCore.MonoBehaviours
 {
     public struct TimingEvent
     {
@@ -27,6 +27,9 @@ namespace ArcCore.MonoBehavious
         public float receptorTime;
         public int songLength;
         public NativeArray<float> currentFloorPosition;
+
+        public delegate void TimeCalculatedAction(float time);
+        public event TimeCalculatedAction OnTimeCalculated;
         
         public void Awake()
         {
@@ -88,6 +91,7 @@ namespace ArcCore.MonoBehavious
                 });
             }
         }
+
         public float GetFloorPositionFromTiming(int timing, int timingGroup)
         {
             if (timing<0) return timingEventGroups[0][0].bpm*timing;
@@ -97,21 +101,46 @@ namespace ArcCore.MonoBehavious
             //list access should be largely local anyway
             int i = groupIndexCache[timingGroup];
 
-            while (i>0 && group[i].timing > timing)
+            while (i > 0 && group[i].timing > timing)
             {
-                i--;     
+                i--;
             }
-            while (i<group.Count - 1 && group[i+1].timing < timing)
+            while (i < group.Count - 1 && group[i + 1].timing < timing)
             {
                 i++;
             }
-            if (i < group.Count-1 && (group[i].timing > timing || timing > group[i+1].timing))
-                Debug.Log(i + ": " + group[i].timing + " - " + timing);
 
             groupIndexCache[timingGroup] = i;
 
-            return (group[i].floorPosition + (timing - group[i].timing) * group[i].bpm) / -1300f;
-        }   
+            return (group[i].floorPosition + (timing - group[i].timing) * group[i].bpm) / -1300;
+        }
+
+        public int GetTimingEventIndexFromTiming(int timing, int timingGroup)
+        {
+            int maxIdx = timingEventGroups[timingGroup].Count;
+
+            for (int i = 1; i < maxIdx; i++)
+            {
+                if (timingEventGroups[timingGroup][i].timing > timing)
+                {
+                    return i - 1;
+                }
+            }
+
+            return maxIdx - 1;
+        }
+
+        public TimingEvent GetTimingEventFromTiming(int timing, int timingGroup)
+            => timingEventGroups[timingGroup][GetTimingEventIndexFromTiming(timing, timingGroup)];
+
+        public TimingEvent GetTimingEvent(int timing, int timingGroup)
+            => timingEventGroups[timingGroup][timing];
+
+        public TimingEvent? GetNextTimingEventOrNull(int index, int timingGroup)
+            => index + 1 >= timingEventGroups[timingGroup].Count ? (TimingEvent?)null : timingEventGroups[timingGroup][index + 1];
+
+        public int TimingEventListLength(int timingGroup)
+            => timingEventGroups[timingGroup].Count;
 
         public void UpdateCurrentFloorPosition()
         {

@@ -3,9 +3,8 @@ using Unity.Entities;
 namespace ArcCore.Data
 {
     [GenerateAuthoringComponent]
-    public struct FloorPosition : IComponentData
+    public struct JudgeArc : IComponentData
     {
-        public float Value;
+        public int colorID;
     }
-
 }

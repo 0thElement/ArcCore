@@ -1,3 +1,4 @@
+using ArcCore.MonoBehaviours;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -42,7 +43,12 @@ namespace ArcCore.Utility
                     return 6.375f;
             }
         }
-        
+        public static int XToTrack(float x)
+            => Mathf.RoundToInt((x - 2.125f) / 4.25f);
+
+        public static float RatioBetween(float start, float end, float val)
+            => (val - start) / (val - end);
+
         public static float S(float start, float end, float t) 
             => start * (1 - t) + end * t;
         public static float O(float start, float end, float t) 

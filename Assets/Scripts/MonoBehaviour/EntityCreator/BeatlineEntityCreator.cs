@@ -4,7 +4,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Data;
 
-namespace ArcCore.MonoBehavious.EntityCreation
+namespace ArcCore.MonoBehaviours.EntityCreation
 {
 
     public class BeatlineEntityCreator : MonoBehaviour

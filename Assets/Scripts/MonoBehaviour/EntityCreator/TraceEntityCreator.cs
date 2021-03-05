@@ -8,7 +8,7 @@ using ArcCore.Utility;
 using ArcCore.Data;
 
 
-namespace ArcCore.MonoBehavious.EntityCreation
+namespace ArcCore.MonoBehaviours.EntityCreation
 {
 
     public class TraceEntityCreator : MonoBehaviour

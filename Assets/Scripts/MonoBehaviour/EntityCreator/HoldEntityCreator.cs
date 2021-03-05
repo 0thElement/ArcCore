@@ -6,9 +6,8 @@ using UnityEngine;
 using ArcCore.Utility;
 using ArcCore.Data;
 
-namespace ArcCore.MonoBehavious.EntityCreation
+namespace ArcCore.MonoBehaviours.EntityCreation
 {
-
     public class HoldEntityCreator : MonoBehaviour
     {
         public static HoldEntityCreator Instance { get; private set; }
@@ -29,7 +28,7 @@ namespace ArcCore.MonoBehavious.EntityCreation
         {
             affHoldList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
 
-            foreach(AffHold hold in affHoldList)
+            foreach (AffHold hold in affHoldList)
             {
                 Entity holdEntity = entityManager.Instantiate(holdNoteEntityPrefab);
 
@@ -55,6 +54,26 @@ namespace ArcCore.MonoBehavious.EntityCreation
                 entityManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(){
                     Value = hold.timingGroup
                 });
+
+                float time = hold.timing;
+                TimingEvent timingEvent = Conductor.Instance.GetTimingEventFromTiming(hold.timing, hold.timingGroup);
+
+                while (time < hold.endTiming)
+                {
+                    time += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
+
+                    Entity judgeEntity = entityManager.CreateEntity(typeof(JudgeTime), typeof(JudgeLane), typeof(Tags.JudgeHold));
+                    entityManager.SetComponentData<JudgeTime>(judgeEntity, new JudgeTime()
+                    {
+                        time = (int)time
+                    });
+                    entityManager.SetComponentData<JudgeLane>(judgeEntity, new JudgeLane()
+                    {
+                        lane = hold.track
+                    });
+
+                    ScoreManager.Instance.maxCombo++;
+                }
             }
         }
     }
