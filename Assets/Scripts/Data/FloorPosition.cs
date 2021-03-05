@@ -7,8 +7,5 @@ using Unity.Entities;
 [GenerateAuthoringComponent]
 public struct FloorPosition : IComponentData
 {
-    /// <summary>
-    /// The value of the floor position.
-    /// </summary>
     public float Value;
 }

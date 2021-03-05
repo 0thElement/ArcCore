@@ -39,6 +39,10 @@ public class TapEntityCreator : MonoBehaviour
             entityManager.SetComponentData<FloorPosition>(tapEntity, new FloorPosition(){
                 Value = Conductor.Instance.GetFloorPositionFromTiming(tap.timing, tap.timingGroup)
             });
+            entityManager.SetComponentData<TimingGroup>(tapEntity, new TimingGroup()
+            {
+                Value = tap.timingGroup
+            });
         }
     }
 }

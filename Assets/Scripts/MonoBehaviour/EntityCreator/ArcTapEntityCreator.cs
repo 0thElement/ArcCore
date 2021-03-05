@@ -43,7 +43,12 @@ public class ArcTapEntityCreator : MonoBehaviour
             entityManager.SetComponentData<FloorPosition>(tapEntity, new FloorPosition(){
                 Value = Conductor.Instance.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup)
             });
+            entityManager.SetComponentData<TimingGroup>(tapEntity, new TimingGroup()
+            {
+                Value = arctap.timingGroup
+            });
 
+            //Connection line
             while (lowBound < affTapList.Count && arctap.timing > affTapList[lowBound].timing)
             {
                 lowBound++;
@@ -94,6 +99,10 @@ public class ArcTapEntityCreator : MonoBehaviour
         });
         entityManager.AddComponentData<FloorPosition>(lineEntity, new FloorPosition(){
             Value = Conductor.Instance.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup)
+        });
+        entityManager.SetComponentData<TimingGroup>(lineEntity, new TimingGroup()
+        {
+            Value = arctap.timingGroup
         });
     }
 }

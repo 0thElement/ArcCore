@@ -87,7 +87,7 @@ public class TraceEntityCreator : MonoBehaviour
                     Conductor.Instance.GetFloorPositionFromTiming(trace.timing + t, trace.timingGroup)
                 );
 
-                CreateSegment(start, end);
+                CreateSegment(start, end, trace.timingGroup);
             }
 
             start = end;
@@ -97,21 +97,17 @@ public class TraceEntityCreator : MonoBehaviour
                 Conductor.Instance.GetFloorPositionFromTiming(trace.endTiming, trace.timingGroup)
             );
 
-            CreateSegment(start, end);
+            CreateSegment(start, end, trace.timingGroup);
         }
     }
 
-    private void CreateSegment(float3 start, float3 end)
+    private void CreateSegment(float3 start, float3 end, int timingGroup)
     {
         Entity traceEntity = entityManager.Instantiate(traceNoteEntityPrefab);
         entityManager.SetSharedComponentData<RenderMesh>(traceEntity, new RenderMesh()
         {
             mesh = traceMesh,
             material = traceMaterial
-        });
-        entityManager.SetComponentData<ArcStartPosition>(traceEntity, new ArcStartPosition()
-        {
-            Value = new float2(start.x, start.y),
         });
         entityManager.SetComponentData<FloorPosition>(traceEntity, new FloorPosition()
         {
@@ -126,11 +122,16 @@ public class TraceEntityCreator : MonoBehaviour
         entityManager.SetComponentData<LocalToWorld>(traceEntity, new LocalToWorld()
         {
             Value = new float4x4(
-                1, 0, dx, 0,
-                0, 1, dy, 0,
+                1, 0, dx, start.x,
+                0, 1, dy, start.y,
                 0, 0, dz, 0,
                 0, 0, 0,  1
             )
+        });
+
+        entityManager.SetComponentData<TimingGroup>(traceEntity, new TimingGroup()
+        {
+            Value = timingGroup
         });
     }
 
@@ -152,6 +153,10 @@ public class TraceEntityCreator : MonoBehaviour
         entityManager.SetComponentData<Translation>(headEntity, new Translation()
         {
             Value = new float3(x, y, z)
+        });
+        entityManager.SetComponentData<TimingGroup>(headEntity, new TimingGroup()
+        {
+            Value = trace.timingGroup
         });
     }
 }

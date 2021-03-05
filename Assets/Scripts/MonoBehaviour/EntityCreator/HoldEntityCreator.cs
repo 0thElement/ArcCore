@@ -48,6 +48,9 @@ public class HoldEntityCreator : MonoBehaviour
             entityManager.SetComponentData<FloorPosition>(holdEntity, new FloorPosition(){
                 Value = startFloorPosition
             });
+            entityManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(){
+                Value = hold.timingGroup
+            });
         }
     }
 }
