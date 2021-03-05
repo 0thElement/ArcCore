@@ -20,21 +20,18 @@ namespace ArcCore.MonoBehaviours
 
         public override string ToString() => $"{type} @ line {line}";
     }
-
     public struct AffTiming
     {
         public int timing;
         public float bpm;
         public float divisor;
     }
-
     public struct AffTap
     {
         public int timing;
         public int track;
         public int timingGroup;
     }
-
     public struct AffHold
     {
         public int timing;
@@ -88,27 +85,6 @@ namespace ArcCore.MonoBehaviours
         public int timing;
     }
 
-    public enum ArcEasing
-    {
-        b,
-        s,
-        si,
-        so,
-        sisi,
-        soso,
-        siso,
-        sosi
-    }
-
-    public enum CameraEasing
-    {
-        l,
-        qi,
-        qo,
-        s,
-        reset
-    }
-
     public enum AffErrorType
     {
         none,
@@ -126,7 +102,6 @@ namespace ArcCore.MonoBehaviours
         invalid_lane,
         improper_time,
     }
-
     public class ChartReader : MonoBehaviour
     {
         public static ChartReader Instance { get; private set; }
@@ -145,13 +120,15 @@ namespace ArcCore.MonoBehaviours
         private void Awake()
         {
             Instance = this;
+        }
+        private void Start()
+        {
             // Temporary
             path = Path.Combine(Application.dataPath, "TempAssets", "2.aff");
             AffError err;
             if ((err = ReadChart(path)) != null)
                 Debug.LogError(err);
         }
-
         private AffError ReadChart(string path)
         {
             string[] lines = File.ReadAllLines(path);
@@ -161,7 +138,7 @@ namespace ArcCore.MonoBehaviours
 
             //Local funcs cuz f*ck this
             AffError getError(AffErrorType t)
-                => new AffError(t, i);
+                => new AffError(t, i+1);
 
             while (i < lines.Length && lines[i][0] != '-')
             {
@@ -192,6 +169,11 @@ namespace ArcCore.MonoBehaviours
             affTimingList.Add(new List<AffTiming>());
             while (i < lines.Length)
             {
+                if (lines[i][0] == '}' || lines[i][0] == '{') 
+                {
+                    i++;
+                    continue;
+                }
 
                 StringParser lineParser = new StringParser(lines[i]);
 
@@ -244,9 +226,14 @@ namespace ArcCore.MonoBehaviours
             }
 
             Conductor.Instance.SetupTiming(affTimingList);
+            BeatlineEntityCreator.Instance.CreateEntities(affTimingList[0]);
             TapEntityCreator.Instance.CreateEntities(affTapList);
             HoldEntityCreator.Instance.CreateEntities(affHoldList);
             ArcEntityCreator.Instance.CreateEntities(affArcList);
+            TraceEntityCreator.Instance.CreateEntities(affTraceList);
+            ArcTapEntityCreator.Instance.CreateEntities(affArcTapList, affTapList);
+
+            Conductor.Instance.PlayMusic();
 
             return null;
         }
@@ -342,7 +329,7 @@ namespace ArcCore.MonoBehaviours
             if (!lineParser.ParseBool(out bool isTrace, ")"))
                 return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_boolean);
 
-            if (isTrace)
+            if (!isTrace)
             {
                 while (affArcList.Count < color + 1) affArcList.Add(new List<AffArc>());
                 affArcList[color].Add(new AffArc()

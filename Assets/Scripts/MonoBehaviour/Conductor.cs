@@ -1,6 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Collections;
 
 namespace ArcCore.MonoBehaviours
 {
@@ -17,55 +17,49 @@ namespace ArcCore.MonoBehaviours
         //Conductor is responsible for playing the audio and making sure gameplay syncs. Most systems will refer to this class to get the current timing
 
         public static Conductor Instance { get; private set; }
-
         private AudioSource audioSource;
+
+        [SerializeField] public float offset;
+        [HideInInspector] private float dspStartPlayingTime;
+        [HideInInspector] public List<float> groupFloorPosition;
+        private List<List<TimingEvent>> timingEventGroups;
+        private List<int> groupIndexCache;
+        public float receptorTime;
+        public int songLength;
+        public NativeArray<float> currentFloorPosition;
 
         public delegate void TimeCalculatedAction(float time);
         public event TimeCalculatedAction OnTimeCalculated;
-
-        [SerializeField]
-        private float offset;
-
-        private float dspStartPlayingTime;
-        [HideInInspector]
-        public float receptorTime;
-        [HideInInspector]
-        public List<float> groupFloorPosition;
-        private List<List<TimingEvent>> timingEventGroups;
-        private List<int> groupIndexCache;
-
+        
         public void Awake()
         {
             Instance = this;
-            audioSource = GetComponent<AudioSource>();
-            PlayMusic();
+            audioSource = GetComponent<AudioSource>();      
+            songLength = (int)Mathf.Round(audioSource.clip.length*1000);
         }
-
+        
         public void PlayMusic()
         {
-            dspStartPlayingTime = (float)AudioSettings.dspTime;
-            audioSource.Play();
+            dspStartPlayingTime = (float)AudioSettings.dspTime + 1;
+            audioSource.PlayScheduled(dspStartPlayingTime);
         }
 
         public void Update()
         {
             receptorTime = (float)(AudioSettings.dspTime - dspStartPlayingTime - offset);
-            OnTimeCalculated?.Invoke(receptorTime);
+            UpdateCurrentFloorPosition();
         }
         public void SetOffset(int value)
         {
-            offset = value;
+            offset = (float)value/1000; 
         }
-        public void SetupTiming(List<List<AffTiming>> timingGroups)
-        {
+        public void SetupTiming(List<List<AffTiming>> timingGroups) {
             //precalculate floorposition value for timing events
-            //Unrolling the first loop. first one will also take on the job of creating beat divisor
-            timingEventGroups = new List<List<TimingEvent>>(timingGroups.Count);
+            timingEventGroups = new List<List<TimingEvent>>(timingGroups.Count); 
 
-            SetupTimingGroup(timingGroups, 0);
-            //todo: beat divisor
+            currentFloorPosition = new NativeArray<float>(new float[timingGroups.Count], Allocator.Persistent);
 
-            for (int i = 1; i < timingGroups.Count; i++)
+            for (int i=0; i<timingGroups.Count; i++)
             {
                 SetupTimingGroup(timingGroups, i);
             }
@@ -91,14 +85,17 @@ namespace ArcCore.MonoBehaviours
                 {
                     timing = timingGroups[i][j].timing,
                     floorPosition = timingGroups[i][j - 1].bpm
-                                  * (timingGroups[i][j].timing - timingGroups[i][j - 1].timing)
-                                  + timingEventGroups[i][j - 1].floorPosition,
+                                * (timingGroups[i][j].timing - timingGroups[i][j - 1].timing)
+                                + timingEventGroups[i][j - 1].floorPosition,
                     bpm = timingGroups[i][j].bpm
                 });
             }
         }
+
         public float GetFloorPositionFromTiming(int timing, int timingGroup)
         {
+            if (timing<0) return timingEventGroups[0][0].bpm*timing;
+
             List<TimingEvent> group = timingEventGroups[timingGroup];
             //caching the index so we dont have to loop the entire thing every time
             //list access should be largely local anyway
@@ -145,5 +142,20 @@ namespace ArcCore.MonoBehaviours
         public int TimingEventListLength(int timingGroup)
             => timingEventGroups[timingGroup].Count;
 
+        public void UpdateCurrentFloorPosition()
+        {
+            if (timingEventGroups == null) return;
+            int timeInt = (int)Mathf.Round(receptorTime*1000);
+            //Might separate the output array into its own singleton class or entity
+            for (int group=0; group < timingEventGroups.Count; group++)
+            {
+                currentFloorPosition[group] = GetFloorPositionFromTiming(timeInt, group);
+            }
+        }
+
+        public void DisposeFloorPositionArray()
+        {
+            currentFloorPosition.Dispose();
+        }
     }
 }

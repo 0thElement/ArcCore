@@ -7,8 +7,9 @@ using ArcCore.Utility;
 using ArcCore.Data;
 using ArcCore.MonoBehaviours;
 
-namespace ArcCore.MonoBehaviours.EntityCreation
+namespace ArcCore.MonoBehavious.EntityCreation
 {
+
     public class TapEntityCreator : MonoBehaviour
     {
         public static TapEntityCreator Instance { get; private set; }
@@ -27,6 +28,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
         public void CreateEntities(List<AffTap> affTapList)
         {
+            affTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+
             foreach (AffTap tap in affTapList)
             {
                 Entity tapEntity = entityManager.Instantiate(tapNoteEntityPrefab);
@@ -34,13 +37,16 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 float x = Convert.TrackToX(tap.track);
                 const float y = 0;
                 const float z = 0;
-                entityManager.SetComponentData<Translation>(tapEntity, new Translation()
-                {
+
+                entityManager.SetComponentData<Translation>(tapEntity, new Translation(){ 
                     Value = new float3(x, y, z)
                 });
-                entityManager.SetComponentData<FloorPosition>(tapEntity, new FloorPosition()
+                entityManager.SetComponentData<FloorPosition>(tapEntity, new FloorPosition(){
+                    Value = Conductor.Instance.GetFloorPositionFromTiming(tap.timing, tap.timingGroup)
+                });
+                entityManager.SetComponentData<TimingGroup>(tapEntity, new TimingGroup()
                 {
-                    value = Conductor.Instance.GetFloorPositionFromTiming(tap.timing, tap.timingGroup)
+                    Value = tap.timingGroup
                 });
 
                 Entity judgeEntity = entityManager.CreateEntity(typeof(JudgeTime), typeof(JudgeLane));
@@ -57,4 +63,5 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             }
         }
     }
+
 }

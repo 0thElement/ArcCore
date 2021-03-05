@@ -4,6 +4,27 @@ using UnityEngine;
 
 namespace ArcCore.Utility
 {
+    public enum ArcEasing
+    {
+        b,
+        s,
+        si,
+        so,
+        sisi,
+        soso,
+        siso,
+        sosi
+    }
+
+    public enum CameraEasing
+    {
+        l,
+        qi,
+        qo,
+        s,
+        reset
+    }
+
     public class Convert
     {
         public static float TrackToX(int track)

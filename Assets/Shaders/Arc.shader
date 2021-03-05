@@ -6,15 +6,11 @@
 		_Color ("Color", Color) = (1,1,1,1)
 		_From ("From", Float) = 0
 		_To ("To", Float) = 1 
-		_Highlight("Highlight", Int) = 0
 	}
 	SubShader
 	{
 		Tags { "Queue" = "Transparent"  "RenderType" = "Transparent" "CanUseSpriteAtlas"="true"  }
-
         Cull Off
-        Lighting Off
-		ZWrite Off 
 		Blend SrcAlpha OneMinusSrcAlpha
   
 		Pass
@@ -22,6 +18,7 @@
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
+			#pragma multi_compile_instancing
 
 			#include "UnityCG.cginc"
 			#include "ColorSpace.cginc"
@@ -40,7 +37,6 @@
 				float2 uv : TEXCOORD0;
 			};
 			 
-			int _Highlight;
 			float _From,_To;
 			float4 _Color;
             float4 _MainTex_ST;
@@ -54,25 +50,13 @@
 				o.color = v.color * _Color;
 				return o;
 			}
-			
-			half4 Highlight(half4 c)
-			{
-				fixed3 hsv = rgb2hsv(c.rgb);
-				if(c.r<0.5) hsv.r += 0.1f;
-				else hsv.g += 1.2f;
-				return half4(hsv2rgb(hsv),c.a);
-			}
 
 			half4 frag (v2f i) : SV_Target
 			{
 			    if(i.uv.y < _From || i.uv.y > _To) return 0;
 				float4 c = tex2D(_MainTex,i.uv) ; 
 				float4 inColor = i.color;
-				if(_Highlight == 1) 
-				{
-					inColor = Highlight(inColor);
-				}
-				c *= inColor;  
+				c *= inColor;
 				return c;
 			}
 			ENDCG

@@ -13,12 +13,18 @@ namespace ArcCore.MonoBehaviours.EntityCreation
     {
         public static ArcEntityCreator Instance { get; private set; }
         [SerializeField] private GameObject arcNotePrefab;
+        [SerializeField] private GameObject headArcNotePrefab;
+        [SerializeField] private GameObject heightIndicatorPrefab;
         [SerializeField] private Material arcMaterial;
+        [SerializeField] private Material heightMaterial;
         [SerializeField] private Color[] arcColors;
+        [SerializeField] private Mesh arcMesh;
+        [SerializeField] private Mesh headMesh;
         private Entity arcNoteEntityPrefab;
+        private Entity headArcNoteEntityPrefab;
+        private Entity heightIndicatorEntityPrefab;
         private World defaultWorld;
         private EntityManager entityManager;
-        private Mesh arcMesh;
         private int colorShaderId;
         private void Awake()
         {
@@ -27,60 +33,39 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager = defaultWorld.EntityManager;
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             arcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcNotePrefab, settings);
-            arcMesh = CreateBaseArcSegmentMesh();
             //Remove these component to allow direct access to localtoworld matrices
             //idk if this is a good way to set up an entity prefab in this case but this will do for now
             entityManager.RemoveComponent<Translation>(arcNoteEntityPrefab);
             entityManager.RemoveComponent<Rotation>(arcNoteEntityPrefab);
+
+            headArcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headArcNotePrefab, settings);
+
+            heightIndicatorEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(heightIndicatorPrefab, settings);
+
             colorShaderId = Shader.PropertyToID("_Color");
-        }
-        public Mesh CreateBaseArcSegmentMesh()
-        {
-            Vector3 fromPos = new float3(0, 0, 0);
-            Vector3 toPos = new float3(0, 0, -1);
-            float offset = 0.9f;
-
-            Vector3[] vertices = new Vector3[6];
-            Vector2[] uv = new Vector2[6];
-            int[] triangles = new int[] { 0, 3, 2, 0, 2, 1, 0, 5, 4, 0, 4, 1 };
-
-            vertices[0] = fromPos + new Vector3(0, offset / 2, 0);
-            uv[0] = new Vector2();
-            vertices[1] = toPos + new Vector3(0, offset / 2, 0);
-            uv[1] = new Vector2(0, 1);
-            vertices[2] = toPos + new Vector3(offset, -offset / 2, 0);
-            uv[2] = new Vector2(1, 1);
-            vertices[3] = fromPos + new Vector3(offset, -offset / 2, 0);
-            uv[3] = new Vector2(1, 0);
-            vertices[4] = toPos + new Vector3(-offset, -offset / 2, 0);
-            uv[4] = new Vector2(1, 1);
-            vertices[5] = fromPos + new Vector3(-offset, -offset / 2, 0);
-            uv[5] = new Vector2(1, 0);
-
-            return new Mesh()
-            {
-                vertices = vertices,
-                uv = uv,
-                triangles = triangles
-            };
         }
 
         public void CreateEntities(List<List<AffArc>> affArcList)
         {
-            int colorId = 0;
+            int colorId=0;
             foreach (List<AffArc> listByColor in affArcList)
             {
-                Material arcColorMaterialInstance = Instantiate(arcMaterial);
-                arcColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
-                Debug.Log(arcColorMaterialInstance.renderQueue);
+                listByColor.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
 
-                List<float3> connectedArcsIdEndpoint = new List<float3>();
+                Material arcColorMaterialInstance = Instantiate(arcMaterial);
+                Material heightIndicatorColorMaterialInstance = Instantiate(heightMaterial);
+                arcColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
+                heightIndicatorColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
+                colorId++;
+
+                List<float4> connectedArcsIdEndpoint = new List<float4>();
 
                 foreach (AffArc arc in listByColor)
                 {
                     //Precalc and assign a connected arc id to avoid having to figure out connection during gameplay
-                    float3 arcStartPoint = new float3((float)arc.timing, arc.startX, arc.startY);
-                    float3 arcEndPoint = new float3((float)arc.endTiming, arc.endX, arc.endY);
+                    //this is really dumb but i don't want to split this into another class
+                    float4 arcStartPoint = new float4((float)arc.timingGroup, (float)arc.timing, arc.startX, arc.startY);
+                    float4 arcEndPoint = new float4((float)arc.timingGroup, (float)arc.endTiming, arc.endX, arc.endY);
                     int arcId = -1;
                     bool isHeadArc = true;
                     for (int id = 0; id < connectedArcsIdEndpoint.Count; id++)
@@ -95,10 +80,12 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
                     if (isHeadArc)
                     {
-                        //todo: create Archead and height indicator
                         arcId = connectedArcsIdEndpoint.Count;
                         connectedArcsIdEndpoint.Add(arcEndPoint);
+                        CreateHeadSegment(arc, arcColorMaterialInstance);
                     }
+                    if (isHeadArc || arc.startY != arc.endY)
+                        CreateHeightIndicator(arc, heightIndicatorColorMaterialInstance);
 
                     //Generate arc segments and shadow segment(each segment is its own entity)
                     int duration = arc.endTiming - arc.timing;
@@ -124,7 +111,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                             Conductor.Instance.GetFloorPositionFromTiming(arc.timing + t, arc.timingGroup)
                         );
 
-                        CreateSegment(arcColorMaterialInstance, start, end);
+                        CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup);
                     }
 
                     start = end;
@@ -134,8 +121,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                         Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                     );
 
-                    CreateSegment(arcColorMaterialInstance, start, end);
-
+                    CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup);
 
                     float time = arc.timing;
                     int timingEventIdx = Conductor.Instance.GetTimingEventIndexFromTiming(arc.timing, arc.timingGroup);
@@ -177,15 +163,11 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
                         ScoreManager.Instance.maxCombo++;
                     }
-
                 }
-
-                colorId++;
-
             }
         }
 
-        private void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end)
+        private void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end, int timingGroup)
         {
             Entity arcEntity = entityManager.Instantiate(arcNoteEntityPrefab);
             entityManager.SetSharedComponentData<RenderMesh>(arcEntity, new RenderMesh()
@@ -193,14 +175,93 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 mesh = arcMesh,
                 material = arcColorMaterialInstance
             });
-            entityManager.SetComponentData<StartEndPosition>(arcEntity, new StartEndPosition()
-            {
-                startPosition = start,
-                endPosition = end
-            });
             entityManager.SetComponentData<FloorPosition>(arcEntity, new FloorPosition()
             {
-                value = start.z
+                Value = start.z
+            });
+
+            float dx = start.x - end.x;
+            float dy = start.y - end.y;
+            float dz = start.z - end.z;
+
+            //Shear along xy + scale along z matrix
+            entityManager.SetComponentData<LocalToWorld>(arcEntity, new LocalToWorld()
+            {
+                Value = new float4x4(
+                    1, 0, dx, start.x,
+                    0, 1, dy, start.y,
+                    0, 0, dz, 0,
+                    0, 0, 0,  1
+                )
+            });
+
+            entityManager.SetComponentData<TimingGroup>(arcEntity, new TimingGroup()
+            {
+                Value = timingGroup
+            });
+        }
+
+        private void CreateHeightIndicator(AffArc arc, Material material)
+        {
+            Entity heightEntity = entityManager.Instantiate(heightIndicatorEntityPrefab);
+
+            float height = Convert.GetWorldY(arc.startY) - 0.45f;
+
+            float x = Convert.GetWorldX(arc.startX); 
+            float y = height / 2;
+            const float z = 0;
+
+            const float scaleX = 2.34f;
+            float scaleY = height;
+            const float scaleZ = 1;
+
+            Mesh mesh = entityManager.GetSharedComponentData<RenderMesh>(heightEntity).mesh; 
+            entityManager.SetSharedComponentData<RenderMesh>(heightEntity, new RenderMesh()
+            {
+                mesh = mesh,
+                material = material 
+            });
+
+            entityManager.SetComponentData<Translation>(heightEntity, new Translation()
+            {
+                Value = new float3(x, y, z)
+            });
+            entityManager.AddComponentData<NonUniformScale>(heightEntity, new NonUniformScale()
+            {
+                Value = new float3(scaleX, scaleY, scaleZ)
+            });
+            entityManager.AddComponentData<FloorPosition>(heightEntity, new FloorPosition()
+            {
+                Value = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
+            });
+            entityManager.SetComponentData<TimingGroup>(heightEntity, new TimingGroup()
+            {
+                Value = arc.timingGroup
+            });
+        }
+
+        private void CreateHeadSegment(AffArc arc, Material material)
+        {
+            Entity headEntity = entityManager.Instantiate(headArcNoteEntityPrefab);
+            entityManager.SetSharedComponentData<RenderMesh>(headEntity, new RenderMesh(){
+                mesh = headMesh,
+                material = material
+            });
+            entityManager.SetComponentData<FloorPosition>(headEntity, new FloorPosition()
+            {
+                Value = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
+            });
+
+            float x = Convert.GetWorldX(arc.startX); 
+            float y = Convert.GetWorldY(arc.startY); 
+            const float z = 0;
+            entityManager.SetComponentData<Translation>(headEntity, new Translation()
+            {
+                Value = new float3(x, y, z)
+            });
+            entityManager.SetComponentData<TimingGroup>(headEntity, new TimingGroup()
+            {
+                Value = arc.timingGroup
             });
         }
     }

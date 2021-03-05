@@ -26,6 +26,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
         public void CreateEntities(List<AffHold> affHoldList)
         {
+            affHoldList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+
             foreach (AffHold hold in affHoldList)
             {
                 Entity holdEntity = entityManager.Instantiate(holdNoteEntityPrefab);
@@ -34,23 +36,23 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 const float y = 0;
                 const float z = 0;
 
-                const float scalex = 1.53f;
+                const float scalex = 1;
+                const float scaley = 1;
                 float endFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.endTiming, hold.timingGroup);
                 float startFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.timing, hold.timingGroup);
-                float scaley = (endFloorPosition - startFloorPosition) / 3790f;
-                const float scalez = 1;
+                float scalez = - endFloorPosition + startFloorPosition;
 
-                entityManager.SetComponentData<Translation>(holdEntity, new Translation()
-                {
+                entityManager.SetComponentData<Translation>(holdEntity, new Translation(){
                     Value = new float3(x, y, z)
                 });
-                entityManager.SetComponentData<NonUniformScale>(holdEntity, new NonUniformScale()
-                {
+                entityManager.AddComponentData<NonUniformScale>(holdEntity, new NonUniformScale(){
                     Value = new float3(scalex, scaley, scalez)
                 });
-                entityManager.SetComponentData<FloorPosition>(holdEntity, new FloorPosition()
-                {
-                    value = startFloorPosition
+                entityManager.SetComponentData<FloorPosition>(holdEntity, new FloorPosition(){
+                    Value = startFloorPosition
+                });
+                entityManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(){
+                    Value = hold.timingGroup
                 });
 
                 float time = hold.timing;
@@ -75,4 +77,5 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             }
         }
     }
+
 }
