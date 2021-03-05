@@ -9,9 +9,19 @@ public class MoveNotesTowardScreen : SystemBase
 {
     protected override void OnUpdate()
     {
-        float currentFloorPosition = Conductor.Instance.currentFloorPosition[0];
-        Entities.ForEach((ref Translation translation, in FloorPosition floorPosition) => {
-            translation.Value.z = floorPosition.Value - currentFloorPosition; 
+        NativeArray<float> currentFloorPosition = Conductor.Instance.currentFloorPosition;
+
+        //All note except arcs
+        Entities.ForEach((ref Translation translation, in FloorPosition floorPosition, in TimingGroup group) => {
+            translation.Value.z = floorPosition.Value - currentFloorPosition[group.Value]; 
         }).Schedule();
+
+        //Arc segments
+        Entities.WithNone<Translation>().
+            ForEach((ref LocalToWorld lcwMatrix, in FloorPosition floorPosition, in TimingGroup group) => {
+
+                lcwMatrix.Value.c3.z = floorPosition.Value - currentFloorPosition[group.Value];
+            
+            }).Schedule();
     }
 }

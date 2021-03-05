@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Collections;
 
 public struct TimingEvent
 {
@@ -23,7 +24,7 @@ public class Conductor : MonoBehaviour
     private List<int> groupIndexCache;
     public float receptorTime;
     public int songLength;
-    public List<float> currentFloorPosition;
+    public NativeArray<float> currentFloorPosition;
     
     public void Awake()
     {
@@ -51,7 +52,7 @@ public class Conductor : MonoBehaviour
         //precalculate floorposition value for timing events
         timingEventGroups = new List<List<TimingEvent>>(timingGroups.Count); 
 
-        currentFloorPosition = new List<float>(new float[timingGroups.Count]);
+        currentFloorPosition = new NativeArray<float>(new float[timingGroups.Count], Allocator.Persistent);
 
         for (int i=0; i<timingGroups.Count; i++)
         {
@@ -121,4 +122,8 @@ public class Conductor : MonoBehaviour
         }
     }
 
+    public void DisposeFloorPositionArray()
+    {
+        currentFloorPosition.Dispose();
+    }
 }
