@@ -157,18 +157,7 @@ namespace ArcCore.MonoBehaviours
         {
             Ray ray = cameraCast.ScreenPointToRay(new Vector3(t.position.x, t.position.y));
 
-            float2 ipt;
-            float ratio;
-
-            if (Mathf.Approximately(ray.direction.z, 0))
-            {
-                ipt = new float2(ray.origin.x, 0);
-            }
-            else
-            {
-                ratio = ray.origin.z / ray.direction.z;
-                ipt = new float2(ray.origin.x - ray.direction.x * ratio, ray.origin.y - ray.direction.y * ratio);
-            }
+            float2 ipt = ProjectionMaths.ProjectOntoXYPlane(ray);
 
             int lane = 0;
             if (ipt.y < Constants.ArcYZero * yLeniency)
