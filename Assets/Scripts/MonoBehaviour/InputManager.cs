@@ -162,9 +162,8 @@ namespace ArcCore.MonoBehaviours
             int lane = 0;
             if (ipt.y < Constants.ArcYZero * yLeniency)
             {
-                ratio = ray.origin.y / ray.direction.y;
-                float laneX = ray.origin.x - ray.direction.x * ratio;
-                lane = Convert.XToTrack(laneX);
+                float2 laneProj = ProjectionMaths.ProjectOntoXZPlane(ray);
+                lane = Convert.XToTrack(laneProj.x);
             }
 
             return (ipt, lane);
