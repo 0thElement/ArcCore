@@ -13,7 +13,7 @@ namespace ArcCore.Utility
 
         public const float TAN_EPSILON = 0.1003f;
 
-        public static float2 ProjectOntoXYPlane(Vector3 position, Ray ray)
+        public static float2 ProjectOntoXYPlane(Ray ray)
         {
             if (ray.direction.z == 0)
             {
@@ -26,7 +26,7 @@ namespace ArcCore.Utility
             }
         }
 
-        public static float2 ProjectOntoXZPlane(Vector3 position, Ray ray)
+        public static float2 ProjectOntoXZPlane(Ray ray)
         {
             if (ray.direction.y == 0)
             {
@@ -39,7 +39,7 @@ namespace ArcCore.Utility
             }
         }
 
-        public static float2 ProjectOntoYZPlane(Vector3 position, Ray ray)
+        public static float2 ProjectOntoYZPlane(Ray ray)
         {
             if (ray.direction.x == 0)
             {
