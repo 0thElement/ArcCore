@@ -27,7 +27,7 @@ namespace ArcCore.MonoBehaviours
         private List<List<TimingEvent>> timingEventGroups;
         private List<int> groupIndexCache;
         public float receptorTime;
-        public float timeOfLastMix;
+        public long timeOfLastMix;
         public int songLength;
         public NativeArray<float> currentFloorPosition;
 
@@ -38,14 +38,13 @@ namespace ArcCore.MonoBehaviours
         {
             Instance = this;
             audioSource = GetComponent<AudioSource>();
-            timeOfLastMix = TimeThreadless.SecondsExact;
+            timeOfLastMix = TimeThreadless.Ticks;
             songLength = (int)Mathf.Round(audioSource.clip.length*1000);
         }
         
         public void PlayMusic()
         {
             dspStartPlayingTime = (float)AudioSettings.dspTime + 1;
-            timeOfLastMix = TimeThreadless.SecondsExact;
             audioSource.PlayScheduled(dspStartPlayingTime);
         }
 
@@ -53,7 +52,7 @@ namespace ArcCore.MonoBehaviours
         {
             receptorTime = (float)(
                 AudioSettings.dspTime - dspStartPlayingTime - offset +
-                TimeThreadless.SecondsExact - timeOfLastMix
+                TimeThreadless.TimeSince_T2S(timeOfLastMix)
                 );
             UpdateCurrentFloorPosition();
             OnTimeCalculated(receptorTime);
@@ -64,7 +63,7 @@ namespace ArcCore.MonoBehaviours
         }
         public void OnAudioFilterRead(float[] data, int channels)
         {
-            timeOfLastMix = TimeThreadless.SecondsExact;
+            timeOfLastMix = TimeThreadless.Ticks;
         }
         public void OnDestroy()
         {
