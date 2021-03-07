@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Collections;
+using System;
+using ArcCore.Utility;
 
 namespace ArcCore.MonoBehaviours
 {
@@ -25,6 +27,7 @@ namespace ArcCore.MonoBehaviours
         private List<List<TimingEvent>> timingEventGroups;
         private List<int> groupIndexCache;
         public float receptorTime;
+        public float timeOfLastMix;
         public int songLength;
         public NativeArray<float> currentFloorPosition;
 
@@ -34,24 +37,38 @@ namespace ArcCore.MonoBehaviours
         public void Awake()
         {
             Instance = this;
-            audioSource = GetComponent<AudioSource>();      
+            audioSource = GetComponent<AudioSource>();
+            timeOfLastMix = TimeThreadless.SecondsExact;
             songLength = (int)Mathf.Round(audioSource.clip.length*1000);
         }
         
         public void PlayMusic()
         {
             dspStartPlayingTime = (float)AudioSettings.dspTime + 1;
+            timeOfLastMix = TimeThreadless.SecondsExact;
             audioSource.PlayScheduled(dspStartPlayingTime);
         }
 
         public void Update()
         {
-            receptorTime = (float)(AudioSettings.dspTime - dspStartPlayingTime - offset);
+            receptorTime = (float)(
+                AudioSettings.dspTime - dspStartPlayingTime - offset +
+                TimeThreadless.SecondsExact - timeOfLastMix
+                );
             UpdateCurrentFloorPosition();
+            OnTimeCalculated(receptorTime);
         }
         public void SetOffset(int value)
         {
             offset = (float)value/1000; 
+        }
+        public void OnAudioFilterRead(float[] data, int channels)
+        {
+            timeOfLastMix = TimeThreadless.SecondsExact;
+        }
+        public void OnDestroy()
+        {
+            currentFloorPosition.Dispose();
         }
         public void SetupTiming(List<List<AffTiming>> timingGroups) {
             //precalculate floorposition value for timing events
@@ -94,7 +111,7 @@ namespace ArcCore.MonoBehaviours
 
         public float GetFloorPositionFromTiming(int timing, int timingGroup)
         {
-            if (timing<0) return timingEventGroups[0][0].bpm*timing;
+            if (timing<0) return timingEventGroups[0][0].bpm*timing / -1300;
 
             List<TimingEvent> group = timingEventGroups[timingGroup];
             //caching the index so we dont have to loop the entire thing every time

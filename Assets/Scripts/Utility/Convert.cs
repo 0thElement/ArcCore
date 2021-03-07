@@ -1,4 +1,5 @@
 using ArcCore.MonoBehaviours;
+using System;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -23,6 +24,11 @@ namespace ArcCore.Utility
         qo,
         s,
         reset
+    }
+
+    public class TimeThreadless
+    {
+        public static float SecondsExact => DateTime.Now.Ticks / 10_000_000f;
     }
 
     public class Convert

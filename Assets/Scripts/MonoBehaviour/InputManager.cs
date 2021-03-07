@@ -1,5 +1,6 @@
 ﻿using ArcCore.Utility;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -8,28 +9,18 @@ namespace ArcCore.MonoBehaviours
 {
     public struct TouchPoint
     {
-        public float2 inputPlanePoint;
-        public int lane;
-        public float time;
+        public AABB inputPlanePoint;
+        public int lane; //CHANGE THIS TO YET ANOTHER AABB
+        public int time;
         public bool pressed;
+        public int fingerId;
 
-        public TouchPoint(float2 inputPlanePoint, int lane, float time, bool pressed)
+        public TouchPoint(AABB inputPlanePoint, int lane, int time, bool pressed, int fingerId)
         {
             this.inputPlanePoint = inputPlanePoint;
             this.lane = lane;
             this.time = time;
             this.pressed = pressed;
-        }
-    }
-
-    public struct TouchPointFull
-    {
-        public TouchPoint touchPoint;
-        public int fingerId;
-
-        public TouchPointFull(TouchPoint touchPoint, int fingerId)
-        {
-            this.touchPoint = touchPoint;
             this.fingerId = fingerId;
         }
     }
@@ -42,19 +33,15 @@ namespace ArcCore.MonoBehaviours
 
         public const int MaxTouches = 10;
 
-        public Dictionary<int, TouchPoint> touchPoints = new Dictionary<int, TouchPoint>(MaxTouches);
+        public NativeArray<TouchPoint> touchPoints;
+        public int safeIndex = 0;
 
         public Camera cameraCast;
-        [HideInInspector]
-        public float yLeniency;
-        public float BaseYLenDist { get; private set; }
 
         void Awake()
         {
             Instance = this;
-
-            //ENSURE THAT CAMERA IS RESET BEFORE CALLING THIS
-            BaseYLenDist = GetYLeniencyDist();
+            touchPoints = new NativeArray<TouchPoint>(new TouchPoint[MaxTouches], Allocator.Persistent);
         }
 
         void Start()
@@ -68,105 +55,102 @@ namespace ArcCore.MonoBehaviours
         public void KillConnection()
             => Conductor.Instance.OnTimeCalculated -= PollInput;
 
-        public NativeArray<TouchPointFull> GetJobPreparedTouchPoints()
+        private bool FreeId(int id) => !touchPoints.Any(t => t.fingerId == id);
+        private int IdIndex(int id)
         {
-            NativeArray<TouchPointFull> ret = new NativeArray<TouchPointFull>(touchPoints.Count, Allocator.TempJob);
-
-            int i = 0;
-
-            foreach(var touchPoint in touchPoints)
-                ret[i++] = new TouchPointFull(touchPoint.Value, touchPoint.Key);
-
-            return ret;
+            for (int i = 0; i < MaxTouches; i++)
+                if (touchPoints[i].fingerId == id)
+                    return i;
+            return -1;
+        }
+        private int SafeIndex()
+        {
+            for (int i = safeIndex; i < MaxTouches; i++)
+                if (touchPoints[i].fingerId == -1)
+                    return safeIndex = i;
+            return safeIndex = MaxTouches;
         }
 
         private void PollInput(float time)
         {
-            CalculateYLeniency(); //SHOULDNT BE RECALCULATED FOR CHARTS WITHOUT CAMERA MOTION
-
-            int count = 0;
-            for(int i = 0; i < Input.touchCount; i++)
+            for (int i = 0; i < Input.touchCount; i++)
             {
                 Touch t = Input.touches[i];
 
-                if (t.phase == TouchPhase.Began && !touchPoints.ContainsKey(t.fingerId)) 
+                if (t.phase == TouchPhase.Began && FreeId(t.fingerId) && SafeIndex() != MaxTouches)
                 {
 
-                    (float2 ipt, int lane) = PerformRayCast(t);
-
-                    if (touchPoints.Count <= MaxTouches)
-                        touchPoints.Add(
-                            t.fingerId, 
-                            new TouchPoint(ipt, lane, time - t.deltaTime, true)
-                        );
-
-                } 
-                else if (t.phase == TouchPhase.Moved && touchPoints.ContainsKey(t.fingerId))
-                {
-
-                    TouchPoint tp = touchPoints[t.fingerId];
-
-                    (float2 ipt, int lane) = PerformRayCast(t);
-
-                    tp.inputPlanePoint = ipt;
-                    tp.lane = lane;
-                    tp.pressed = false;
-
-                    touchPoints[t.fingerId] = tp;
-
-                    count++;
+                    (AABB ipt, int lane) = PerformRaycast(t);
+                    int timeT = (int)math.round((time - t.deltaTime) * 1000);
+                    touchPoints[safeIndex] = new TouchPoint(ipt, lane, timeT, true, t.fingerId);
 
                 }
-                else if (t.phase == TouchPhase.Stationary && touchPoints.ContainsKey(t.fingerId))
+                else if (t.phase == TouchPhase.Moved)
+                {
+                    int index = IdIndex(t.fingerId);
+                    if (index == -1)
+                    {
+                        TouchPoint tp = touchPoints[index];
+
+                        (AABB ipt, int lane) = PerformRaycast(t);
+                        int timeT = (int)math.round((time - t.deltaTime) * 1000);
+
+                        tp.inputPlanePoint = ipt;
+                        tp.lane = lane;
+                        tp.time = timeT;
+                        tp.pressed = false;
+
+                        touchPoints[index] = tp;
+                    }
+
+                }
+                else if (t.phase == TouchPhase.Stationary)
                 {
 
-                    TouchPoint tp = touchPoints[t.fingerId];
+                    int index = IdIndex(t.fingerId);
+                    if (index == -1)
+                    {
+                        TouchPoint tp = touchPoints[index];
 
-                    tp.pressed = false;
-                    tp.time = time - t.deltaTime;
+                        int timeT = (int)math.round((time - t.deltaTime) * 1000);
 
-                    touchPoints[t.fingerId] = tp;
+                        tp.time = timeT;
+                        tp.pressed = false;
 
-                } 
+                        touchPoints[index] = tp;
+                    }
+
+                }
                 else if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled)
                 {
 
-                    touchPoints.Remove(t.fingerId);
+                    int index = IdIndex(t.fingerId);
+                    if (index != -1)
+                    {
+                        TouchPoint tp = touchPoints[index];
+
+                        tp.fingerId = -1;
+
+                        touchPoints[index] = tp;
+                    }
 
                 }
             }
         }
 
-        public float GetYLeniencyDist()
-        {
-            Vector3 basepoint = cameraCast.WorldToScreenPoint(Vector3.zero);
-            Vector3 toppoint = cameraCast.WorldToScreenPoint(Vector3.up * Constants.InputMaxY);
-            return Vector3.Distance(basepoint, toppoint);
-        }
-
-        public void CalculateYLeniency()
-        {
-            float dist = GetYLeniencyDist();
-            if (Mathf.Approximately(dist, 0))
-                yLeniency = float.PositiveInfinity;
-            else
-                yLeniency = BaseYLenDist / dist;
-        }
-
-        public (float2 ipt, int lane) PerformRayCast(Touch t)
+        public (AABB ipt, int lane) PerformRaycast(Touch t)
         {
             Ray ray = cameraCast.ScreenPointToRay(new Vector3(t.position.x, t.position.y));
-
-            float2 ipt = ProjectionMaths.ProjectOntoXYPlane(ray);
+            float3 ipt = ProjectionMaths.ProjectOntoXYPlane(ray);
+            AABB ipt_aabb = ProjectionMaths.GetAABBJudgePoint(cameraCast.transform.position, ipt);
 
             int lane = 0;
-            if (ipt.y < Constants.ArcYZero * yLeniency)
-            {
-                float2 laneProj = ProjectionMaths.ProjectOntoXZPlane(ray);
-                lane = Convert.XToTrack(laneProj.x);
+            float3 lane_proj = ProjectionMaths.ProjectOntoXZPlane(ray);
+            if (ipt.z < 1) { 
+                lane = Convert.XToTrack(lane_proj.x);
             }
 
-            return (ipt, lane);
+            return (ipt_aabb, lane);
         }
     }
 }
