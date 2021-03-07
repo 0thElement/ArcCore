@@ -49,12 +49,12 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     Value = tap.timingGroup
                 });
 
-                Entity judgeEntity = entityManager.CreateEntity(typeof(JudgeTime), typeof(JudgeLane));
-                entityManager.SetComponentData<JudgeTime>(judgeEntity, new JudgeTime()
+                Entity judgeEntity = entityManager.CreateEntity(typeof(ChartTime), typeof(Track));
+                entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
                 {
                     time = tap.timing
                 });;
-                entityManager.SetComponentData<JudgeLane>(judgeEntity, new JudgeLane()
+                entityManager.SetComponentData<Track>(judgeEntity, new Track()
                 {
                     lane = tap.track
                 });

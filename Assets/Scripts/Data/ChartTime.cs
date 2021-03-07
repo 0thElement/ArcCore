@@ -3,7 +3,7 @@ using Unity.Entities;
 namespace ArcCore.Data
 {
     [GenerateAuthoringComponent]
-    public struct JudgeTime : IComponentData
+    public struct ChartTime : IComponentData
     {
         public int time;
     }

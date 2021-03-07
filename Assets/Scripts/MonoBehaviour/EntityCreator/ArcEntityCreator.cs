@@ -246,12 +246,12 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     nextEvent = Conductor.Instance.GetNextTimingEventOrNull(timingEventIdx, arc.timingGroup);
                 }
 
-                Entity judgeEntity = entityManager.CreateEntity(typeof(JudgeTime), typeof(JudgeStartEndPosition), typeof(JudgeArc));
-                entityManager.SetComponentData<JudgeTime>(judgeEntity, new JudgeTime()
+                Entity judgeEntity = entityManager.CreateEntity(typeof(ChartTime), typeof(PositionPair), typeof(ColorID));
+                entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
                 {
                     time = (int)time
                 });
-                entityManager.SetComponentData<JudgeStartEndPosition>(judgeEntity, new JudgeStartEndPosition()
+                entityManager.SetComponentData<PositionPair>(judgeEntity, new PositionPair()
                 {
                     startPosition = new float2(
                         Convert.GetXAt(Convert.RatioBetween(arc.timing, arc.endTiming, time - Constants.FarWindow), arc.startX, arc.endX, arc.easing),
@@ -262,7 +262,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                         Convert.GetYAt(Convert.RatioBetween(arc.timing, arc.endTiming, time + Constants.FarWindow), arc.startY, arc.endY, arc.easing)
                     )
                 });
-                entityManager.SetComponentData<JudgeArc>(judgeEntity, new JudgeArc()
+                entityManager.SetComponentData<ColorID>(judgeEntity, new ColorID()
                 {
                     colorID = colorId
                 });

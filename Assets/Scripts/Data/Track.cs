@@ -3,7 +3,7 @@
 namespace ArcCore.Data
 {
     [GenerateAuthoringComponent]
-    public struct JudgeLane : IComponentData
+    public struct Track : IComponentData
     {
         public int lane;
     }

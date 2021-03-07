@@ -4,8 +4,9 @@ using Unity.Mathematics;
 namespace ArcCore.Data
 {
     [GenerateAuthoringComponent]
-    public struct JudgePosition : IComponentData
+    public struct PositionPair : IComponentData
     {
-        public float2 position;
+        public float2 startPosition;
+        public float2 endPosition;
     }
 }
