@@ -5,8 +5,10 @@ using Unity.Jobs;
 using Unity.Transforms;
 using ArcCore.Data;
 using ArcCore.MonoBehaviours;
+using ArcCore.Tags;
+using Unity.Rendering;
 
-public class MoveNotesTowardScreen : SystemBase
+public class NoteVisuals : SystemBase
 {
     protected override void OnUpdate()
     {
@@ -24,5 +26,15 @@ public class MoveNotesTowardScreen : SystemBase
                 lcwMatrix.Value.c3.z = floorPosition.Value - currentFloorPosition[group.Value];
             
             }).Schedule();
+
+        float receptorTime = Conductor.Instance.receptorTime;
+
+        //Handle all traces
+        Entities.WithoutBurst()
+            .ForEach((RenderMesh rend, in ChartTime time) => {
+
+                rend.material.SetFloat("_Cutoff", receptorTime - time.Value / 1000f);
+
+            }).Run();
     }
 }

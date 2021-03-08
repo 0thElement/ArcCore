@@ -2,7 +2,6 @@
 
 namespace ArcCore.Tags
 {
-    [GenerateAuthoringComponent]
     public struct WithinRenderRange : IComponentData
     { }
 }

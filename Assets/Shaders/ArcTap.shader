@@ -31,6 +31,7 @@
 			{
 				float4 vertex : SV_POSITION;
 				float2 uv : TEXCOORD0;
+				float4 worldpos : TEXCOORD1;
 			};
 
 			sampler2D _MainTex;
@@ -41,11 +42,13 @@
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+				o.worldpos = mul(unity_ObjectToWorld, v.vertex);
 				return o;
 			}
 			
 			half4 frag (v2f i) : SV_Target
 			{
+				if(i.worldpos.z <= -124.25) discard;
 				return half4(tex2D(_MainTex,i.uv).rgb, 1);
 			}
 			ENDCG

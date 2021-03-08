@@ -49,6 +49,11 @@ namespace ArcCore.MonoBehaviours
             CreateConnection();
         }
 
+        void OnDestroy()
+        {
+            touchPoints.Dispose();
+        }
+
         public void CreateConnection()
             => Conductor.Instance.OnTimeCalculated += PollInput;
 

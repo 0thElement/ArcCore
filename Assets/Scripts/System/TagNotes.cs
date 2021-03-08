@@ -10,10 +10,5 @@ public class TagNotes : SystemBase
 {
     protected override void OnUpdate()
     {
-        Entities.WithAll<LocalToWorld>().ForEach((Entity entity, int entityID) => {
-            
-
-
-        }).Schedule();
     }
 }

@@ -34,6 +34,7 @@
 				float4 vertex : SV_POSITION; 
 				fixed4 color    : COLOR;
 				float2 uv : TEXCOORD0;
+				float4 worldpos : TEXCOORD1;
 			};
 			 
 			int _Highlight;
@@ -47,11 +48,13 @@
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				o.color = v.color * _Color;
+				o.worldpos = mul(unity_ObjectToWorld, v.vertex);
 				return o;
 			}
 
 			half4 frag (v2f i) : SV_Target
 			{
+				if(i.worldpos.z <= -124.25) discard;
 				float4 c = tex2D(_MainTex,i.uv) ; 
 				float4 inColor = i.color;
 				c *= inColor;  

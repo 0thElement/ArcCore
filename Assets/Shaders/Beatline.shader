@@ -33,6 +33,7 @@
                 float2 uv : TEXCOORD0;
                 UNITY_FOG_COORDS(1)
                 float4 vertex : SV_POSITION;
+                float4 worldpos : TEXCOORD1;
             };
 
             float4 _Color;
@@ -44,11 +45,13 @@
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 UNITY_TRANSFER_FOG(o,o.vertex);
+                o.worldpos = mul(unity_ObjectToWorld, v.vertex);
                 return o;
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
+                if(i.worldpos.z <= -124.25) discard;
                 return _Color;
             }
             ENDCG

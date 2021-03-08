@@ -125,7 +125,7 @@ namespace ArcCore.MonoBehaviours
         private void Start()
         {
             // Temporary
-            path = Path.Combine(Application.dataPath, "TempAssets", "2.aff");
+            path = Path.Combine(Application.dataPath, "TempAssets", "5.aff");
             AffError err;
             if ((err = ReadChart(path)) != null)
                 Debug.LogError(err);

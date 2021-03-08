@@ -58,10 +58,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     lowBound++;
                 }
                 //Iterated the whole list without finding anything
-                if (lowBound == affTapList.Count) continue;
+                if (lowBound >= affTapList.Count) continue;
 
-                int highBound=lowBound;
-                while (arctap.timing == affTapList[highBound].timing)
+                int highBound = lowBound;
+                while (highBound < affTapList.Count && arctap.timing == affTapList[highBound].timing)
                 {
                     highBound++;
                 }
