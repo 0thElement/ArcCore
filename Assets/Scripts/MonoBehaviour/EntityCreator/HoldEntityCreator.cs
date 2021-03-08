@@ -22,6 +22,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager = defaultWorld.EntityManager;
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             holdNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(holdNotePrefab, settings);
+            entityManager.AddComponent<TimingGroup>(holdNoteEntityPrefab); //TEMPORARY TO FIX BUGFCKERY
         }
 
         public void CreateEntities(List<AffHold> affHoldList)
