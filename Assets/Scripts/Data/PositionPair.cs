@@ -3,7 +3,6 @@ using Unity.Mathematics;
 
 namespace ArcCore.Data
 {
-    [GenerateAuthoringComponent]
     public struct PositionPair : IComponentData
     {
         public float2 startPosition;

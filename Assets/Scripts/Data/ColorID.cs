@@ -4,6 +4,6 @@ namespace ArcCore.Data
 {
     public struct ColorID : IComponentData
     {
-        public int colorID;
+        public int Value;
     }
 }

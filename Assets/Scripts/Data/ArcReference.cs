@@ -2,8 +2,9 @@ using Unity.Entities;
 
 namespace ArcCore.Data
 {
+    [GenerateAuthoringComponent]
     public struct ArcReference : IComponentData
     {
-        public Entity arcEntity;
+        public Entity Value;
     }
 }

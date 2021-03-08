@@ -62,14 +62,18 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 {
                     time += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
 
-                    Entity judgeEntity = entityManager.CreateEntity(typeof(ChartTime), typeof(Track), typeof(Tags.JudgeHold));
+                    Entity judgeEntity = entityManager.CreateEntity(typeof(ChartTime), typeof(Track), typeof(HoldReference));
                     entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
                     {
-                        time = (int)time
+                        Value = (int)time
                     });
                     entityManager.SetComponentData<Track>(judgeEntity, new Track()
                     {
-                        lane = hold.track
+                        Value = hold.track
+                    });
+                    entityManager.SetComponentData<HoldReference>(judgeEntity, new HoldReference()
+                    {
+                        Value = holdEntity
                     });
 
                     ScoreManager.Instance.maxCombo++;

@@ -52,11 +52,11 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Entity judgeEntity = entityManager.CreateEntity(typeof(ChartTime), typeof(Track));
                 entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
                 {
-                    time = tap.timing
+                    Value = tap.timing
                 });;
                 entityManager.SetComponentData<Track>(judgeEntity, new Track()
                 {
-                    lane = tap.track
+                    Value = tap.track
                 });
 
                 ScoreManager.Instance.maxCombo++;
