@@ -1,37 +1,51 @@
 ﻿using ArcCore.Utility;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Collections;
 using Unity.Mathematics;
+using Unity.Burst;
 using UnityEngine;
 
 namespace ArcCore.MonoBehaviours
 {
     public struct TouchPoint
     {
-        public float2 inputPlanePoint;
-        public int lane;
-        public float time;
+        public AABB2D inputPlane;
+        public bool   inputPlaneValid;
+        public AABB2D trackPlane;
+        public bool   trackPlaneValid;
+
+        public int time;
         public bool pressed;
-
-        public TouchPoint(float2 inputPlanePoint, int lane, float time, bool pressed)
-        {
-            this.inputPlanePoint = inputPlanePoint;
-            this.lane = lane;
-            this.time = time;
-            this.pressed = pressed;
-        }
-    }
-
-    public struct TouchPointFull
-    {
-        public TouchPoint touchPoint;
         public int fingerId;
 
-        public TouchPointFull(TouchPoint touchPoint, int fingerId)
+        public TouchPoint(AABB2D inputPlane, bool inputPlaneValid, AABB2D trackPlane, bool trackPlaneValid, int time, bool pressed, int fingerId)
         {
-            this.touchPoint = touchPoint;
+            this.inputPlane = inputPlane;
+            this.inputPlaneValid = inputPlaneValid;
+            this.trackPlane = trackPlane;
+            this.trackPlaneValid = trackPlaneValid;
+            this.time = time;
+            this.pressed = pressed;
             this.fingerId = fingerId;
         }
+
+        [BurstDiscard]
+        public void MutatePlanes(AABB2D? inputPlane, AABB2D? trackPlane)
+        {
+            this.inputPlane = inputPlane.GetValueOrDefault();
+            inputPlaneValid = inputPlane != null;
+            this.trackPlane = trackPlane.GetValueOrDefault();
+            trackPlaneValid = trackPlane != null;
+        }
+
+        [BurstDiscard]
+        public static TouchPoint FromNullables(AABB2D? inputPlane, AABB2D? trackPlane, int time, bool pressed, int fingerId)
+            => new TouchPoint(
+                inputPlane.GetValueOrDefault(), inputPlane != null,
+                trackPlane.GetValueOrDefault(), trackPlane != null,
+                time, pressed, fingerId
+                );
     }
 
     //ORDERING IS IMPORTANT HERE; POLL_INPUT MUST OCCUR BEFORE ALL JUDGING.
@@ -42,24 +56,25 @@ namespace ArcCore.MonoBehaviours
 
         public const int MaxTouches = 10;
 
-        public Dictionary<int, TouchPoint> touchPoints = new Dictionary<int, TouchPoint>(MaxTouches);
+        public NativeArray<TouchPoint> touchPoints;
+        public int safeIndex = 0;
 
         public Camera cameraCast;
-        [HideInInspector]
-        public float yLeniency;
-        public float BaseYLenDist { get; private set; }
 
         void Awake()
         {
             Instance = this;
-
-            //ENSURE THAT CAMERA IS RESET BEFORE CALLING THIS
-            BaseYLenDist = GetYLeniencyDist();
+            touchPoints = new NativeArray<TouchPoint>(new TouchPoint[MaxTouches], Allocator.Persistent);
         }
 
         void Start()
         {
             CreateConnection();
+        }
+
+        void OnDestroy()
+        {
+            touchPoints.Dispose();
         }
 
         public void CreateConnection()
@@ -68,117 +83,86 @@ namespace ArcCore.MonoBehaviours
         public void KillConnection()
             => Conductor.Instance.OnTimeCalculated -= PollInput;
 
-        public NativeArray<TouchPointFull> GetJobPreparedTouchPoints()
+        private bool FreeId(int id) => !touchPoints.Any(t => t.fingerId == id);
+        private int IdIndex(int id)
         {
-            NativeArray<TouchPointFull> ret = new NativeArray<TouchPointFull>(touchPoints.Count, Allocator.TempJob);
-
-            int i = 0;
-
-            foreach(var touchPoint in touchPoints)
-                ret[i++] = new TouchPointFull(touchPoint.Value, touchPoint.Key);
-
-            return ret;
+            for (int i = 0; i < MaxTouches; i++)
+                if (touchPoints[i].fingerId == id)
+                    return i;
+            return -1;
+        }
+        private int SafeIndex()
+        {
+            for (int i = safeIndex; i < MaxTouches; i++)
+                if (touchPoints[i].fingerId == -1)
+                    return safeIndex = i;
+            return safeIndex = MaxTouches;
         }
 
         private void PollInput(float time)
         {
-            CalculateYLeniency(); //SHOULDNT BE RECALCULATED FOR CHARTS WITHOUT CAMERA MOTION
-
-            int count = 0;
-            for(int i = 0; i < Input.touchCount; i++)
+            for (int i = 0; i < Input.touchCount; i++)
             {
                 Touch t = Input.touches[i];
 
-                if (t.phase == TouchPhase.Began && !touchPoints.ContainsKey(t.fingerId)) 
+                if (t.phase == TouchPhase.Began && FreeId(t.fingerId) && SafeIndex() != MaxTouches)
                 {
 
-                    (float2 ipt, int lane) = PerformRayCast(t);
-
-                    if (touchPoints.Count <= MaxTouches)
-                        touchPoints.Add(
-                            t.fingerId, 
-                            new TouchPoint(ipt, lane, time - t.deltaTime, true)
-                        );
-
-                } 
-                else if (t.phase == TouchPhase.Moved && touchPoints.ContainsKey(t.fingerId))
-                {
-
-                    TouchPoint tp = touchPoints[t.fingerId];
-
-                    (float2 ipt, int lane) = PerformRayCast(t);
-
-                    tp.inputPlanePoint = ipt;
-                    tp.lane = lane;
-                    tp.pressed = false;
-
-                    touchPoints[t.fingerId] = tp;
-
-                    count++;
+                    (AABB2D? ipt, AABB2D? track) = ProjectionMaths.PerformInputRaycast(cameraCast, t);
+                    int timeT = (int)math.round((time - t.deltaTime) * 1000);
+                    touchPoints[safeIndex] = TouchPoint.FromNullables(ipt, track, timeT, true, t.fingerId);
 
                 }
-                else if (t.phase == TouchPhase.Stationary && touchPoints.ContainsKey(t.fingerId))
+                else if (t.phase == TouchPhase.Moved)
+                {
+                    int index = IdIndex(t.fingerId);
+                    if (index == -1)
+                    {
+                        TouchPoint tp = touchPoints[index];
+
+                        (AABB2D? ipt, AABB2D? track) = ProjectionMaths.PerformInputRaycast(cameraCast, t);
+                        int timeT = (int)math.round((time - t.deltaTime) * 1000);
+
+                        tp.MutatePlanes(ipt, track);
+                        tp.time = timeT;
+                        tp.pressed = false;
+
+                        touchPoints[index] = tp;
+                    }
+
+                }
+                else if (t.phase == TouchPhase.Stationary)
                 {
 
-                    TouchPoint tp = touchPoints[t.fingerId];
+                    int index = IdIndex(t.fingerId);
+                    if (index == -1)
+                    {
+                        TouchPoint tp = touchPoints[index];
 
-                    tp.pressed = false;
-                    tp.time = time - t.deltaTime;
+                        int timeT = (int)math.round((time - t.deltaTime) * 1000);
 
-                    touchPoints[t.fingerId] = tp;
+                        tp.time = timeT;
+                        tp.pressed = false;
 
-                } 
+                        touchPoints[index] = tp;
+                    }
+
+                }
                 else if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled)
                 {
 
-                    touchPoints.Remove(t.fingerId);
+                    int index = IdIndex(t.fingerId);
+                    if (index != -1)
+                    {
+                        TouchPoint tp = touchPoints[index];
+
+                        tp.fingerId = -1;
+
+                        touchPoints[index] = tp;
+                    }
 
                 }
             }
-        }
-
-        public float GetYLeniencyDist()
-        {
-            Vector3 basepoint = cameraCast.WorldToScreenPoint(Vector3.zero);
-            Vector3 toppoint = cameraCast.WorldToScreenPoint(Vector3.up * Constants.InputMaxY);
-            return Vector3.Distance(basepoint, toppoint);
-        }
-
-        public void CalculateYLeniency()
-        {
-            float dist = GetYLeniencyDist();
-            if (Mathf.Approximately(dist, 0))
-                yLeniency = float.PositiveInfinity;
-            else
-                yLeniency = BaseYLenDist / dist;
-        }
-
-        public (float2 ipt, int lane) PerformRayCast(Touch t)
-        {
-            Ray ray = cameraCast.ScreenPointToRay(new Vector3(t.position.x, t.position.y));
-
-            float2 ipt;
-            float ratio;
-
-            if (Mathf.Approximately(ray.direction.z, 0))
-            {
-                ipt = new float2(ray.origin.x, 0);
-            }
-            else
-            {
-                ratio = ray.origin.z / ray.direction.z;
-                ipt = new float2(ray.origin.x - ray.direction.x * ratio, ray.origin.y - ray.direction.y * ratio);
-            }
-
-            int lane = 0;
-            if (ipt.y < Constants.ArcYZero * yLeniency)
-            {
-                ratio = ray.origin.y / ray.direction.y;
-                float laneX = ray.origin.x - ray.direction.x * ratio;
-                lane = Convert.XToTrack(laneX);
-            }
-
-            return (ipt, lane);
         }
     }
 }

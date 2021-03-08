@@ -18,6 +18,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private Entity connectionLineEntityPrefab;
         private World defaultWorld;
         private EntityManager entityManager;
+        private EntityArchetype arctapJudgeArchetype;
         private void Awake()
         {
             Instance = this;
@@ -26,6 +27,12 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             arcTapNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcTapNotePrefab, settings);
             connectionLineEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(connectionLinePrefab, settings);
+
+            arctapJudgeArchetype = entityManager.CreateArchetype(
+                ComponentType.ReadOnly<ChartTime>(),
+                ComponentType.ReadOnly<SinglePosition>(),
+                ComponentType.ReadOnly<EntityReference>()
+                );
         }
 
         public void CreateEntities(List<AffArcTap> affArcTapList, List<AffTap> affTapList)
@@ -58,10 +65,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     lowBound++;
                 }
                 //Iterated the whole list without finding anything
-                if (lowBound == affTapList.Count) continue;
+                if (lowBound >= affTapList.Count) continue;
 
-                int highBound=lowBound;
-                while (arctap.timing == affTapList[highBound].timing)
+                int highBound = lowBound;
+                while (highBound < affTapList.Count && arctap.timing == affTapList[highBound].timing)
                 {
                     highBound++;
                 }

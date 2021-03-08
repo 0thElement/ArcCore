@@ -3,8 +3,8 @@ using Unity.Entities;
 namespace ArcCore.Data
 {
     [GenerateAuthoringComponent]
-    public struct JudgeArc : IComponentData
+    public struct ColorID : IComponentData
     {
-        public int colorID;
+        public int Value;
     }
 }

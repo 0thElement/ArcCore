@@ -5,8 +5,10 @@ using Unity.Jobs;
 using Unity.Transforms;
 using ArcCore.Data;
 using ArcCore.MonoBehaviours;
+using ArcCore.Tags;
+using Unity.Rendering;
 
-public class MoveNotesTowardScreen : SystemBase
+public class NoteVisuals : SystemBase
 {
     protected override void OnUpdate()
     {
@@ -19,10 +21,11 @@ public class MoveNotesTowardScreen : SystemBase
 
         //Arc segments
         Entities.WithNone<Translation>().
-            ForEach((ref LocalToWorld lcwMatrix, in FloorPosition floorPosition, in TimingGroup group) => {
+            ForEach((ref LocalToWorld lcwMatrix, in FloorPosition floorPosition, in TimingGroup group) =>
+            {
 
                 lcwMatrix.Value.c3.z = floorPosition.Value - currentFloorPosition[group.Value];
-            
+
             }).Schedule();
     }
 }

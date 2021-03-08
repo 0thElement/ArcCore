@@ -21,6 +21,7 @@
             #pragma multi_compile_fog
 
             #include "UnityCG.cginc"
+            #include "DistanceColorMath.cginc"
 
             struct appdata
             {
@@ -33,6 +34,7 @@
                 float2 uv : TEXCOORD0;
                 UNITY_FOG_COORDS(1)
                 float4 vertex : SV_POSITION;
+                float4 worldpos : TEXCOORD1;
             };
 
             float4 _Color;
@@ -44,12 +46,15 @@
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 UNITY_TRANSFER_FOG(o,o.vertex);
+                o.worldpos = mul(unity_ObjectToWorld, v.vertex);
                 return o;
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
-                return _Color;
+                float4 c = _Color;
+                c.a = alpha_from_pos(c, i.worldpos.z);
+                return c;
             }
             ENDCG
         }

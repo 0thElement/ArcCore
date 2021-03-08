@@ -26,6 +26,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private World defaultWorld;
         private EntityManager entityManager;
         private int colorShaderId;
+        private EntityArchetype arcJudgeArchetype;
         private void Awake()
         {
             Instance = this;
@@ -42,6 +43,13 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
             heightIndicatorEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(heightIndicatorPrefab, settings);
 
+            arcJudgeArchetype = entityManager.CreateArchetype(
+                ComponentType.ReadOnly<ChartTime>(),
+                ComponentType.ReadOnly<PositionPair>(),
+                ComponentType.ReadOnly<ColorID>(),
+                ComponentType.ReadOnly<EntityReference>()
+                );
+
             colorShaderId = Shader.PropertyToID("_Color");
         }
 
@@ -56,7 +64,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Material heightIndicatorColorMaterialInstance = Instantiate(heightMaterial);
                 arcColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
                 heightIndicatorColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
-                colorId++;
 
                 List<float4> connectedArcsIdEndpoint = new List<float4>();
 
@@ -87,6 +94,12 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     if (isHeadArc || arc.startY != arc.endY)
                         CreateHeightIndicator(arc, heightIndicatorColorMaterialInstance);
 
+                    Entity arcDataEntity = entityManager.CreateEntity(typeof(ArcFunnel));
+                    entityManager.SetComponentData<ArcFunnel>(arcDataEntity, new ArcFunnel
+                    {
+                        displayHit = true
+                    });
+
                     //Generate arc segments and shadow segment(each segment is its own entity)
                     int duration = arc.endTiming - arc.timing;
                     int v1 = duration < 1000 ? 14 : 7;
@@ -103,15 +116,15 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
                     for (int i = 0; i < segmentCount - 1; i++)
                     {
-                        int t = (int)((i + 1) * segmentLength);
+                        float t = (i + 1) * segmentLength;
                         start = end;
                         end = new float3(
-                            Convert.GetWorldX(Convert.GetXAt((float)t / duration, arc.startX, arc.endX, arc.easing)),
-                            Convert.GetWorldY(Convert.GetYAt((float)t / duration, arc.startY, arc.endY, arc.easing)),
-                            Conductor.Instance.GetFloorPositionFromTiming(arc.timing + t, arc.timingGroup)
+                            Convert.GetWorldX(Convert.GetXAt(t / duration, arc.startX, arc.endX, arc.easing)),
+                            Convert.GetWorldY(Convert.GetYAt(t / duration, arc.startY, arc.endY, arc.easing)),
+                            Conductor.Instance.GetFloorPositionFromTiming((int)(arc.timing + t), arc.timingGroup)
                         );
 
-                        CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup);
+                        CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup, arcDataEntity);
                     }
 
                     start = end;
@@ -121,61 +134,24 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                         Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                     );
 
-                    CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup);
-
-                    float time = arc.timing;
-                    int timingEventIdx = Conductor.Instance.GetTimingEventIndexFromTiming(arc.timing, arc.timingGroup);
-                    TimingEvent timingEvent = Conductor.Instance.GetTimingEvent(timingEventIdx, arc.timingGroup);
-                    TimingEvent? nextEvent = Conductor.Instance.GetNextTimingEventOrNull(timingEventIdx, arc.timingGroup);
-
-                    while (time < arc.endTiming)
-                    {
-                        time += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
-
-                        if(nextEvent.HasValue && nextEvent.Value.timing < time)
-                        {
-                            time = nextEvent.Value.timing;
-                            timingEventIdx++;
-                            timingEvent = Conductor.Instance.GetTimingEvent(timingEventIdx, arc.timingGroup);
-                            nextEvent = Conductor.Instance.GetNextTimingEventOrNull(timingEventIdx, arc.timingGroup);
-                        }
-
-                        Entity judgeEntity = entityManager.CreateEntity(typeof(JudgeTime), typeof(JudgeStartEndPosition), typeof(JudgeArc));
-                        entityManager.SetComponentData<JudgeTime>(judgeEntity, new JudgeTime()
-                        {
-                            time = (int)time
-                        });
-                        entityManager.SetComponentData<JudgeStartEndPosition>(judgeEntity, new JudgeStartEndPosition()
-                        {
-                            startPosition = new float2(
-                                Convert.GetXAt(Convert.RatioBetween(arc.timing, arc.endTiming, time - Constants.FarWindow), arc.startX, arc.endX, arc.easing),
-                                Convert.GetYAt(Convert.RatioBetween(arc.timing, arc.endTiming, time - Constants.FarWindow), arc.startY, arc.endY, arc.easing)
-                            ),
-                            endPosition = new float2(
-                                Convert.GetXAt(Convert.RatioBetween(arc.timing, arc.endTiming, time + Constants.FarWindow), arc.startX, arc.endX, arc.easing),
-                                Convert.GetYAt(Convert.RatioBetween(arc.timing, arc.endTiming, time + Constants.FarWindow), arc.startY, arc.endY, arc.easing)
-                            )
-                        });
-                        entityManager.SetComponentData<JudgeArc>(judgeEntity, new JudgeArc()
-                        {
-                            colorID = colorId
-                        });
-
-                        ScoreManager.Instance.maxCombo++;
-                    }
+                    CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup, arcDataEntity);
+                    CreateJudgeEntities(arc, colorId, arcDataEntity);
+                    
                 }
+
+                colorId++;
             }
         }
 
-        private void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end, int timingGroup)
+        private void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end, int timingGroup, Entity arcEntity)
         {
-            Entity arcEntity = entityManager.Instantiate(arcNoteEntityPrefab);
-            entityManager.SetSharedComponentData<RenderMesh>(arcEntity, new RenderMesh()
+            Entity arcInstEntity = entityManager.Instantiate(arcNoteEntityPrefab);
+            entityManager.SetSharedComponentData<RenderMesh>(arcInstEntity, new RenderMesh()
             {
                 mesh = arcMesh,
                 material = arcColorMaterialInstance
             });
-            entityManager.SetComponentData<FloorPosition>(arcEntity, new FloorPosition()
+            entityManager.SetComponentData<FloorPosition>(arcInstEntity, new FloorPosition()
             {
                 Value = start.z
             });
@@ -185,7 +161,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             float dz = start.z - end.z;
 
             //Shear along xy + scale along z matrix
-            entityManager.SetComponentData<LocalToWorld>(arcEntity, new LocalToWorld()
+            entityManager.SetComponentData<LocalToWorld>(arcInstEntity, new LocalToWorld()
             {
                 Value = new float4x4(
                     1, 0, dx, start.x,
@@ -195,9 +171,19 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 )
             });
 
-            entityManager.SetComponentData<TimingGroup>(arcEntity, new TimingGroup()
+            entityManager.SetComponentData<TimingGroup>(arcInstEntity, new TimingGroup()
             {
                 Value = timingGroup
+            });
+
+            entityManager.SetComponentData<EntityReference>(arcInstEntity, new EntityReference()
+            {
+                Value = arcEntity
+            });
+
+            entityManager.SetComponentData<CutoffShaderProp>(arcInstEntity, new CutoffShaderProp()
+            {
+                Value = 1f
             });
         }
 
@@ -263,6 +249,54 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             {
                 Value = arc.timingGroup
             });
+        }
+
+        private void CreateJudgeEntities(AffArc arc, int colorId, Entity arcEntity)
+        {
+            float time = arc.timing;
+            int timingEventIdx = Conductor.Instance.GetTimingEventIndexFromTiming(arc.timing, arc.timingGroup);
+            TimingEvent timingEvent = Conductor.Instance.GetTimingEvent(timingEventIdx, arc.timingGroup);
+            TimingEvent? nextEvent = Conductor.Instance.GetNextTimingEventOrNull(timingEventIdx, arc.timingGroup);
+
+            while (time < arc.endTiming)
+            {
+                time += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
+
+                if (nextEvent.HasValue && nextEvent.Value.timing < time)
+                {
+                    time = nextEvent.Value.timing;
+                    timingEventIdx++;
+                    timingEvent = Conductor.Instance.GetTimingEvent(timingEventIdx, arc.timingGroup);
+                    nextEvent = Conductor.Instance.GetNextTimingEventOrNull(timingEventIdx, arc.timingGroup);
+                }
+
+                Entity judgeEntity = entityManager.CreateEntity(arcJudgeArchetype);
+                entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
+                {
+                    Value = (int)time
+                });
+                entityManager.SetComponentData<PositionPair>(judgeEntity, new PositionPair()
+                {
+                    startPosition = new float2(
+                        Convert.GetXAt(Convert.RatioBetween(arc.timing, arc.endTiming, time - Constants.FarWindow), arc.startX, arc.endX, arc.easing),
+                        Convert.GetYAt(Convert.RatioBetween(arc.timing, arc.endTiming, time - Constants.FarWindow), arc.startY, arc.endY, arc.easing)
+                    ),
+                    endPosition = new float2(
+                        Convert.GetXAt(Convert.RatioBetween(arc.timing, arc.endTiming, time + Constants.FarWindow), arc.startX, arc.endX, arc.easing),
+                        Convert.GetYAt(Convert.RatioBetween(arc.timing, arc.endTiming, time + Constants.FarWindow), arc.startY, arc.endY, arc.easing)
+                    )
+                });
+                entityManager.SetComponentData<ColorID>(judgeEntity, new ColorID()
+                {
+                    Value = colorId
+                });
+                entityManager.SetComponentData<EntityReference>(judgeEntity, new EntityReference()
+                {
+                    Value = arcEntity
+                });
+
+                ScoreManager.Instance.maxCombo++;
+            }
         }
     }
 }

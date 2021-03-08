@@ -23,7 +23,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private Entity headTraceNoteEntityPrefab;
         private World defaultWorld;
         private EntityManager entityManager;
-        private int colorShaderId;
+        //private int colorShaderId;
         private void Awake()
         {
             Instance = this;
@@ -37,8 +37,9 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.RemoveComponent<Rotation>(traceNoteEntityPrefab);
 
             headTraceNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headTraceNotePrefab, settings);
+            entityManager.AddComponent(headTraceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
 
-            colorShaderId = Shader.PropertyToID("_Color");
+            //colorShaderId = Shader.PropertyToID("_Color");
         }
         //Similar to arc creation
         public void CreateEntities(List<AffTrace> affTraceList)
@@ -92,7 +93,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                         Conductor.Instance.GetFloorPositionFromTiming(trace.timing + t, trace.timingGroup)
                     );
 
-                    CreateSegment(start, end, trace.timingGroup);
+                    CreateSegment(start, end, trace.timingGroup, trace.timing + (int)(i * segmentLength));
                 }
 
                 start = end;
@@ -102,11 +103,11 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     Conductor.Instance.GetFloorPositionFromTiming(trace.endTiming, trace.timingGroup)
                 );
 
-                CreateSegment(start, end, trace.timingGroup);
+                CreateSegment(start, end, trace.timingGroup, (int)(trace.endTiming - segmentLength));
             }
         }
 
-        private void CreateSegment(float3 start, float3 end, int timingGroup)
+        private void CreateSegment(float3 start, float3 end, int timingGroup, int time)
         {
             Entity traceEntity = entityManager.Instantiate(traceNoteEntityPrefab);
             entityManager.SetSharedComponentData<RenderMesh>(traceEntity, new RenderMesh()
@@ -137,6 +138,11 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.SetComponentData<TimingGroup>(traceEntity, new TimingGroup()
             {
                 Value = timingGroup
+            });
+
+            entityManager.SetComponentData<CutoffShaderProp>(traceEntity, new CutoffShaderProp()
+            {
+                Value = 1f
             });
         }
 
