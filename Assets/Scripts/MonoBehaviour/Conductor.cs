@@ -44,22 +44,22 @@ namespace ArcCore.MonoBehaviours
         
         public void PlayMusic()
         {
-            dspStartPlayingTime = (float)AudioSettings.dspTime + 1;
+            dspStartPlayingTime = (float)AudioSettings.dspTime + 2f;
             audioSource.PlayScheduled(dspStartPlayingTime);
         }
 
         public void Update()
         {
             receptorTime = (float)(
-                AudioSettings.dspTime - dspStartPlayingTime - offset +
-                TimeThreadless.TimeSince_T2S(timeOfLastMix)
+                AudioSettings.dspTime - dspStartPlayingTime - offset
+                + TimeThreadless.TimeSince_T2S(timeOfLastMix)
                 );
             UpdateCurrentFloorPosition();
             OnTimeCalculated(receptorTime);
         }
         public void SetOffset(int value)
         {
-            offset = (float)value/1000; 
+            offset = value / 1000f; 
         }
         public void OnAudioFilterRead(float[] data, int channels)
         {

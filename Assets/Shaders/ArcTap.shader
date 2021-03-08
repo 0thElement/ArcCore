@@ -50,9 +50,10 @@
 			half4 frag (v2f i) : SV_Target
 			{
 				float farCut = -124.25 + i.worldpos.y * 6;
-				if(i.worldpos.z <= farCut) discard;
+				if(i.worldpos.z <= farCut) return 0;
 				float4 c = tex2D(_MainTex, i.uv);
-				return alpha_from_pos(c, i.worldpos.z);
+				c.a = alpha_from_pos(c, i.worldpos.z);
+				return c;
 			}
 			ENDCG
 		}

@@ -57,12 +57,11 @@
 
 			half4 frag (v2f i) : SV_Target
 			{
-				if(i.worldpos.z <= -124.25 || (i.worldpos.z > 0 && _Cutoff <= 0)) discard;
-			    if(i.uv.y < _From || i.uv.y > _To) return 0;
+			    if((i.worldpos.z > 0 && _Cutoff <= 0) || (i.uv.y < _From || i.uv.y > _To)) return 0;
 				float4 c = tex2D(_MainTex,i.uv);
 				float4 inColor = i.color;
 				c *= inColor;
-				c = alpha_from_pos(c, i.worldpos.z);
+				c.a = alpha_from_pos(c, i.worldpos.z);
 				return c;
 			}
 			ENDCG

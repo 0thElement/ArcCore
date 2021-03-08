@@ -49,7 +49,7 @@
 
             fixed4 frag (v2f i) : SV_Target
             {
-                if(i.worldpos.z <= -124.25 || (i.worldpos.z > 0)) discard;
+                if(i.worldpos.z <= -100) discard;
                 return _Color;
             }
             ENDCG

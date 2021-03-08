@@ -21,6 +21,7 @@
 			#pragma multi_compile_instancing
 
             #include "UnityCG.cginc"
+            #include "DistanceColorMath.cginc"
 
             struct appdata
             {
@@ -51,11 +52,11 @@
 
             fixed4 frag (v2f i) : SV_Target
             {
-                if(i.worldpos.z <= -124.25) discard;
                 // sample the texture
                 fixed4 col = tex2D(_MainTex, i.uv);
                 // apply fog
                 UNITY_APPLY_FOG(i.fogCoord, col);
+                col.a = alpha_from_pos(col, i.worldpos.z);
                 return col;
             }
             ENDCG

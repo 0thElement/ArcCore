@@ -21,6 +21,7 @@
             #pragma multi_compile_fog
 
             #include "UnityCG.cginc"
+            #include "DistanceColorMath.cginc"
 
             struct appdata
             {
@@ -51,8 +52,9 @@
 
             fixed4 frag (v2f i) : SV_Target
             {
-                if(i.worldpos.z <= -124.25) discard;
-                return _Color;
+                float4 c = _Color;
+                c.a = alpha_from_pos(c, i.worldpos.z);
+                return c;
             }
             ENDCG
         }
