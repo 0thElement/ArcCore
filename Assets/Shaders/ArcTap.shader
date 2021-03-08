@@ -20,6 +20,7 @@
 
 			#include "UnityCG.cginc"
 			#include "ColorSpace.cginc"
+			#include "DistanceColorMath.cginc"
 
 			struct appdata
 			{
@@ -48,8 +49,10 @@
 			
 			half4 frag (v2f i) : SV_Target
 			{
-				if(i.worldpos.z <= -124.25) discard;
-				return half4(tex2D(_MainTex,i.uv).rgb, 1);
+				float farCut = -124.25 + i.worldpos.y * 10;
+				if(i.worldpos.z <= farCut) discard;
+				float4 c = tex2D(_MainTex, i.uv);
+				return alpha_from_pos(c, i.worldpos.z, farCut);
 			}
 			ENDCG
 		}
