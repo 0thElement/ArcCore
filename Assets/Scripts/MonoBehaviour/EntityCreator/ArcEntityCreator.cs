@@ -181,7 +181,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Value = arcEntity
             });
 
-            entityManager.SetComponentData<CutoffShaderProp>(arcInstEntity, new CutoffShaderProp()
+            entityManager.SetComponentData<ShouldCutOff>(arcInstEntity, new ShouldCutOff()
             {
                 Value = 1f
             });

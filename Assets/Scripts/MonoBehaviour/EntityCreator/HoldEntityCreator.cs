@@ -15,6 +15,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private Entity holdNoteEntityPrefab;
         private World defaultWorld;
         private EntityManager entityManager;
+        private EntityArchetype holdJudgeArchetype;
         private void Awake()
         {
             Instance = this;
@@ -23,6 +24,13 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             holdNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(holdNotePrefab, settings);
             entityManager.AddComponent<TimingGroup>(holdNoteEntityPrefab); //TEMPORARY TO FIX BUGFCKERY
+
+            holdJudgeArchetype = entityManager.CreateArchetype(
+                ComponentType.ReadOnly<ChartTime>(),
+                ComponentType.ReadOnly<Track>(),
+                ComponentType.ReadOnly<EntityReference>(),
+                ComponentType.ReadOnly<Tags.JudgeHoldPoint>()
+                );
         }
 
         public void CreateEntities(List<AffHold> affHoldList)
@@ -63,7 +71,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 {
                     time += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
 
-                    Entity judgeEntity = entityManager.CreateEntity(typeof(ChartTime), typeof(Track), typeof(EntityReference));
+                    Entity judgeEntity = entityManager.CreateEntity(holdJudgeArchetype);
                     entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
                     {
                         Value = (int)time
@@ -76,6 +84,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     {
                         Value = holdEntity
                     });
+                    entityManager.SetComponentData<Tags.JudgeHoldPoint>(judgeEntity, new Tags.JudgeHoldPoint());
 
                     ScoreManager.Instance.maxCombo++;
                 }

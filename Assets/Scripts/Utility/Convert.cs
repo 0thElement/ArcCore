@@ -108,5 +108,8 @@ namespace ArcCore.Utility
             => -8.5f * x + 4.25f;
         public static float GetWorldY(float y) 
             => 4.5f * y + 1f;
+
+        public static float2 GetWorldPos(float2 xy)
+            => new float2(GetWorldX(xy.x), GetWorldY(xy.y));
     }
 }

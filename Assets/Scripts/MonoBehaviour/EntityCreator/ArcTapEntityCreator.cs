@@ -116,5 +116,23 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Value = arctap.timingGroup
             });
         }
+
+        public void CreateJudgeEntity(AffArcTap arctap, Entity arctapEntity)
+        {
+            Entity judgeEntity = entityManager.CreateEntity(arctapJudgeArchetype);
+
+            entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
+            {
+                Value = arctap.timing
+            });
+            entityManager.SetComponentData<SinglePosition>(judgeEntity, new SinglePosition()
+            {
+                Value = Convert.GetWorldPos(arctap.position)
+            });
+            entityManager.SetComponentData<EntityReference>(judgeEntity, new EntityReference()
+            {
+                Value = arctapEntity
+            });
+        }
     }
 }

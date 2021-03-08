@@ -140,9 +140,14 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Value = timingGroup
             });
 
-            entityManager.SetComponentData<CutoffShaderProp>(traceEntity, new CutoffShaderProp()
+            entityManager.SetComponentData<ShouldCutOff>(traceEntity, new ShouldCutOff()
             {
                 Value = 1f
+            });
+
+            entityManager.SetComponentData<ChartTime>(traceEntity, new ChartTime()
+            {
+                Value = time
             });
         }
 
@@ -168,6 +173,14 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.SetComponentData<TimingGroup>(headEntity, new TimingGroup()
             {
                 Value = trace.timingGroup
+            });
+            entityManager.SetComponentData<ShouldCutOff>(headEntity, new ShouldCutOff()
+            {
+                Value = 1f
+            });
+            entityManager.SetComponentData<ChartTime>(headEntity, new ChartTime()
+            {
+                Value = trace.timing
             });
         }
     }
