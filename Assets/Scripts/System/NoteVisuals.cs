@@ -26,15 +26,5 @@ public class NoteVisuals : SystemBase
                 lcwMatrix.Value.c3.z = floorPosition.Value - currentFloorPosition[group.Value];
             
             }).Schedule();
-
-        float receptorTime = Conductor.Instance.receptorTime;
-
-        //Handle all traces
-        Entities.WithoutBurst()
-            .ForEach((RenderMesh rend, in ChartTime time) => {
-
-                rend.material.SetFloat("_Cutoff", receptorTime - time.Value / 1000f);
-
-            }).Run();
     }
 }
