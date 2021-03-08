@@ -21,6 +21,7 @@
 
 			#include "UnityCG.cginc"
 			#include "ColorSpace.cginc"
+			#include "DistanceColorMath.cginc"
 
 			struct appdata
 			{
@@ -58,7 +59,7 @@
 				float4 c = tex2D(_MainTex,i.uv) ; 
 				float4 inColor = i.color;
 				c *= inColor;  
-				return c;
+				return alpha_from_pos(c, i.worldpos.z, -124.25);
 			}
 			ENDCG
 		}
