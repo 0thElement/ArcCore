@@ -26,6 +26,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private World defaultWorld;
         private EntityManager entityManager;
         private int colorShaderId;
+        private EntityArchetype arcJudgeArchetype;
         private void Awake()
         {
             Instance = this;
@@ -41,6 +42,13 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             headArcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headArcNotePrefab, settings);
 
             heightIndicatorEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(heightIndicatorPrefab, settings);
+
+            arcJudgeArchetype = entityManager.CreateArchetype(
+                ComponentType.ReadOnly<ChartTime>(),
+                ComponentType.ReadOnly<PositionPair>(),
+                ComponentType.ReadOnly<ColorID>(),
+                ComponentType.ReadOnly<EntityReference>()
+                );
 
             colorShaderId = Shader.PropertyToID("_Color");
         }
@@ -168,9 +176,14 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Value = timingGroup
             });
 
-            entityManager.SetComponentData<ArcReference>(arcInstEntity, new ArcReference()
+            entityManager.SetComponentData<EntityReference>(arcInstEntity, new EntityReference()
             {
                 Value = arcEntity
+            });
+
+            entityManager.SetComponentData<CutoffShaderProp>(arcInstEntity, new CutoffShaderProp()
+            {
+                Value = 1f
             });
         }
 
@@ -257,7 +270,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     nextEvent = Conductor.Instance.GetNextTimingEventOrNull(timingEventIdx, arc.timingGroup);
                 }
 
-                Entity judgeEntity = entityManager.CreateEntity(typeof(ChartTime), typeof(PositionPair), typeof(ColorID), typeof(ArcReference));
+                Entity judgeEntity = entityManager.CreateEntity(arcJudgeArchetype);
                 entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
                 {
                     Value = (int)time
@@ -277,7 +290,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 {
                     Value = colorId
                 });
-                entityManager.SetComponentData<ArcReference>(judgeEntity, new ArcReference()
+                entityManager.SetComponentData<EntityReference>(judgeEntity, new EntityReference()
                 {
                     Value = arcEntity
                 });

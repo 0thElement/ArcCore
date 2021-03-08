@@ -7,7 +7,8 @@ using Unity.Entities;
 
 namespace ArcCore.Data
 {
-    public struct HoldReference : IComponentData
+    [GenerateAuthoringComponent]
+    public struct EntityReference : IComponentData
     {
         public Entity Value;
     }

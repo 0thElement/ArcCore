@@ -62,7 +62,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 {
                     time += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
 
-                    Entity judgeEntity = entityManager.CreateEntity(typeof(ChartTime), typeof(Track), typeof(HoldReference));
+                    Entity judgeEntity = entityManager.CreateEntity(typeof(ChartTime), typeof(Track), typeof(EntityReference));
                     entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
                     {
                         Value = (int)time
@@ -71,7 +71,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     {
                         Value = hold.track
                     });
-                    entityManager.SetComponentData<HoldReference>(judgeEntity, new HoldReference()
+                    entityManager.SetComponentData<EntityReference>(judgeEntity, new EntityReference()
                     {
                         Value = holdEntity
                     });

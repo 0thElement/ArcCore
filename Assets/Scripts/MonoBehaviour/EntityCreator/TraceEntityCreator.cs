@@ -139,6 +139,11 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             {
                 Value = timingGroup
             });
+
+            entityManager.SetComponentData<CutoffShaderProp>(traceEntity, new CutoffShaderProp()
+            {
+                Value = 1f
+            });
         }
 
         private void CreateHeadSegment(AffTrace trace)
