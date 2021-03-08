@@ -3,26 +3,49 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
 using Unity.Mathematics;
+using Unity.Burst;
 using UnityEngine;
 
 namespace ArcCore.MonoBehaviours
 {
     public struct TouchPoint
     {
-        public AABB inputPlanePoint;
-        public int lane; //CHANGE THIS TO YET ANOTHER AABB
+        public AABB2D inputPlane;
+        public bool   inputPlaneValid;
+        public AABB2D trackPlane;
+        public bool   trackPlaneValid;
+
         public int time;
         public bool pressed;
         public int fingerId;
 
-        public TouchPoint(AABB inputPlanePoint, int lane, int time, bool pressed, int fingerId)
+        public TouchPoint(AABB2D inputPlane, bool inputPlaneValid, AABB2D trackPlane, bool trackPlaneValid, int time, bool pressed, int fingerId)
         {
-            this.inputPlanePoint = inputPlanePoint;
-            this.lane = lane;
+            this.inputPlane = inputPlane;
+            this.inputPlaneValid = inputPlaneValid;
+            this.trackPlane = trackPlane;
+            this.trackPlaneValid = trackPlaneValid;
             this.time = time;
             this.pressed = pressed;
             this.fingerId = fingerId;
         }
+
+        [BurstDiscard]
+        public void MutatePlanes(AABB2D? inputPlane, AABB2D? trackPlane)
+        {
+            this.inputPlane = inputPlane.GetValueOrDefault();
+            inputPlaneValid = inputPlane != null;
+            this.trackPlane = trackPlane.GetValueOrDefault();
+            trackPlaneValid = trackPlane != null;
+        }
+
+        [BurstDiscard]
+        public static TouchPoint FromNullables(AABB2D? inputPlane, AABB2D? trackPlane, int time, bool pressed, int fingerId)
+            => new TouchPoint(
+                inputPlane.GetValueOrDefault(), inputPlane != null,
+                trackPlane.GetValueOrDefault(), trackPlane != null,
+                time, pressed, fingerId
+                );
     }
 
     //ORDERING IS IMPORTANT HERE; POLL_INPUT MUST OCCUR BEFORE ALL JUDGING.
@@ -85,9 +108,9 @@ namespace ArcCore.MonoBehaviours
                 if (t.phase == TouchPhase.Began && FreeId(t.fingerId) && SafeIndex() != MaxTouches)
                 {
 
-                    (AABB ipt, int lane) = PerformRaycast(t);
+                    (AABB2D? ipt, AABB2D? track) = ProjectionMaths.PerformInputRaycast(cameraCast, t);
                     int timeT = (int)math.round((time - t.deltaTime) * 1000);
-                    touchPoints[safeIndex] = new TouchPoint(ipt, lane, timeT, true, t.fingerId);
+                    touchPoints[safeIndex] = TouchPoint.FromNullables(ipt, track, timeT, true, t.fingerId);
 
                 }
                 else if (t.phase == TouchPhase.Moved)
@@ -97,11 +120,10 @@ namespace ArcCore.MonoBehaviours
                     {
                         TouchPoint tp = touchPoints[index];
 
-                        (AABB ipt, int lane) = PerformRaycast(t);
+                        (AABB2D? ipt, AABB2D? track) = ProjectionMaths.PerformInputRaycast(cameraCast, t);
                         int timeT = (int)math.round((time - t.deltaTime) * 1000);
 
-                        tp.inputPlanePoint = ipt;
-                        tp.lane = lane;
+                        tp.MutatePlanes(ipt, track);
                         tp.time = timeT;
                         tp.pressed = false;
 
@@ -141,21 +163,6 @@ namespace ArcCore.MonoBehaviours
 
                 }
             }
-        }
-
-        public (AABB ipt, int lane) PerformRaycast(Touch t)
-        {
-            Ray ray = cameraCast.ScreenPointToRay(new Vector3(t.position.x, t.position.y));
-            float3 ipt = ProjectionMaths.ProjectOntoXYPlane(ray);
-            AABB ipt_aabb = ProjectionMaths.GetAABBJudgePoint(cameraCast.transform.position, ipt);
-
-            int lane = 0;
-            float3 lane_proj = ProjectionMaths.ProjectOntoXZPlane(ray);
-            if (ipt.z < 1) { 
-                lane = Convert.XToTrack(lane_proj.x);
-            }
-
-            return (ipt_aabb, lane);
         }
     }
 }

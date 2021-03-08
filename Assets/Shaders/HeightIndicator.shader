@@ -59,7 +59,7 @@
 				float4 c = tex2D(_MainTex,i.uv) ; 
 				float4 inColor = i.color;
 				c *= inColor;  
-				return alpha_from_pos(c, i.worldpos.z, -124.25);
+				return c;
 			}
 			ENDCG
 		}

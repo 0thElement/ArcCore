@@ -1,5 +1,4 @@
-	float4 alpha_from_pos(float4 col, float z, float zMax) 
+	float4 alpha_from_pos(float4 col, float z) 
 	{
-		float p = -z / zMax;
-		return float4(col.x, col.y, col.z, col.a - col.a * p*p*p*p*p*p*p*p*p*p*p*p); // maxalpha - maxalpha * (-z / zmax) ^ 11
+		return float4(col.r, col.g, col.b, min(col.a, 5 * col.a - 0.04024144869 * col.a * z));
 	}
