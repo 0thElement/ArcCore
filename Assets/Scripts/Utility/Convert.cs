@@ -48,7 +48,7 @@ namespace ArcCore.Utility
             => Mathf.RoundToInt((x - 2.125f) / 4.25f);
 
         public static float RatioBetween(float start, float end, float val)
-            => (val - start) / (val - end);
+            => (val - start) / (end - start);
 
         public static float S(float start, float end, float t) 
             => start * (1 - t) + end * t;

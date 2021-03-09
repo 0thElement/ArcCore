@@ -19,5 +19,8 @@ namespace ArcCore
         public const int FarWindow     = 100;
         public const int LostWindow    = 120;
 
+        public const float LaneWidth     = 2.125f;
+        public const float LaneFullwidth = LaneWidth * 2;
+
     }
 }

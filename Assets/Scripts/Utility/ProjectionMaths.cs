@@ -189,7 +189,7 @@ namespace ArcCore.Utility
                 float zMin = distYProj * (projPosXZ.y - camPos.z - TAN_EPSILON * distYProj) / (
                              distYProj + (projPosXZ.y - camPos.z) * TAN_EPSILON);
 
-                trackPlane = AABB2D.FromCorners(new float2(xMax, zMax), new float2(xMin, zMin));
+                trackPlane = math.min(zMin, zMax) < -2f ? (AABB2D?)null : AABB2D.FromCorners(new float2(xMax, zMax), new float2(xMin, zMin));
             }
 
             //RETURN
