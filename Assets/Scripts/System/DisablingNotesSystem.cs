@@ -6,9 +6,10 @@ using Unity.Transforms;
 using ArcCore.Data;
 using ArcCore.MonoBehaviours;
 
-public class TagNotes : SystemBase
+public class TagNotes : JobComponentSystem
 {
     protected override void OnUpdate()
     {
+        
     }
 }

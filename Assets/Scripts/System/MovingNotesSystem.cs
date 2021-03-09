@@ -8,7 +8,7 @@ using ArcCore.MonoBehaviours;
 using ArcCore.Tags;
 using Unity.Rendering;
 
-public class NoteVisuals : SystemBase
+public class MovingNotesSystem : SystemBase
 {
     protected override void OnUpdate()
     {
