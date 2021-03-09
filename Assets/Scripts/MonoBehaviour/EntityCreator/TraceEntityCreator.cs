@@ -35,6 +35,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             //idk if this is a good way to set up an entity prefab in this case but this will do for now
             entityManager.RemoveComponent<Translation>(traceNoteEntityPrefab);
             entityManager.RemoveComponent<Rotation>(traceNoteEntityPrefab);
+            entityManager.AddComponent(traceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
 
             headTraceNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headTraceNotePrefab, settings);
             entityManager.AddComponent(headTraceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
@@ -174,10 +175,12 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             {
                 Value = trace.timingGroup
             });
+
             entityManager.SetComponentData<ShouldCutOff>(headEntity, new ShouldCutOff()
             {
                 Value = 1f
             });
+
             entityManager.SetComponentData<ChartTime>(headEntity, new ChartTime()
             {
                 Value = trace.timing

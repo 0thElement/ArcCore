@@ -17,7 +17,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         [SerializeField] private GameObject heightIndicatorPrefab;
         [SerializeField] private Material arcMaterial;
         [SerializeField] private Material heightMaterial;
-        [SerializeField] public Color[] ArcColors { get; private set; }
+        [SerializeField] public Color[] arcColors;
         [SerializeField] private Mesh arcMesh;
         [SerializeField] private Mesh headMesh;
         private Entity arcNoteEntityPrefab;
@@ -68,6 +68,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 );
 
             colorShaderId = Shader.PropertyToID("_Color");
+
+            JudgementSystem.Instance.SetupColors();
         }
 
         public void CreateEntities(List<List<AffArc>> affArcList)
@@ -80,8 +82,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
                 Material arcColorMaterialInstance = Instantiate(arcMaterial);
                 Material heightIndicatorColorMaterialInstance = Instantiate(heightMaterial);
-                arcColorMaterialInstance.SetColor(colorShaderId, ArcColors[colorId]);
-                heightIndicatorColorMaterialInstance.SetColor(colorShaderId, ArcColors[colorId]);
+                arcColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
+                heightIndicatorColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
 
                 List<float4> connectedArcsIdEndpoint = new List<float4>();
 
@@ -270,6 +272,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.SetComponentData<TimingGroup>(headEntity, new TimingGroup()
             {
                 Value = arc.timingGroup
+            });
+            entityManager.SetComponentData<ShouldCutOff>(headEntity, new ShouldCutOff()
+            {
+                Value = 1f
             });
         }
 

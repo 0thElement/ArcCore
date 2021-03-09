@@ -1,28 +1,10 @@
-﻿using System.Collections;
+﻿using ArcCore.Utility;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace ArcCore.MonoBehaviours
 {
-    public struct JudgeCounts {
-
-        public int maxPureCount;
-        public int latePureCount;
-        public int earlyPureCount;
-        public int lateFarCount;
-        public int earlyFarCount;
-        public int lostCount;
-
-        public JudgeCounts(int maxPureCount, int latePureCount, int earlyPureCount, int lateFarCount, int earlyFarCount, int lostCount)
-        {
-            this.maxPureCount = maxPureCount;
-            this.latePureCount = latePureCount;
-            this.earlyPureCount = earlyPureCount;
-            this.lateFarCount = lateFarCount;
-            this.earlyFarCount = earlyFarCount;
-            this.lostCount = lostCount;
-        }
-    }
     public class ScoreManager : MonoBehaviour
     {
         public static ScoreManager Instance { get; private set; }
@@ -31,20 +13,28 @@ namespace ArcCore.MonoBehaviours
 
         [HideInInspector] public int maxCombo;
 
-        public unsafe JudgeCounts* judgeCounts;
+        public unsafe int*
+            maxPureCount,
+            latePureCount,
+            earlyPureCount,
+            lateFarCount,
+            earlyFarCount,
+            lostCount;
 
         [HideInInspector] public float currentScore;
 
         public Text textUI;
 
-        void Awake()
+        unsafe void Awake()
         {
             Instance = this;
-            unsafe
-            {
-                JudgeCounts judgeCountsData = new JudgeCounts();
-                judgeCounts = &judgeCountsData;
-            }
+
+            maxPureCount = Unsafe.New<int>();
+            latePureCount = Unsafe.New<int>();
+            earlyPureCount = Unsafe.New<int>();
+            lateFarCount = Unsafe.New<int>();
+            earlyFarCount = Unsafe.New<int>();
+            lostCount = Unsafe.New<int>();
         }
 
         //call later
@@ -53,9 +43,9 @@ namespace ArcCore.MonoBehaviours
             unsafe
             {
                 currentScore =
-                    (judgeCounts->maxPureCount + judgeCounts->latePureCount + judgeCounts->earlyPureCount) * MAX_VALUE / maxCombo +
-                    (judgeCounts->lateFarCount + judgeCounts->earlyFarCount) * MAX_VALUE / maxCombo / 2 +
-                    judgeCounts->maxPureCount;
+                    (*maxPureCount + *latePureCount + *earlyPureCount) * MAX_VALUE / maxCombo +
+                    (*lateFarCount + *earlyFarCount) * MAX_VALUE / maxCombo / 2 +
+                    *maxPureCount;
             }
             textUI.text = $"{(int)currentScore:D8}";
         }

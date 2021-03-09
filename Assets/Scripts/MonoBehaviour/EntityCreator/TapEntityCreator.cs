@@ -25,7 +25,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager = defaultWorld.EntityManager;
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             tapNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(tapNotePrefab, settings);
-            entityManager.AddComponent<TimingGroup>(tapNoteEntityPrefab); //TEMPORARY TO FIX BUGFCKERY
 
             tapJudgeArchetype = entityManager.CreateArchetype(
                 ComponentType.ReadOnly<ChartTime>(),

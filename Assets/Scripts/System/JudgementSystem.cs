@@ -14,21 +14,21 @@ using ArcCore;
 
 public unsafe class JudgementSystem : SystemBase
 {
-    public EntityManager entityMan;
-    public NativeArray<int> currentArcFgs;
-    public NativeArray<AABB2D> glaneAABB2Ds;
+    public static JudgementSystem Instance { get; private set; }
+    public EntityManager globalEntityManager;
+    public NativeArray<int> globalCurrentArcFingers;
+    public NativeArray<AABB2D> globalLaneAABB2Ds;
     public BeginInitializationEntityCommandBufferSystem bufferSystem;
-
-    public int* maxPureT, latePureT, earlyPureT, lateFarT, earlyFarT, lostT;
 
     public const float arcLeniencyGeneral = 2f;
     protected override void OnCreate()
     {
+        Instance = this;
         var defaultWorld = World.DefaultGameObjectInjectionWorld;
-        entityMan = defaultWorld.EntityManager;
+        globalEntityManager = defaultWorld.EntityManager;
         bufferSystem = defaultWorld.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
-        currentArcFgs = new NativeArray<int>(ArcEntityCreator.Instance.ArcColors.Length, Allocator.Persistent);
-        glaneAABB2Ds = new NativeArray<AABB2D>(
+        
+        globalLaneAABB2Ds = new NativeArray<AABB2D>(
             new AABB2D[] {
                 new AABB2D(new float2(Convert.TrackToX(1), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
                 new AABB2D(new float2(Convert.TrackToX(2), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
@@ -38,33 +38,42 @@ public unsafe class JudgementSystem : SystemBase
             Allocator.Persistent
             );
     }
+    public void SetupColors()
+    {
+        globalCurrentArcFingers = new NativeArray<int>(ArcEntityCreator.Instance.arcColors.Length, Allocator.Persistent);
+    }
+    protected override void OnDestroy()
+    {
+        globalCurrentArcFingers.Dispose();
+        globalLaneAABB2Ds.Dispose();
+    }
     protected override void OnUpdate()
     {
+        //Only execute after full initialization
+        if (!globalCurrentArcFingers.IsCreated)
+            return;
+
+        //Get data from statics
         NativeArray<TouchPoint> touchPoints = InputManager.Instance.touchPoints;
-        NativeArray<Entity> tapForTouch = new NativeArray<Entity>(touchPoints.Length, Allocator.TempJob);
+        NativeArray<Entity> noteForTouch = new NativeArray<Entity>(touchPoints.Length, Allocator.TempJob);
         int currentTime = (int)(Conductor.Instance.receptorTime / 1000f);
 
-        EntityManager entityManager = entityMan;
-        NativeArray<int> currentArcFingers = currentArcFgs;
-        NativeArray<AABB2D> laneAABB2Ds = glaneAABB2Ds;
+        //Create copies of instances
+        EntityManager entityManager = globalEntityManager;
+        NativeArray<int> currentArcFingers = globalCurrentArcFingers;
+        NativeArray<AABB2D> laneAABB2Ds = globalLaneAABB2Ds;
 
         EntityCommandBuffer buffer = bufferSystem.CreateCommandBuffer();
 
-        //SWAP VALUES WITH SCORE MANAGER TO MAINTAIN BURSTABILITY
-        ScoreManager.Instance.maxPureCount = maxPureT;
-        ScoreManager.Instance.latePureCount = latePureT;
-        ScoreManager.Instance.earlyPureCount = earlyPureT;
-        ScoreManager.Instance.lateFarCount = lateFarT;
-        ScoreManager.Instance.earlyFarCount = earlyFarT;
-        ScoreManager.Instance.lostCount = lostT;
-
-        maxPureT = ScoreManager.Instance.maxPureCount;
-        latePureT = ScoreManager.Instance.latePureCount;
-        earlyPureT = ScoreManager.Instance.earlyPureCount;
-        lateFarT = ScoreManager.Instance.lateFarCount;
-        earlyFarT = ScoreManager.Instance.earlyFarCount;
-        lostT = ScoreManager.Instance.lostCount;
-
+        //Set pointers to score contents
+        int* maxPureT = ScoreManager.Instance.maxPureCount;
+        int* latePureT = ScoreManager.Instance.latePureCount;
+        int* earlyPureT = ScoreManager.Instance.earlyPureCount;
+        int* lateFarT = ScoreManager.Instance.lateFarCount;
+        int* earlyFarT = ScoreManager.Instance.earlyFarCount;
+        int* lostT = ScoreManager.Instance.lostCount;
+        
+        // Foreach loop
         JobHandle loopHandle = Entities.WithAll<WithinJudgeRange>().ForEach(
             (Entity entity, in EntityReference entityRef) =>
             {
@@ -85,11 +94,11 @@ public unsafe class JudgementSystem : SystemBase
 
                         if(red.Value || !hit.Value) 
                         {
-                            lostT++;
+                            (*lostT)++;
                         }
                         else
                         {
-                            maxPureT++;
+                            (*maxPureT)++;
                         }
 
                         buffer.AddComponent<Disabled>(entity);
@@ -131,7 +140,7 @@ public unsafe class JudgementSystem : SystemBase
 
                                 entityManager.SetComponentData<ArcIsRed>(entity, red);
 
-                                maxPureT++;
+                                (*maxPureT)++;
                             }
                             //Arc hit by *incorrect* finger -> instant lost
                             else
@@ -150,7 +159,7 @@ public unsafe class JudgementSystem : SystemBase
 
                                 entityManager.SetComponentData<ArcIsRed>(entity, red);
 
-                                lostT++;
+                                (*lostT)++;
                             }
                             
                             //If the point is strict, remove the current finger id to allow for switching
@@ -184,21 +193,27 @@ public unsafe class JudgementSystem : SystemBase
 
                         buffer.AddComponent<Disabled>(entity);
 
-                        lostT++;
+                        (*lostT)++;
+                        return;
 
                     }
 
-                    ShouldCutOff holdSCO = entityManager.GetComponentData<ShouldCutOff>(entityRef.Value);
+                    entityManager.SetComponentData<ShouldCutOff>(entityRef.Value, new ShouldCutOff()
+                    {
+                        Value = 0f
+                    });
+
+                    HoldHeldJudge heldJudge = entityManager.GetComponentData<HoldHeldJudge>(entityRef.Value);
                     Track track = entityManager.GetComponentData<Track>(entity);
 
                     //If the hold has been broken
-                    if(holdSCO.Value <= 0)
+                    if(!heldJudge.Value)
                     {
                         for(int i = 0; i < touchPoints.Length; i++)
                         {
                             if (
-                                entityManager.Exists(tapForTouch[i]) && 
-                                entityManager.GetComponentData<ChartTime>(tapForTouch[i]).Value >= time.Value &&
+                                !(entityManager.Exists(noteForTouch[i]) || 
+                                entityManager.GetComponentData<ChartTime>(noteForTouch[i]).Value < time.Value) &&
                                 touchPoints[i].status == TouchPoint.Status.TAPPED &&
                                 time.Value - touchPoints[i].time <= Constants.FarWindow &&
                                 touchPoints[i].time - time.Value >= Constants.FarWindow &&
@@ -207,10 +222,12 @@ public unsafe class JudgementSystem : SystemBase
                             )
                             {
                                 //Check for judge later
-                                tapForTouch[i] = entity;
+                                noteForTouch[i] = entity;
+                                return;
                             }
                         }
                     } else
+                    //If the hold has not been broken
                     {
                         for (int i = 0; i < touchPoints.Length; i++)
                         {
@@ -225,9 +242,9 @@ public unsafe class JudgementSystem : SystemBase
                                 if (touchPoints[i].status == TouchPoint.Status.RELEASED)
                                 {
 
-                                    entityManager.SetComponentData<ShouldCutOff>(entityRef.Value, new ShouldCutOff()
+                                    entityManager.SetComponentData<HoldHeldJudge>(entityRef.Value, new HoldHeldJudge()
                                     {
-                                        Value = 0f
+                                        Value = false
                                     });
 
                                 } else
@@ -238,18 +255,136 @@ public unsafe class JudgementSystem : SystemBase
                                         Value = 1f
                                     });
 
+                                    entityManager.SetComponentData<HoldHeldJudge>(entityRef.Value, new HoldHeldJudge()
+                                    {
+                                        Value = true
+                                    });
+
                                     buffer.AddComponent<Disabled>(entity);
 
-                                    maxPureT++;
+                                    (*maxPureT)++;
+                                    return;
 
                                 }
 
                             }
                         }
                     }
+                    return;
+                }
+
+                //Kill all remaining entities if they are overaged
+                if (time.Value + Constants.FarWindow < currentTime)
+                {
+
+                    buffer.AddComponent<Disabled>(entity);
+
+                    (*lostT)++;
+                    return;
+
+                }
+
+                //Handle valid arctaps
+                if(entityManager.HasComponent(entity, ComponentType.ReadOnly<SinglePosition>()))
+                {
+
+                    SinglePosition pos = entityManager.GetComponentData<SinglePosition>(entity);
+
+                    for (int i = 0; i < touchPoints.Length; i++)
+                    {
+                        if (
+                            !(entityManager.Exists(noteForTouch[i]) ||
+                            entityManager.GetComponentData<ChartTime>(noteForTouch[i]).Value < time.Value) &&
+                            touchPoints[i].status == TouchPoint.Status.TAPPED &&
+                            time.Value - touchPoints[i].time <= Constants.FarWindow &&
+                            touchPoints[i].time - time.Value >= Constants.FarWindow &&
+                            touchPoints[i].inputPlaneValid &&
+                            touchPoints[i].inputPlane.CollidingWith(new AABB2D(pos.Value, new float2(arcLeniencyGeneral)))
+                        )
+                        {
+                            //Check for judge later
+                            noteForTouch[i] = entity;
+                            return;
+                        }
+                    }
+
+                    return;
+
+                }
+
+                //Handle all taps
+                Track trackTap = entityManager.GetComponentData<Track>(entity);
+
+                for (int i = 0; i < touchPoints.Length; i++)
+                {
+                    if (
+                        !(entityManager.Exists(noteForTouch[i]) ||
+                        entityManager.GetComponentData<ChartTime>(noteForTouch[i]).Value < time.Value) &&
+                        touchPoints[i].status == TouchPoint.Status.TAPPED &&
+                        time.Value - touchPoints[i].time <= Constants.FarWindow &&
+                        touchPoints[i].time - time.Value >= Constants.FarWindow &&
+                        touchPoints[i].trackPlaneValid &&
+                        touchPoints[i].trackPlane.CollidingWith(laneAABB2Ds[trackTap.Value])
+                    )
+                    {
+                        //Check for judge later
+                        noteForTouch[i] = entity;
+                        return;
+                    }
                 }
 
             }
         ).Schedule(new JobHandle());
+
+        JobHandle finalizeHandle = Job.WithCode(() =>
+        {
+
+            for(int i = 0; i < noteForTouch.Length; i++)
+            {
+                if (entityManager.Exists(noteForTouch[i]))
+                    continue;
+
+                //HANDLE HOLDS
+                if (entityManager.HasComponent<JudgeHoldPoint>(noteForTouch[i]))
+                {
+
+                    EntityReference entityRef = entityManager.GetComponentData<EntityReference>(noteForTouch[i]);
+
+                    entityManager.SetComponentData<ShouldCutOff>(entityRef.Value, new ShouldCutOff()
+                    {
+                        Value = 1f
+                    });
+
+                    entityManager.SetComponentData<HoldHeldJudge>(entityRef.Value, new HoldHeldJudge()
+                    {
+                        Value = true
+                    });
+
+                    buffer.AddComponent<Disabled>(noteForTouch[i]);
+
+                    (*maxPureT)++;
+                    return;
+
+                }
+
+                ChartTime time = entityManager.GetComponentData<ChartTime>(noteForTouch[i]);
+
+                if (currentTime - time.Value > Constants.FarWindow)
+                    (*lostT)++;
+                else if (currentTime - time.Value > Constants.PureWindow)
+                    (*earlyFarT)++;
+                else if (currentTime - time.Value > Constants.MaxPureWindow)
+                    (*earlyPureT)++;
+                else if (currentTime - time.Value > -Constants.MaxPureWindow)
+                    (*maxPureT)++;
+                else if (currentTime - time.Value > -Constants.PureWindow)
+                    (*latePureT)++;
+                else (*lateFarT)++;
+
+                buffer.AddComponent<Disabled>(noteForTouch[i]);
+
+            }
+
+        }).Schedule(loopHandle);
     }
 }
