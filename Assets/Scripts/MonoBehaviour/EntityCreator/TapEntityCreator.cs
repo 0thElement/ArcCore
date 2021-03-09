@@ -17,7 +17,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private Entity tapNoteEntityPrefab;
         private World defaultWorld;
         private EntityManager entityManager;
-        private EntityArchetype tapJudgeArchetype;
+        public EntityArchetype tapJudgeArchetype { get; private set; }
         private void Awake()
         {
             Instance = this;

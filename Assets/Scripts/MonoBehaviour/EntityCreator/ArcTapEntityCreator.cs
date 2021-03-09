@@ -18,7 +18,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private Entity connectionLineEntityPrefab;
         private World defaultWorld;
         private EntityManager entityManager;
-        private EntityArchetype arctapJudgeArchetype;
+        public EntityArchetype arctapJudgeArchetype { get; private set; }
         private void Awake()
         {
             Instance = this;

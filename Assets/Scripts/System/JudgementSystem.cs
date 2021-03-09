@@ -12,20 +12,13 @@ public class JudgementSystem : SystemBase
 {
     protected override void OnUpdate()
     {
-        NativeArray<float> currentFloorPosition = Conductor.Instance.currentFloorPosition;
+        NativeArray<TouchPoint> touchPoints = InputManager.Instance.touchPoints;
 
-        //All note except arcs
-        Entities.ForEach((ref Translation translation, in FloorPosition floorPosition, in TimingGroup group) => {
-            translation.Value.z = floorPosition.Value - currentFloorPosition[group.Value]; 
-        }).Schedule();
-
-        //Arc segments
-        Entities.WithNone<Translation>().
-            ForEach((ref LocalToWorld lcwMatrix, in FloorPosition floorPosition, in TimingGroup group) =>
+        //SETUP LOCAL
+        var job = Entities.WithAll<ChartTime, EntityReference>().WithAny<Track, SinglePosition, PositionPair>().ForEach(
+            () =>
             {
 
-                lcwMatrix.Value.c3.z = floorPosition.Value - currentFloorPosition[group.Value];
-
-            }).Schedule();
+            });
     }
 }

@@ -26,7 +26,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private World defaultWorld;
         private EntityManager entityManager;
         private int colorShaderId;
-        private EntityArchetype arcJudgeArchetype;
+        public EntityArchetype arcJudgeArchetype { get; private set; }
         private void Awake()
         {
             Instance = this;

@@ -15,7 +15,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private Entity holdNoteEntityPrefab;
         private World defaultWorld;
         private EntityManager entityManager;
-        private EntityArchetype holdJudgeArchetype;
+        public EntityArchetype holdJudgeArchetype { get; private set; }
         private void Awake()
         {
             Instance = this;
