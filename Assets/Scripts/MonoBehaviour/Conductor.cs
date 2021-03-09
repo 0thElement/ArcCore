@@ -21,12 +21,12 @@ namespace ArcCore.MonoBehaviours
         public static Conductor Instance { get; private set; }
         private AudioSource audioSource;
 
-        [SerializeField] public float offset;
+        [SerializeField] public int offset;
         [HideInInspector] private float dspStartPlayingTime;
         [HideInInspector] public List<float> groupFloorPosition;
         private List<List<TimingEvent>> timingEventGroups;
         private List<int> groupIndexCache;
-        public float receptorTime;
+        public int receptorTime;
         public long timeOfLastMix;
         public int songLength;
         public NativeArray<float> currentFloorPosition;
@@ -50,16 +50,15 @@ namespace ArcCore.MonoBehaviours
 
         public void Update()
         {
-            receptorTime = (float)(
-                AudioSettings.dspTime - dspStartPlayingTime - offset
-                + TimeThreadless.TimeSince_T2S(timeOfLastMix)
-                );
+            receptorTime = Mathf.RoundToInt(
+                (float)(AudioSettings.dspTime - dspStartPlayingTime + TimeThreadless.TimeSince_T2S(timeOfLastMix)) * 1000)
+                - offset;
             UpdateCurrentFloorPosition();
             OnTimeCalculated(receptorTime);
         }
         public void SetOffset(int value)
         {
-            offset = value / 1000f; 
+            offset = value; 
         }
         public void OnAudioFilterRead(float[] data, int channels)
         {
@@ -182,11 +181,10 @@ namespace ArcCore.MonoBehaviours
         public void UpdateCurrentFloorPosition()
         {
             if (timingEventGroups == null) return;
-            int timeInt = (int)Mathf.Round(receptorTime*1000);
             //Might separate the output array into its own singleton class or entity
             for (int group=0; group < timingEventGroups.Count; group++)
             {
-                currentFloorPosition[group] = GetFloorPositionFromTiming(timeInt, group);
+                currentFloorPosition[group] = GetFloorPositionFromTiming(receptorTime, group);
             }
         }
         
