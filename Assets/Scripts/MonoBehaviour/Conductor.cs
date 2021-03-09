@@ -44,7 +44,7 @@ namespace ArcCore.MonoBehaviours
         
         public void PlayMusic()
         {
-            dspStartPlayingTime = (float)AudioSettings.dspTime + 2f;
+            dspStartPlayingTime = (float)AudioSettings.dspTime + 1f;
             audioSource.PlayScheduled(dspStartPlayingTime);
         }
 
