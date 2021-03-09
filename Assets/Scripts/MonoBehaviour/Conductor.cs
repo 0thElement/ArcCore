@@ -157,6 +157,27 @@ namespace ArcCore.MonoBehaviours
 
         public int TimingEventListLength(int timingGroup)
             => timingEventGroups[timingGroup].Count;
+        public int GetFirstTimingFromFloorPosition(float floorposition, int timingGroup)
+        {
+            int maxIndex = timingEventGroups[timingGroup].Count;
+
+            for (int i = 0; i < maxIndex - 1; i++)
+            {
+                TimingEvent curr = timingEventGroups[timingGroup][i];
+                TimingEvent next = timingEventGroups[timingGroup][i+1];
+
+                if ((curr.floorPosition < floorposition && next.floorPosition > floorposition)
+                ||  (curr.floorPosition > floorposition && next.floorPosition < floorposition))
+                {
+                    float result = (floorposition * -1300 - curr.floorPosition) / curr.bpm + curr.timing;
+                    return Mathf.RoundToInt(result);
+                }
+            }
+
+            TimingEvent last = timingEventGroups[timingGroup][maxIndex-1];
+            float lastresult =  (floorposition * -1300 - last.floorPosition) / last.bpm + last.timing;
+            return Mathf.RoundToInt(lastresult);
+        }
 
         public void UpdateCurrentFloorPosition()
         {
@@ -168,6 +189,7 @@ namespace ArcCore.MonoBehaviours
                 currentFloorPosition[group] = GetFloorPositionFromTiming(timeInt, group);
             }
         }
+        
 
         public void DisposeFloorPositionArray()
         {

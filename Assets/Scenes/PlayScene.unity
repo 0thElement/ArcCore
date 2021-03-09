@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.37311918, g: 0.3807398, b: 0.35872716, a: 1}
+  m_IndirectSpecularColor: {r: 0.37311953, g: 0.38074014, b: 0.3587274, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -752,7 +752,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2adfa10b2fd544faa70191694406d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tapNotePrefab: {fileID: 2994907523628847089, guid: 7b256d4ec16e3504d8df690beb2388f4,
+  tapNotePrefab: {fileID: 2994907523628847089, guid: e4e0fa23086e0e74e98c16b8d525d520,
     type: 3}
 --- !u!1 &800735912
 GameObject:
@@ -929,7 +929,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd5714a800870224ba23fe4a7e32b93b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  holdNotePrefab: {fileID: 1128270376758739520, guid: c2d71e16e52706c41821aa971218f591,
+  holdNotePrefab: {fileID: 1128270376758739520, guid: a1e2e728e75223c488b75baf1d36daa0,
     type: 3}
 --- !u!1 &939880829
 GameObject:

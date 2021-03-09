@@ -34,14 +34,23 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager = defaultWorld.EntityManager;
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             arcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcNotePrefab, settings);
+            headArcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headArcNotePrefab, settings);
+            heightIndicatorEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(heightIndicatorPrefab, settings);
+
             //Remove these component to allow direct access to localtoworld matrices
             //idk if this is a good way to set up an entity prefab in this case but this will do for now
             entityManager.RemoveComponent<Translation>(arcNoteEntityPrefab);
             entityManager.RemoveComponent<Rotation>(arcNoteEntityPrefab);
 
-            headArcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headArcNotePrefab, settings);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(arcNoteEntityPrefab);
+            entityManager.SetChunkComponentData<ChunkAppearTime>(entityManager.GetChunk(arcNoteEntityPrefab), new ChunkAppearTime(){
+                Value = int.MaxValue
+            });
 
-            heightIndicatorEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(heightIndicatorPrefab, settings);
+            entityManager.AddChunkComponentData<ChunkDisappearTime>(arcNoteEntityPrefab);
+            entityManager.SetChunkComponentData<ChunkDisappearTime>(entityManager.GetChunk(arcNoteEntityPrefab), new ChunkDisappearTime(){
+                Value = int.MinValue
+            });
 
             arcJudgeArchetype = entityManager.CreateArchetype(
                 ComponentType.ReadOnly<ChartTime>(),
@@ -185,6 +194,25 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             {
                 Value = 1f
             });
+
+            int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, 0);
+            int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, 0);
+            int appearTime = (t1 < t2) ? t1 : t2;
+            int disappearTime = (t1 < t2) ? t2 : t1;
+
+            ArchetypeChunk currentChunk = entityManager.GetChunk(arcInstEntity);
+
+            ChunkAppearTime chunkAppearTime = entityManager.GetChunkComponentData<ChunkAppearTime>(arcInstEntity);
+            ChunkAppearTime newMinAppearTime = chunkAppearTime.Value > appearTime ?
+                                                chunkAppearTime : new ChunkAppearTime(){ Value = appearTime };
+            
+            entityManager.SetChunkComponentData<ChunkAppearTime>(currentChunk, newMinAppearTime);
+
+            ChunkDisappearTime chunkDisappearTime = entityManager.GetChunkComponentData<ChunkDisappearTime>(arcInstEntity);
+            ChunkDisappearTime newMaxDisappearTime = chunkAppearTime.Value < disappearTime ?
+                                                    chunkDisappearTime : new ChunkDisappearTime(){ Value = disappearTime };
+            
+            entityManager.SetChunkComponentData<ChunkDisappearTime>(currentChunk, newMaxDisappearTime);
         }
 
         private void CreateHeightIndicator(AffArc arc, Material material)

@@ -22,7 +22,16 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager = defaultWorld.EntityManager;
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             holdNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(holdNotePrefab, settings);
-            entityManager.AddComponent<TimingGroup>(holdNoteEntityPrefab); //TEMPORARY TO FIX BUGFCKERY
+
+            entityManager.AddChunkComponentData<ChunkAppearTime>(holdNoteEntityPrefab);
+            entityManager.SetChunkComponentData<ChunkAppearTime>(entityManager.GetChunk(holdNoteEntityPrefab), new ChunkAppearTime(){
+                Value = int.MaxValue
+            });
+
+            entityManager.AddChunkComponentData<ChunkDisappearTime>(holdNoteEntityPrefab);
+            entityManager.SetChunkComponentData<ChunkDisappearTime>(entityManager.GetChunk(holdNoteEntityPrefab), new ChunkDisappearTime(){
+                Value = int.MinValue
+            });
         }
 
         public void CreateEntities(List<AffHold> affHoldList)
@@ -31,6 +40,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
             foreach (AffHold hold in affHoldList)
             {
+                //Main entity
                 Entity holdEntity = entityManager.Instantiate(holdNoteEntityPrefab);
 
                 float x = Convert.TrackToX(hold.track);
@@ -56,6 +66,28 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     Value = hold.timingGroup
                 });
 
+                //Appear/disappear time
+
+                int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(startFloorPosition + Constants.RenderFloorPositionRange, 0);
+                int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(endFloorPosition - Constants.RenderFloorPositionRange, 0);
+                int appearTime = (t1 < t2) ? t1 : t2;
+                int disappearTime = (t1 < t2) ? t2 : t1;
+
+                ArchetypeChunk currentChunk = entityManager.GetChunk(holdEntity);
+
+                ChunkAppearTime chunkAppearTime = entityManager.GetChunkComponentData<ChunkAppearTime>(holdEntity);
+                ChunkAppearTime newMinAppearTime = chunkAppearTime.Value > appearTime ?
+                                                    chunkAppearTime : new ChunkAppearTime(){ Value = appearTime };
+                
+                entityManager.SetChunkComponentData<ChunkAppearTime>(currentChunk, newMinAppearTime);
+
+                ChunkDisappearTime chunkDisappearTime = entityManager.GetChunkComponentData<ChunkDisappearTime>(holdEntity);
+                ChunkDisappearTime newMaxDisappearTime = chunkAppearTime.Value < disappearTime ?
+                                                        chunkDisappearTime : new ChunkDisappearTime(){ Value = disappearTime };
+                
+                entityManager.SetChunkComponentData<ChunkDisappearTime>(currentChunk, newMaxDisappearTime);
+
+                //Judge entities
                 float time = hold.timing;
                 TimingEvent timingEvent = Conductor.Instance.GetTimingEventFromTiming(hold.timing, hold.timingGroup);
 
