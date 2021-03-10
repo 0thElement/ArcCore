@@ -51,6 +51,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.SetChunkComponentData<ChunkDisappearTime>(entityManager.GetChunk(arcNoteEntityPrefab), new ChunkDisappearTime(){
                 Value = int.MinValue
             });
+            entityManager.AddComponent<Disabled>(arcNoteEntityPrefab);
 
             arcJudgeArchetype = entityManager.CreateArchetype(
                 ComponentType.ReadOnly<ChartTime>(),
