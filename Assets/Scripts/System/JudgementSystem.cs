@@ -460,9 +460,16 @@ public class JudgementSystem : SystemBase
         for (int i = 0; i < judgeBacklog.Length; i++)
         {
 
+            if (!entityManager.HasComponent<JudgeHoldPoint>(judgeBacklog[i].entity))
+            {
+                entityManager.AddComponent<Disabled>(
+                    entityManager.GetComponentData<EntityReference>(judgeBacklog[i].entity).Value
+                    );
+            }
+
             entityManager.AddComponent<Disabled>(judgeBacklog[i].entity);
 
-            switch(judgeBacklog[i].type)
+            switch (judgeBacklog[i].type)
             {
                 case JudgeOccurance.JudgeType.LOST:
                     ScoreManager.Instance.lostCount++;
