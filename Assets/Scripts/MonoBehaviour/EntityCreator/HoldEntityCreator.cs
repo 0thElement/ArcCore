@@ -62,13 +62,13 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 entityManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(){
                     Value = hold.timingGroup
                 });
-                entityManager.SetComponentData<HoldHeldJudge>(holdEntity, new HoldHeldJudge()
-                {
-                    Value = false
-                });
                 entityManager.SetComponentData<ShouldCutOff>(holdEntity, new ShouldCutOff()
                 {
                     Value = 1f
+                });
+                entityManager.SetComponentData(holdEntity, new HoldIsHeld()
+                {
+                    Value = false
                 });
 
                 float time = hold.timing;

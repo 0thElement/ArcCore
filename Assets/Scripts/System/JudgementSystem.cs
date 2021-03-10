@@ -12,7 +12,48 @@ using Unity.Mathematics;
 using ArcCore.MonoBehaviours.EntityCreation;
 using ArcCore;
 
-public unsafe class JudgementSystem : SystemBase
+public struct JudgeOccurance
+{
+    public enum JudgeType
+    {
+        MAX_PURE,
+        LATE_PURE,
+        EARLY_PURE,
+        LATE_FAR,
+        EARLY_FAR,
+        LOST
+    }
+
+    public JudgeType type;
+    public Entity entity;
+    public float3 position;
+
+    public JudgeOccurance(JudgeType type, Entity entity, float3 position)
+    {
+        this.type = type;
+        this.entity = entity;
+        this.position = position;
+    }
+
+    public static JudgeType GetType(int timeDifference)
+    {
+        if (timeDifference > Constants.FarWindow)
+            return JudgeType.LOST;
+        else if (timeDifference > Constants.PureWindow)
+            return JudgeType.EARLY_FAR;
+        else if (timeDifference > Constants.MaxPureWindow)
+            return JudgeType.EARLY_PURE;
+        else if (timeDifference > -Constants.MaxPureWindow)
+            return JudgeType.MAX_PURE;
+        else if (timeDifference > -Constants.PureWindow)
+            return JudgeType.LATE_PURE;
+        else if (timeDifference > -Constants.FarWindow)
+            return JudgeType.LATE_FAR;
+        else return JudgeType.LOST;
+    }
+}
+
+public class JudgementSystem : SystemBase
 {
     public static JudgementSystem Instance { get; private set; }
     public EntityManager globalEntityManager;
@@ -55,7 +96,7 @@ public unsafe class JudgementSystem : SystemBase
 
         //Get data from statics
         NativeArray<TouchPoint> touchPoints = InputManager.Instance.touchPoints;
-        NativeArray<Entity> noteForTouch = new NativeArray<Entity>(touchPoints.Length, Allocator.TempJob);
+        NativeArray<NativeList<Entity>> noteForTouch = new NativeArray<NativeList<Entity>>(touchPoints.Length, Allocator.TempJob);
         int currentTime = (int)(Conductor.Instance.receptorTime / 1000f);
 
         //Create copies of instances
@@ -63,328 +104,387 @@ public unsafe class JudgementSystem : SystemBase
         NativeArray<int> currentArcFingers = globalCurrentArcFingers;
         NativeArray<AABB2D> laneAABB2Ds = globalLaneAABB2Ds;
 
+        NativeList<JudgeOccurance> judgeBacklog = new NativeList<JudgeOccurance>(Allocator.TempJob);
+
         EntityCommandBuffer buffer = bufferSystem.CreateCommandBuffer();
 
-        //Set pointers to score contents
-        int* maxPureT = ScoreManager.Instance.maxPureCount;
-        int* latePureT = ScoreManager.Instance.latePureCount;
-        int* earlyPureT = ScoreManager.Instance.earlyPureCount;
-        int* lateFarT = ScoreManager.Instance.lateFarCount;
-        int* earlyFarT = ScoreManager.Instance.earlyFarCount;
-        int* lostT = ScoreManager.Instance.lostCount;
-        
-        // Foreach loop
-        JobHandle loopHandle = Entities.WithAll<WithinJudgeRange>().ForEach(
-            (Entity entity, in EntityReference entityRef) =>
+        for(int i = 0; i < noteForTouch.Length; i++)
+        {
+            noteForTouch[i] = new NativeList<Entity>(Allocator.TempJob);
+        }
+
+
+
+        // Handle all arcs //
+        Entities.WithAll<WithinJudgeRange>().ForEach(
+
+            (Entity entity, in EntityReference entityRef, in LinearPosGroup linearPosGroup, in ColorID colorID, in StrictArcJudge strictArcJudge) 
+            
+                =>
+
             {
-                
-                // Arcs only
-                if(entityManager.HasComponent(entity, ComponentType.ReadOnly<ColorID>()))
+
+                ArcIsHit hit;
+                ArcIsRed red;
+
+                // Kill all points that have passed
+                if (linearPosGroup.endTime < currentTime)
                 {
-                    LinearPosGroup linearPosGroup = entityManager.GetComponentData<LinearPosGroup>(entity);
-                    ColorID colorID = entityManager.GetComponentData<ColorID>(entity);
-                    StrictArcJudge strictArcJudge = entityManager.GetComponentData<StrictArcJudge>(entity);
 
-                    ArcIsHit hit = entityManager.GetComponentData<ArcIsHit>(entityRef.Value);
-                    ArcIsRed red = entityManager.GetComponentData<ArcIsRed>(entityRef.Value);
+                    hit = entityManager.GetComponentData<ArcIsHit>(entityRef.Value);
+                    red = entityManager.GetComponentData<ArcIsRed>(entityRef.Value);
 
-                    //Dead arcs -> judge
-                    if (linearPosGroup.endTime < currentTime)
+                    JudgeOccurance judgeOcc = 
+                        new JudgeOccurance(
+                            red.Value || !hit.Value ? JudgeOccurance.JudgeType.LOST : JudgeOccurance.JudgeType.MAX_PURE, 
+                            entity,
+                            new float3(linearPosGroup.startPosition, 0)
+                        );
+
+                    judgeBacklog.Add(judgeOcc);
+
+                    return;
+
+                }
+
+                // Loop through all touch points
+                for (int i = 0; i < touchPoints.Length; i++)
+                {
+
+                    // Arc hit by finger
+                    if (linearPosGroup.startTime <= touchPoints[i].time &&
+                        linearPosGroup.endTime >= touchPoints[i].time &&
+                        touchPoints[i].status != TouchPoint.Status.RELEASED &&
+                        touchPoints[i].inputPlaneValid &&
+                        touchPoints[i].inputPlane.CollidingWith(
+                            new AABB2D(
+                                linearPosGroup.PosAt(currentTime), 
+                                new float2(arcLeniencyGeneral)
+                                )
+                            )) 
                     {
 
-                        if(red.Value || !hit.Value) 
+                        // Set hit to true
+                        hit = new ArcIsHit()
                         {
-                            (*lostT)++;
-                        }
-                        else
+                            Value = true
+                        };
+                        entityManager.SetComponentData(entityRef.Value, hit);
+
+                        // Set red based on current finger id
+                        red = new ArcIsRed()
                         {
-                            (*maxPureT)++;
+                            Value = touchPoints[i].fingerId == currentArcFingers[colorID.Value] || currentArcFingers[colorID.Value] == -1 || !strictArcJudge.Value
+                        };
+                        entityManager.SetComponentData(entityRef.Value, red);
+
+                        //If the point is strict, remove the current finger id to allow for switching
+                        if (!strictArcJudge.Value)
+                        {
+                            currentArcFingers[colorID.Value] = -1;
                         }
-
-                        buffer.AddComponent<Disabled>(entity);
-
-                        return;
+                        //If there is no finger currently, allow there to be a new one permitted that the arc is not hit
+                        else if (currentArcFingers[colorID.Value] != touchPoints[i].fingerId && !hit.Value)
+                        {
+                            currentArcFingers[colorID.Value] = touchPoints[i].fingerId;
+                        }
 
                     }
+                }
 
+            }
+
+        )
+            .WithName("HandleArcs")
+            .ScheduleParallel();
+
+        
+        // Handle all holds //
+        Entities.WithAll<WithinJudgeRange, JudgeHoldPoint>().ForEach(
+
+            (Entity entity, in EntityReference entityRef, in ChartTime time, in Track track) 
+
+                =>
+
+            {
+
+                //Kill old entities and make lost
+                if (time.Value + Constants.FarWindow < currentTime)
+                {
+
+                    JudgeOccurance judgeOcc =
+                        new JudgeOccurance(
+                            JudgeOccurance.JudgeType.LOST,
+                            entity,
+                            new float3(Convert.TrackToX(track.Value), float2.zero)
+                        );
+
+                    judgeBacklog.Add(judgeOcc);
+
+                    return;
+
+                }
+
+                //Reset hold value
+                entityManager.SetComponentData<HoldIsHeld>(entityRef.Value, new HoldIsHeld()
+                {
+                    Value = false
+                });
+
+                HoldIsHeld held = entityManager.GetComponentData<HoldIsHeld>(entityRef.Value);
+
+                //If the hold has not been broken
+                if (held.Value)
+                {
                     for (int i = 0; i < touchPoints.Length; i++)
                     {
-
-                        //Calculate whether or not the current finger is correct (or if it matters)
-                        bool correctFinger = touchPoints[i].fingerId == currentArcFingers[colorID.Value] || currentArcFingers[colorID.Value] == -1 || !strictArcJudge.Value;
-
-                        //Arc hit by any finger
                         if (
-                            linearPosGroup.startTime <= touchPoints[i].time &&
-                            linearPosGroup.endTime >= touchPoints[i].time &&
                             touchPoints[i].status != TouchPoint.Status.RELEASED &&
-                            touchPoints[i].inputPlaneValid &&
-                            touchPoints[i].inputPlane.CollidingWith(new AABB2D(linearPosGroup.PosAt(currentTime), new float2(arcLeniencyGeneral)))
+                            time.Value - touchPoints[i].time <= Constants.FarWindow &&
+                            touchPoints[i].time - time.Value >= Constants.FarWindow &&
+                            touchPoints[i].trackPlaneValid &&
+                            touchPoints[i].trackPlane.CollidingWith(laneAABB2Ds[track.Value])
                         )
                         {
 
-                            //Arc hit by *correct* finger -> instant pure
-                            if (correctFinger)
+                            entityManager.SetComponentData<HoldIsHeld>(entityRef.Value, new HoldIsHeld()
                             {
-                                hit = new ArcIsHit()
-                                {
-                                    Value = true
-                                };
-                                
-                                entityManager.SetComponentData<ArcIsHit>(entity, hit);
+                                Value = true
+                            });
 
-                                red = new ArcIsRed()
-                                {
-                                    Value = false
-                                };
+                            JudgeOccurance judgeOcc =
+                                new JudgeOccurance(
+                                    JudgeOccurance.JudgeType.LOST,
+                                    entity,
+                                    new float3(Convert.TrackToX(track.Value), float2.zero)
+                                );
 
-                                entityManager.SetComponentData<ArcIsRed>(entity, red);
+                            judgeBacklog.Add(judgeOcc);
 
-                                (*maxPureT)++;
-                            }
-                            //Arc hit by *incorrect* finger -> instant lost
-                            else
-                            {
-                                hit = new ArcIsHit()
-                                {
-                                    Value = false
-                                };
-
-                                entityManager.SetComponentData<ArcIsHit>(entity, hit);
-
-                                red = new ArcIsRed()
-                                {
-                                    Value = true
-                                };
-
-                                entityManager.SetComponentData<ArcIsRed>(entity, red);
-
-                                (*lostT)++;
-                            }
-                            
-                            //If the point is strict, remove the current finger id to allow for switching
-                            if (!strictArcJudge.Value)
-                            {
-                                currentArcFingers[colorID.Value] = -1;
-                            }
-                            //If there is no finger currently, allow there to be a new one permitted that the arc is not hit
-                            else if (currentArcFingers[colorID.Value] != touchPoints[i].fingerId && !hit.Value) 
-                            {
-                                currentArcFingers[colorID.Value] = touchPoints[i].fingerId;
-                            }
+                            return;
 
                         }
                     }
-
-                    return;
-
                 }
-
-                // All other types have this component
-                ChartTime time = entityManager.GetComponentData<ChartTime>(entity);
-
-                // Holds only
-                if(entityManager.HasComponent(entity, ComponentType.ReadOnly<JudgeHoldPoint>()))
+                //If the hold has been broken
+                else
                 {
-
-                    //Kill old entities and make lost
-                    if(time.Value + Constants.FarWindow < currentTime)
+                    for (int i = 0; i < touchPoints.Length; i++)
                     {
-
-                        buffer.AddComponent<Disabled>(entity);
-
-                        (*lostT)++;
-                        return;
-
-                    }
-
-                    entityManager.SetComponentData<ShouldCutOff>(entityRef.Value, new ShouldCutOff()
-                    {
-                        Value = 0f
-                    });
-
-                    HoldHeldJudge heldJudge = entityManager.GetComponentData<HoldHeldJudge>(entityRef.Value);
-                    Track track = entityManager.GetComponentData<Track>(entity);
-
-                    //If the hold has been broken
-                    if(!heldJudge.Value)
-                    {
-                        for(int i = 0; i < touchPoints.Length; i++)
+                        if (
+                            touchPoints[i].status == TouchPoint.Status.TAPPED &&
+                            time.Value - touchPoints[i].time <= Constants.FarWindow &&
+                            touchPoints[i].time - time.Value >= Constants.FarWindow &&
+                            touchPoints[i].trackPlaneValid &&
+                            touchPoints[i].trackPlane.CollidingWith(laneAABB2Ds[track.Value])
+                        )
                         {
-                            if (
-                                !(entityManager.Exists(noteForTouch[i]) || 
-                                entityManager.GetComponentData<ChartTime>(noteForTouch[i]).Value < time.Value) &&
-                                touchPoints[i].status == TouchPoint.Status.TAPPED &&
-                                time.Value - touchPoints[i].time <= Constants.FarWindow &&
-                                touchPoints[i].time - time.Value >= Constants.FarWindow &&
-                                touchPoints[i].trackPlaneValid &&
-                                touchPoints[i].trackPlane.CollidingWith(laneAABB2Ds[track.Value])
-                            )
-                            {
-                                //Check for judge later
-                                noteForTouch[i] = entity;
-                                return;
-                            }
-                        }
-                    } else
-                    //If the hold has not been broken
-                    {
-                        for (int i = 0; i < touchPoints.Length; i++)
-                        {
-                            if (
-                                time.Value - touchPoints[i].time <= Constants.FarWindow &&
-                                touchPoints[i].time - time.Value >= Constants.FarWindow &&
-                                touchPoints[i].trackPlaneValid &&
-                                touchPoints[i].trackPlane.CollidingWith(laneAABB2Ds[track.Value])
-                            )
-                            {
-
-                                if (touchPoints[i].status == TouchPoint.Status.RELEASED)
-                                {
-
-                                    entityManager.SetComponentData<HoldHeldJudge>(entityRef.Value, new HoldHeldJudge()
-                                    {
-                                        Value = false
-                                    });
-
-                                } else
-                                {
-
-                                    entityManager.SetComponentData<ShouldCutOff>(entityRef.Value, new ShouldCutOff()
-                                    {
-                                        Value = 1f
-                                    });
-
-                                    entityManager.SetComponentData<HoldHeldJudge>(entityRef.Value, new HoldHeldJudge()
-                                    {
-                                        Value = true
-                                    });
-
-                                    buffer.AddComponent<Disabled>(entity);
-
-                                    (*maxPureT)++;
-                                    return;
-
-                                }
-
-                            }
+                            //Check for judge later
+                            noteForTouch[i].Add(entity);
+                            return;
                         }
                     }
-                    return;
                 }
+
+            }
+
+        )
+            .WithName("HandleHolds")
+            .ScheduleParallel();
+
+
+        // Handle all arctaps //
+        Entities.WithAll<WithinJudgeRange>().ForEach(
+
+            (Entity entity, in ChartTime time, in SinglePosition pos)
+
+                =>
+
+            {
+
 
                 //Kill all remaining entities if they are overaged
                 if (time.Value + Constants.FarWindow < currentTime)
                 {
 
-                    buffer.AddComponent<Disabled>(entity);
+                    JudgeOccurance judgeOcc =
+                                new JudgeOccurance(
+                                    JudgeOccurance.JudgeType.LOST,
+                                    entity,
+                                    new float3(pos.Value, 0)
+                                );
 
-                    (*lostT)++;
-                    return;
-
-                }
-
-                //Handle valid arctaps
-                if(entityManager.HasComponent(entity, ComponentType.ReadOnly<SinglePosition>()))
-                {
-
-                    SinglePosition pos = entityManager.GetComponentData<SinglePosition>(entity);
-
-                    for (int i = 0; i < touchPoints.Length; i++)
-                    {
-                        if (
-                            !(entityManager.Exists(noteForTouch[i]) ||
-                            entityManager.GetComponentData<ChartTime>(noteForTouch[i]).Value < time.Value) &&
-                            touchPoints[i].status == TouchPoint.Status.TAPPED &&
-                            time.Value - touchPoints[i].time <= Constants.FarWindow &&
-                            touchPoints[i].time - time.Value >= Constants.FarWindow &&
-                            touchPoints[i].inputPlaneValid &&
-                            touchPoints[i].inputPlane.CollidingWith(new AABB2D(pos.Value, new float2(arcLeniencyGeneral)))
-                        )
-                        {
-                            //Check for judge later
-                            noteForTouch[i] = entity;
-                            return;
-                        }
-                    }
+                    judgeBacklog.Add(judgeOcc);
 
                     return;
 
                 }
-
-                //Handle all taps
-                Track trackTap = entityManager.GetComponentData<Track>(entity);
 
                 for (int i = 0; i < touchPoints.Length; i++)
                 {
                     if (
-                        !(entityManager.Exists(noteForTouch[i]) ||
-                        entityManager.GetComponentData<ChartTime>(noteForTouch[i]).Value < time.Value) &&
                         touchPoints[i].status == TouchPoint.Status.TAPPED &&
-                        time.Value - touchPoints[i].time <= Constants.FarWindow &&
-                        touchPoints[i].time - time.Value >= Constants.FarWindow &&
-                        touchPoints[i].trackPlaneValid &&
-                        touchPoints[i].trackPlane.CollidingWith(laneAABB2Ds[trackTap.Value])
-                    )
+                        touchPoints[i].inputPlaneValid &&
+                        touchPoints[i].inputPlane.CollidingWith(
+                            new AABB2D(
+                                pos.Value, 
+                                new float2(arcLeniencyGeneral)
+                                )
+                            ))
                     {
                         //Check for judge later
-                        noteForTouch[i] = entity;
+                        noteForTouch[i].Add(entity);
                         return;
                     }
                 }
 
             }
-        ).Schedule(new JobHandle());
 
-        JobHandle finalizeHandle = Job.WithCode(() =>
-        {
+        )
+            .WithName("HandleArctaps")
+            .ScheduleParallel();
 
-            for(int i = 0; i < noteForTouch.Length; i++)
+
+        // Handle all taps //
+        Entities.WithAll<WithinJudgeRange>().ForEach(
+
+            (Entity entity, in ChartTime time, in Track track)
+
+                =>
+
             {
-                if (entityManager.Exists(noteForTouch[i]))
-                    continue;
 
-                //HANDLE HOLDS
-                if (entityManager.HasComponent<JudgeHoldPoint>(noteForTouch[i]))
+                for (int i = 0; i < touchPoints.Length; i++)
                 {
-
-                    EntityReference entityRef = entityManager.GetComponentData<EntityReference>(noteForTouch[i]);
-
-                    entityManager.SetComponentData<ShouldCutOff>(entityRef.Value, new ShouldCutOff()
+                    if (
+                        touchPoints[i].status == TouchPoint.Status.TAPPED &&
+                        touchPoints[i].trackPlaneValid &&
+                        touchPoints[i].trackPlane.CollidingWith(laneAABB2Ds[track.Value])
+                    )
                     {
-                        Value = 1f
-                    });
-
-                    entityManager.SetComponentData<HoldHeldJudge>(entityRef.Value, new HoldHeldJudge()
-                    {
-                        Value = true
-                    });
-
-                    buffer.AddComponent<Disabled>(noteForTouch[i]);
-
-                    (*maxPureT)++;
-                    return;
-
+                        //Check for judge later
+                        noteForTouch[i].Add(entity);
+                        return;
+                    }
                 }
-
-                ChartTime time = entityManager.GetComponentData<ChartTime>(noteForTouch[i]);
-
-                if (currentTime - time.Value > Constants.FarWindow)
-                    (*lostT)++;
-                else if (currentTime - time.Value > Constants.PureWindow)
-                    (*earlyFarT)++;
-                else if (currentTime - time.Value > Constants.MaxPureWindow)
-                    (*earlyPureT)++;
-                else if (currentTime - time.Value > -Constants.MaxPureWindow)
-                    (*maxPureT)++;
-                else if (currentTime - time.Value > -Constants.PureWindow)
-                    (*latePureT)++;
-                else (*lateFarT)++;
-
-                buffer.AddComponent<Disabled>(noteForTouch[i]);
 
             }
 
-        }).Schedule(loopHandle);
+        )
+            .WithName("HandleTaps")
+            .ScheduleParallel();
+
+        // Complete code and find mins //
+        Dependency.Complete();
+        Job.WithCode(
+
+            () =>
+
+            {
+
+                for (int t = 0; t < noteForTouch.Length; t++)
+                {
+
+                    if (noteForTouch[t].Length == 0)
+                    {
+                        continue;
+                    }
+
+                    Entity minEntity = noteForTouch[t][0];
+                    int minTime = entityManager.GetComponentData<ChartTime>(minEntity).Value;
+
+                    for (int i = 0; i < noteForTouch[t].Length; i++)
+                    {
+                        int newTime = entityManager.GetComponentData<ChartTime>(noteForTouch[t][i]).Value;
+                        if (newTime < minTime)
+                        {
+                            minEntity = noteForTouch[t][i];
+                            minTime = newTime;
+                        }
+                    }
+
+                    if(entityManager.HasComponent(minEntity, ComponentType.ReadOnly<Track>()))
+                    {
+
+                        Track track = entityManager.GetComponentData<Track>(minEntity);
+
+                        JudgeOccurance.JudgeType type;
+
+                        if (entityManager.HasComponent(minEntity, ComponentType.ReadOnly<JudgeHoldPoint>()))
+                        {
+                            type = JudgeOccurance.JudgeType.MAX_PURE;
+                        }
+                        else
+                        {
+                            ChartTime time = entityManager.GetComponentData<ChartTime>(minEntity);
+                            type = JudgeOccurance.GetType(currentTime - time.Value);
+                        }
+
+                        JudgeOccurance judgeOcc =
+                                    new JudgeOccurance(
+                                        JudgeOccurance.JudgeType.LOST,
+                                        minEntity,
+                                        new float3(Convert.TrackToX(track.Value), float2.zero)
+                                    );
+
+                        judgeBacklog.Add(judgeOcc);
+
+                    } 
+                    else
+                    {
+
+                        SinglePosition pos = entityManager.GetComponentData<SinglePosition>(minEntity);
+                        ChartTime time = entityManager.GetComponentData<ChartTime>(minEntity);
+
+                        JudgeOccurance judgeOcc =
+                                new JudgeOccurance(
+                                    JudgeOccurance.GetType(currentTime - time.Value),
+                                    minEntity,
+                                    new float3(pos.Value, 0)
+                                );
+
+                        judgeBacklog.Add(judgeOcc);
+
+                    }
+
+                }
+
+            }
+
+        )
+            .WithName("FinalizeMinimums")
+            .Schedule();
+
+        // Complete code and manage backlog //
+        Dependency.Complete();
+        for (int i = 0; i < judgeBacklog.Length; i++)
+        {
+
+            entityManager.AddComponent<Disabled>(judgeBacklog[i].entity);
+
+            switch(judgeBacklog[i].type)
+            {
+                case JudgeOccurance.JudgeType.LOST:
+                    ScoreManager.Instance.lostCount++;
+                    break;
+                case JudgeOccurance.JudgeType.EARLY_FAR:
+                    ScoreManager.Instance.earlyFarCount++;
+                    break;
+                case JudgeOccurance.JudgeType.EARLY_PURE:
+                    ScoreManager.Instance.earlyPureCount++;
+                    break;
+                case JudgeOccurance.JudgeType.MAX_PURE:
+                    ScoreManager.Instance.maxPureCount++;
+                    break;
+                case JudgeOccurance.JudgeType.LATE_PURE:
+                    ScoreManager.Instance.latePureCount++;
+                    break;
+                case JudgeOccurance.JudgeType.LATE_FAR:
+                    ScoreManager.Instance.lateFarCount++;
+                    break;
+            }
+
+        }
+
     }
 }

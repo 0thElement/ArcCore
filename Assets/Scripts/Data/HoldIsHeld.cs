@@ -3,7 +3,7 @@
 namespace ArcCore.Data
 {
     [GenerateAuthoringComponent]
-    public struct HoldHeldJudge : IComponentData
+    public struct HoldIsHeld : IComponentData
     {
         public bool Value;
     }
