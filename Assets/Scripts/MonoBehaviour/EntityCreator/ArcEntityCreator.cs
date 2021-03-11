@@ -15,6 +15,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         [SerializeField] private GameObject arcNotePrefab;
         [SerializeField] private GameObject headArcNotePrefab;
         [SerializeField] private GameObject heightIndicatorPrefab;
+        [SerializeField] private GameObject arcShadowPrefab;
         [SerializeField] private Material arcMaterial;
         [SerializeField] private Material heightMaterial;
         [SerializeField] public Color[] arcColors;
@@ -23,6 +24,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private Entity arcNoteEntityPrefab;
         private Entity headArcNoteEntityPrefab;
         private Entity heightIndicatorEntityPrefab;
+        private Entity arcShadowEntityPrefab;
         private World defaultWorld;
         private EntityManager entityManager;
         private int colorShaderId;
@@ -45,10 +47,13 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager = defaultWorld.EntityManager;
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             arcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcNotePrefab, settings);
+            arcShadowEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcShadowPrefab, settings);
             //Remove these component to allow direct access to localtoworld matrices
             //idk if this is a good way to set up an entity prefab in this case but this will do for now
             entityManager.RemoveComponent<Translation>(arcNoteEntityPrefab);
             entityManager.RemoveComponent<Rotation>(arcNoteEntityPrefab);
+            entityManager.RemoveComponent<Translation>(arcShadowEntityPrefab);
+            entityManager.RemoveComponent<Rotation>(arcShadowEntityPrefab);
 
             headArcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headArcNotePrefab, settings);
 
@@ -170,35 +175,49 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end, int timingGroup, Entity arcEntity)
         {
             Entity arcInstEntity = entityManager.Instantiate(arcNoteEntityPrefab);
+            Entity arcShadowEntity = entityManager.Instantiate(arcShadowEntityPrefab);
             entityManager.SetSharedComponentData<RenderMesh>(arcInstEntity, new RenderMesh()
             {
                 mesh = arcMesh,
                 material = arcColorMaterialInstance
             });
-            entityManager.SetComponentData<FloorPosition>(arcInstEntity, new FloorPosition()
+
+            FloorPosition fpos = new FloorPosition()
             {
                 Value = start.z
-            });
+            };
+
+            entityManager.SetComponentData<FloorPosition>(arcInstEntity, fpos);
+            entityManager.SetComponentData<FloorPosition>(arcShadowEntity, fpos);
+
+            TimingGroup group = new TimingGroup()
+            {
+                Value = timingGroup
+            };
+
+            entityManager.SetComponentData<TimingGroup>(arcInstEntity, group);
+            entityManager.SetComponentData<TimingGroup>(arcShadowEntity, group);
 
             float dx = start.x - end.x;
             float dy = start.y - end.y;
             float dz = start.z - end.z;
 
-            //Shear along xy + scale along z matrix
-            entityManager.SetComponentData<LocalToWorld>(arcInstEntity, new LocalToWorld()
+            LocalToWorld ltwArc = new LocalToWorld()
             {
                 Value = new float4x4(
                     1, 0, dx, start.x,
                     0, 1, dy, start.y,
                     0, 0, dz, 0,
-                    0, 0, 0,  1
+                    0, 0, 0, 1
                 )
-            });
+            };
 
-            entityManager.SetComponentData<TimingGroup>(arcInstEntity, new TimingGroup()
-            {
-                Value = timingGroup
-            });
+            LocalToWorld ltwShadow = ltwArc;
+            ltwShadow.Value.c1.zw = new float2(1, 0);
+
+            //Shear along xy + scale along z matrix
+            entityManager.SetComponentData<LocalToWorld>(arcInstEntity, ltwArc);
+            entityManager.SetComponentData<LocalToWorld>(arcShadowEntity, ltwShadow);
 
             entityManager.SetComponentData<EntityReference>(arcInstEntity, new EntityReference()
             {
@@ -208,6 +227,11 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.SetComponentData<ShouldCutOff>(arcInstEntity, new ShouldCutOff()
             {
                 Value = 1f
+            });
+
+            entityManager.SetComponentData<ShadowReference>(arcInstEntity, new ShadowReference()
+            {
+                Value = arcShadowEntity
             });
         }
 
@@ -310,13 +334,13 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 LinearPosGroup currentLpg = new LinearPosGroup()
                 {
                     startPosition = new float2(
-                        Convert.GetXAt(Convert.RatioBetween(arc.timing, arc.endTiming, timeF), arcStartX, arcEndX, arc.easing),
-                        Convert.GetYAt(Convert.RatioBetween(arc.timing, arc.endTiming, timeF), arcStartY, arcEndY, arc.easing)
+                        Convert.GetXAt(math.unlerp(arc.timing, arc.endTiming, timeF), arcStartX, arcEndX, arc.easing),
+                        Convert.GetYAt(math.unlerp(arc.timing, arc.endTiming, timeF), arcStartY, arcEndY, arc.easing)
                     ),
                     startTime = (int)timeF,
                     endPosition = new float2(
-                        Convert.GetXAt(Convert.RatioBetween(arc.timing, arc.endTiming, timePosEnd), arcStartX, arcEndX, arc.easing),
-                        Convert.GetYAt(Convert.RatioBetween(arc.timing, arc.endTiming, timePosEnd), arcStartY, arcEndY, arc.easing)
+                        Convert.GetXAt(math.unlerp(arc.timing, arc.endTiming, timePosEnd), arcStartX, arcEndX, arc.easing),
+                        Convert.GetYAt(math.unlerp(arc.timing, arc.endTiming, timePosEnd), arcStartY, arcEndY, arc.easing)
                     ),
                     endTime = (int)timePosEnd
                 };

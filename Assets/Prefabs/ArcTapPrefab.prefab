@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6915217587042562501}
   - component: {fileID: 6537699251306353060}
   - component: {fileID: -4833416921495582988}
+  - component: {fileID: -8344911719796928250}
   m_Layer: 0
   m_Name: ArcTapPrefab
   m_TagString: Untagged
@@ -107,3 +108,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Value: 0
+--- !u!114 &-8344911719796928250
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6915217587042562500}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d415a1341e84b87429c2420e29ec3df3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Value: {fileID: 0}

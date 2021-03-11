@@ -29,7 +29,8 @@ namespace ArcCore.Utility
     public class Convert
     {
         public static float TrackToX(int track)
-        {
+            => Constants.LaneCXStart - Constants.LaneFullwidth * track;
+        /*{
             switch(track)
             {
                 case 1:
@@ -43,19 +44,14 @@ namespace ArcCore.Utility
                 default:
                     return 6.375f;
             }
-        }
+        }*/
         public static int XToTrack(float x)
-            => Mathf.RoundToInt((x - 2.125f) / 4.25f);
+            => (int)math.round((x - Constants.LaneWidth) * Constants.LaneFullwidthRecip);
 
-        public static float RatioBetween(float start, float end, float val)
-            => (val - start) / (end - start);
-
-        public static float S(float start, float end, float t) 
-            => start * (1 - t) + end * t;
         public static float O(float start, float end, float t) 
-            => start + (end - start) * (1 - Mathf.Cos(1.5707963f * t));
+            => math.lerp(start, end, 1 - math.cos(math.PI / 2 * t));
         public static float I(float start, float end, float t)
-            => start + (end - start) * (Mathf.Sin(1.5707963f * t));
+            => math.lerp(start, end, math.sin(math.PI / 2 * t));
         public static float B(float start, float end, float t)
         {
             float o = 1 - t;
@@ -66,9 +62,8 @@ namespace ArcCore.Utility
         {
             switch (easing)
             {
-                default:
                 case ArcEasing.s:
-                    return S(startX, endX, t);
+                    return math.lerp(startX, endX, t);
                 case ArcEasing.b:
                     return B(startX, endX, t);
                 case ArcEasing.si:
@@ -80,16 +75,17 @@ namespace ArcCore.Utility
                 case ArcEasing.soso:
                     return O(startX, endX, t);
             }
+            //Not possible, just here to make the compiler smile
+            return float.PositiveInfinity;
         }
         public static float GetYAt(float t, float startY, float endY, ArcEasing easing)
         {
             switch (easing)
             {
-                default:
                 case ArcEasing.s:
                 case ArcEasing.si:
                 case ArcEasing.so:
-                    return S(startY, endY, t);
+                    return math.lerp(startY, endY, t);
                 case ArcEasing.b:
                     return B(startY, endY, t);
                 case ArcEasing.sisi:
@@ -99,6 +95,8 @@ namespace ArcCore.Utility
                 case ArcEasing.soso:
                     return O(startY, endY, t);
             }
+            //Not possible, just here to make the compiler smile
+            return float.PositiveInfinity;
         }
 
         public static float2 GetPosAt(float t, float2 start, float2 end, ArcEasing easing)

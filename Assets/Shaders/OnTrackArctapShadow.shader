@@ -1,9 +1,8 @@
-﻿Shader "Unlit/OnTrackSprites"
+﻿Shader "Unlit/OnTrackArctapShadow"
 {
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
-        _Cutoff ("Cutoff", Float) = 0
     }
     SubShader
     {
@@ -39,7 +38,6 @@
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
-            float _Cutoff;
 
             v2f vert (appdata v)
             {
@@ -53,7 +51,6 @@
 
             fixed4 frag (v2f i) : SV_Target
             {
-                if(i.worldpos.z > 0 && _Cutoff <= 0) return 0;
                 // sample the texture
                 fixed4 col = tex2D(_MainTex, i.uv);
                 // apply fog

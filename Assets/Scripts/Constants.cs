@@ -21,6 +21,9 @@ namespace ArcCore
 
         public const float LaneWidth     = 2.125f;
         public const float LaneFullwidth = LaneWidth * 2;
+        public const float LaneCXStart   = LaneWidth * 5;
+
+        public const float LaneFullwidthRecip = 1 / LaneFullwidth;
 
     }
 }

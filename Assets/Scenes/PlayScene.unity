@@ -602,6 +602,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MAX_VALUE: 10000000
   maxCombo: 0
+  maxPureCount: 0
+  latePureCount: 0
+  earlyPureCount: 0
+  lateFarCount: 0
+  earlyFarCount: 0
+  lostCount: 0
   currentScore: 0
   textUI: {fileID: 0}
 --- !u!1 &714797368
@@ -871,6 +877,7 @@ MonoBehaviour:
     type: 3}
   heightIndicatorPrefab: {fileID: 2509541287854956852, guid: 112bbb63291d4b24da269b7d9c9179ea,
     type: 3}
+  arcShadowPrefab: {fileID: 0}
   arcMaterial: {fileID: 2100000, guid: 6a9129239f6b3054db310a0864ba9eb2, type: 2}
   heightMaterial: {fileID: 2100000, guid: 7df61da0627a5714080a4c06cd73892e, type: 2}
   arcColors:
