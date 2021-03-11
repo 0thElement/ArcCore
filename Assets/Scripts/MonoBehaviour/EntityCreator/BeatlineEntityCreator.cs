@@ -21,16 +21,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager = defaultWorld.EntityManager;
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             BeatlineEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(BeatlinePrefab, settings);
-
-            entityManager.AddChunkComponentData<ChunkAppearTime>(BeatlineEntityPrefab);
-            entityManager.SetChunkComponentData<ChunkAppearTime>(entityManager.GetChunk(BeatlineEntityPrefab), new ChunkAppearTime(){
-                Value = int.MaxValue
-            });
-
-            entityManager.AddChunkComponentData<ChunkDisappearTime>(BeatlineEntityPrefab);
-            entityManager.SetChunkComponentData<ChunkDisappearTime>(entityManager.GetChunk(BeatlineEntityPrefab), new ChunkDisappearTime(){
-                Value = int.MinValue
-            });
         }
 
         public void CreateEntities(List<AffTiming> affTimingList)
@@ -103,20 +93,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, 0);
             int appearTime = (t1 < t2) ? t1 : t2;
             int disappearTime = (t1 < t2) ? t2 : t1;
-
-            ArchetypeChunk currentChunk = entityManager.GetChunk(lineEntity);
-
-            ChunkAppearTime chunkAppearTime = entityManager.GetChunkComponentData<ChunkAppearTime>(lineEntity);
-            ChunkAppearTime newMinAppearTime = chunkAppearTime.Value > appearTime ?
-                                                chunkAppearTime : new ChunkAppearTime(){ Value = appearTime };
-            
-            entityManager.SetChunkComponentData<ChunkAppearTime>(currentChunk, newMinAppearTime);
-
-            ChunkDisappearTime chunkDisappearTime = entityManager.GetChunkComponentData<ChunkDisappearTime>(lineEntity);
-            ChunkDisappearTime newMaxDisappearTime = chunkAppearTime.Value < disappearTime ?
-                                                     chunkDisappearTime : new ChunkDisappearTime(){ Value = disappearTime };
-            
-            entityManager.SetChunkComponentData<ChunkDisappearTime>(currentChunk, newMaxDisappearTime);
         }
     }
 

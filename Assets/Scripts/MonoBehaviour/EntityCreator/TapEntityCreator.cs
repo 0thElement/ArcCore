@@ -24,11 +24,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager = defaultWorld.EntityManager;
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             tapNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(tapNotePrefab, settings);
-
-            entityManager.AddChunkComponentData<ChunkAppearTime>(tapNoteEntityPrefab);
-            entityManager.SetChunkComponentData<ChunkAppearTime>(entityManager.GetChunk(tapNoteEntityPrefab), new ChunkAppearTime(){
-                Value = int.MaxValue
-            });
         }
 
         public void CreateEntities(List<AffTap> affTapList)
@@ -56,17 +51,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 {
                     Value = tap.timingGroup
                 });
-
-                //Appear time
-                int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, tap.timingGroup);
-                int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, tap.timingGroup);
-                int appearTime = (t1 < t2) ? t1 : t2;
-
-                ChunkAppearTime chunkAppearTime = entityManager.GetChunkComponentData<ChunkAppearTime>(tapEntity);
-                ChunkAppearTime newMinAppearTime = chunkAppearTime.Value > appearTime ?
-                                                   chunkAppearTime : new ChunkAppearTime(){ Value = appearTime };
-                
-                entityManager.SetChunkComponentData<ChunkAppearTime>(entityManager.GetChunk(tapEntity), newMinAppearTime);
 
                 //Judge component
                 Entity judgeEntity = entityManager.CreateEntity(typeof(ChartTime), typeof(Track));

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Transforms;
+using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Utility;
@@ -27,15 +28,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             arcTapNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcTapNotePrefab, settings);
             connectionLineEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(connectionLinePrefab, settings);
-
-            entityManager.AddChunkComponentData<ChunkAppearTime>(arcTapNoteEntityPrefab);
-            entityManager.AddChunkComponentData<ChunkAppearTime>(connectionLineEntityPrefab);
-            entityManager.SetChunkComponentData<ChunkAppearTime>(entityManager.GetChunk(arcTapNoteEntityPrefab), new ChunkAppearTime(){
-                Value = int.MaxValue
-            });
-            entityManager.SetChunkComponentData<ChunkAppearTime>(entityManager.GetChunk(connectionLineEntityPrefab), new ChunkAppearTime(){
-                Value = int.MaxValue
-            });
 
             arctapJudgeArchetype = entityManager.CreateArchetype(
                 ComponentType.ReadOnly<ChartTime>(),
@@ -75,13 +67,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arctap.timingGroup);
                 int appearTime = (t1 < t2) ? t1 : t2;
 
-                ChunkAppearTime chunkAppearTime = entityManager.GetChunkComponentData<ChunkAppearTime>(tapEntity);
-                ChunkAppearTime newMinAppearTime = chunkAppearTime.Value > appearTime ?
-                                                   chunkAppearTime : new ChunkAppearTime(){ Value = appearTime };
-                
-                ArchetypeChunk currentChunk = entityManager.GetChunk(tapEntity);
-                entityManager.SetChunkComponentData<ChunkAppearTime>(currentChunk, newMinAppearTime);
-
                 //Connection line
                 while (lowBound < affTapList.Count && arctap.timing > affTapList[lowBound].timing)
                 {
@@ -104,6 +89,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                         CreateConnections(arctap, affTapList[j], appearTime);
                 }
             }
+
         }
 
         public void CreateConnections(AffArcTap arctap, AffTap tap, int appearTime)
@@ -138,13 +124,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             {
                 Value = arctap.timingGroup
             });
-
-            ChunkAppearTime chunkAppearTime = entityManager.GetChunkComponentData<ChunkAppearTime>(lineEntity);
-            ChunkAppearTime newMinAppearTime = chunkAppearTime.Value > appearTime ?
-                                                chunkAppearTime : new ChunkAppearTime(){ Value = appearTime };
-            
-            ArchetypeChunk currentChunk = entityManager.GetChunk(lineEntity);
-            entityManager.SetChunkComponentData<ChunkAppearTime>(currentChunk, newMinAppearTime);
         }
     }
 }

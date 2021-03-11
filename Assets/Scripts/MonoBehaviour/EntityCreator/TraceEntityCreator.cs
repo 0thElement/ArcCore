@@ -35,16 +35,9 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             //idk if this is a good way to set up an entity prefab in this case but this will do for now
             entityManager.RemoveComponent<Translation>(traceNoteEntityPrefab);
             entityManager.RemoveComponent<Rotation>(traceNoteEntityPrefab);
-
+            entityManager.AddComponent<Disabled>(traceNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkAppearTime>(traceNoteEntityPrefab);
-            entityManager.SetChunkComponentData<ChunkAppearTime>(entityManager.GetChunk(traceNoteEntityPrefab), new ChunkAppearTime(){
-                Value = int.MaxValue
-            });
-
             entityManager.AddChunkComponentData<ChunkDisappearTime>(traceNoteEntityPrefab);
-            entityManager.SetChunkComponentData<ChunkDisappearTime>(entityManager.GetChunk(traceNoteEntityPrefab), new ChunkDisappearTime(){
-                Value = int.MinValue
-            });
 
             headTraceNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headTraceNotePrefab, settings);
             entityManager.AddComponent(headTraceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
@@ -160,19 +153,14 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             int appearTime = (t1 < t2) ? t1 : t2;
             int disappearTime = (t1 < t2) ? t2 : t1;
 
-            ArchetypeChunk currentChunk = entityManager.GetChunk(traceEntity);
-
-            ChunkAppearTime chunkAppearTime = entityManager.GetChunkComponentData<ChunkAppearTime>(traceEntity);
-            ChunkAppearTime newMinAppearTime = chunkAppearTime.Value > appearTime ?
-                                                chunkAppearTime : new ChunkAppearTime(){ Value = appearTime };
-            
-            entityManager.SetChunkComponentData<ChunkAppearTime>(currentChunk, newMinAppearTime);
-
-            ChunkDisappearTime chunkDisappearTime = entityManager.GetChunkComponentData<ChunkDisappearTime>(traceEntity);
-            ChunkDisappearTime newMaxDisappearTime = chunkAppearTime.Value < disappearTime ?
-                                                    chunkDisappearTime : new ChunkDisappearTime(){ Value = disappearTime };
-            
-            entityManager.SetChunkComponentData<ChunkDisappearTime>(currentChunk, newMaxDisappearTime);
+            entityManager.SetComponentData<AppearTime>(traceEntity, new AppearTime()
+            {
+                Value = appearTime
+            });
+            entityManager.SetComponentData<DisappearTime>(traceEntity, new DisappearTime()
+            {
+                Value = disappearTime
+            });
         }
 
         private void CreateHeadSegment(AffTrace trace)

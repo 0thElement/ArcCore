@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
@@ -41,17 +42,9 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             //idk if this is a good way to set up an entity prefab in this case but this will do for now
             entityManager.RemoveComponent<Translation>(arcNoteEntityPrefab);
             entityManager.RemoveComponent<Rotation>(arcNoteEntityPrefab);
-
-            entityManager.AddChunkComponentData<ChunkAppearTime>(arcNoteEntityPrefab);
-            entityManager.SetChunkComponentData<ChunkAppearTime>(entityManager.GetChunk(arcNoteEntityPrefab), new ChunkAppearTime(){
-                Value = int.MaxValue
-            });
-
-            entityManager.AddChunkComponentData<ChunkDisappearTime>(arcNoteEntityPrefab);
-            entityManager.SetChunkComponentData<ChunkDisappearTime>(entityManager.GetChunk(arcNoteEntityPrefab), new ChunkDisappearTime(){
-                Value = int.MinValue
-            });
             entityManager.AddComponent<Disabled>(arcNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(arcNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkDisappearTime>(arcNoteEntityPrefab);
 
             arcJudgeArchetype = entityManager.CreateArchetype(
                 ComponentType.ReadOnly<ChartTime>(),
@@ -196,24 +189,19 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Value = 1f
             });
 
-            int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, 0);
-            int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, 0);
+            int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, timingGroup);
+            int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, timingGroup);
             int appearTime = (t1 < t2) ? t1 : t2;
             int disappearTime = (t1 < t2) ? t2 : t1;
 
-            ArchetypeChunk currentChunk = entityManager.GetChunk(arcInstEntity);
-
-            ChunkAppearTime chunkAppearTime = entityManager.GetChunkComponentData<ChunkAppearTime>(arcInstEntity);
-            ChunkAppearTime newMinAppearTime = chunkAppearTime.Value > appearTime ?
-                                                chunkAppearTime : new ChunkAppearTime(){ Value = appearTime };
-            
-            entityManager.SetChunkComponentData<ChunkAppearTime>(currentChunk, newMinAppearTime);
-
-            ChunkDisappearTime chunkDisappearTime = entityManager.GetChunkComponentData<ChunkDisappearTime>(arcInstEntity);
-            ChunkDisappearTime newMaxDisappearTime = chunkAppearTime.Value < disappearTime ?
-                                                    chunkDisappearTime : new ChunkDisappearTime(){ Value = disappearTime };
-            
-            entityManager.SetChunkComponentData<ChunkDisappearTime>(currentChunk, newMaxDisappearTime);
+            entityManager.SetComponentData<AppearTime>(arcInstEntity, new AppearTime()
+            {
+                Value = appearTime
+            });
+            entityManager.SetComponentData<DisappearTime>(arcInstEntity, new DisappearTime()
+            {
+                Value = disappearTime
+            });
         }
 
         private void CreateHeightIndicator(AffArc arc, Material material)
@@ -328,4 +316,5 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             }
         }
     }
+
 }
