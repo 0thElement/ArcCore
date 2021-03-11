@@ -29,7 +29,7 @@ namespace ArcCore.Utility
     public class Convert
     {
         public static float TrackToX(int track)
-            => Constants.LaneCXStart - Constants.LaneFullwidth * track;
+            => Constants.LaneWidth * 5 - Constants.LaneFullwidth * track;
         /*{
             switch(track)
             {
