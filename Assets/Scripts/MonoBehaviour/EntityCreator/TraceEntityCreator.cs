@@ -42,6 +42,9 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             headTraceNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headTraceNotePrefab, settings);
             entityManager.AddComponent(headTraceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
 
+            entityManager.AddComponent<Disabled>(headTraceNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(headTraceNoteEntityPrefab);
+
             //colorShaderId = Shader.PropertyToID("_Color");
         }
         //Similar to arc creation
@@ -170,9 +173,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 mesh = headMesh,
                 material = traceMaterial
             });
+            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(trace.timing, trace.timingGroup);
             entityManager.SetComponentData<FloorPosition>(headEntity, new FloorPosition()
             {
-                Value = Conductor.Instance.GetFloorPositionFromTiming(trace.timing, trace.timingGroup)
+                Value = floorpos
             });
 
             float x = Convert.GetWorldX(trace.startX); 
@@ -185,6 +189,15 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.SetComponentData<TimingGroup>(headEntity, new TimingGroup()
             {
                 Value = trace.timingGroup
+            });
+            
+            int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, 0);
+            int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, 0);
+            int appearTime = (t1 < t2) ? t1 : t2;
+
+            entityManager.SetComponentData<AppearTime>(headEntity, new AppearTime()
+            {
+                Value = appearTime
             });
         }
     }

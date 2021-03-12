@@ -22,6 +22,9 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager = defaultWorld.EntityManager;
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             holdNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(holdNotePrefab, settings);
+            entityManager.AddComponent<Disabled>(holdNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(holdNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkDisappearTime>(holdNoteEntityPrefab);
         }
 
         public void CreateEntities(List<AffHold> affHoldList)
@@ -62,6 +65,9 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(endFloorPosition - Constants.RenderFloorPositionRange, 0);
                 int appearTime = (t1 < t2) ? t1 : t2;
                 int disappearTime = (t1 < t2) ? t2 : t1;
+
+                entityManager.SetComponentData<AppearTime>(holdEntity, new AppearTime(){ Value = appearTime });
+                entityManager.SetComponentData<DisappearTime>(holdEntity, new DisappearTime(){ Value = disappearTime });
 
                 //Judge entities
                 float time = hold.timing;

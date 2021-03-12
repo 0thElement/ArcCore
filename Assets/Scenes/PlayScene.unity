@@ -164,7 +164,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0b66db8488f4ae458454d1427080342, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BeatlinePrefab: {fileID: 1926968061456618601, guid: 1adf085d2c359624aab5977033528e8d,
+  beatlinePrefab: {fileID: 1926968061456618601, guid: 1adf085d2c359624aab5977033528e8d,
     type: 3}
 --- !u!1 &72529306
 GameObject:

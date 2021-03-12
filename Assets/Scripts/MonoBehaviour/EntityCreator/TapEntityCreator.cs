@@ -24,6 +24,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager = defaultWorld.EntityManager;
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             tapNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(tapNotePrefab, settings);
+            entityManager.AddComponent<Disabled>(tapNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(tapNoteEntityPrefab);
         }
 
         public void CreateEntities(List<AffTap> affTapList)
@@ -51,6 +53,12 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 {
                     Value = tap.timingGroup
                 });
+
+                int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, tap.timingGroup);
+                int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, tap.timingGroup);
+                int appearTime = (t1 < t2) ? t1 : t2;
+
+                entityManager.SetComponentData<AppearTime>(tapEntity, new AppearTime(){ Value = appearTime });
 
                 //Judge component
                 Entity judgeEntity = entityManager.CreateEntity(typeof(ChartTime), typeof(Track));

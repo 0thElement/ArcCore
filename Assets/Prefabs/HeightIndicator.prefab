@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 8990416313514662003}
   - component: {fileID: -3906169415954797495}
   - component: {fileID: -6096881300659070878}
+  - component: {fileID: 1973789342630883691}
   m_Layer: 0
   m_Name: HeightIndicator
   m_TagString: Untagged
@@ -104,6 +105,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 08971367d0a285d48a9071c53667ae42, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Value: 0
+--- !u!114 &1973789342630883691
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2509541287854956852}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b33f04a1d753094ebbcae5b653401fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   Value: 0

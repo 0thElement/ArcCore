@@ -46,6 +46,12 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.AddChunkComponentData<ChunkAppearTime>(arcNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkDisappearTime>(arcNoteEntityPrefab);
 
+            entityManager.AddComponent<Disabled>(headArcNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(headArcNoteEntityPrefab);
+            
+            entityManager.AddComponent<Disabled>(heightIndicatorEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(heightIndicatorEntityPrefab);
+
             arcJudgeArchetype = entityManager.CreateArchetype(
                 ComponentType.ReadOnly<ChartTime>(),
                 ComponentType.ReadOnly<PositionPair>(),
@@ -233,13 +239,22 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             {
                 Value = new float3(scaleX, scaleY, scaleZ)
             });
+            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup);
             entityManager.AddComponentData<FloorPosition>(heightEntity, new FloorPosition()
             {
-                Value = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
+                Value = floorpos
             });
             entityManager.SetComponentData<TimingGroup>(heightEntity, new TimingGroup()
             {
                 Value = arc.timingGroup
+            });
+
+            int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arc.timingGroup);
+            int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, arc.timingGroup);
+            int appearTime = (t1 < t2) ? t1 : t2;
+
+            entityManager.SetComponentData<AppearTime>(heightEntity, new AppearTime(){
+                Value = appearTime
             });
         }
 
@@ -250,9 +265,11 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 mesh = headMesh,
                 material = material
             });
+
+            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup);
             entityManager.SetComponentData<FloorPosition>(headEntity, new FloorPosition()
             {
-                Value = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
+                Value = floorpos 
             });
 
             float x = Convert.GetWorldX(arc.startX); 
@@ -265,6 +282,14 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.SetComponentData<TimingGroup>(headEntity, new TimingGroup()
             {
                 Value = arc.timingGroup
+            });
+
+            int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arc.timingGroup);
+            int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, arc.timingGroup);
+            int appearTime = (t1 < t2) ? t1 : t2;
+
+            entityManager.SetComponentData<AppearTime>(headEntity, new AppearTime(){
+                Value = appearTime
             });
         }
 

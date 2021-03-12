@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 6242960814994536105}
   - component: {fileID: 5049329439691517727}
   - component: {fileID: -3366428543563404190}
+  - component: {fileID: 6780919025644053894}
+  - component: {fileID: -3214216882849377065}
   m_Layer: 0
   m_Name: BeatlinePrefab
   m_TagString: Untagged
@@ -104,6 +106,32 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 08971367d0a285d48a9071c53667ae42, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Value: 0
+--- !u!114 &6780919025644053894
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1926968061456618601}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b33f04a1d753094ebbcae5b653401fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Value: 0
+--- !u!114 &-3214216882849377065
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1926968061456618601}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c1d593ab77722f4bae8ae95c8c12cdf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   Value: 0

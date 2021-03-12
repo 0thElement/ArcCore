@@ -14,29 +14,39 @@ public class ChunkScopingSystem : SystemBase
     private EntityQuery makeDisappearQuery;
     private EntityManager entityManager;
     private bool firstFrame = true;
-    private EntityQueryDesc appearTimeChangedQueryDesc;
     private EntityQuery appearTimeChangedQuery;
+    private EntityQuery disappearTimeChangedQuery;
+
     protected override void OnCreate()
     {
         makeAppearQueryDesc = new EntityQueryDesc
         {
-            None = new ComponentType[] {ComponentType.ChunkComponent<ChunkWithinRenderRangeTag>(), typeof(Prefab)},
+            None = new ComponentType[] {typeof(DisappearedTag), typeof(Prefab)},
             All = new ComponentType[] {ComponentType.ChunkComponentReadOnly<ChunkAppearTime>(), typeof(Disabled)}
         };
         makeAppearQuery = GetEntityQuery(makeAppearQueryDesc);
-        makeDisappearQuery = GetEntityQuery(ComponentType.ChunkComponent<ChunkDisappearTime>(), 
-                                            ComponentType.ChunkComponent<ChunkWithinRenderRangeTag>());
 
-        appearTimeChangedQueryDesc = new EntityQueryDesc() 
+        makeDisappearQuery = GetEntityQuery(ComponentType.ChunkComponent<ChunkDisappearTime>());
+
+        var appearTimeChangedQueryDesc = new EntityQueryDesc() 
         {
-            None = new ComponentType[] {ComponentType.ChunkComponent<ChunkWithinRenderRangeTag>(), typeof(Prefab)},
+            None = new ComponentType[] {typeof(Prefab)},
             All = new ComponentType[] {ComponentType.ChunkComponent<ChunkAppearTime>(), typeof(Disabled), typeof(AppearTime)}
         };
         appearTimeChangedQuery = GetEntityQuery(appearTimeChangedQueryDesc);
         appearTimeChangedQuery.SetChangedVersionFilter(typeof(AppearTime));
 
+        var disappearTimeChangedQueryDesc = new EntityQueryDesc() 
+        {
+            None = new ComponentType[] {typeof(Prefab), typeof(Disabled)},
+            All = new ComponentType[] {ComponentType.ChunkComponent<ChunkDisappearTime>(), typeof(DisappearTime)}
+        };
+        disappearTimeChangedQuery = GetEntityQuery(disappearTimeChangedQueryDesc);
+        disappearTimeChangedQuery.SetChangedVersionFilter(typeof(DisappearTime));
+
         entityManager = World.EntityManager;
     }
+
     protected override void OnStartRunning()
     {
         SetupChunkComponentData();
@@ -44,12 +54,12 @@ public class ChunkScopingSystem : SystemBase
 
     private void SetupChunkComponentData()
     {
-        EntityQueryDesc arcQueryDesc = new EntityQueryDesc(){
-            All = new ComponentType[]{typeof(AppearTime), typeof(DisappearTime)},
+        EntityQueryDesc queryDesc = new EntityQueryDesc(){
+            All = new ComponentType[]{typeof(AppearTime)},
             Options = EntityQueryOptions.IncludeDisabled
         };
-        EntityQuery arcQuery = entityManager.CreateEntityQuery(new EntityQueryDesc[]{arcQueryDesc});
-        NativeArray<ArchetypeChunk> chunks = arcQuery.CreateArchetypeChunkArray(Allocator.Persistent);
+        EntityQuery query = entityManager.CreateEntityQuery(new EntityQueryDesc[]{queryDesc});
+        NativeArray<ArchetypeChunk> chunks = query.CreateArchetypeChunkArray(Allocator.Persistent);
 
         foreach (var chunk in chunks)
         {
@@ -66,11 +76,22 @@ public class ChunkScopingSystem : SystemBase
             chunk.SetChunkComponentData<ChunkAppearTime>(chunkAppearTimeType, new ChunkAppearTime(){
                 Value = min
             });
+        }
+        chunks.Dispose();
 
+        queryDesc = new EntityQueryDesc(){
+            All = new ComponentType[]{typeof(DisappearTime)},
+            Options = EntityQueryOptions.IncludeDisabled
+        };
+        query = entityManager.CreateEntityQuery(new EntityQueryDesc[]{queryDesc});
+        chunks = query.CreateArchetypeChunkArray(Allocator.Persistent);
+
+        foreach (var chunk in chunks)
+        {
             var disappearTimeType = entityManager.GetArchetypeChunkComponentType<DisappearTime>(true);
             NativeArray<DisappearTime> disappearTimeList = chunk.GetNativeArray<DisappearTime>(disappearTimeType);
 
-            int max = appearTimeList[0].Value;
+            int max = disappearTimeList[0].Value;
             foreach (DisappearTime disappearTime in disappearTimeList)
             {
                 if (max < disappearTime.Value) max = disappearTime.Value;
@@ -86,9 +107,14 @@ public class ChunkScopingSystem : SystemBase
     protected override void OnUpdate()
     {
         //No jobs in this system since all this does is remove and add tags (which jobs aren't designed for)
+        if (firstFrame)
+        {
+            firstFrame = false;
+            return;
+        }
         currentTime = Conductor.Instance.receptorTime;
         MakeNoteChunksAppear();
-        // MakeNotesChunksDisappear();
+        MakeNotesChunksDisappear();
     }
     private void MakeNoteChunksAppear()
     {
@@ -109,8 +135,25 @@ public class ChunkScopingSystem : SystemBase
         }
 
         //Delete disabled tag from all chunks that was flagged
-        if (!firstFrame) entityManager.RemoveComponent<Disabled>(appearTimeChangedQuery);
+        entityManager.RemoveComponent<Disabled>(appearTimeChangedQuery);
         chunks.Dispose();
-        firstFrame = false;
+    }
+    private void MakeNotesChunksDisappear()
+    {
+        NativeArray<ArchetypeChunk> chunks = makeDisappearQuery.CreateArchetypeChunkArray(Allocator.TempJob);
+        for (int i=0; i<chunks.Length; i++)
+        {
+            int disappearTime = entityManager.GetChunkComponentData<ChunkDisappearTime>(chunks[i]).Value;
+
+            if (currentTime >= disappearTime)
+            {
+                var acct = entityManager.GetArchetypeChunkComponentType<DisappearTime>(false);
+                chunks[i].GetNativeArray(acct);
+            }
+        }
+
+        entityManager.AddComponent<DisappearedTag>(disappearTimeChangedQuery);
+        entityManager.AddComponent<Disabled>(disappearTimeChangedQuery);
+        chunks.Dispose();
     }
 }
