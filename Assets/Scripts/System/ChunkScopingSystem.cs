@@ -9,6 +9,8 @@ using ArcCore.MonoBehaviours;
 public class ChunkScopingSystem : SystemBase
 {
     private int currentTime;
+    private int nextMakeAppearUpdateTime = 0;
+    private int nextMakeDisappearUpdateTime = 0;
     private EntityQueryDesc makeAppearQueryDesc;
     private EntityQuery makeAppearQuery;
     private EntityQuery makeDisappearQuery;
@@ -113,8 +115,8 @@ public class ChunkScopingSystem : SystemBase
             return;
         }
         currentTime = Conductor.Instance.receptorTime;
-        MakeNoteChunksAppear();
-        MakeNotesChunksDisappear();
+        if (currentTime >= nextMakeAppearUpdateTime) MakeNoteChunksAppear();
+        if (currentTime >= nextMakeDisappearUpdateTime) MakeNotesChunksDisappear();
     }
     private void MakeNoteChunksAppear()
     {
@@ -122,6 +124,8 @@ public class ChunkScopingSystem : SystemBase
 
         //Chunk iteration
         NativeArray<ArchetypeChunk> chunks = makeAppearQuery.CreateArchetypeChunkArray(Allocator.TempJob);
+
+        int minNextAppear = int.MaxValue;
         for (int i=0; i<chunks.Length; i++)
         {
             int appearTime = entityManager.GetChunkComponentData<ChunkAppearTime>(chunks[i]).Value;
@@ -132,15 +136,20 @@ public class ChunkScopingSystem : SystemBase
                 var acct = entityManager.GetArchetypeChunkComponentType<AppearTime>(false);
                 chunks[i].GetNativeArray(acct); 
             }
+            else if (appearTime < minNextAppear) minNextAppear = appearTime;
         }
 
         //Delete disabled tag from all chunks that was flagged
         entityManager.RemoveComponent<Disabled>(appearTimeChangedQuery);
         chunks.Dispose();
+
+        nextMakeAppearUpdateTime = minNextAppear;
     }
     private void MakeNotesChunksDisappear()
     {
         NativeArray<ArchetypeChunk> chunks = makeDisappearQuery.CreateArchetypeChunkArray(Allocator.TempJob);
+        
+        int minNextDisappear = int.MaxValue;
         for (int i=0; i<chunks.Length; i++)
         {
             int disappearTime = entityManager.GetChunkComponentData<ChunkDisappearTime>(chunks[i]).Value;
@@ -150,10 +159,13 @@ public class ChunkScopingSystem : SystemBase
                 var acct = entityManager.GetArchetypeChunkComponentType<DisappearTime>(false);
                 chunks[i].GetNativeArray(acct);
             }
+            else if (disappearTime < minNextDisappear) minNextDisappear = disappearTime;
         }
 
         entityManager.AddComponent<DisappearedTag>(disappearTimeChangedQuery);
         entityManager.AddComponent<Disabled>(disappearTimeChangedQuery);
         chunks.Dispose();
+
+        nextMakeDisappearUpdateTime = minNextDisappear;
     }
 }
