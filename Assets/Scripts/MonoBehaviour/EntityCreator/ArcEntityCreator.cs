@@ -56,7 +56,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 ComponentType.ReadOnly<ChartTime>(),
                 ComponentType.ReadOnly<PositionPair>(),
                 ComponentType.ReadOnly<ColorID>(),
-                ComponentType.ReadOnly<EntityReference>()
+                ComponentType.ReadOnly<EntityReference>(),
+                typeof(AppearTime),
+                typeof(Disabled),
+                ComponentType.ChunkComponent<ChunkAppearTime>()
                 );
 
             colorShaderId = Shader.PropertyToID("_Color");
@@ -335,6 +338,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 entityManager.SetComponentData<EntityReference>(judgeEntity, new EntityReference()
                 {
                     Value = arcEntity
+                });
+                entityManager.SetComponentData<AppearTime>(judgeEntity, new AppearTime()
+                {
+                    Value = (int)time - Constants.LostWindow
                 });
 
                 ScoreManager.Instance.maxCombo++;

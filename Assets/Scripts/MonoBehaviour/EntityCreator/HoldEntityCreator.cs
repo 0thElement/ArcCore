@@ -77,7 +77,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 {
                     time += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
 
-                    Entity judgeEntity = entityManager.CreateEntity(typeof(ChartTime), typeof(Track), typeof(EntityReference));
+                    Entity judgeEntity = entityManager.CreateEntity(typeof(ChartTime), typeof(Track), typeof(EntityReference), typeof(AppearTime), ComponentType.ChunkComponent<ChunkAppearTime>());
                     entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
                     {
                         Value = (int)time
@@ -90,7 +90,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     {
                         Value = holdEntity
                     });
-
+                    entityManager.SetComponentData<AppearTime>(judgeEntity, new AppearTime()
+                    {
+                        Value = (int)time - Constants.LostWindow
+                    });
                     ScoreManager.Instance.maxCombo++;
                 }
             }
