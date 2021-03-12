@@ -19,12 +19,12 @@ public class JudgeEntitiesScopingSystem : SystemBase
         int currentTime = Conductor.Instance.receptorTime;
         var commandBuffer = commandBufferSystem.CreateCommandBuffer();
 
-        Entities.WithNone<WithinJudgeRangeTag>()
+        Entities.WithNone<WithinJudgeRange>()
             .ForEach((Entity entity, in ChartTime chartTime, in AppearTime appearTime) => 
             {
                 if (currentTime >= appearTime.Value)
                 {
-                    commandBuffer.AddComponent<WithinJudgeRangeTag>(entity);
+                    commandBuffer.AddComponent<WithinJudgeRange>(entity);
                 }
             }).Run();
     }

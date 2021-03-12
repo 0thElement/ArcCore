@@ -2,7 +2,7 @@ using Unity.Entities;
 
 namespace ArcCore.Data
 {
-    public struct WithinJudgeRangeTag : IComponentData
+    public struct WithinJudgeRange : IComponentData
     {
     }
 }
