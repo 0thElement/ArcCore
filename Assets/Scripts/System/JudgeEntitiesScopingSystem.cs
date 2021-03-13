@@ -4,6 +4,7 @@ using Unity.Entities;
 using UnityEngine;
 using ArcCore.Data;
 using ArcCore.MonoBehaviours;
+using ArcCore.Tags;
 
 [UpdateInGroup(typeof(InitializationSystemGroup))]
 [UpdateAfter(typeof(ChunkScopingSystem))]

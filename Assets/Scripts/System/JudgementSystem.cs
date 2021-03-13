@@ -5,12 +5,12 @@ using Unity.Jobs;
 using Unity.Transforms;
 using ArcCore.Data;
 using ArcCore.MonoBehaviours;
-using ArcCore.Tags;
 using Unity.Rendering;
 using ArcCore.Utility;
 using Unity.Mathematics;
 using ArcCore.MonoBehaviours.EntityCreation;
 using ArcCore;
+using ArcCore.Tags;
 
 public struct JudgeOccurance
 {
@@ -27,12 +27,14 @@ public struct JudgeOccurance
     public JudgeType type;
     public Entity entity;
     public float3 position;
+    public bool deleteEn;
 
-    public JudgeOccurance(JudgeType type, Entity entity, float3 position)
+    public JudgeOccurance(JudgeType type, Entity entity, float3 position, bool deleteEn)
     {
         this.type = type;
         this.entity = entity;
         this.position = position;
+        this.deleteEn = deleteEn;
     }
 
     public static JudgeType GetType(int timeDifference)
@@ -88,6 +90,17 @@ public class JudgementSystem : SystemBase
         globalCurrentArcFingers.Dispose();
         globalLaneAABB2Ds.Dispose();
     }
+    public struct EntityWithLoadedChartTime
+    {
+        public readonly Entity en;
+        public readonly ChartTime ch;
+
+        public EntityWithLoadedChartTime(Entity en, ChartTime ch)
+        {
+            this.en = en;
+            this.ch = ch;
+        }
+    }
     protected override void OnUpdate()
     {
         //Only execute after full initialization
@@ -96,7 +109,7 @@ public class JudgementSystem : SystemBase
 
         //Get data from statics
         NativeArray<TouchPoint> touchPoints = InputManager.Instance.touchPoints;
-        NativeArray<NativeList<Entity>> noteForTouch = new NativeArray<NativeList<Entity>>(touchPoints.Length, Allocator.TempJob);
+        NativeArray<EntityWithLoadedChartTime> noteForTouch = new NativeArray<EntityWithLoadedChartTime>(touchPoints.Length, Allocator.TempJob);
         int currentTime = (int)(Conductor.Instance.receptorTime / 1000f);
 
         //Create copies of instances
@@ -107,11 +120,6 @@ public class JudgementSystem : SystemBase
         NativeList<JudgeOccurance> judgeBacklog = new NativeList<JudgeOccurance>(Allocator.TempJob);
 
         EntityCommandBuffer buffer = bufferSystem.CreateCommandBuffer();
-
-        for(int i = 0; i < noteForTouch.Length; i++)
-        {
-            noteForTouch[i] = new NativeList<Entity>(Allocator.TempJob);
-        }
 
 
 
@@ -138,7 +146,8 @@ public class JudgementSystem : SystemBase
                         new JudgeOccurance(
                             red.Value || !hit.Value ? JudgeOccurance.JudgeType.LOST : JudgeOccurance.JudgeType.MAX_PURE, 
                             entity,
-                            new float3(linearPosGroup.startPosition, 0)
+                            new float3(linearPosGroup.startPosition, 0),
+                            false
                         );
 
                     judgeBacklog.Add(judgeOcc);
@@ -216,7 +225,8 @@ public class JudgementSystem : SystemBase
                         new JudgeOccurance(
                             JudgeOccurance.JudgeType.LOST,
                             entity,
-                            new float3(Convert.TrackToX(track.Value), float2.zero)
+                            new float3(Convert.TrackToX(track.Value), float2.zero),
+                            false
                         );
 
                     judgeBacklog.Add(judgeOcc);
@@ -256,7 +266,8 @@ public class JudgementSystem : SystemBase
                                 new JudgeOccurance(
                                     JudgeOccurance.JudgeType.LOST,
                                     entity,
-                                    new float3(Convert.TrackToX(track.Value), float2.zero)
+                                    new float3(Convert.TrackToX(track.Value), float2.zero),
+                                    false
                                 );
 
                             judgeBacklog.Add(judgeOcc);
@@ -272,6 +283,7 @@ public class JudgementSystem : SystemBase
                     for (int i = 0; i < touchPoints.Length; i++)
                     {
                         if (
+                            noteForTouch[i].ch.Value < time.Value &&
                             touchPoints[i].status == TouchPoint.Status.TAPPED &&
                             time.Value - touchPoints[i].time <= Constants.FarWindow &&
                             touchPoints[i].time - time.Value >= Constants.FarWindow &&
@@ -280,7 +292,7 @@ public class JudgementSystem : SystemBase
                         )
                         {
                             //Check for judge later
-                            noteForTouch[i].Add(entity);
+                            noteForTouch[i] = new EntityWithLoadedChartTime(entity, time);
                             return;
                         }
                     }
@@ -311,7 +323,8 @@ public class JudgementSystem : SystemBase
                                 new JudgeOccurance(
                                     JudgeOccurance.JudgeType.LOST,
                                     entity,
-                                    new float3(pos.Value, 0)
+                                    new float3(pos.Value, 0),
+                                    true
                                 );
 
                     judgeBacklog.Add(judgeOcc);
@@ -323,6 +336,7 @@ public class JudgementSystem : SystemBase
                 for (int i = 0; i < touchPoints.Length; i++)
                 {
                     if (
+                        noteForTouch[i].ch.Value < time.Value &&
                         touchPoints[i].status == TouchPoint.Status.TAPPED &&
                         touchPoints[i].inputPlaneValid &&
                         touchPoints[i].inputPlane.CollidingWith(
@@ -333,7 +347,7 @@ public class JudgementSystem : SystemBase
                             ))
                     {
                         //Check for judge later
-                        noteForTouch[i].Add(entity);
+                        noteForTouch[i] = new EntityWithLoadedChartTime(entity, time);
                         return;
                     }
                 }
@@ -357,13 +371,14 @@ public class JudgementSystem : SystemBase
                 for (int i = 0; i < touchPoints.Length; i++)
                 {
                     if (
+                        noteForTouch[i].ch.Value < time.Value &&
                         touchPoints[i].status == TouchPoint.Status.TAPPED &&
                         touchPoints[i].trackPlaneValid &&
                         touchPoints[i].trackPlane.CollidingWith(laneAABB2Ds[track.Value])
                     )
                     {
                         //Check for judge later
-                        noteForTouch[i].Add(entity);
+                        noteForTouch[i] = new EntityWithLoadedChartTime(entity, time);
                         return;
                     }
                 }
@@ -384,47 +399,33 @@ public class JudgementSystem : SystemBase
 
                 for (int t = 0; t < noteForTouch.Length; t++)
                 {
-
-                    if (noteForTouch[t].Length == 0)
-                    {
-                        continue;
-                    }
-
-                    Entity minEntity = noteForTouch[t][0];
-                    int minTime = entityManager.GetComponentData<ChartTime>(minEntity).Value;
-
-                    for (int i = 0; i < noteForTouch[t].Length; i++)
-                    {
-                        int newTime = entityManager.GetComponentData<ChartTime>(noteForTouch[t][i]).Value;
-                        if (newTime < minTime)
-                        {
-                            minEntity = noteForTouch[t][i];
-                            minTime = newTime;
-                        }
-                    }
-
+                    Entity minEntity = noteForTouch[t].en;
+                    ChartTime time = noteForTouch[t].ch;
                     if(entityManager.HasComponent(minEntity, ComponentType.ReadOnly<Track>()))
                     {
 
                         Track track = entityManager.GetComponentData<Track>(minEntity);
 
                         JudgeOccurance.JudgeType type;
+                        bool delEn;
 
                         if (entityManager.HasComponent(minEntity, ComponentType.ReadOnly<JudgeHoldPoint>()))
                         {
                             type = JudgeOccurance.JudgeType.MAX_PURE;
+                            delEn = false;
                         }
                         else
                         {
-                            ChartTime time = entityManager.GetComponentData<ChartTime>(minEntity);
                             type = JudgeOccurance.GetType(currentTime - time.Value);
+                            delEn = true;
                         }
 
                         JudgeOccurance judgeOcc =
                                     new JudgeOccurance(
-                                        JudgeOccurance.JudgeType.LOST,
+                                        type,
                                         minEntity,
-                                        new float3(Convert.TrackToX(track.Value), float2.zero)
+                                        new float3(Convert.TrackToX(track.Value), float2.zero),
+                                        delEn
                                     );
 
                         judgeBacklog.Add(judgeOcc);
@@ -434,13 +435,13 @@ public class JudgementSystem : SystemBase
                     {
 
                         SinglePosition pos = entityManager.GetComponentData<SinglePosition>(minEntity);
-                        ChartTime time = entityManager.GetComponentData<ChartTime>(minEntity);
 
                         JudgeOccurance judgeOcc =
                                 new JudgeOccurance(
                                     JudgeOccurance.GetType(currentTime - time.Value),
                                     minEntity,
-                                    new float3(pos.Value, 0)
+                                    new float3(pos.Value, 0),
+                                    true
                                 );
 
                         judgeBacklog.Add(judgeOcc);
@@ -460,7 +461,7 @@ public class JudgementSystem : SystemBase
         for (int i = 0; i < judgeBacklog.Length; i++)
         {
 
-            if (!entityManager.HasComponent<JudgeHoldPoint>(judgeBacklog[i].entity))
+            if (judgeBacklog[i].deleteEn)
             {
                 entityManager.AddComponent<Disabled>(
                     entityManager.GetComponentData<EntityReference>(judgeBacklog[i].entity).Value
