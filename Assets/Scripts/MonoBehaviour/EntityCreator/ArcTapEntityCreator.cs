@@ -19,7 +19,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private Entity connectionLineEntityPrefab;
         private World defaultWorld;
         private EntityManager entityManager;
-        private EntityArchetype arctapJudgeArchetype;
+        public EntityArchetype arctapJudgeArchetype { get; private set; }
         private void Awake()
         {
             Instance = this;
@@ -135,6 +135,24 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             });
             entityManager.SetComponentData<AppearTime>(lineEntity, new AppearTime(){
                 Value = appearTime
+            });
+        }
+
+        public void CreateJudgeEntity(AffArcTap arctap, Entity arctapEntity)
+        {
+            Entity judgeEntity = entityManager.CreateEntity(arctapJudgeArchetype);
+
+            entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
+            {
+                Value = arctap.timing
+            });
+            entityManager.SetComponentData<SinglePosition>(judgeEntity, new SinglePosition()
+            {
+                Value = Convert.GetWorldPos(arctap.position)
+            });
+            entityManager.SetComponentData<EntityReference>(judgeEntity, new EntityReference()
+            {
+                Value = arctapEntity
             });
         }
     }

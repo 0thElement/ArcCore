@@ -38,6 +38,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.AddComponent<Disabled>(traceNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkAppearTime>(traceNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkDisappearTime>(traceNoteEntityPrefab);
+            entityManager.AddComponent(traceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
 
             headTraceNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headTraceNotePrefab, settings);
             entityManager.AddComponent(headTraceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
@@ -146,7 +147,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Value = timingGroup
             });
 
-            entityManager.SetComponentData<CutoffShaderProp>(traceEntity, new CutoffShaderProp()
+            entityManager.SetComponentData<ShouldCutOff>(traceEntity, new ShouldCutOff()
             {
                 Value = 1f
             });
@@ -163,6 +164,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.SetComponentData<DisappearTime>(traceEntity, new DisappearTime()
             {
                 Value = disappearTime
+            });
+            entityManager.SetComponentData<ChartTime>(traceEntity, new ChartTime()
+            {
+                Value = time
             });
         }
 
@@ -198,6 +203,16 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.SetComponentData<AppearTime>(headEntity, new AppearTime()
             {
                 Value = appearTime
+            });
+
+            entityManager.SetComponentData<ShouldCutOff>(headEntity, new ShouldCutOff()
+            {
+                Value = 1f
+            });
+
+            entityManager.SetComponentData<ChartTime>(headEntity, new ChartTime()
+            {
+                Value = trace.timing
             });
         }
     }

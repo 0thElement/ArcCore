@@ -16,18 +16,31 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         [SerializeField] private GameObject arcNotePrefab;
         [SerializeField] private GameObject headArcNotePrefab;
         [SerializeField] private GameObject heightIndicatorPrefab;
+        [SerializeField] private GameObject arcShadowPrefab;
         [SerializeField] private Material arcMaterial;
         [SerializeField] private Material heightMaterial;
-        [SerializeField] private Color[] arcColors;
+        [SerializeField] public Color[] arcColors;
         [SerializeField] private Mesh arcMesh;
         [SerializeField] private Mesh headMesh;
         private Entity arcNoteEntityPrefab;
         private Entity headArcNoteEntityPrefab;
         private Entity heightIndicatorEntityPrefab;
+        private Entity arcShadowEntityPrefab;
         private World defaultWorld;
         private EntityManager entityManager;
         private int colorShaderId;
-        private EntityArchetype arcJudgeArchetype;
+        public EntityArchetype arcJudgeArchetype { get; private set; }
+        public EntityArchetype arcFunnelArchetype { get; private set; }
+
+        /// <summary>
+        /// Time between two judge points of a similar area and differing colorIDs in which both points will be set as unscrict
+        /// </summary>
+        public const int judgeStrictnessLeniency = 100;
+        /// <summary>
+        /// The distance between two points (in world space) at which they will begin to be considered for unstrictness
+        /// </summary>
+        public const float judgeStrictnessDist = 1f;
+
         private void Awake()
         {
             Instance = this;
@@ -37,7 +50,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             arcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcNotePrefab, settings);
             headArcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headArcNotePrefab, settings);
             heightIndicatorEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(heightIndicatorPrefab, settings);
-
+            arcShadowEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcShadowPrefab, settings);
+            
             //Remove these component to allow direct access to localtoworld matrices
             //idk if this is a good way to set up an entity prefab in this case but this will do for now
             entityManager.RemoveComponent<Translation>(arcNoteEntityPrefab);
@@ -45,6 +59,9 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.AddComponent<Disabled>(arcNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkAppearTime>(arcNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkDisappearTime>(arcNoteEntityPrefab);
+            
+            entityManager.RemoveComponent<Translation>(arcShadowEntityPrefab);
+            entityManager.RemoveComponent<Rotation>(arcShadowEntityPrefab);
 
             entityManager.AddComponent<Disabled>(headArcNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkAppearTime>(headArcNoteEntityPrefab);
@@ -54,20 +71,30 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
             arcJudgeArchetype = entityManager.CreateArchetype(
                 ComponentType.ReadOnly<ChartTime>(),
-                ComponentType.ReadOnly<PositionPair>(),
+                ComponentType.ReadOnly<LinearPosGroup>(),
                 ComponentType.ReadOnly<ColorID>(),
                 ComponentType.ReadOnly<EntityReference>(),
                 typeof(AppearTime),
                 typeof(Disabled),
-                ComponentType.ChunkComponent<ChunkAppearTime>()
+                ComponentType.ChunkComponent<ChunkAppearTime>(),
+                ComponentType.ReadOnly<StrictArcJudge>(),
+                ComponentType.ReadOnly<EntityReference>()
+                );
+
+            arcFunnelArchetype = entityManager.CreateArchetype(
+                ComponentType.ReadWrite<ArcIsHit>(),
+                ComponentType.ReadWrite<ArcIsRed>()
                 );
 
             colorShaderId = Shader.PropertyToID("_Color");
+
+            JudgementSystem.Instance.SetupColors();
         }
 
         public void CreateEntities(List<List<AffArc>> affArcList)
         {
             int colorId=0;
+            List<Entity> createdJudgeEntities = new List<Entity>();
             foreach (List<AffArc> listByColor in affArcList)
             {
                 listByColor.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
@@ -106,10 +133,14 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     if (isHeadArc || arc.startY != arc.endY)
                         CreateHeightIndicator(arc, heightIndicatorColorMaterialInstance);
 
-                    Entity arcDataEntity = entityManager.CreateEntity(typeof(ArcFunnel));
-                    entityManager.SetComponentData<ArcFunnel>(arcDataEntity, new ArcFunnel
+                    Entity arcDataEntity = entityManager.CreateEntity(arcFunnelArchetype);
+                    entityManager.SetComponentData<ArcIsHit>(arcDataEntity, new ArcIsHit
                     {
-                        displayHit = true
+                        Value = false
+                    });
+                    entityManager.SetComponentData<ArcIsRed>(arcDataEntity, new ArcIsRed
+                    {
+                        Value = false
                     });
 
                     //Generate arc segments and shadow segment(each segment is its own entity)
@@ -147,7 +178,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     );
 
                     CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup, arcDataEntity);
-                    CreateJudgeEntities(arc, colorId, arcDataEntity);
+                    CreateJudgeEntities(arc, colorId, arcDataEntity, createdJudgeEntities);
                     
                 }
 
@@ -158,42 +189,56 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end, int timingGroup, Entity arcEntity)
         {
             Entity arcInstEntity = entityManager.Instantiate(arcNoteEntityPrefab);
+            Entity arcShadowEntity = entityManager.Instantiate(arcShadowEntityPrefab);
             entityManager.SetSharedComponentData<RenderMesh>(arcInstEntity, new RenderMesh()
             {
                 mesh = arcMesh,
                 material = arcColorMaterialInstance
             });
-            entityManager.SetComponentData<FloorPosition>(arcInstEntity, new FloorPosition()
+
+            FloorPosition fpos = new FloorPosition()
             {
                 Value = start.z
-            });
+            };
+
+            entityManager.SetComponentData<FloorPosition>(arcInstEntity, fpos);
+            entityManager.SetComponentData<FloorPosition>(arcShadowEntity, fpos);
+
+            TimingGroup group = new TimingGroup()
+            {
+                Value = timingGroup
+            };
+
+            entityManager.SetComponentData<TimingGroup>(arcInstEntity, group);
+            entityManager.SetComponentData<TimingGroup>(arcShadowEntity, group);
 
             float dx = start.x - end.x;
             float dy = start.y - end.y;
             float dz = start.z - end.z;
 
-            //Shear along xy + scale along z matrix
-            entityManager.SetComponentData<LocalToWorld>(arcInstEntity, new LocalToWorld()
+            LocalToWorld ltwArc = new LocalToWorld()
             {
                 Value = new float4x4(
                     1, 0, dx, start.x,
                     0, 1, dy, start.y,
                     0, 0, dz, 0,
-                    0, 0, 0,  1
+                    0, 0, 0, 1
                 )
-            });
+            };
 
-            entityManager.SetComponentData<TimingGroup>(arcInstEntity, new TimingGroup()
-            {
-                Value = timingGroup
-            });
+            LocalToWorld ltwShadow = ltwArc;
+            ltwShadow.Value.c1.zw = new float2(1, 0);
+
+            //Shear along xy + scale along z matrix
+            entityManager.SetComponentData<LocalToWorld>(arcInstEntity, ltwArc);
+            entityManager.SetComponentData<LocalToWorld>(arcShadowEntity, ltwShadow);
 
             entityManager.SetComponentData<EntityReference>(arcInstEntity, new EntityReference()
             {
                 Value = arcEntity
             });
 
-            entityManager.SetComponentData<CutoffShaderProp>(arcInstEntity, new CutoffShaderProp()
+            entityManager.SetComponentData<ShouldCutOff>(arcInstEntity, new ShouldCutOff()
             {
                 Value = 1f
             });
@@ -210,6 +255,11 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.SetComponentData<DisappearTime>(arcInstEntity, new DisappearTime()
             {
                 Value = disappearTime
+            });
+            
+            entityManager.SetComponentData<ShadowReference>(arcInstEntity, new ShadowReference()
+            {
+                Value = arcShadowEntity
             });
         }
 
@@ -294,43 +344,81 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.SetComponentData<AppearTime>(headEntity, new AppearTime(){
                 Value = appearTime
             });
+            
+            entityManager.SetComponentData<ShouldCutOff>(headEntity, new ShouldCutOff()
+            {
+                Value = 1f
+            });
         }
 
-        private void CreateJudgeEntities(AffArc arc, int colorId, Entity arcEntity)
+        private void CreateJudgeEntities(AffArc arc, int colorId, Entity arcEntity, List<Entity> createdJudgeEntities)
         {
-            float time = arc.timing;
+            float timeF = arc.timing;
             int timingEventIdx = Conductor.Instance.GetTimingEventIndexFromTiming(arc.timing, arc.timingGroup);
             TimingEvent timingEvent = Conductor.Instance.GetTimingEvent(timingEventIdx, arc.timingGroup);
             TimingEvent? nextEvent = Conductor.Instance.GetNextTimingEventOrNull(timingEventIdx, arc.timingGroup);
 
-            while (time < arc.endTiming)
+            while (timeF < arc.endTiming)
             {
-                time += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
+                timeF += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
 
-                if (nextEvent.HasValue && nextEvent.Value.timing < time)
+                if (nextEvent.HasValue && nextEvent.Value.timing < timeF)
                 {
-                    time = nextEvent.Value.timing;
+                    timeF = nextEvent.Value.timing;
                     timingEventIdx++;
                     timingEvent = Conductor.Instance.GetTimingEvent(timingEventIdx, arc.timingGroup);
                     nextEvent = Conductor.Instance.GetNextTimingEventOrNull(timingEventIdx, arc.timingGroup);
                 }
 
+                int time = (int)timeF;
+
+                float timePosEnd = math.min(timeF + Constants.FarWindow, arc.endTiming);
+
+                float arcStartX = Convert.GetWorldX(arc.startX);
+                float arcStartY = Convert.GetWorldY(arc.startY);
+                float arcEndX = Convert.GetWorldX(arc.endX);
+                float arcEndY = Convert.GetWorldY(arc.endY);
+
+                LinearPosGroup currentLpg = new LinearPosGroup()
+                {
+                    startPosition = new float2(
+                        Convert.GetXAt(math.unlerp(arc.timing, arc.endTiming, timeF), arcStartX, arcEndX, arc.easing),
+                        Convert.GetYAt(math.unlerp(arc.timing, arc.endTiming, timeF), arcStartY, arcEndY, arc.easing)
+                    ),
+                    startTime = (int)timeF,
+                    endPosition = new float2(
+                        Convert.GetXAt(math.unlerp(arc.timing, arc.endTiming, timePosEnd), arcStartX, arcEndX, arc.easing),
+                        Convert.GetYAt(math.unlerp(arc.timing, arc.endTiming, timePosEnd), arcStartY, arcEndY, arc.easing)
+                    ),
+                    endTime = (int)timePosEnd
+                };
+
+                bool IsStrict = true;
+                foreach (Entity en in createdJudgeEntities)
+                {
+                    if (entityManager.GetComponentData<ColorID>(en).Value != colorId)
+                    {
+                        LinearPosGroup otherLpg = entityManager.GetComponentData<LinearPosGroup>(en);
+                        if(math.abs(otherLpg.TimeCenter() - currentLpg.TimeCenter()) < judgeStrictnessLeniency &&
+                           math.distance(otherLpg.PosAt(time), currentLpg.PosAt(time)) < judgeStrictnessDist)
+                        {
+                            entityManager.SetComponentData<StrictArcJudge>(en, new StrictArcJudge()
+                            {
+                                Value = false
+                            });
+
+                            IsStrict = false;
+                            break;
+                        }
+                    }
+                }
+
                 Entity judgeEntity = entityManager.CreateEntity(arcJudgeArchetype);
                 entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
                 {
-                    Value = (int)time
+                    Value = time
                 });
-                entityManager.SetComponentData<PositionPair>(judgeEntity, new PositionPair()
-                {
-                    startPosition = new float2(
-                        Convert.GetXAt(Convert.RatioBetween(arc.timing, arc.endTiming, time - Constants.FarWindow), arc.startX, arc.endX, arc.easing),
-                        Convert.GetYAt(Convert.RatioBetween(arc.timing, arc.endTiming, time - Constants.FarWindow), arc.startY, arc.endY, arc.easing)
-                    ),
-                    endPosition = new float2(
-                        Convert.GetXAt(Convert.RatioBetween(arc.timing, arc.endTiming, time + Constants.FarWindow), arc.startX, arc.endX, arc.easing),
-                        Convert.GetYAt(Convert.RatioBetween(arc.timing, arc.endTiming, time + Constants.FarWindow), arc.startY, arc.endY, arc.easing)
-                    )
-                });
+                entityManager.SetComponentData<LinearPosGroup>(judgeEntity, currentLpg);
                 entityManager.SetComponentData<ColorID>(judgeEntity, new ColorID()
                 {
                     Value = colorId
@@ -343,7 +431,12 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 {
                     Value = (int)time - Constants.LostWindow
                 });
+                entityManager.SetComponentData<StrictArcJudge>(judgeEntity, new StrictArcJudge()
+                {
+                    Value = IsStrict
+                });
 
+                createdJudgeEntities.Add(judgeEntity);
                 ScoreManager.Instance.maxCombo++;
             }
         }

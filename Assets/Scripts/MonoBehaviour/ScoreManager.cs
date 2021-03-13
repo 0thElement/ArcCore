@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using ArcCore.Utility;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,12 +13,13 @@ namespace ArcCore.MonoBehaviours
 
         [HideInInspector] public int maxCombo;
 
-        [HideInInspector] public int maxPureCount;
-        [HideInInspector] public int latePureCount;
-        [HideInInspector] public int earlyPureCount;
-        [HideInInspector] public int lateFarCount;
-        [HideInInspector] public int earlyFarCount;
-        [HideInInspector] public int lostCount;
+        public int
+            maxPureCount,
+            latePureCount,
+            earlyPureCount,
+            lateFarCount,
+            earlyFarCount,
+            lostCount;
 
         [HideInInspector] public float currentScore;
 
@@ -34,7 +36,7 @@ namespace ArcCore.MonoBehaviours
             currentScore =
                 (maxPureCount + latePureCount + earlyPureCount) * MAX_VALUE / maxCombo +
                 (lateFarCount + earlyFarCount) * MAX_VALUE / maxCombo / 2 +
-                maxPureCount;
+                 maxPureCount;
             textUI.text = $"{(int)currentScore:D8}";
         }
     }

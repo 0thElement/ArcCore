@@ -15,6 +15,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private Entity holdNoteEntityPrefab;
         private World defaultWorld;
         private EntityManager entityManager;
+        public EntityArchetype holdJudgeArchetype { get; private set; }
         private void Awake()
         {
             Instance = this;
@@ -25,6 +26,15 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.AddComponent<Disabled>(holdNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkAppearTime>(holdNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkDisappearTime>(holdNoteEntityPrefab);
+
+            holdJudgeArchetype = entityManager.CreateArchetype(
+                ComponentType.ReadOnly<ChartTime>(),
+                ComponentType.ReadOnly<Track>(),
+                ComponentType.ReadOnly<EntityReference>(),
+                ComponentType.ReadOnly<Tags.JudgeHoldPoint>(),
+                ComponentType.ReadOnly<AppearTime>(),
+                ComponentType.ChunkComponent<ChunkAppearTime>()
+                );
         }
 
         public void CreateEntities(List<AffHold> affHoldList)
@@ -58,6 +68,14 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 entityManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(){
                     Value = hold.timingGroup
                 });
+                entityManager.SetComponentData<ShouldCutOff>(holdEntity, new ShouldCutOff()
+                {
+                    Value = 1f
+                });
+                entityManager.SetComponentData(holdEntity, new HoldIsHeld()
+                {
+                    Value = false
+                });
 
                 //Appear/disappear time
 
@@ -77,7 +95,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 {
                     time += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
 
-                    Entity judgeEntity = entityManager.CreateEntity(typeof(ChartTime), typeof(Track), typeof(EntityReference), typeof(AppearTime), ComponentType.ChunkComponent<ChunkAppearTime>());
+                    Entity judgeEntity = entityManager.CreateEntity(holdJudgeArchetype);
+                    
                     entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
                     {
                         Value = (int)time

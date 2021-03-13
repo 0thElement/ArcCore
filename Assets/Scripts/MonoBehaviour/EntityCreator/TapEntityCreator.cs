@@ -17,6 +17,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private Entity tapNoteEntityPrefab;
         private World defaultWorld;
         private EntityManager entityManager;
+        public EntityArchetype tapJudgeArchetype { get; private set; }
         private void Awake()
         {
             Instance = this;
@@ -26,6 +27,12 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             tapNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(tapNotePrefab, settings);
             entityManager.AddComponent<Disabled>(tapNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkAppearTime>(tapNoteEntityPrefab);
+
+            tapJudgeArchetype = entityManager.CreateArchetype(
+                ComponentType.ReadOnly<ChartTime>(),
+                ComponentType.ReadOnly<Track>(),
+                ComponentType.ReadOnly<EntityReference>()
+                );
         }
 
         public void CreateEntities(List<AffTap> affTapList)
@@ -61,7 +68,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 entityManager.SetComponentData<AppearTime>(tapEntity, new AppearTime(){ Value = appearTime });
 
                 //Judge component
-                Entity judgeEntity = entityManager.CreateEntity(typeof(ChartTime), typeof(Track));
+                Entity judgeEntity = entityManager.CreateEntity(tapJudgeArchetype);
+                
                 entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
                 {
                     Value = tap.timing
@@ -69,6 +77,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 entityManager.SetComponentData<Track>(judgeEntity, new Track()
                 {
                     Value = tap.track
+                });
+                entityManager.SetComponentData<EntityReference>(judgeEntity, new EntityReference()
+                {
+                    Value = tapEntity
                 });
 
                 ScoreManager.Instance.maxCombo++;
