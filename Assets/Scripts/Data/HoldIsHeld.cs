@@ -2,6 +2,7 @@
 
 namespace ArcCore.Data
 {
+    [System.Obsolete]
     [GenerateAuthoringComponent]
     public struct HoldIsHeld : IComponentData
     {

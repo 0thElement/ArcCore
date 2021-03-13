@@ -147,7 +147,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Value = timingGroup
             });
 
-            entityManager.SetComponentData<ShouldCutOff>(traceEntity, new ShouldCutOff()
+            entityManager.SetComponentData<ShaderCutoff>(traceEntity, new ShaderCutoff()
             {
                 Value = 1f
             });
@@ -205,7 +205,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Value = appearTime
             });
 
-            entityManager.SetComponentData<ShouldCutOff>(headEntity, new ShouldCutOff()
+            entityManager.SetComponentData<ShaderCutoff>(headEntity, new ShaderCutoff()
             {
                 Value = 1f
             });

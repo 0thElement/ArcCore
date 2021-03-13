@@ -82,7 +82,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 );
 
             arcFunnelArchetype = entityManager.CreateArchetype(
-                ComponentType.ReadWrite<ArcIsHit>(),
+                ComponentType.ReadWrite<HitState>(),
                 ComponentType.ReadWrite<ArcIsRed>()
                 );
 
@@ -134,10 +134,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                         CreateHeightIndicator(arc, heightIndicatorColorMaterialInstance);
 
                     Entity arcDataEntity = entityManager.CreateEntity(arcFunnelArchetype);
-                    entityManager.SetComponentData<ArcIsHit>(arcDataEntity, new ArcIsHit
-                    {
-                        Value = false
-                    });
+                    entityManager.SetComponentData<HitState>(arcDataEntity, CutoffUtils.UnjudgedHS);
                     entityManager.SetComponentData<ArcIsRed>(arcDataEntity, new ArcIsRed
                     {
                         Value = false
@@ -238,10 +235,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Value = arcEntity
             });
 
-            entityManager.SetComponentData<ShouldCutOff>(arcInstEntity, new ShouldCutOff()
-            {
-                Value = 1f
-            });
+            entityManager.SetComponentData<ShaderCutoff>(arcInstEntity, CutoffUtils.Unjudged);
 
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, timingGroup);
             int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, timingGroup);
@@ -345,10 +339,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Value = appearTime
             });
             
-            entityManager.SetComponentData<ShouldCutOff>(headEntity, new ShouldCutOff()
-            {
-                Value = 1f
-            });
+            entityManager.SetComponentData<ShaderCutoff>(headEntity, CutoffUtils.Unjudged);
         }
 
         private void CreateJudgeEntities(AffArc arc, int colorId, Entity arcEntity, List<Entity> createdJudgeEntities)

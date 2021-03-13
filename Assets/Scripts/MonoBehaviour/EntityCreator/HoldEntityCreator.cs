@@ -68,14 +68,11 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 entityManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(){
                     Value = hold.timingGroup
                 });
-                entityManager.SetComponentData<ShouldCutOff>(holdEntity, new ShouldCutOff()
+                entityManager.SetComponentData<ShaderCutoff>(holdEntity, new ShaderCutoff()
                 {
                     Value = 1f
                 });
-                entityManager.SetComponentData(holdEntity, new HoldIsHeld()
-                {
-                    Value = false
-                });
+                entityManager.SetComponentData(holdEntity, CutoffUtils.UnjudgedHS);
 
                 //Appear/disappear time
 

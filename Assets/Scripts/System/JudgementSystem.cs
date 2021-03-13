@@ -132,25 +132,32 @@ public class JudgementSystem : SystemBase
 
             {
 
-                ArcIsHit hit;
+                HitState hit = entityManager.GetComponentData<HitState>(entityRef.Value); ;
                 ArcIsRed red;
 
                 // Kill all points that have passed
                 if (linearPosGroup.endTime < currentTime)
                 {
 
-                    hit = entityManager.GetComponentData<ArcIsHit>(entityRef.Value);
                     red = entityManager.GetComponentData<ArcIsRed>(entityRef.Value);
 
                     JudgeOccurance judgeOcc = 
                         new JudgeOccurance(
-                            red.Value || !hit.Value ? JudgeOccurance.JudgeType.LOST : JudgeOccurance.JudgeType.MAX_PURE, 
+                            red.Value || !hit.HitRaw ? JudgeOccurance.JudgeType.LOST : JudgeOccurance.JudgeType.MAX_PURE, 
                             entity,
                             new float3(linearPosGroup.startPosition, 0),
                             false
                         );
 
                     judgeBacklog.Add(judgeOcc);
+
+                    hit = new HitState()
+                    {
+                        Value = hit.HitRaw ? 0f : 2f,
+                        HitRaw = hit.HitRaw
+                    };
+
+                    entityManager.SetComponentData<HitState>(entityRef.Value, hit);
 
                     return;
 
@@ -173,10 +180,11 @@ public class JudgementSystem : SystemBase
                             )) 
                     {
 
-                        // Set hit to true
-                        hit = new ArcIsHit()
+                        // Set hit.HitRaw to true
+                        hit = new HitState()
                         {
-                            Value = true
+                            Value = hit.Value,
+                            HitRaw = true
                         };
                         entityManager.SetComponentData(entityRef.Value, hit);
 
@@ -193,7 +201,7 @@ public class JudgementSystem : SystemBase
                             currentArcFingers[colorID.Value] = -1;
                         }
                         //If there is no finger currently, allow there to be a new one permitted that the arc is not hit
-                        else if (currentArcFingers[colorID.Value] != touchPoints[i].fingerId && !hit.Value)
+                        else if (currentArcFingers[colorID.Value] != touchPoints[i].fingerId && !hit.HitRaw)
                         {
                             currentArcFingers[colorID.Value] = touchPoints[i].fingerId;
                         }
@@ -217,6 +225,9 @@ public class JudgementSystem : SystemBase
 
             {
 
+
+                HitState hit = entityManager.GetComponentData<HitState>(entityRef.Value);
+
                 //Kill old entities and make lost
                 if (time.Value + Constants.FarWindow < currentTime)
                 {
@@ -236,20 +247,18 @@ public class JudgementSystem : SystemBase
                 }
 
                 //Reset hold value
-                entityManager.SetComponentData<HoldIsHeld>(entityRef.Value, new HoldIsHeld()
+                entityManager.SetComponentData<HitState>(entityRef.Value, new HitState()
                 {
-                    Value = false
+                    Value = hit.Value == 0 ? 0 : 2,
+                    HitRaw = hit.HitRaw
                 });
 
-                HoldIsHeld held = entityManager.GetComponentData<HoldIsHeld>(entityRef.Value);
-
                 //If the hold has not been broken
-                if (held.Value)
+                if (hit.HitRaw)
                 {
                     for (int i = 0; i < touchPoints.Length; i++)
                     {
                         if (
-                            touchPoints[i].status != TouchPoint.Status.RELEASED &&
                             time.Value - touchPoints[i].time <= Constants.FarWindow &&
                             touchPoints[i].time - time.Value >= Constants.FarWindow &&
                             touchPoints[i].trackPlaneValid &&
@@ -257,20 +266,29 @@ public class JudgementSystem : SystemBase
                         )
                         {
 
-                            entityManager.SetComponentData<HoldIsHeld>(entityRef.Value, new HoldIsHeld()
+                            if (touchPoints[i].status == TouchPoint.Status.RELEASED)
                             {
-                                Value = true
-                            });
+                                entityManager.SetComponentData<HitState>(entityRef.Value, new HitState()
+                                {
+                                    Value = hit.Value,
+                                    HitRaw = false
+                                });
 
-                            JudgeOccurance judgeOcc =
-                                new JudgeOccurance(
-                                    JudgeOccurance.JudgeType.LOST,
-                                    entity,
-                                    new float3(Convert.TrackToX(track.Value), float2.zero),
-                                    false
-                                );
+                            }
+                            else
+                            {
 
-                            judgeBacklog.Add(judgeOcc);
+                                JudgeOccurance judgeOcc =
+                                        new JudgeOccurance(
+                                            JudgeOccurance.JudgeType.MAX_PURE,
+                                            entity,
+                                            new float3(Convert.TrackToX(track.Value), float2.zero),
+                                            false
+                                        );
+
+                                judgeBacklog.Add(judgeOcc);
+
+                            }
 
                             return;
 
@@ -413,6 +431,13 @@ public class JudgementSystem : SystemBase
                         {
                             type = JudgeOccurance.JudgeType.MAX_PURE;
                             delEn = false;
+
+                            entityManager.SetComponentData<HitState>(
+                                entityManager.GetComponentData<EntityReference>(noteForTouch[t].en).Value, 
+                                new HitState() {
+                                    Value = 1,
+                                    HitRaw = true
+                            });
                         }
                         else
                         {

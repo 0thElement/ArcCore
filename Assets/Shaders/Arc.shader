@@ -3,10 +3,12 @@
 	Properties
 	{
 		_MainTex ("Texture", 2D) = "white" {}
+		_RedCol ("Red Color", Color) = (1,1,1,1)
 		_Color ("Color", Color) = (1,1,1,1)
 		_From ("From", Float) = 0
 		_To ("To", Float) = 1 
 		_Cutoff ("Cutoff", Float) = 0
+		_RedMix ("Red Mix", Float) = 0
 	}
 	SubShader
 	{
@@ -40,8 +42,8 @@
 				float3 worldpos : TEXCOORD1;
 			};
 			 
-			float _From,_To,_Cutoff;
-			float4 _Color;
+			float _From,_To,_Cutoff,_RedMix;
+			float4 _Color,_RedCol;
             float4 _MainTex_ST;
 			sampler2D _MainTex;
 
@@ -50,18 +52,27 @@
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-				o.color = v.color * _Color;
+				o.color = v.color * Lerp(_Color, _RedCol, _RedMix);
 				o.worldpos = mul(unity_ObjectToWorld, v.vertex);
 				return o;
 			}
 
 			half4 frag (v2f i) : SV_Target
 			{
-			    if((i.worldpos.z > 0 && _Cutoff <= 0) || (i.uv.y < _From || i.uv.y > _To)) return 0;
+			    if(i.uv.y < _From || i.uv.y > _To) return 0;
+				if(_Cutoff == 0) 
+				{
+					if(i.worldpos.z > 0) return 0;
+				} 
 				float4 c = tex2D(_MainTex,i.uv);
 				float4 inColor = i.color;
 				c *= inColor;
+				c =  Lerp(c, _RedCol, _RedMix);
 				c.a = alpha_from_pos(c, i.worldpos.z);
+				if(_Cutoff == 2) 
+				{
+					c.a *= 0.85;
+				} 
 				return c;
 			}
 			ENDCG
