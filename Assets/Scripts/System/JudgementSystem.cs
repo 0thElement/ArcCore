@@ -205,7 +205,7 @@ public class JudgementSystem : SystemBase
 
         )
             .WithName("HandleArcs")
-            .ScheduleParallel();
+            .Schedule();
 
         
         // Handle all holds //
@@ -302,7 +302,7 @@ public class JudgementSystem : SystemBase
 
         )
             .WithName("HandleHolds")
-            .ScheduleParallel();
+            .Schedule();
 
 
         // Handle all arctaps //
@@ -356,7 +356,7 @@ public class JudgementSystem : SystemBase
 
         )
             .WithName("HandleArctaps")
-            .ScheduleParallel();
+            .Schedule();
 
 
         // Handle all taps //
@@ -387,9 +387,9 @@ public class JudgementSystem : SystemBase
 
         )
             .WithName("HandleTaps")
-            .ScheduleParallel();
+            .Schedule();
 
-        // Complete code and find mins //
+        // Complete code and find types //
         Dependency.Complete();
         Job.WithCode(
 
