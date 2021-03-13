@@ -3,6 +3,7 @@ using Unity.Rendering;
 
 namespace ArcCore.Data
 {
+    [System.Obsolete]
     [MaterialProperty("_ArcState", MaterialPropertyFormat.Float)]
     [GenerateAuthoringComponent]
     public struct ArcState : IComponentData

@@ -2,30 +2,77 @@
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
+using Unity.Mathematics;
 using Unity.Transforms;
 using ArcCore.Data;
 using ArcCore.MonoBehaviours;
 using ArcCore.Tags;
 using Unity.Rendering;
 
+[UpdateAfter(typeof(JudgementSystem))]
 public class ShaderParamsApplySystem : SystemBase
 {
+    public EntityManager globalEntityManager;
+
+    protected override void OnCreate() 
+    { 
+        var defaultWorld = World.DefaultGameObjectInjectionWorld;
+        globalEntityManager = defaultWorld.EntityManager;
+    }
+
     protected override void OnUpdate()
     {
-        NativeArray<float> currentFloorPosition = Conductor.Instance.currentFloorPosition;
+        EntityManager entityManager = globalEntityManager;
 
-        //All note except arcs
-        Entities.ForEach((ref Translation translation, in FloorPosition floorPosition, in TimingGroup group) => {
-            translation.Value.z = floorPosition.Value - currentFloorPosition[group.Value]; 
-        }).Schedule();
+        //ARCS
+        Entities.WithNone<ChartTime, Translation>().WithAll<ColorID>().ForEach(
 
-        //Arc segments
-        Entities.WithNone<Translation>().
-            ForEach((ref LocalToWorld lcwMatrix, in FloorPosition floorPosition, in TimingGroup group) =>
+            (ref ShaderCutoff cutoff, ref ShaderRedmix redmix, in EntityReference eref)
+
+                =>
+
             {
+                Entity funnel = eref.Value;
+                HitState hit = entityManager.GetComponentData<HitState>(funnel);
+                ArcIsRed red = entityManager.GetComponentData<ArcIsRed>(funnel);
+                if(red.Value || hit.Value != 0)
+                {
+                    if (red.Value)
+                    {
+                        redmix.Value = math.min(redmix.Value + 0.08f, 1);
+                    }
+                    else
+                    {
+                        redmix.Value = 0;
+                    }
 
-                lcwMatrix.Value.c3.z = floorPosition.Value - currentFloorPosition[group.Value];
+                    cutoff.Value = hit.Value;
+                }
+            }
 
-            }).Schedule();
+        )
+            .WithName("ArcShaders")
+            .Schedule();
+
+        //HOLDS
+        Entities.WithNone<Translation>().ForEach(
+
+            (ref ShaderCutoff cutoff, in HitState hit)
+
+                =>
+
+            {
+                if (hit.Value != 0)
+                {
+                    cutoff.Value = hit.Value;
+                }
+            }
+
+        )
+            .WithName("HoldShaders")
+            .Schedule();
+
+        //COMPLETE ALL
+        Dependency.Complete();
     }
 }

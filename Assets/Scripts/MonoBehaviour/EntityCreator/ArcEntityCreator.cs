@@ -20,6 +20,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         [SerializeField] private Material arcMaterial;
         [SerializeField] private Material heightMaterial;
         [SerializeField] public Color[] arcColors;
+        [SerializeField] private Color redColor;
         [SerializeField] private Mesh arcMesh;
         [SerializeField] private Mesh headMesh;
         private Entity arcNoteEntityPrefab;
@@ -29,6 +30,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private World defaultWorld;
         private EntityManager entityManager;
         private int colorShaderId;
+        private int redColorShaderId;
         public EntityArchetype arcJudgeArchetype { get; private set; }
         public EntityArchetype arcFunnelArchetype { get; private set; }
 
@@ -87,6 +89,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 );
 
             colorShaderId = Shader.PropertyToID("_Color");
+            redColorShaderId = Shader.PropertyToID("_RedCol");
 
             JudgementSystem.Instance.SetupColors();
         }
@@ -102,6 +105,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Material arcColorMaterialInstance = Instantiate(arcMaterial);
                 Material heightIndicatorColorMaterialInstance = Instantiate(heightMaterial);
                 arcColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
+                arcColorMaterialInstance.SetColor(redColorShaderId, redColor);
                 heightIndicatorColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
 
                 List<float4> connectedArcsIdEndpoint = new List<float4>();
@@ -236,6 +240,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             });
 
             entityManager.SetComponentData<ShaderCutoff>(arcInstEntity, CutoffUtils.Unjudged);
+            entityManager.SetComponentData<ShaderRedmix>(arcInstEntity, new ShaderRedmix() { Value = 0f });
 
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, timingGroup);
             int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, timingGroup);

@@ -61,7 +61,6 @@ public class JudgementSystem : SystemBase
     public EntityManager globalEntityManager;
     public NativeArray<int> globalCurrentArcFingers;
     public NativeArray<AABB2D> globalLaneAABB2Ds;
-    public BeginInitializationEntityCommandBufferSystem bufferSystem;
 
     public const float arcLeniencyGeneral = 2f;
     protected override void OnCreate()
@@ -69,7 +68,6 @@ public class JudgementSystem : SystemBase
         Instance = this;
         var defaultWorld = World.DefaultGameObjectInjectionWorld;
         globalEntityManager = defaultWorld.EntityManager;
-        bufferSystem = defaultWorld.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
         
         globalLaneAABB2Ds = new NativeArray<AABB2D>(
             new AABB2D[] {
@@ -118,9 +116,6 @@ public class JudgementSystem : SystemBase
         NativeArray<AABB2D> laneAABB2Ds = globalLaneAABB2Ds;
 
         NativeList<JudgeOccurance> judgeBacklog = new NativeList<JudgeOccurance>(Allocator.TempJob);
-
-        EntityCommandBuffer buffer = bufferSystem.CreateCommandBuffer();
-
 
 
         // Handle all arcs //
