@@ -23,12 +23,17 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager = defaultWorld.EntityManager;
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             holdNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(holdNotePrefab, settings);
+            entityManager.AddComponent<Disabled>(holdNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(holdNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkDisappearTime>(holdNoteEntityPrefab);
 
             holdJudgeArchetype = entityManager.CreateArchetype(
                 ComponentType.ReadOnly<ChartTime>(),
                 ComponentType.ReadOnly<Track>(),
                 ComponentType.ReadOnly<EntityReference>(),
-                ComponentType.ReadOnly<Tags.JudgeHoldPoint>()
+                ComponentType.ReadOnly<Tags.JudgeHoldPoint>(),
+                ComponentType.ReadOnly<AppearTime>(),
+                ComponentType.ChunkComponent<ChunkAppearTime>()
                 );
         }
 
@@ -38,6 +43,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
             foreach (AffHold hold in affHoldList)
             {
+                //Main entity
                 Entity holdEntity = entityManager.Instantiate(holdNoteEntityPrefab);
 
                 float x = Convert.TrackToX(hold.track);
@@ -71,6 +77,17 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     Value = false
                 });
 
+                //Appear/disappear time
+
+                int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(startFloorPosition + Constants.RenderFloorPositionRange, 0);
+                int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(endFloorPosition - Constants.RenderFloorPositionRange, 0);
+                int appearTime = (t1 < t2) ? t1 : t2;
+                int disappearTime = (t1 < t2) ? t2 : t1;
+
+                entityManager.SetComponentData<AppearTime>(holdEntity, new AppearTime(){ Value = appearTime });
+                entityManager.SetComponentData<DisappearTime>(holdEntity, new DisappearTime(){ Value = disappearTime });
+
+                //Judge entities
                 float time = hold.timing;
                 TimingEvent timingEvent = Conductor.Instance.GetTimingEventFromTiming(hold.timing, hold.timingGroup);
 
@@ -79,6 +96,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     time += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
 
                     Entity judgeEntity = entityManager.CreateEntity(holdJudgeArchetype);
+                    
                     entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
                     {
                         Value = (int)time
@@ -91,7 +109,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     {
                         Value = holdEntity
                     });
-
+                    entityManager.SetComponentData<AppearTime>(judgeEntity, new AppearTime()
+                    {
+                        Value = (int)time - Constants.LostWindow
+                    });
                     ScoreManager.Instance.maxCombo++;
                 }
             }

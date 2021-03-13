@@ -5,7 +5,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Utility;
 using ArcCore.Data;
-using ArcCore.MonoBehaviours;
+using Unity.Collections;
 
 namespace ArcCore.MonoBehaviours.EntityCreation
 {
@@ -25,6 +25,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager = defaultWorld.EntityManager;
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             tapNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(tapNotePrefab, settings);
+            entityManager.AddComponent<Disabled>(tapNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(tapNoteEntityPrefab);
 
             tapJudgeArchetype = entityManager.CreateArchetype(
                 ComponentType.ReadOnly<ChartTime>(),
@@ -39,6 +41,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
             foreach (AffTap tap in affTapList)
             {
+                //Main Entity
                 Entity tapEntity = entityManager.Instantiate(tapNoteEntityPrefab);
 
                 float x = Convert.TrackToX(tap.track);
@@ -48,15 +51,25 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 entityManager.SetComponentData<Translation>(tapEntity, new Translation(){ 
                     Value = new float3(x, y, z)
                 });
+
+                float floorpos = Conductor.Instance.GetFloorPositionFromTiming(tap.timing, tap.timingGroup);
                 entityManager.SetComponentData<FloorPosition>(tapEntity, new FloorPosition(){
-                    Value = Conductor.Instance.GetFloorPositionFromTiming(tap.timing, tap.timingGroup)
+                    Value = floorpos 
                 });
                 entityManager.SetComponentData<TimingGroup>(tapEntity, new TimingGroup()
                 {
                     Value = tap.timingGroup
                 });
 
+                int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, tap.timingGroup);
+                int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, tap.timingGroup);
+                int appearTime = (t1 < t2) ? t1 : t2;
+
+                entityManager.SetComponentData<AppearTime>(tapEntity, new AppearTime(){ Value = appearTime });
+
+                //Judge component
                 Entity judgeEntity = entityManager.CreateEntity(tapJudgeArchetype);
+                
                 entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
                 {
                     Value = tap.timing

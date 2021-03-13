@@ -35,10 +35,16 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             //idk if this is a good way to set up an entity prefab in this case but this will do for now
             entityManager.RemoveComponent<Translation>(traceNoteEntityPrefab);
             entityManager.RemoveComponent<Rotation>(traceNoteEntityPrefab);
+            entityManager.AddComponent<Disabled>(traceNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(traceNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkDisappearTime>(traceNoteEntityPrefab);
             entityManager.AddComponent(traceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
 
             headTraceNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headTraceNotePrefab, settings);
             entityManager.AddComponent(headTraceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
+
+            entityManager.AddComponent<Disabled>(headTraceNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(headTraceNoteEntityPrefab);
 
             //colorShaderId = Shader.PropertyToID("_Color");
         }
@@ -146,6 +152,19 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Value = 1f
             });
 
+            int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, 0);
+            int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, 0);
+            int appearTime = (t1 < t2) ? t1 : t2;
+            int disappearTime = (t1 < t2) ? t2 : t1;
+
+            entityManager.SetComponentData<AppearTime>(traceEntity, new AppearTime()
+            {
+                Value = appearTime
+            });
+            entityManager.SetComponentData<DisappearTime>(traceEntity, new DisappearTime()
+            {
+                Value = disappearTime
+            });
             entityManager.SetComponentData<ChartTime>(traceEntity, new ChartTime()
             {
                 Value = time
@@ -159,9 +178,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 mesh = headMesh,
                 material = traceMaterial
             });
+            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(trace.timing, trace.timingGroup);
             entityManager.SetComponentData<FloorPosition>(headEntity, new FloorPosition()
             {
-                Value = Conductor.Instance.GetFloorPositionFromTiming(trace.timing, trace.timingGroup)
+                Value = floorpos
             });
 
             float x = Convert.GetWorldX(trace.startX); 
@@ -174,6 +194,15 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.SetComponentData<TimingGroup>(headEntity, new TimingGroup()
             {
                 Value = trace.timingGroup
+            });
+            
+            int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, 0);
+            int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, 0);
+            int appearTime = (t1 < t2) ? t1 : t2;
+
+            entityManager.SetComponentData<AppearTime>(headEntity, new AppearTime()
+            {
+                Value = appearTime
             });
 
             entityManager.SetComponentData<ShouldCutOff>(headEntity, new ShouldCutOff()

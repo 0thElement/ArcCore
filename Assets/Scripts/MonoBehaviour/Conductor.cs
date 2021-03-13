@@ -21,12 +21,12 @@ namespace ArcCore.MonoBehaviours
         public static Conductor Instance { get; private set; }
         private AudioSource audioSource;
 
-        [SerializeField] public float offset;
+        [SerializeField] public int offset;
         [HideInInspector] private float dspStartPlayingTime;
         [HideInInspector] public List<float> groupFloorPosition;
         private List<List<TimingEvent>> timingEventGroups;
         private List<int> groupIndexCache;
-        public float receptorTime;
+        public int receptorTime;
         public long timeOfLastMix;
         public int songLength;
         public NativeArray<float> currentFloorPosition;
@@ -44,22 +44,21 @@ namespace ArcCore.MonoBehaviours
         
         public void PlayMusic()
         {
-            dspStartPlayingTime = (float)AudioSettings.dspTime + 2f;
+            dspStartPlayingTime = (float)AudioSettings.dspTime + 1f;
             audioSource.PlayScheduled(dspStartPlayingTime);
         }
 
         public void Update()
         {
-            receptorTime = (float)(
-                AudioSettings.dspTime - dspStartPlayingTime - offset
-                + TimeThreadless.TimeSince_T2S(timeOfLastMix)
-                );
+            receptorTime = Mathf.RoundToInt(
+                (float)(AudioSettings.dspTime - dspStartPlayingTime + TimeThreadless.TimeSince_T2S(timeOfLastMix)) * 1000)
+                - offset;
             UpdateCurrentFloorPosition();
             OnTimeCalculated(receptorTime);
         }
         public void SetOffset(int value)
         {
-            offset = value / 1000f; 
+            offset = value; 
         }
         public void OnAudioFilterRead(float[] data, int channels)
         {
@@ -157,17 +156,39 @@ namespace ArcCore.MonoBehaviours
 
         public int TimingEventListLength(int timingGroup)
             => timingEventGroups[timingGroup].Count;
+        public int GetFirstTimingFromFloorPosition(float floorposition, int timingGroup)
+        {
+            int maxIndex = timingEventGroups[timingGroup].Count;
+            floorposition *= -1300;
+
+            for (int i = 0; i < maxIndex - 1; i++)
+            {
+                TimingEvent curr = timingEventGroups[timingGroup][i];
+                TimingEvent next = timingEventGroups[timingGroup][i+1];
+
+                if ((curr.floorPosition < floorposition && next.floorPosition > floorposition)
+                ||  (curr.floorPosition > floorposition && next.floorPosition < floorposition))
+                {
+                    float result = (floorposition - curr.floorPosition) / curr.bpm + curr.timing;
+                    return Mathf.RoundToInt(result);
+                }
+            }
+
+            TimingEvent last = timingEventGroups[timingGroup][maxIndex-1];
+            float lastresult =  (floorposition - last.floorPosition) / last.bpm + last.timing;
+            return Mathf.RoundToInt(lastresult);
+        }
 
         public void UpdateCurrentFloorPosition()
         {
             if (timingEventGroups == null) return;
-            int timeInt = (int)Mathf.Round(receptorTime*1000);
             //Might separate the output array into its own singleton class or entity
             for (int group=0; group < timingEventGroups.Count; group++)
             {
-                currentFloorPosition[group] = GetFloorPositionFromTiming(timeInt, group);
+                currentFloorPosition[group] = GetFloorPositionFromTiming(receptorTime, group);
             }
         }
+        
 
         public void DisposeFloorPositionArray()
         {

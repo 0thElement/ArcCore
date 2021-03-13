@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
@@ -47,22 +48,35 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager = defaultWorld.EntityManager;
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             arcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcNotePrefab, settings);
+            headArcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headArcNotePrefab, settings);
+            heightIndicatorEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(heightIndicatorPrefab, settings);
             arcShadowEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcShadowPrefab, settings);
+            
             //Remove these component to allow direct access to localtoworld matrices
             //idk if this is a good way to set up an entity prefab in this case but this will do for now
             entityManager.RemoveComponent<Translation>(arcNoteEntityPrefab);
             entityManager.RemoveComponent<Rotation>(arcNoteEntityPrefab);
+            entityManager.AddComponent<Disabled>(arcNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(arcNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkDisappearTime>(arcNoteEntityPrefab);
+            
             entityManager.RemoveComponent<Translation>(arcShadowEntityPrefab);
             entityManager.RemoveComponent<Rotation>(arcShadowEntityPrefab);
 
-            headArcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headArcNotePrefab, settings);
-
-            heightIndicatorEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(heightIndicatorPrefab, settings);
+            entityManager.AddComponent<Disabled>(headArcNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(headArcNoteEntityPrefab);
+            
+            entityManager.AddComponent<Disabled>(heightIndicatorEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(heightIndicatorEntityPrefab);
 
             arcJudgeArchetype = entityManager.CreateArchetype(
                 ComponentType.ReadOnly<ChartTime>(),
                 ComponentType.ReadOnly<LinearPosGroup>(),
                 ComponentType.ReadOnly<ColorID>(),
+                ComponentType.ReadOnly<EntityReference>(),
+                typeof(AppearTime),
+                typeof(Disabled),
+                ComponentType.ChunkComponent<ChunkAppearTime>(),
                 ComponentType.ReadOnly<StrictArcJudge>(),
                 ComponentType.ReadOnly<EntityReference>()
                 );
@@ -229,6 +243,20 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Value = 1f
             });
 
+            int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, timingGroup);
+            int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, timingGroup);
+            int appearTime = (t1 < t2) ? t1 : t2;
+            int disappearTime = (t1 < t2) ? t2 : t1;
+
+            entityManager.SetComponentData<AppearTime>(arcInstEntity, new AppearTime()
+            {
+                Value = appearTime
+            });
+            entityManager.SetComponentData<DisappearTime>(arcInstEntity, new DisappearTime()
+            {
+                Value = disappearTime
+            });
+            
             entityManager.SetComponentData<ShadowReference>(arcInstEntity, new ShadowReference()
             {
                 Value = arcShadowEntity
@@ -264,13 +292,22 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             {
                 Value = new float3(scaleX, scaleY, scaleZ)
             });
+            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup);
             entityManager.AddComponentData<FloorPosition>(heightEntity, new FloorPosition()
             {
-                Value = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
+                Value = floorpos
             });
             entityManager.SetComponentData<TimingGroup>(heightEntity, new TimingGroup()
             {
                 Value = arc.timingGroup
+            });
+
+            int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arc.timingGroup);
+            int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, arc.timingGroup);
+            int appearTime = (t1 < t2) ? t1 : t2;
+
+            entityManager.SetComponentData<AppearTime>(heightEntity, new AppearTime(){
+                Value = appearTime
             });
         }
 
@@ -281,9 +318,11 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 mesh = headMesh,
                 material = material
             });
+
+            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup);
             entityManager.SetComponentData<FloorPosition>(headEntity, new FloorPosition()
             {
-                Value = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
+                Value = floorpos 
             });
 
             float x = Convert.GetWorldX(arc.startX); 
@@ -297,6 +336,15 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             {
                 Value = arc.timingGroup
             });
+
+            int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arc.timingGroup);
+            int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, arc.timingGroup);
+            int appearTime = (t1 < t2) ? t1 : t2;
+
+            entityManager.SetComponentData<AppearTime>(headEntity, new AppearTime(){
+                Value = appearTime
+            });
+            
             entityManager.SetComponentData<ShouldCutOff>(headEntity, new ShouldCutOff()
             {
                 Value = 1f
@@ -379,15 +427,19 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 {
                     Value = arcEntity
                 });
+                entityManager.SetComponentData<AppearTime>(judgeEntity, new AppearTime()
+                {
+                    Value = (int)time - Constants.LostWindow
+                });
                 entityManager.SetComponentData<StrictArcJudge>(judgeEntity, new StrictArcJudge()
                 {
                     Value = IsStrict
                 });
 
                 createdJudgeEntities.Add(judgeEntity);
-
                 ScoreManager.Instance.maxCombo++;
             }
         }
     }
+
 }

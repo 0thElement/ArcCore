@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Transforms;
+using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Utility;
@@ -27,6 +28,11 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
             arcTapNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcTapNotePrefab, settings);
             connectionLineEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(connectionLinePrefab, settings);
+            entityManager.AddComponent<Disabled>(arcTapNoteEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(arcTapNoteEntityPrefab);
+
+            entityManager.AddComponent<Disabled>(connectionLineEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(connectionLineEntityPrefab);
 
             arctapJudgeArchetype = entityManager.CreateArchetype(
                 ComponentType.ReadOnly<ChartTime>(),
@@ -43,21 +49,30 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
             foreach (AffArcTap arctap in affArcTapList)
             {
+                //Main entity
                 Entity tapEntity = entityManager.Instantiate(arcTapNoteEntityPrefab);
 
                 float x = Convert.GetWorldX(arctap.position.x);
                 float y = Convert.GetWorldY(arctap.position.y);
                 const float z = 0;
+
                 entityManager.SetComponentData<Translation>(tapEntity, new Translation(){ 
                     Value = new float3(x, y, z)
                 });
+                float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup);
                 entityManager.SetComponentData<FloorPosition>(tapEntity, new FloorPosition(){
-                    Value = Conductor.Instance.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup)
+                    Value = floorpos
                 });
                 entityManager.SetComponentData<TimingGroup>(tapEntity, new TimingGroup()
                 {
                     Value = arctap.timingGroup
                 });
+
+                int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, arctap.timingGroup);
+                int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arctap.timingGroup);
+                int appearTime = (t1 < t2) ? t1 : t2;
+
+                entityManager.SetComponentData<AppearTime>(tapEntity, new AppearTime(){ Value = appearTime });
 
                 //Connection line
                 while (lowBound < affTapList.Count && arctap.timing > affTapList[lowBound].timing)
@@ -75,15 +90,16 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 //if lowbound's timing is greater than arctap's timing, that means there are no tap with the same timing
                 //Range from lowbound to highbound are all taps with the same timing
 
-                for (int i=lowBound; i<highBound; i++)
+                for (int j=lowBound; j<highBound; j++)
                 {
-                    if (arctap.timingGroup == affTapList[i].timingGroup)
-                        CreateConnections(arctap, affTapList[i]);
+                    if (arctap.timingGroup == affTapList[j].timingGroup)
+                        CreateConnections(arctap, affTapList[j], appearTime);
                 }
             }
+
         }
 
-        public void CreateConnections(AffArcTap arctap, AffTap tap)
+        public void CreateConnections(AffArcTap arctap, AffTap tap, int appearTime)
         {
             Entity lineEntity = entityManager.Instantiate(connectionLineEntityPrefab);
 
@@ -108,12 +124,17 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.SetComponentData<Rotation>(lineEntity, new Rotation(){
                 Value = quaternion.LookRotationSafe(direction, new Vector3(0,0,1))
             });
+
+            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup);
             entityManager.AddComponentData<FloorPosition>(lineEntity, new FloorPosition(){
-                Value = Conductor.Instance.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup)
+                Value = floorpos
             });
             entityManager.SetComponentData<TimingGroup>(lineEntity, new TimingGroup()
             {
                 Value = arctap.timingGroup
+            });
+            entityManager.SetComponentData<AppearTime>(lineEntity, new AppearTime(){
+                Value = appearTime
             });
         }
 

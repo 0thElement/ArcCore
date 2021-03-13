@@ -10,8 +10,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
     public class BeatlineEntityCreator : MonoBehaviour
     {
         public static BeatlineEntityCreator Instance { get; private set; }
-        [SerializeField] private GameObject BeatlinePrefab;
-        private Entity BeatlineEntityPrefab;
+        [SerializeField] private GameObject beatlinePrefab;
+        private Entity beatlineEntityPrefab;
         private World defaultWorld;
         private EntityManager entityManager;
         private void Awake()
@@ -20,7 +20,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             defaultWorld = World.DefaultGameObjectInjectionWorld;
             entityManager = defaultWorld.EntityManager;
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
-            BeatlineEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(BeatlinePrefab, settings);
+            beatlineEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(beatlinePrefab, settings);
+            entityManager.AddComponent<Disabled>(beatlineEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(beatlineEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkDisappearTime>(beatlineEntityPrefab);
         }
 
         public void CreateEntities(List<AffTiming> affTimingList)
@@ -81,13 +84,21 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         {
             int timing = (int)Mathf.Round(timingf);
 
-            Entity lineEntity = entityManager.Instantiate(BeatlineEntityPrefab);
+            Entity lineEntity = entityManager.Instantiate(beatlineEntityPrefab);
 
-            float floorposition = Conductor.Instance.GetFloorPositionFromTiming(timing, 0);
+            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(timing, 0);
 
             entityManager.SetComponentData<FloorPosition>(lineEntity, new FloorPosition(){
-                Value = floorposition
+                Value = floorpos
             });
+
+            int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, 0);
+            int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, 0);
+            int appearTime = (t1 < t2) ? t1 : t2;
+            int disappearTime = (t1 < t2) ? t2 : t1;
+
+            entityManager.SetComponentData<AppearTime>(lineEntity, new AppearTime(){ Value = appearTime });
+            entityManager.SetComponentData<DisappearTime>(lineEntity, new DisappearTime(){ Value = disappearTime });
         }
     }
 
