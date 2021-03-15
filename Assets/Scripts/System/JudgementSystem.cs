@@ -12,6 +12,28 @@ using ArcCore.MonoBehaviours.EntityCreation;
 using ArcCore;
 using ArcCore.Tags;
 
+public struct EntityWithLoadedNoteData
+{
+    public readonly Entity en;
+    public readonly ChartTime ch;
+
+    public readonly float3 pos;
+
+    public readonly bool isHold;
+    public readonly HoldFunnelPtr holdFunnelPtr;
+    public readonly ArctapFunnelPtr arctapFunnelPtr;
+
+    public EntityWithLoadedNoteData(Entity en, ChartTime ch, float3 pos, bool isHold, HoldFunnelPtr holdFunnelPtr, ArctapFunnelPtr arctapFunnelPtr)
+    {
+        this.en = en;
+        this.ch = ch;
+        this.pos = pos;
+        this.isHold = isHold;
+        this.holdFunnelPtr = holdFunnelPtr;
+        this.arctapFunnelPtr = arctapFunnelPtr;
+    }
+}
+
 public struct JudgeOccurance
 {
     public enum JudgeType
@@ -25,15 +47,13 @@ public struct JudgeOccurance
     }
 
     public JudgeType type;
-    public Entity entity;
-    public float3 position;
+    public EntityWithLoadedNoteData entity;
     public bool deleteEn;
 
-    public JudgeOccurance(JudgeType type, Entity entity, float3 position, bool deleteEn)
+    public JudgeOccurance(JudgeType type, EntityWithLoadedNoteData entity, bool deleteEn)
     {
         this.type = type;
         this.entity = entity;
-        this.position = position;
         this.deleteEn = deleteEn;
     }
 
@@ -88,18 +108,7 @@ public class JudgementSystem : SystemBase
         globalCurrentArcFingers.Dispose();
         globalLaneAABB2Ds.Dispose();
     }
-    public struct EntityWithLoadedChartTime
-    {
-        public readonly Entity en;
-        public readonly ChartTime ch;
-
-        public EntityWithLoadedChartTime(Entity en, ChartTime ch)
-        {
-            this.en = en;
-            this.ch = ch;
-        }
-    }
-    protected override void OnUpdate()
+    protected override unsafe void OnUpdate()
     {
         //Only execute after full initialization
         if (!globalCurrentArcFingers.IsCreated)
@@ -107,7 +116,7 @@ public class JudgementSystem : SystemBase
 
         //Get data from statics
         NativeArray<TouchPoint> touchPoints = InputManager.Instance.touchPoints;
-        NativeArray<EntityWithLoadedChartTime> noteForTouch = new NativeArray<EntityWithLoadedChartTime>(touchPoints.Length, Allocator.TempJob);
+        NativeArray<EntityWithLoadedNoteData> noteForTouch = new NativeArray<EntityWithLoadedNoteData>(touchPoints.Length, Allocator.TempJob);
         int currentTime = (int)(Conductor.Instance.receptorTime / 1000f);
 
         //Create copies of instances
@@ -121,34 +130,34 @@ public class JudgementSystem : SystemBase
         // Handle all arcs //
         Entities.WithAll<WithinJudgeRange>().ForEach(
 
-            (Entity entity, in EntityReference entityRef, in LinearPosGroup linearPosGroup, in ColorID colorID, in StrictArcJudge strictArcJudge) 
+            (Entity entity, in ArcFunnelPtr arcFunnelPtr, in LinearPosGroup linearPosGroup, in ColorID colorID, in StrictArcJudge strictArcJudge) 
             
                 =>
 
             {
 
-                HitState hit = entityManager.GetComponentData<HitState>(entityRef.Value);
-                ArcIsRed red;
+                ArcFunnel* arcFunnelPtrD = arcFunnelPtr.Value;
 
                 // Kill all points that have passed
                 if (linearPosGroup.endTime < currentTime)
                 {
 
-                    red = entityManager.GetComponentData<ArcIsRed>(entityRef.Value);
-
-                    hit = new HitState()
-                    {
-                        Value = hit.HitRaw ? 0f : 2f,
-                        HitRaw = hit.HitRaw
-                    };
-
-                    entityManager.SetComponentData<HitState>(entityRef.Value, hit);
+                    arcFunnelPtrD->visualState = 
+                        arcFunnelPtrD->isHit ? 
+                        LongnoteVisualState.JUDGED_PURE : 
+                        LongnoteVisualState.JUDGED_LOST;
 
                     JudgeOccurance judgeOcc =
                         new JudgeOccurance(
-                            red.Value || !hit.HitRaw ? JudgeOccurance.JudgeType.LOST : JudgeOccurance.JudgeType.MAX_PURE,
-                            entity,
-                            new float3(linearPosGroup.startPosition, 0),
+                            arcFunnelPtrD->isRed || !arcFunnelPtrD->isHit ? 
+                                JudgeOccurance.JudgeType.LOST : 
+                                JudgeOccurance.JudgeType.MAX_PURE,
+                            new EntityWithLoadedNoteData(
+                                entity, new ChartTime(), 
+                                new float3(linearPosGroup.startPosition, 0),
+                                false,
+                                new HoldFunnelPtr(), new ArctapFunnelPtr()
+                            ),
                             false
                         );
 
@@ -175,20 +184,13 @@ public class JudgementSystem : SystemBase
                             )) 
                     {
 
-                        // Set hit.HitRaw to true
-                        hit = new HitState()
-                        {
-                            Value = hit.Value,
-                            HitRaw = true
-                        };
-                        entityManager.SetComponentData(entityRef.Value, hit);
+                        // Set hit to true
+                        arcFunnelPtrD->isHit = true;
 
                         // Set red based on current finger id
-                        red = new ArcIsRed()
-                        {
-                            Value = touchPoints[i].fingerId == currentArcFingers[colorID.Value] || currentArcFingers[colorID.Value] == -1 || !strictArcJudge.Value
-                        };
-                        entityManager.SetComponentData(entityRef.Value, red);
+                        arcFunnelPtrD->isRed =
+                            touchPoints[i].fingerId == currentArcFingers[colorID.Value] || 
+                            currentArcFingers[colorID.Value] == -1 || !strictArcJudge.Value;
 
                         //If the point is strict, remove the current finger id to allow for switching
                         if (!strictArcJudge.Value)
@@ -196,7 +198,7 @@ public class JudgementSystem : SystemBase
                             currentArcFingers[colorID.Value] = -1;
                         }
                         //If there is no finger currently, allow there to be a new one permitted that the arc is not hit
-                        else if (currentArcFingers[colorID.Value] != touchPoints[i].fingerId && !hit.HitRaw)
+                        else if (currentArcFingers[colorID.Value] != touchPoints[i].fingerId && !arcFunnelPtrD->isHit)
                         {
                             currentArcFingers[colorID.Value] = touchPoints[i].fingerId;
                         }
@@ -215,14 +217,13 @@ public class JudgementSystem : SystemBase
         // Handle all holds //
         Entities.WithAll<WithinJudgeRange, JudgeHoldPoint>().ForEach(
 
-            (Entity entity, in EntityReference entityRef, in ChartTime time, in Track track) 
+            (Entity entity, in HoldFunnelPtr holdFunnelPtr, in ChartTime time, in Track track) 
 
                 =>
 
             {
 
-
-                HitState hit = entityManager.GetComponentData<HitState>(entityRef.Value);
+                HoldFunnel* holdFunnelPtrD = holdFunnelPtr.Value;
 
                 //Kill old entities and make lost
                 if (time.Value + Constants.FarWindow < currentTime)
@@ -231,8 +232,11 @@ public class JudgementSystem : SystemBase
                     JudgeOccurance judgeOcc =
                         new JudgeOccurance(
                             JudgeOccurance.JudgeType.LOST,
-                            entity,
-                            new float3(Convert.TrackToX(track.Value), float2.zero),
+                            new EntityWithLoadedNoteData(
+                                entity, time,
+                                new float3(Convert.TrackToX(track.Value), 0, 0),
+                                true, holdFunnelPtr, new ArctapFunnelPtr()
+                            ),
                             false
                         );
 
@@ -243,14 +247,10 @@ public class JudgementSystem : SystemBase
                 }
 
                 //Reset hold value
-                entityManager.SetComponentData<HitState>(entityRef.Value, new HitState()
-                {
-                    Value = hit.Value == 0 ? 0 : 2,
-                    HitRaw = hit.HitRaw
-                });
+                holdFunnelPtrD->visualState = holdFunnelPtrD->isHit ? LongnoteVisualState.JUDGED_PURE : LongnoteVisualState.JUDGED_LOST;
 
                 //If the hold has not been broken
-                if (hit.HitRaw)
+                if (holdFunnelPtrD->isHit)
                 {
                     for (int i = 0; i < touchPoints.Length; i++)
                     {
@@ -264,12 +264,7 @@ public class JudgementSystem : SystemBase
 
                             if (touchPoints[i].status == TouchPoint.Status.RELEASED)
                             {
-                                entityManager.SetComponentData<HitState>(entityRef.Value, new HitState()
-                                {
-                                    Value = hit.Value,
-                                    HitRaw = false
-                                });
-
+                                holdFunnelPtrD->isHit = false;
                             }
                             else
                             {
@@ -277,8 +272,11 @@ public class JudgementSystem : SystemBase
                                 JudgeOccurance judgeOcc =
                                         new JudgeOccurance(
                                             JudgeOccurance.JudgeType.MAX_PURE,
-                                            entity,
-                                            new float3(Convert.TrackToX(track.Value), float2.zero),
+                                            new EntityWithLoadedNoteData(
+                                                entity, time,
+                                                new float3(Convert.TrackToX(track.Value), 0, 0),
+                                                true, holdFunnelPtr, new ArctapFunnelPtr()
+                                            ),
                                             false
                                         );
 
@@ -306,7 +304,11 @@ public class JudgementSystem : SystemBase
                         )
                         {
                             //Check for judge later
-                            noteForTouch[i] = new EntityWithLoadedChartTime(entity, time);
+                            noteForTouch[i] = new EntityWithLoadedNoteData(
+                                entity, time,
+                                new float3(Convert.TrackToX(track.Value), 0, 0),
+                                true, holdFunnelPtr, new ArctapFunnelPtr()
+                                );
                             return;
                         }
                     }
@@ -323,7 +325,7 @@ public class JudgementSystem : SystemBase
         // Handle all arctaps //
         Entities.WithAll<WithinJudgeRange>().ForEach(
 
-            (Entity entity, in ChartTime time, in SinglePosition pos)
+            (Entity entity, in ChartTime time, in SinglePosition pos, in ArctapFunnelPtr funnel)
 
                 =>
 
@@ -337,8 +339,11 @@ public class JudgementSystem : SystemBase
                     JudgeOccurance judgeOcc =
                                 new JudgeOccurance(
                                     JudgeOccurance.JudgeType.LOST,
-                                    entity,
-                                    new float3(pos.Value, 0),
+                                    new EntityWithLoadedNoteData(
+                                        entity, time,
+                                        new float3(pos.Value, 0),
+                                        false, new HoldFunnelPtr(), funnel
+                                    ),
                                     true
                                 );
 
@@ -362,7 +367,11 @@ public class JudgementSystem : SystemBase
                             ))
                     {
                         //Check for judge later
-                        noteForTouch[i] = new EntityWithLoadedChartTime(entity, time);
+                        noteForTouch[i] = new EntityWithLoadedNoteData(
+                            entity, time,
+                            new float3(pos.Value, 0),
+                            false, new HoldFunnelPtr(), funnel
+                            );
                         return;
                     }
                 }
@@ -378,7 +387,7 @@ public class JudgementSystem : SystemBase
         // Handle all taps //
         Entities.WithAll<WithinJudgeRange>().ForEach(
 
-            (Entity entity, in ChartTime time, in Track track)
+            (Entity entity, in ChartTime time, in Track track, in ArctapFunnelPtr funnel)
 
                 =>
 
@@ -394,7 +403,11 @@ public class JudgementSystem : SystemBase
                     )
                     {
                         //Check for judge later
-                        noteForTouch[i] = new EntityWithLoadedChartTime(entity, time);
+                        noteForTouch[i] = new EntityWithLoadedNoteData(
+                            entity, time,
+                            new float3(Convert.TrackToX(track.Value), 0, 0),
+                            false, new HoldFunnelPtr(), funnel
+                            );
                         return;
                     }
                 }
@@ -420,59 +433,32 @@ public class JudgementSystem : SystemBase
 
                     Entity minEntity = noteForTouch[t].en;
                     ChartTime time = noteForTouch[t].ch;
-                    if(entityManager.HasComponent(minEntity, ComponentType.ReadOnly<Track>()))
+
+
+                    JudgeOccurance.JudgeType type;
+                    bool delEn;
+
+                    if (noteForTouch[t].isHold)
                     {
+                        type = JudgeOccurance.JudgeType.MAX_PURE;
+                        delEn = false;
 
-                        Track track = entityManager.GetComponentData<Track>(minEntity);
-
-                        JudgeOccurance.JudgeType type;
-                        bool delEn;
-
-                        if (entityManager.HasComponent(minEntity, ComponentType.ReadOnly<JudgeHoldPoint>()))
-                        {
-                            type = JudgeOccurance.JudgeType.MAX_PURE;
-                            delEn = false;
-
-                            entityManager.SetComponentData<HitState>(
-                                entityManager.GetComponentData<EntityReference>(noteForTouch[t].en).Value, 
-                                new HitState() {
-                                    Value = 1,
-                                    HitRaw = true
-                            });
-                        }
-                        else
-                        {
-                            type = JudgeOccurance.GetType(currentTime - time.Value);
-                            delEn = true;
-                        }
-
-                        JudgeOccurance judgeOcc =
-                                    new JudgeOccurance(
-                                        type,
-                                        minEntity,
-                                        new float3(Convert.TrackToX(track.Value), float2.zero),
-                                        delEn
-                                    );
-
-                        judgeBacklog.Add(judgeOcc);
-
-                    } 
+                        noteForTouch[t].holdFunnelPtr.Value->visualState = LongnoteVisualState.JUDGED_PURE;
+                    }
                     else
                     {
+                        type = JudgeOccurance.GetType(currentTime - time.Value);
+                        delEn = true;
+                    }
 
-                        SinglePosition pos = entityManager.GetComponentData<SinglePosition>(minEntity);
-
-                        JudgeOccurance judgeOcc =
+                    JudgeOccurance judgeOcc =
                                 new JudgeOccurance(
-                                    JudgeOccurance.GetType(currentTime - time.Value),
-                                    minEntity,
-                                    new float3(pos.Value, 0),
-                                    true
+                                    type,
+                                    noteForTouch[t],
+                                    delEn
                                 );
 
-                        judgeBacklog.Add(judgeOcc);
-
-                    }
+                    judgeBacklog.Add(judgeOcc);
 
                 }
 
@@ -489,12 +475,12 @@ public class JudgementSystem : SystemBase
 
             if (judgeBacklog[i].deleteEn)
             {
-                entityManager.AddComponent<Disabled>(
-                    entityManager.GetComponentData<EntityReference>(judgeBacklog[i].entity).Value
-                    );
+                entityManager.AddComponent<Disabled>(judgeBacklog[i].entity.en);
+                if(!judgeBacklog[i].entity.isHold)
+                {
+                    judgeBacklog[i].entity.arctapFunnelPtr.Value->isExistant = false;
+                }
             }
-
-            entityManager.AddComponent<Disabled>(judgeBacklog[i].entity);
 
             switch (judgeBacklog[i].type)
             {

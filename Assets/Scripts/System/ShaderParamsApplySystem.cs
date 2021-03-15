@@ -13,22 +13,21 @@ using Unity.Rendering;
 public class ShaderParamsApplySystem : SystemBase
 {
 
-    protected override void OnUpdate()
+    protected unsafe override void OnUpdate()
     {
         EntityManager entityManager = EntityManager;
 
         //ARCS
-        Entities.WithNone<ChartTime>().WithAll<ColorID>().ForEach(
+        Entities.WithNone<ChartTime>().ForEach(
 
-            (ref ShaderCutoff cutoff, ref ShaderRedmix redmix, in EntityReference eref)
+            (ref ShaderCutoff cutoff, ref ShaderRedmix redmix, in ArcFunnelPtr arcFunnelPtr)
 
                 =>
 
             {
-                HitState hit = entityManager.GetComponentData<HitState>(eref.Value);
-                ArcIsRed red = entityManager.GetComponentData<ArcIsRed>(eref.Value);
+                ArcFunnel* arcFunnelPtrD = arcFunnelPtr.Value;
 
-                if (red.Value)
+                if (arcFunnelPtrD->isRed)
                 {
                     redmix.Value = math.min(redmix.Value + 0.08f, 1);
                 }
@@ -37,10 +36,7 @@ public class ShaderParamsApplySystem : SystemBase
                     redmix.Value = 0;
                 }
 
-                if (hit.Value != 0)
-                {
-                    cutoff.Value = hit.Value;
-                }
+                cutoff.Value = (float)arcFunnelPtrD->visualState;
             }
 
         )
@@ -52,22 +48,32 @@ public class ShaderParamsApplySystem : SystemBase
         //HOLDS
         Entities.WithNone<Translation>().ForEach(
 
-            (ref ShaderCutoff cutoff, in HitState hit)
+            (ref ShaderCutoff cutoff, in HoldFunnelPtr holdFunnelPtr)
 
                 =>
 
             {
-                if (hit.Value != 0)
-                {
-                    cutoff.Value = hit.Value;
-                }
+                cutoff.Value = (float)holdFunnelPtr.Value->visualState;
             }
 
         )
             .WithName("HoldShaders")
             .Schedule();
 
-        //COMPLETE ALL
         Dependency.Complete();
+
+        //ARCTAPS
+        Entities.WithoutBurst().WithStructuralChanges().ForEach(
+
+            (Entity entity, in ArctapFunnelPtr arctapFunnelPtr) 
+
+                =>
+
+            {
+                if(!arctapFunnelPtr.Value->isExistant) entityManager.DestroyEntity(entity);
+            }
+
+        )
+            .Run();
     }
 }

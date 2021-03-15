@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 6485649514946026521}
   - component: {fileID: 649795004564846257}
   - component: {fileID: 1281809482901500433}
+  - component: {fileID: 384023863154197468}
   m_Layer: 0
   m_Name: ArcShadowPrefab
   m_TagString: Untagged
@@ -121,3 +122,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Value: 0
+--- !u!114 &384023863154197468
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 345932005286596484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9307a1ded40820c459d8fa711f42adba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

@@ -30,14 +30,14 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             holdJudgeArchetype = entityManager.CreateArchetype(
                 ComponentType.ReadOnly<ChartTime>(),
                 ComponentType.ReadOnly<Track>(),
-                ComponentType.ReadOnly<EntityReference>(),
+                ComponentType.ReadOnly<HoldFunnelPtr>(),
                 ComponentType.ReadOnly<Tags.JudgeHoldPoint>(),
                 ComponentType.ReadOnly<AppearTime>(),
                 ComponentType.ChunkComponent<ChunkAppearTime>()
                 );
         }
 
-        public void CreateEntities(List<AffHold> affHoldList)
+        public unsafe void CreateEntities(List<AffHold> affHoldList)
         {
             affHoldList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
 
@@ -56,6 +56,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 float startFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.timing, hold.timingGroup);
                 float scalez = - endFloorPosition + startFloorPosition;
 
+                HoldFunnel* holdFunnelPtr = CreateHoldFunnelPtr();
+
                 entityManager.SetComponentData<Translation>(holdEntity, new Translation(){
                     Value = new float3(x, y, z)
                 });
@@ -72,7 +74,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 {
                     Value = 1f
                 });
-                entityManager.SetComponentData(holdEntity, CutoffUtils.UnjudgedHS);
+                entityManager.SetComponentData<HoldFunnelPtr>(holdEntity, new HoldFunnelPtr()
+                {
+                    Value = holdFunnelPtr
+                });
 
                 //Appear/disappear time
 
@@ -102,9 +107,9 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     {
                         Value = hold.track
                     });
-                    entityManager.SetComponentData<EntityReference>(judgeEntity, new EntityReference()
+                    entityManager.SetComponentData<HoldFunnelPtr>(judgeEntity, new HoldFunnelPtr()
                     {
-                        Value = holdEntity
+                        Value = holdFunnelPtr
                     });
                     entityManager.SetComponentData<AppearTime>(judgeEntity, new AppearTime()
                     {
@@ -113,6 +118,12 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     ScoreManager.Instance.maxCombo++;
                 }
             }
+        }
+
+        private unsafe HoldFunnel* CreateHoldFunnelPtr()
+        {
+            HoldFunnel funnel = new HoldFunnel(LongnoteVisualState.UNJUDGED, false);
+            return &funnel;
         }
     }
 
