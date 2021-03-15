@@ -127,7 +127,7 @@ public class JudgementSystem : SystemBase
 
             {
 
-                HitState hit = entityManager.GetComponentData<HitState>(entityRef.Value); ;
+                HitState hit = entityManager.GetComponentData<HitState>(entityRef.Value);
                 ArcIsRed red;
 
                 // Kill all points that have passed
@@ -136,16 +136,6 @@ public class JudgementSystem : SystemBase
 
                     red = entityManager.GetComponentData<ArcIsRed>(entityRef.Value);
 
-                    JudgeOccurance judgeOcc = 
-                        new JudgeOccurance(
-                            red.Value || !hit.HitRaw ? JudgeOccurance.JudgeType.LOST : JudgeOccurance.JudgeType.MAX_PURE, 
-                            entity,
-                            new float3(linearPosGroup.startPosition, 0),
-                            false
-                        );
-
-                    judgeBacklog.Add(judgeOcc);
-
                     hit = new HitState()
                     {
                         Value = hit.HitRaw ? 0f : 2f,
@@ -153,6 +143,16 @@ public class JudgementSystem : SystemBase
                     };
 
                     entityManager.SetComponentData<HitState>(entityRef.Value, hit);
+
+                    JudgeOccurance judgeOcc =
+                        new JudgeOccurance(
+                            red.Value || !hit.HitRaw ? JudgeOccurance.JudgeType.LOST : JudgeOccurance.JudgeType.MAX_PURE,
+                            entity,
+                            new float3(linearPosGroup.startPosition, 0),
+                            false
+                        );
+
+                    judgeBacklog.Add(judgeOcc);
 
                     return;
 
@@ -208,7 +208,8 @@ public class JudgementSystem : SystemBase
 
         )
             .WithName("HandleArcs")
-            .Schedule();
+            .Schedule(Dependency)
+            .Complete();
 
         
         // Handle all holds //
@@ -315,7 +316,8 @@ public class JudgementSystem : SystemBase
 
         )
             .WithName("HandleHolds")
-            .Schedule();
+            .Schedule(Dependency)
+            .Complete();
 
 
         // Handle all arctaps //
@@ -369,7 +371,8 @@ public class JudgementSystem : SystemBase
 
         )
             .WithName("HandleArctaps")
-            .Schedule();
+            .Schedule(Dependency)
+            .Complete();
 
 
         // Handle all taps //
@@ -400,10 +403,10 @@ public class JudgementSystem : SystemBase
 
         )
             .WithName("HandleTaps")
-            .Schedule();
+            .Schedule(Dependency)
+            .Complete();
 
         // Complete code and find types //
-        Dependency.Complete();
         Job.WithCode(
 
             () =>
@@ -412,6 +415,9 @@ public class JudgementSystem : SystemBase
 
                 for (int t = 0; t < noteForTouch.Length; t++)
                 {
+
+                    if (!entityManager.Exists(noteForTouch[t].en)) continue;
+
                     Entity minEntity = noteForTouch[t].en;
                     ChartTime time = noteForTouch[t].ch;
                     if(entityManager.HasComponent(minEntity, ComponentType.ReadOnly<Track>()))
@@ -513,6 +519,9 @@ public class JudgementSystem : SystemBase
             }
 
         }
+
+        noteForTouch.Dispose();
+        judgeBacklog.Dispose();
 
     }
 }

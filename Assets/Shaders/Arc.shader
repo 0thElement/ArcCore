@@ -52,7 +52,7 @@
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-				o.color = v.color * Lerp(_Color, _RedCol, _RedMix);
+				o.color = v.color *lerp(_Color, _RedCol, _RedMix);
 				o.worldpos = mul(unity_ObjectToWorld, v.vertex);
 				return o;
 			}
@@ -60,14 +60,14 @@
 			half4 frag (v2f i) : SV_Target
 			{
 			    if(i.uv.y < _From || i.uv.y > _To) return 0;
-				if(_Cutoff == 0) 
+				if(_Cutoff == 1) 
 				{
 					if(i.worldpos.z > 0) return 0;
 				} 
 				float4 c = tex2D(_MainTex,i.uv);
 				float4 inColor = i.color;
-				c *= inColor;
-				c =  Lerp(c, _RedCol, _RedMix);
+				c *=  inColor;
+				c =   lerp(c, _RedCol, _RedMix);
 				c.a = alpha_from_pos(c, i.worldpos.z);
 				if(_Cutoff == 2) 
 				{

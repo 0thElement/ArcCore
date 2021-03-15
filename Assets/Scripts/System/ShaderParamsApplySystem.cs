@@ -12,40 +12,33 @@ using Unity.Rendering;
 [UpdateAfter(typeof(JudgementSystem))]
 public class ShaderParamsApplySystem : SystemBase
 {
-    public EntityManager globalEntityManager;
-
-    protected override void OnCreate() 
-    { 
-        var defaultWorld = World.DefaultGameObjectInjectionWorld;
-        globalEntityManager = defaultWorld.EntityManager;
-    }
 
     protected override void OnUpdate()
     {
-        EntityManager entityManager = globalEntityManager;
+        EntityManager entityManager = EntityManager;
 
         //ARCS
-        Entities.WithNone<ChartTime, Translation>().WithAll<ColorID>().ForEach(
+        Entities.WithNone<ChartTime>().WithAll<ColorID>().ForEach(
 
             (ref ShaderCutoff cutoff, ref ShaderRedmix redmix, in EntityReference eref)
 
                 =>
 
             {
-                Entity funnel = eref.Value;
-                HitState hit = entityManager.GetComponentData<HitState>(funnel);
-                ArcIsRed red = entityManager.GetComponentData<ArcIsRed>(funnel);
-                if(red.Value || hit.Value != 0)
-                {
-                    if (red.Value)
-                    {
-                        redmix.Value = math.min(redmix.Value + 0.08f, 1);
-                    }
-                    else
-                    {
-                        redmix.Value = 0;
-                    }
+                HitState hit = entityManager.GetComponentData<HitState>(eref.Value);
+                ArcIsRed red = entityManager.GetComponentData<ArcIsRed>(eref.Value);
 
+                if (red.Value)
+                {
+                    redmix.Value = math.min(redmix.Value + 0.08f, 1);
+                }
+                else
+                {
+                    redmix.Value = 0;
+                }
+
+                if (hit.Value != 0)
+                {
                     cutoff.Value = hit.Value;
                 }
             }
@@ -53,6 +46,8 @@ public class ShaderParamsApplySystem : SystemBase
         )
             .WithName("ArcShaders")
             .Schedule();
+
+        Dependency.Complete();
 
         //HOLDS
         Entities.WithNone<Translation>().ForEach(

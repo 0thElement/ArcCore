@@ -79,8 +79,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 typeof(AppearTime),
                 typeof(Disabled),
                 ComponentType.ChunkComponent<ChunkAppearTime>(),
-                ComponentType.ReadOnly<StrictArcJudge>(),
-                ComponentType.ReadOnly<EntityReference>()
+                ComponentType.ReadOnly<StrictArcJudge>()
                 );
 
             arcFunnelArchetype = entityManager.CreateArchetype(

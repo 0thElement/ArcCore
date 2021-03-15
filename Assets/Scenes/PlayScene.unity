@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.37311953, g: 0.38074014, b: 0.3587274, a: 1}
+  m_IndirectSpecularColor: {r: 0.37311918, g: 0.3807398, b: 0.35872716, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -877,7 +877,8 @@ MonoBehaviour:
     type: 3}
   heightIndicatorPrefab: {fileID: 2509541287854956852, guid: 112bbb63291d4b24da269b7d9c9179ea,
     type: 3}
-  arcShadowPrefab: {fileID: 0}
+  arcShadowPrefab: {fileID: 345932005286596484, guid: 214e882901cb10a409006d01ba409ccc,
+    type: 3}
   arcMaterial: {fileID: 2100000, guid: 6a9129239f6b3054db310a0864ba9eb2, type: 2}
   heightMaterial: {fileID: 2100000, guid: 7df61da0627a5714080a4c06cd73892e, type: 2}
   arcColors:
@@ -885,6 +886,7 @@ MonoBehaviour:
   - {r: 0.8867924, g: 0.06274474, b: 0.54300517, a: 0.78039217}
   - {r: 0.1747762, g: 0.8018868, b: 0.04160734, a: 0.7647059}
   - {r: 0.8679245, g: 0.84862864, b: 0.10234957, a: 0.7607843}
+  redColor: {r: 1, g: 0, b: 0, a: 0.7647059}
   arcMesh: {fileID: 5628013574231025859, guid: 90cc480477edf894685f61a3a6723260, type: 3}
   headMesh: {fileID: -4335921442542054854, guid: 08b948e6802acc44ea07fb34e3ebb8db,
     type: 3}
