@@ -19,7 +19,8 @@ namespace ArcCore.MonoBehaviours
             earlyPureCount,
             lateFarCount,
             earlyFarCount,
-            lostCount;
+            lostCount,
+            currentCombo;
 
         [HideInInspector] public float currentScore;
 
@@ -28,6 +29,37 @@ namespace ArcCore.MonoBehaviours
         void Awake()
         {
             Instance = this;
+        }
+
+        public void AddJudge(JudgeManage.JudgeType type)
+        {
+            switch(type)
+            {
+                case JudgeManage.JudgeType.LOST:
+                    lostCount++;
+                    currentCombo = 0;
+                    break;
+                case JudgeManage.JudgeType.MAX_PURE:
+                    maxPureCount++;
+                    currentCombo++;
+                    break;
+                case JudgeManage.JudgeType.LATE_PURE:
+                    latePureCount++;
+                    currentCombo++;
+                    break;
+                case JudgeManage.JudgeType.EARLY_PURE:
+                    earlyPureCount++;
+                    currentCombo++;
+                    break;
+                case JudgeManage.JudgeType.LATE_FAR:
+                    lateFarCount++;
+                    currentCombo++;
+                    break;
+                case JudgeManage.JudgeType.EARLY_FAR:
+                    earlyFarCount++;
+                    currentCombo++;
+                    break;
+            }
         }
 
         //call later

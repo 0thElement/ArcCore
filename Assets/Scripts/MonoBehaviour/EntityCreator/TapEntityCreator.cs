@@ -31,11 +31,11 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             tapJudgeArchetype = entityManager.CreateArchetype(
                 ComponentType.ReadOnly<ChartTime>(),
                 ComponentType.ReadOnly<Track>(),
-                ComponentType.ReadOnly<ArctapFunnelPtr>()
+                ComponentType.ReadOnly<EntityReference>()
                 );
         }
 
-        public unsafe void CreateEntities(List<AffTap> affTapList)
+        public void CreateEntities(List<AffTap> affTapList)
         {
             affTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
 
@@ -48,8 +48,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 const float y = 0;
                 const float z = 0;
 
-                ArctapFunnel* tapFunnelPtr = CreateTapFunnelPtr();
-
                 entityManager.SetComponentData<Translation>(tapEntity, new Translation(){ 
                     Value = new float3(x, y, z)
                 });
@@ -61,10 +59,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 entityManager.SetComponentData<TimingGroup>(tapEntity, new TimingGroup()
                 {
                     Value = tap.timingGroup
-                });
-                entityManager.SetComponentData<ArctapFunnelPtr>(tapEntity, new ArctapFunnelPtr()
-                {
-                    Value = tapFunnelPtr
                 });
 
                 int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, tap.timingGroup);
@@ -84,19 +78,13 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 {
                     Value = tap.track
                 });
-                entityManager.SetComponentData<ArctapFunnelPtr>(judgeEntity, new ArctapFunnelPtr()
+                entityManager.SetComponentData<EntityReference>(judgeEntity, new EntityReference()
                 {
-                    Value = tapFunnelPtr
+                    Value = tapEntity
                 });
 
                 ScoreManager.Instance.maxCombo++;
             }
-        }
-
-        private unsafe ArctapFunnel* CreateTapFunnelPtr()
-        {
-            ArctapFunnel funnel = new ArctapFunnel(true);
-            return &funnel;
         }
     }
 
