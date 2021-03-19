@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
@@ -35,6 +35,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             //idk if this is a good way to set up an entity prefab in this case but this will do for now
             entityManager.RemoveComponent<Translation>(traceNoteEntityPrefab);
             entityManager.RemoveComponent<Rotation>(traceNoteEntityPrefab);
+            entityManager.RemoveComponent<ArcFunnelPtr>(traceNoteEntityPrefab);
             entityManager.AddComponent<Disabled>(traceNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkAppearTime>(traceNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkDisappearTime>(traceNoteEntityPrefab);

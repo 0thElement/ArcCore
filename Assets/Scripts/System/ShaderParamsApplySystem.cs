@@ -1,4 +1,4 @@
-﻿using Unity.Burst;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
@@ -16,9 +16,10 @@ public class ShaderParamsApplySystem : SystemBase
     protected unsafe override void OnUpdate()
     {
         EntityManager entityManager = EntityManager;
+        int currentTime = Conductor.Instance.receptorTime;
 
         //ARCS
-        Entities.WithNone<ChartTime>().ForEach(
+        Entities.ForEach(
 
             (ref ShaderCutoff cutoff, ref ShaderRedmix redmix, in ArcFunnelPtr arcFunnelPtr)
 
@@ -41,6 +42,23 @@ public class ShaderParamsApplySystem : SystemBase
 
         )
             .WithName("ArcShaders")
+            .Schedule();
+
+        Dependency.Complete();
+
+        //TRACES
+        Entities.ForEach(
+
+            (ref ShaderCutoff cutoff, in ChartTime time)
+
+                =>
+
+            {
+                cutoff.Value = time.Value < currentTime ? 1f : 0f;
+            }
+
+        )
+            .WithName("TraceShaders")
             .Schedule();
 
         Dependency.Complete();
