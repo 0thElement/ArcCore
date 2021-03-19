@@ -295,7 +295,7 @@ public class JudgementSystem : SystemBase
 
 
         // Handle all arctaps //
-        Entities.WithAll<WithinJudgeRange>().ForEach(
+        Entities.WithAll<WithinJudgeRange>().WithoutBurst().WithStructuralChanges().ForEach(
 
             (Entity entity, in ChartTime time, in SinglePosition pos, in ArctapFunnelPtr funnel)
 
@@ -308,18 +308,9 @@ public class JudgementSystem : SystemBase
                 if (time.Value + Constants.FarWindow < currentTime)
                 {
 
-                    JudgeManage judgeOcc =
-                                new JudgeOccurance(
-                                    JudgeManage.JudgeType.LOST,
-                                    new EntityWithLoadedNoteData(
-                                        entity, time,
-                                        new float3(pos.Value, 0),
-                                        false, new HoldFunnelPtr(), funnel
-                                    ),
-                                    true
-                                );
+                    ScoreManager.Instance.AddJudge(JudgeManage.JudgeType.LOST);
 
-                    judgeBacklog.Add(judgeOcc);
+                    entityManager.DestroyEntity(entity);
 
                     return;
 
@@ -328,7 +319,8 @@ public class JudgementSystem : SystemBase
                 for (int i = 0; i < touchPoints.Length; i++)
                 {
                     if (
-                        noteForTouch[i].ch.Value < time.Value &&
+                       !entityManager.Exists(noteForTouch[i].entity) &&
+                        noteForTouch[i].time < time.Value &&
                         touchPoints[i].status == TouchPoint.Status.TAPPED &&
                         touchPoints[i].inputPlaneValid &&
                         touchPoints[i].inputPlane.CollidingWith(
@@ -339,11 +331,7 @@ public class JudgementSystem : SystemBase
                             ))
                     {
                         //Check for judge later
-                        noteForTouch[i] = new EntityWithLoadedNoteData(
-                            entity, time,
-                            new float3(pos.Value, 0),
-                            false, new HoldFunnelPtr(), funnel
-                            );
+                        noteForTouch[i] = new JudgeEntityRef(entity, time.Value, JudgeEntityRef.EntityType.ARCTAP);
                         return;
                     }
                 }
@@ -365,21 +353,29 @@ public class JudgementSystem : SystemBase
 
             {
 
+                //Kill all remaining entities if they are overaged
+                if (time.Value + Constants.FarWindow < currentTime)
+                {
+
+                    ScoreManager.Instance.AddJudge(JudgeManage.JudgeType.LOST);
+
+                    entityManager.DestroyEntity(entity);
+
+                    return;
+
+                }
+
                 for (int i = 0; i < touchPoints.Length; i++)
                 {
                     if (
-                        noteForTouch[i].ch.Value < time.Value &&
-                        touchPoints[i].status == TouchPoint.Status.TAPPED &&
+                       !entityManager.Exists(noteForTouch[i].entity) &&
+                        noteForTouch[i].time < time.Value &&
                         touchPoints[i].trackPlaneValid &&
                         touchPoints[i].trackPlane.CollidingWith(laneAABB2Ds[track.Value])
                     )
                     {
                         //Check for judge later
-                        noteForTouch[i] = new EntityWithLoadedNoteData(
-                            entity, time,
-                            new float3(Convert.TrackToX(track.Value), 0, 0),
-                            false, new HoldFunnelPtr(), funnel
-                            );
+                        noteForTouch[i] = new JudgeEntityRef(entity, time.Value, JudgeEntityRef.EntityType.TAP);
                         return;
                     }
                 }
@@ -392,7 +388,7 @@ public class JudgementSystem : SystemBase
             .Complete();
 
         // Complete code and find types //
-        Job.WithCode(
+        Job.WithStructuralChanges().WithCode(
 
             () =>
 
@@ -401,36 +397,39 @@ public class JudgementSystem : SystemBase
                 for (int t = 0; t < noteForTouch.Length; t++)
                 {
 
-                    if (!entityManager.Exists(noteForTouch[t].en)) continue;
+                    if (!entityManager.Exists(noteForTouch[t].entity)) continue;
 
-                    Entity minEntity = noteForTouch[t].en;
-                    ChartTime time = noteForTouch[t].ch;
+                    Entity minEntity = noteForTouch[t].entity;
 
-
-                    JudgeManage.JudgeType type;
-                    bool delEn;
-
-                    if (noteForTouch[t].isHold)
+                    if (noteForTouch[t].type == JudgeEntityRef.EntityType.HOLD)
                     {
-                        type = JudgeManage.JudgeType.MAX_PURE;
-                        delEn = false;
+                        HoldFunnelPtr holdFunnelPtr = entityManager.GetComponentData<HoldFunnelPtr>(minEntity);
+                        holdFunnelPtr.Value->visualState = LongnoteVisualState.JUDGED_PURE;
 
-                        noteForTouch[t].holdFunnelPtr.Value->visualState = LongnoteVisualState.JUDGED_PURE;
+                        entityManager.DestroyEntity(minEntity);
+                        ScoreManager.Instance.AddJudge(JudgeManage.JudgeType.MAX_PURE);
                     }
                     else
                     {
-                        type = JudgeManage.GetType(currentTime - time.Value);
-                        delEn = true;
+                        JudgeManage.JudgeType type = JudgeManage.GetType(currentTime - noteForTouch[t].time);
+                        if(noteForTouch[t].type == JudgeEntityRef.EntityType.ARCTAP)
+                        {
+                            ArctapFunnelPtr arctapFunnelPtr = entityManager.GetComponentData<ArctapFunnelPtr>(minEntity);
+                            arctapFunnelPtr.Value->isExistant = false;
+
+                            entityManager.DestroyEntity(minEntity);
+                            ScoreManager.Instance.AddJudge(type);
+                        } 
+                        else
+                        {
+                            EntityReference entityReference = entityManager.GetComponentData<EntityReference>(minEntity);
+
+                            entityManager.DestroyEntity(entityReference.Value);
+
+                            entityManager.DestroyEntity(minEntity);
+                            ScoreManager.Instance.AddJudge(type);
+                        }
                     }
-
-                    JudgeManage judgeOcc =
-                                new JudgeOccurance(
-                                    type,
-                                    noteForTouch[t],
-                                    delEn
-                                );
-
-                    judgeBacklog.Add(judgeOcc);
 
                 }
 
@@ -440,46 +439,8 @@ public class JudgementSystem : SystemBase
             .WithName("FinalizeMinimums")
             .Schedule();
 
-        // Complete code and manage backlog //
         Dependency.Complete();
-        for (int i = 0; i < judgeBacklog.Length; i++)
-        {
-
-            if (judgeBacklog[i].deleteEn)
-            {
-                entityManager.AddComponent<Disabled>(judgeBacklog[i].entity.en);
-                if(!judgeBacklog[i].entity.isHold)
-                {
-                    judgeBacklog[i].entity.arctapFunnelPtr.Value->isExistant = false;
-                }
-            }
-
-            switch (judgeBacklog[i].type)
-            {
-                case JudgeManage.JudgeType.LOST:
-                    ScoreManager.Instance.lostCount++;
-                    break;
-                case JudgeManage.JudgeType.EARLY_FAR:
-                    ScoreManager.Instance.earlyFarCount++;
-                    break;
-                case JudgeManage.JudgeType.EARLY_PURE:
-                    ScoreManager.Instance.earlyPureCount++;
-                    break;
-                case JudgeManage.JudgeType.MAX_PURE:
-                    ScoreManager.Instance.maxPureCount++;
-                    break;
-                case JudgeManage.JudgeType.LATE_PURE:
-                    ScoreManager.Instance.latePureCount++;
-                    break;
-                case JudgeManage.JudgeType.LATE_FAR:
-                    ScoreManager.Instance.lateFarCount++;
-                    break;
-            }
-
-        }
-
         noteForTouch.Dispose();
-        judgeBacklog.Dispose();
 
     }
 }
