@@ -608,6 +608,7 @@ MonoBehaviour:
   lateFarCount: 0
   earlyFarCount: 0
   lostCount: 0
+  currentCombo: 0
   currentScore: 0
   textUI: {fileID: 0}
 --- !u!1 &714797368
@@ -1273,6 +1274,8 @@ MonoBehaviour:
   arcTapNotePrefab: {fileID: 6915217587042562500, guid: 1916ae4801f8520438e76fb06614e538,
     type: 3}
   connectionLinePrefab: {fileID: 6999443773866882105, guid: d2d95facb0a89ed46b986440d2d9628e,
+    type: 3}
+  shadowPrefab: {fileID: 6324984913872004424, guid: c8dd83811280464479564fb9b71d73d9,
     type: 3}
 --- !u!1 &1879273769
 GameObject:

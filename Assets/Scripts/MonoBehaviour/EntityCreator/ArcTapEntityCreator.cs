@@ -15,8 +15,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         public static ArcTapEntityCreator Instance { get; private set; }
         [SerializeField] private GameObject arcTapNotePrefab;
         [SerializeField] private GameObject connectionLinePrefab;
+        [SerializeField] private GameObject shadowPrefab;
         private Entity arcTapNoteEntityPrefab;
         private Entity connectionLineEntityPrefab;
+        private Entity shadowEntityPrefab;
         private World defaultWorld;
         private EntityManager entityManager;
         public EntityArchetype arctapJudgeArchetype { get; private set; }
@@ -26,22 +28,28 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             defaultWorld = World.DefaultGameObjectInjectionWorld;
             entityManager = defaultWorld.EntityManager;
             GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
+
             arcTapNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcTapNotePrefab, settings);
             connectionLineEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(connectionLinePrefab, settings);
+            shadowEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(shadowPrefab, settings);
+
             entityManager.AddComponent<Disabled>(arcTapNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkAppearTime>(arcTapNoteEntityPrefab);
 
             entityManager.AddComponent<Disabled>(connectionLineEntityPrefab);
             entityManager.AddChunkComponentData<ChunkAppearTime>(connectionLineEntityPrefab);
 
+            entityManager.AddComponent<Disabled>(shadowEntityPrefab);
+            entityManager.AddChunkComponentData<ChunkAppearTime>(shadowEntityPrefab);
+
             arctapJudgeArchetype = entityManager.CreateArchetype(
                 ComponentType.ReadOnly<ChartTime>(),
                 ComponentType.ReadOnly<SinglePosition>(),
-                ComponentType.ReadOnly<ArctapFunnelPtr>()
+                ComponentType.ReadOnly<EntityReference>()
                 );
         }
 
-        public unsafe void CreateEntities(List<AffArcTap> affArcTapList, List<AffTap> affTapList)
+        public void CreateEntities(List<AffArcTap> affArcTapList, List<AffTap> affTapList)
         {
             affArcTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
             affTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
@@ -51,27 +59,41 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             {
                 //Main entity
                 Entity tapEntity = entityManager.Instantiate(arcTapNoteEntityPrefab);
+                Entity shadowEntity = entityManager.Instantiate(shadowEntityPrefab);
 
                 float x = Convert.GetWorldX(arctap.position.x);
                 float y = Convert.GetWorldY(arctap.position.y);
                 const float z = 0;
 
-                ArctapFunnel* arctapFunnelPtr = CreateArctapFunnelPtr();
-
-                entityManager.SetComponentData<Translation>(tapEntity, new Translation(){ 
+                entityManager.SetComponentData<Translation>(tapEntity, new Translation()
+                {
                     Value = new float3(x, y, z)
                 });
-                float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup);
-                entityManager.SetComponentData<FloorPosition>(tapEntity, new FloorPosition(){
-                    Value = floorpos
+                entityManager.SetComponentData<Translation>(shadowEntity, new Translation()
+                {
+                    Value = new float3(x, 0, z)
                 });
-                entityManager.SetComponentData<TimingGroup>(tapEntity, new TimingGroup()
+
+                float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup);
+                FloorPosition floorPositionF = new FloorPosition()
+                {
+                    Value = floorpos
+                };
+
+                entityManager.SetComponentData<FloorPosition>(tapEntity, floorPositionF);
+                entityManager.SetComponentData<FloorPosition>(shadowEntity, floorPositionF);
+
+                TimingGroup group = new TimingGroup()
                 {
                     Value = arctap.timingGroup
-                });
-                entityManager.SetComponentData<ArctapFunnelPtr>(tapEntity, new ArctapFunnelPtr()
+                };
+
+                entityManager.SetComponentData<TimingGroup>(tapEntity, group);
+                entityManager.SetComponentData<TimingGroup>(shadowEntity, group);
+
+                entityManager.SetComponentData<EntityReference>(tapEntity, new EntityReference()
                 {
-                    Value = arctapFunnelPtr
+                    Value = shadowEntity
                 });
 
                 int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, arctap.timingGroup);
@@ -79,8 +101,9 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 int appearTime = (t1 < t2) ? t1 : t2;
 
                 entityManager.SetComponentData<AppearTime>(tapEntity, new AppearTime(){ Value = appearTime });
+                entityManager.SetComponentData<AppearTime>(shadowEntity, new AppearTime() { Value = appearTime });
 
-                CreateJudgeEntity(arctap, arctapFunnelPtr);
+                CreateJudgeEntity(arctap, tapEntity);
 
                 //Connection line
                 while (lowBound < affTapList.Count && arctap.timing > affTapList[lowBound].timing)
@@ -146,7 +169,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             });
         }
 
-        public unsafe void CreateJudgeEntity(AffArcTap arctap, ArctapFunnel* arctapFunnelPtr)
+        public void CreateJudgeEntity(AffArcTap arctap, Entity tapEntity)
         {
             Entity judgeEntity = entityManager.CreateEntity(arctapJudgeArchetype);
 
@@ -158,16 +181,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             {
                 Value = Convert.GetWorldPos(arctap.position)
             });
-            entityManager.SetComponentData<ArctapFunnelPtr>(judgeEntity, new ArctapFunnelPtr()
+            entityManager.SetComponentData<EntityReference>(judgeEntity, new EntityReference()
             {
-                Value = arctapFunnelPtr
+                Value = tapEntity
             });
-        }
-
-        public unsafe ArctapFunnel* CreateArctapFunnelPtr()
-        {
-            ArctapFunnel funnel = new ArctapFunnel(true);
-            return &funnel;
         }
     }
 }

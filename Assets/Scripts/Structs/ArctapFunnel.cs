@@ -1,4 +1,5 @@
-﻿public struct ArctapFunnel
+﻿[System.Obsolete]
+public struct ArctapFunnel
 {
     public bool isExistant;
 

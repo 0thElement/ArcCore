@@ -71,7 +71,7 @@ namespace ArcCore.MonoBehaviours
         void Awake()
         {
             Instance = this;
-            touchPoints = new NativeArray<TouchPoint>(new TouchPoint[MaxTouches], Allocator.Persistent);
+            touchPoints = new NativeArray<TouchPoint>(MaxTouches, Allocator.Persistent);
         }
 
         void Start()

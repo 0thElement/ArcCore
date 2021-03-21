@@ -36,6 +36,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.RemoveComponent<Translation>(traceNoteEntityPrefab);
             entityManager.RemoveComponent<Rotation>(traceNoteEntityPrefab);
             entityManager.RemoveComponent<ArcFunnelPtr>(traceNoteEntityPrefab);
+            entityManager.RemoveComponent<ColorID>(traceNoteEntityPrefab);
             entityManager.AddComponent<Disabled>(traceNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkAppearTime>(traceNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkDisappearTime>(traceNoteEntityPrefab);

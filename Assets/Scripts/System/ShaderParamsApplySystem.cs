@@ -19,7 +19,7 @@ public class ShaderParamsApplySystem : SystemBase
         int currentTime = Conductor.Instance.receptorTime;
 
         //ARCS
-        Entities.ForEach(
+        Entities.WithAll<WithinJudgeRange>().ForEach(
 
             (ref ShaderCutoff cutoff, ref ShaderRedmix redmix, in ArcFunnelPtr arcFunnelPtr)
 
@@ -44,10 +44,8 @@ public class ShaderParamsApplySystem : SystemBase
             .WithName("ArcShaders")
             .Schedule();
 
-        Dependency.Complete();
-
         //TRACES
-        Entities.ForEach(
+        Entities.WithAll<WithinJudgeRange>().ForEach(
 
             (ref ShaderCutoff cutoff, in ChartTime time)
 
@@ -61,10 +59,8 @@ public class ShaderParamsApplySystem : SystemBase
             .WithName("TraceShaders")
             .Schedule();
 
-        Dependency.Complete();
-
         //HOLDS
-        Entities.WithNone<Translation>().ForEach(
+        Entities.WithAll<WithinJudgeRange>().WithNone<Translation>().ForEach(
 
             (ref ShaderCutoff cutoff, in HoldFunnelPtr holdFunnelPtr)
 
@@ -77,21 +73,5 @@ public class ShaderParamsApplySystem : SystemBase
         )
             .WithName("HoldShaders")
             .Schedule();
-
-        Dependency.Complete();
-
-        //ARCTAPS
-        Entities.WithoutBurst().WithStructuralChanges().ForEach(
-
-            (Entity entity, in ArctapFunnelPtr arctapFunnelPtr) 
-
-                =>
-
-            {
-                if(!arctapFunnelPtr.Value->isExistant) entityManager.DestroyEntity(entity);
-            }
-
-        )
-            .Run();
     }
 }
