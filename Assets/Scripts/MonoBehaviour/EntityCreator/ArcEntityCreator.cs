@@ -404,7 +404,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Entity judgeEntity = entityManager.CreateEntity(arcJudgeArchetype);
                 entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
                 {
-                    Value = time
+                    value = time
                 });
                 entityManager.SetComponentData<LinearPosGroup>(judgeEntity, currentLpg);
                 entityManager.SetComponentData<ColorID>(judgeEntity, new ColorID()

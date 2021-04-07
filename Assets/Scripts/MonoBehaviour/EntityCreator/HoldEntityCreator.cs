@@ -13,33 +13,21 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         public static HoldEntityCreator Instance { get; private set; }
         [SerializeField] private GameObject holdNotePrefab;
         private Entity holdNoteEntityPrefab;
-        private World defaultWorld;
-        private EntityManager entityManager;
-        public EntityArchetype holdJudgeArchetype { get; private set; }
         private void Awake()
         {
             Instance = this;
-            defaultWorld = World.DefaultGameObjectInjectionWorld;
-            entityManager = defaultWorld.EntityManager;
-            GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
-            holdNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(holdNotePrefab, settings);
+            holdNoteEntityPrefab = EntityManagement.GameObjectToEntity(holdNotePrefab);
+
+            EntityManager entityManager = EntityManagement.entityManager;
+
             entityManager.AddComponent<Disabled>(holdNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkAppearTime>(holdNoteEntityPrefab);
-            entityManager.AddChunkComponentData<ChunkDisappearTime>(holdNoteEntityPrefab);
-
-            holdJudgeArchetype = entityManager.CreateArchetype(
-                ComponentType.ReadOnly<ChartTime>(),
-                ComponentType.ReadOnly<Track>(),
-                ComponentType.ReadOnly<HoldFunnelPtr>(),
-                ComponentType.ReadOnly<Tags.JudgeHoldPoint>(),
-                ComponentType.ReadOnly<AppearTime>(),
-                ComponentType.ChunkComponent<ChunkAppearTime>()
-                );
         }
 
         public unsafe void CreateEntities(List<AffHold> affHoldList)
         {
             affHoldList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+            EntityManager entityManager = EntityManagement.entityManager;
 
             foreach (AffHold hold in affHoldList)
             {
@@ -55,8 +43,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 float endFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.endTiming, hold.timingGroup);
                 float startFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.timing, hold.timingGroup);
                 float scalez = - endFloorPosition + startFloorPosition;
-
-                HoldFunnel* holdFunnelPtr = CreateHoldFunnelPtr();
 
                 entityManager.SetComponentData<Translation>(holdEntity, new Translation(){
                     Value = new float3(x, y, z)
@@ -74,10 +60,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 {
                     Value = 1f
                 });
-                entityManager.SetComponentData<HoldFunnelPtr>(holdEntity, new HoldFunnelPtr()
-                {
-                    Value = holdFunnelPtr
-                });
 
                 //Appear/disappear time
 
@@ -90,40 +72,18 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 entityManager.SetComponentData<DisappearTime>(holdEntity, new DisappearTime(){ Value = disappearTime });
 
                 //Judge entities
-                float time = hold.timing;
                 TimingEvent timingEvent = Conductor.Instance.GetTimingEventFromTiming(hold.timing, hold.timingGroup);
+                double append = (timingEvent.bpm >= 255 ? 60_000d : 30_000d) / timingEvent.bpm;
 
-                while (time < hold.endTiming)
-                {
-                    time += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
+                ChartTimeSpan span = new ChartTimeSpan(hold.timing, hold.endTiming);
 
-                    Entity judgeEntity = entityManager.CreateEntity(holdJudgeArchetype);
-                    
-                    entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
-                    {
-                        Value = (int)time
-                    });
-                    entityManager.SetComponentData<Track>(judgeEntity, new Track()
-                    {
-                        Value = hold.track
-                    });
-                    entityManager.SetComponentData<HoldFunnelPtr>(judgeEntity, new HoldFunnelPtr()
-                    {
-                        Value = holdFunnelPtr
-                    });
-                    entityManager.SetComponentData<AppearTime>(judgeEntity, new AppearTime()
-                    {
-                        Value = (int)time - Constants.LostWindow
-                    });
-                    ScoreManager.Instance.maxCombo++;
-                }
+                entityManager.SetComponentData(holdEntity, span);
+                entityManager.SetComponentData(holdEntity, new ChartHoldTime(hold.timing, append));
+                entityManager.SetComponentData(holdEntity, new ChartPosition(hold.track));
+
+                //Add combo
+                ScoreManager.Instance.maxCombo += span.GetHoldCount(append);
             }
-        }
-
-        private unsafe HoldFunnel* CreateHoldFunnelPtr()
-        {
-            HoldFunnel funnel = new HoldFunnel(LongnoteVisualState.UNJUDGED, false);
-            return &funnel;
         }
     }
 

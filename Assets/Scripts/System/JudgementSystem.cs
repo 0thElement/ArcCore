@@ -83,7 +83,7 @@ public class JudgementSystem : SystemBase
         arctapQuery = GetEntityQuery(
                 typeof(EntityReference),
                 typeof(ChartTime),
-                typeof(SinglePosition),
+                typeof(ChartPosition),
                 typeof(WithinJudgeRange)
             );
 
@@ -259,7 +259,7 @@ public class JudgementSystem : SystemBase
             HoldFunnel* holdFunnelPtrD = holdFunnelPtr.Value;
 
             //Kill old entities and make lost
-            if (chartTime.Value + Constants.FarWindow < currentTime)
+            if (chartTime.value + Constants.FarWindow < currentTime)
             {
 
                 ScoreManager.Instance.AddJudge(JudgeManage.JudgeType.LOST);
@@ -271,7 +271,7 @@ public class JudgementSystem : SystemBase
             }
 
             //Reset hold value
-            if (currentTime > chartTime.Value)
+            if (currentTime > chartTime.value)
             {
                 holdFunnelPtrD->visualState = LongnoteVisualState.JUDGED_LOST;
             }
@@ -279,8 +279,8 @@ public class JudgementSystem : SystemBase
             for (int i = 0; i < InputManager.Instance.touchPoints.Length; i++)
             {
                 bool generalJudgeValid =
-                    chartTime.Value - InputManager.Instance.touchPoints[i].time <= Constants.FarWindow &&
-                    InputManager.Instance.touchPoints[i].time - chartTime.Value >= Constants.FarWindow &&
+                    chartTime.value - InputManager.Instance.touchPoints[i].time <= Constants.FarWindow &&
+                    InputManager.Instance.touchPoints[i].time - chartTime.value >= Constants.FarWindow &&
                     InputManager.Instance.touchPoints[i].trackPlaneValid &&
                     InputManager.Instance.touchPoints[i].trackPlane.CollidingWith(laneAABB2Ds[track.Value]);
 
@@ -310,13 +310,13 @@ public class JudgementSystem : SystemBase
                 {
                     if (
                        !entityManager.Exists(noteForTouch[i].entity) &&
-                        noteForTouch[i].time < chartTime.Value &&
+                        noteForTouch[i].time < chartTime.value &&
                         InputManager.Instance.touchPoints[i].status == TouchPoint.Status.TAPPED &&
                         generalJudgeValid
                     )
                     {
                         //Check for judge later
-                        noteForTouch[i] = new JudgeEntityRef(entity, chartTime.Value, JudgeEntityRef.EntityType.HOLD);
+                        noteForTouch[i] = new JudgeEntityRef(entity, chartTime.value, JudgeEntityRef.EntityType.HOLD);
                         return;
                     }
                 }
@@ -335,11 +335,11 @@ public class JudgementSystem : SystemBase
 
             // Get entity components
             EntityReference entityReference = entityManager.GetComponentData<EntityReference>(entity);
-            SinglePosition singlePosition   = entityManager.GetComponentData<SinglePosition> (entity);
+            ChartPosition singlePosition   = entityManager.GetComponentData<ChartPosition> (entity);
             ChartTime chartTime             = entityManager.GetComponentData<ChartTime>      (entity);
 
             //Kill all remaining entities if they are overaged
-            if (chartTime.Value + Constants.FarWindow < currentTime)
+            if (chartTime.value + Constants.FarWindow < currentTime)
             {
 
                 ScoreManager.Instance.AddJudge(JudgeManage.JudgeType.LOST);
@@ -355,7 +355,7 @@ public class JudgementSystem : SystemBase
             {
                 if (
                    !entityManager.Exists(noteForTouch[i].entity) &&
-                    noteForTouch[i].time < chartTime.Value &&
+                    noteForTouch[i].time < chartTime.value &&
                     InputManager.Instance.touchPoints[i].status == TouchPoint.Status.TAPPED &&
                     InputManager.Instance.touchPoints[i].inputPlaneValid &&
                     InputManager.Instance.touchPoints[i].inputPlane.CollidingWith(
@@ -366,7 +366,7 @@ public class JudgementSystem : SystemBase
                         ))
                 {
                     //Check for judge later
-                    noteForTouch[i] = new JudgeEntityRef(entity, chartTime.Value, JudgeEntityRef.EntityType.ARCTAP);
+                    noteForTouch[i] = new JudgeEntityRef(entity, chartTime.value, JudgeEntityRef.EntityType.ARCTAP);
                     return;
                 }
             }
@@ -388,7 +388,7 @@ public class JudgementSystem : SystemBase
             Track track                     = entityManager.GetComponentData<Track>          (entity);
 
             //Kill all remaining entities if they are overaged
-            if (chartTime.Value + Constants.FarWindow < currentTime)
+            if (chartTime.value + Constants.FarWindow < currentTime)
             {
 
                 ScoreManager.Instance.AddJudge(JudgeManage.JudgeType.LOST);
@@ -404,13 +404,13 @@ public class JudgementSystem : SystemBase
             {
                 if (
                    !entityManager.Exists(noteForTouch[i].entity) &&
-                    noteForTouch[i].time < chartTime.Value &&
+                    noteForTouch[i].time < chartTime.value &&
                     InputManager.Instance.touchPoints[i].trackPlaneValid &&
                     InputManager.Instance.touchPoints[i].trackPlane.CollidingWith(laneAABB2Ds[track.Value])
                 )
                 {
                     //Check for judge later
-                    noteForTouch[i] = new JudgeEntityRef(entity, chartTime.Value, JudgeEntityRef.EntityType.TAP);
+                    noteForTouch[i] = new JudgeEntityRef(entity, chartTime.value, JudgeEntityRef.EntityType.TAP);
                     return;
                 }
             }

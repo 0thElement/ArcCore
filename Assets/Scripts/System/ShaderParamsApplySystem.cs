@@ -52,7 +52,7 @@ public class ShaderParamsApplySystem : SystemBase
                 =>
 
             {
-                cutoff.Value = time.Value < currentTime ? 1f : 0f;
+                cutoff.Value = time.value < currentTime ? 1f : 0f;
             }
 
         )

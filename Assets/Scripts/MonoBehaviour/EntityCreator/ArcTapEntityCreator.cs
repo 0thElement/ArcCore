@@ -19,19 +19,16 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private Entity arcTapNoteEntityPrefab;
         private Entity connectionLineEntityPrefab;
         private Entity shadowEntityPrefab;
-        private World defaultWorld;
-        private EntityManager entityManager;
-        public EntityArchetype arctapJudgeArchetype { get; private set; }
+
         private void Awake()
         {
             Instance = this;
-            defaultWorld = World.DefaultGameObjectInjectionWorld;
-            entityManager = defaultWorld.EntityManager;
-            GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
 
-            arcTapNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcTapNotePrefab, settings);
-            connectionLineEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(connectionLinePrefab, settings);
-            shadowEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(shadowPrefab, settings);
+            arcTapNoteEntityPrefab = EntityManagement.GameObjectToEntity(arcTapNotePrefab);
+            connectionLineEntityPrefab = EntityManagement.GameObjectToEntity(connectionLinePrefab);
+            shadowEntityPrefab = EntityManagement.GameObjectToEntity(shadowPrefab);
+
+            EntityManager entityManager = EntityManagement.entityManager;
 
             entityManager.AddComponent<Disabled>(arcTapNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkAppearTime>(arcTapNoteEntityPrefab);
@@ -41,12 +38,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
             entityManager.AddComponent<Disabled>(shadowEntityPrefab);
             entityManager.AddChunkComponentData<ChunkAppearTime>(shadowEntityPrefab);
-
-            arctapJudgeArchetype = entityManager.CreateArchetype(
-                ComponentType.ReadOnly<ChartTime>(),
-                ComponentType.ReadOnly<SinglePosition>(),
-                ComponentType.ReadOnly<EntityReference>()
-                );
         }
 
         public void CreateEntities(List<AffArcTap> affArcTapList, List<AffTap> affTapList)
@@ -54,6 +45,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             affArcTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
             affTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
             int lowBound=0;
+
+            EntityManager entityManager = EntityManagement.entityManager;
 
             foreach (AffArcTap arctap in affArcTapList)
             {
@@ -103,7 +96,9 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 entityManager.SetComponentData<AppearTime>(tapEntity, new AppearTime(){ Value = appearTime });
                 entityManager.SetComponentData<AppearTime>(shadowEntity, new AppearTime() { Value = appearTime });
 
-                CreateJudgeEntity(arctap, tapEntity);
+                //Judge entities
+                entityManager.SetComponentData(tapEntity, new ChartTime(arctap.timing));
+                entityManager.SetComponentData(tapEntity, new ChartPosition(arctap.position));
 
                 //Connection line
                 while (lowBound < affTapList.Count && arctap.timing > affTapList[lowBound].timing)
@@ -132,6 +127,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
         public void CreateConnections(AffArcTap arctap, AffTap tap, int appearTime)
         {
+            EntityManager entityManager = EntityManagement.entityManager;
+
             Entity lineEntity = entityManager.Instantiate(connectionLineEntityPrefab);
 
             float x = Convert.GetWorldX(arctap.position.x);
@@ -166,24 +163,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             });
             entityManager.SetComponentData<AppearTime>(lineEntity, new AppearTime(){
                 Value = appearTime
-            });
-        }
-
-        public void CreateJudgeEntity(AffArcTap arctap, Entity tapEntity)
-        {
-            Entity judgeEntity = entityManager.CreateEntity(arctapJudgeArchetype);
-
-            entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
-            {
-                Value = arctap.timing
-            });
-            entityManager.SetComponentData<SinglePosition>(judgeEntity, new SinglePosition()
-            {
-                Value = Convert.GetWorldPos(arctap.position)
-            });
-            entityManager.SetComponentData<EntityReference>(judgeEntity, new EntityReference()
-            {
-                Value = tapEntity
             });
         }
     }

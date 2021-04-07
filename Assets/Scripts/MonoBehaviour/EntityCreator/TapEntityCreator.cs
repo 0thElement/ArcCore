@@ -12,32 +12,26 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
     public class TapEntityCreator : MonoBehaviour
     {
+        //TODO: MODIFY PREFAB (sorry 0th, i didnt have the editor open while combining the entities lol
+
         public static TapEntityCreator Instance { get; private set; }
         [SerializeField] private GameObject tapNotePrefab;
         private Entity tapNoteEntityPrefab;
-        private World defaultWorld;
-        private EntityManager entityManager;
-        public EntityArchetype tapJudgeArchetype { get; private set; }
         private void Awake()
         {
             Instance = this;
-            defaultWorld = World.DefaultGameObjectInjectionWorld;
-            entityManager = defaultWorld.EntityManager;
-            GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
-            tapNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(tapNotePrefab, settings);
+            tapNoteEntityPrefab = EntityManagement.GameObjectToEntity(tapNotePrefab);
+
+            EntityManager entityManager = EntityManagement.entityManager;
+
             entityManager.AddComponent<Disabled>(tapNoteEntityPrefab);
             entityManager.AddChunkComponentData<ChunkAppearTime>(tapNoteEntityPrefab);
-
-            tapJudgeArchetype = entityManager.CreateArchetype(
-                ComponentType.ReadOnly<ChartTime>(),
-                ComponentType.ReadOnly<Track>(),
-                ComponentType.ReadOnly<EntityReference>()
-                );
         }
 
         public void CreateEntities(List<AffTap> affTapList)
         {
             affTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+            EntityManager entityManager = EntityManagement.entityManager;
 
             foreach (AffTap tap in affTapList)
             {
@@ -48,15 +42,15 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 const float y = 0;
                 const float z = 0;
 
-                entityManager.SetComponentData<Translation>(tapEntity, new Translation(){ 
+                entityManager.SetComponentData(tapEntity, new Translation(){ 
                     Value = new float3(x, y, z)
                 });
 
                 float floorpos = Conductor.Instance.GetFloorPositionFromTiming(tap.timing, tap.timingGroup);
-                entityManager.SetComponentData<FloorPosition>(tapEntity, new FloorPosition(){
+                entityManager.SetComponentData(tapEntity, new FloorPosition(){
                     Value = floorpos 
                 });
-                entityManager.SetComponentData<TimingGroup>(tapEntity, new TimingGroup()
+                entityManager.SetComponentData(tapEntity, new TimingGroup()
                 {
                     Value = tap.timingGroup
                 });
@@ -65,23 +59,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, tap.timingGroup);
                 int appearTime = (t1 < t2) ? t1 : t2;
 
-                entityManager.SetComponentData<AppearTime>(tapEntity, new AppearTime(){ Value = appearTime });
-
-                //Judge component
-                Entity judgeEntity = entityManager.CreateEntity(tapJudgeArchetype);
+                entityManager.SetComponentData(tapEntity, new AppearTime(){ Value = appearTime });
                 
-                entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
-                {
-                    Value = tap.timing
-                });;
-                entityManager.SetComponentData<Track>(judgeEntity, new Track()
-                {
-                    Value = tap.track
-                });
-                entityManager.SetComponentData<EntityReference>(judgeEntity, new EntityReference()
-                {
-                    Value = tapEntity
-                });
+                entityManager.SetComponentData(tapEntity, new ChartTime(tap.timing));
+                entityManager.SetComponentData(tapEntity, new ChartPosition(tap.track));
 
                 ScoreManager.Instance.maxCombo++;
             }

@@ -169,7 +169,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             });
             entityManager.SetComponentData<ChartTime>(traceEntity, new ChartTime()
             {
-                Value = time
+                value = time
             });
         }
 
@@ -214,7 +214,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
             entityManager.SetComponentData<ChartTime>(headEntity, new ChartTime()
             {
-                Value = trace.timing
+                value = trace.timing
             });
         }
     }
