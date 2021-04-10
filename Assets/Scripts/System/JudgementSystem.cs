@@ -12,56 +12,28 @@ using ArcCore.MonoBehaviours.EntityCreation;
 using ArcCore;
 using ArcCore.Tags;
 
-public struct JudgeEntityRef
-{
-    public enum EntityType
-    {
-        HOLD,
-        TAP,
-        ARCTAP
-    }
-
-    public bool exists;
-    public Entity entity;
-    public int time;
-    public EntityType entityType;
-
-    public JudgeEntityRef(Entity entity, int time, EntityType entityType)
-    {
-        exists = true;
-        this.entity = entity;
-        this.time = time;
-        this.entityType = entityType;
-    }
-
-    public static JudgeEntityRef Empty() => new JudgeEntityRef()
-    {
-        exists = false,
-        entity = new Entity(),
-        time = -1,
-        entityType = (EntityType)(-1)
-    };
-}
-
+[UpdateInGroup(typeof(SimulationSystemGroup))]
 public class JudgementSystem : SystemBase
 {
     public static JudgementSystem Instance { get; private set; }
     public EntityManager entityManager;
     public NativeArray<int> currentArcFingers;
     public NativeArray<AABB2D> laneAABB2Ds;
-    public NativeArray<JudgeEntityRef> noteForTouch;
 
     public bool IsReady => currentArcFingers.IsCreated;
-
     public EntityQuery tapQuery, arcQuery, arctapQuery, holdQuery;
-
     public const float arcLeniencyGeneral = 2f;
+
+    BeginSimulationEntityCommandBufferSystem beginSimulationEntityCommandBufferSystem;
+
     protected override void OnCreate()
     {
         Instance = this;
         var defaultWorld = World.DefaultGameObjectInjectionWorld;
         entityManager = defaultWorld.EntityManager;
-        
+
+        beginSimulationEntityCommandBufferSystem = World.GetOrCreateSystem<BeginSimulationEntityCommandBufferSystem>();
+
         laneAABB2Ds = new NativeArray<AABB2D>(
             new AABB2D[] {
                 new AABB2D(new float2(Convert.TrackToX(1), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
@@ -72,7 +44,7 @@ public class JudgementSystem : SystemBase
             Allocator.Persistent
             );
 
-        holdQuery =  GetEntityQuery(
+        holdQuery = GetEntityQuery(
                 typeof(HoldFunnelPtr),
                 typeof(ChartTime),
                 typeof(Track),
@@ -102,8 +74,6 @@ public class JudgementSystem : SystemBase
                 typeof(StrictArcJudge),
                 typeof(WithinJudgeRange)
             );
-
-        noteForTouch = new NativeArray<JudgeEntityRef>(InputManager.MaxTouches, Allocator.Persistent);
     }
     public void SetupColors()
     {
@@ -113,7 +83,6 @@ public class JudgementSystem : SystemBase
     {
         currentArcFingers.Dispose();
         laneAABB2Ds.Dispose();
-        noteForTouch.Dispose();
     }
     protected override unsafe void OnUpdate()
     {
@@ -124,10 +93,114 @@ public class JudgementSystem : SystemBase
         //Get data from statics
         int currentTime = (int)(Conductor.Instance.receptorTime / 1000f);
 
-        //Setup noteForTouch 
-        for (int i = 0; i < noteForTouch.Length; i++)
+        //Command buffering
+        var commandBuffer = beginSimulationEntityCommandBufferSystem.CreateCommandBuffer();
+        int maxPureCount = ScoreManager.Instance.maxPureCount,
+            latePureCount = ScoreManager.Instance.latePureCount,
+            earlyPureCount = ScoreManager.Instance.earlyPureCount,
+            lateFarCount = ScoreManager.Instance.lateFarCount,
+            earlyFarCount = ScoreManager.Instance.earlyFarCount,
+            lostCount = ScoreManager.Instance.lostCount,
+            combo = ScoreManager.Instance.currentCombo;
+
+        //Execute for each touch
+        for (int i = 0; i < InputManager.MaxTouches; i++)
         {
-            noteForTouch[i] = JudgeEntityRef.Empty();
+            TouchPoint touch = InputManager.Get(i);
+            bool tapped = false;
+
+            //Track taps
+            if (touch.trackPlaneValid) {
+
+                //Hold notes
+                Entities.WithAll<WithinJudgeRange>().ForEach(
+
+                    (Entity entity, ref HoldLastJudge held, ref ChartHoldTime holdTime, ref HoldLastJudge lastJudge, in ChartTimeSpan span, in ChartPosition position)
+
+                        =>
+
+                    {
+                        //Invalidate holds if they require a tap and this touch has been parsed as a tap already
+                        if (!held.value && tapped) return;
+
+                        //Invalidate holds out of time range
+                        if (!holdTime.CheckStart(Constants.FarWindow)) return;
+
+                        //Disable judgenotes
+                        void Disable()
+                        {
+                            commandBuffer.RemoveComponent<WithinJudgeRange>(entity);
+                            commandBuffer.AddComponent<PastJudgeRange>(entity);
+                        }
+
+                        //Increment or kill holds out of time for judging
+                        if (holdTime.CheckOutOfRange(currentTime))
+                        {
+                            lostCount++;
+                            combo = 0;
+
+                            lastJudge.value = false;
+
+                            if (!holdTime.Increment(span)) Disable();
+                        }
+
+                        //Invalidate holds not in range
+                        if (!laneAABB2Ds[position.lane].CollidesWith(touch.trackPlane)) return;
+
+                        //Holds not requiring a tap
+                        if(held.value)
+                        {
+                            //If valid:
+                            if (touch.status != TouchPoint.Status.RELEASED)
+                            {
+                                maxPureCount++;
+                                combo++;
+
+                                lastJudge.value = true;
+
+                                if (!holdTime.Increment(span)) Disable();
+                            }
+                            //If invalid:
+                            else
+                            {
+                                held.value = false;
+                            }
+                        }
+                        //Holds requiring a tap
+                        else if(touch.status == TouchPoint.Status.TAPPED)
+                        {
+                            maxPureCount++;
+                            combo++;
+
+                            lastJudge.value = true;
+
+                            if (!holdTime.Increment(span)) Disable();
+
+                            tapped = true;
+                        }
+                    }
+
+                );
+
+                if (!tapped) {
+                    //Tap notes; no EntityReference, those only exist on arctaps
+                    Entities.WithAll<WithinJudgeRange>().WithNone<EntityReference>().ForEach(
+
+                        (Entity en, in ChartTime time, in ChartPosition position)
+
+                            =>
+
+                        {
+                            //Invalidate if already tapped
+                            if (tapped) return;
+    
+                            //Invalidate if... i cant think and im gonna stop here for now. im sorry
+                        }
+
+                    );
+                }
+
+            }
         }
 
         // Handle arc fingers once they are released //
@@ -198,7 +271,7 @@ public class JudgementSystem : SystemBase
                     linearPosGroup.endTime >= InputManager.Instance.touchPoints[i].time &&
                     InputManager.Instance.touchPoints[i].status != TouchPoint.Status.RELEASED &&
                     InputManager.Instance.touchPoints[i].inputPlaneValid &&
-                    InputManager.Instance.touchPoints[i].inputPlane.CollidingWith(
+                    InputManager.Instance.touchPoints[i].inputPlane.CollidesWith(
                         new AABB2D(
                             linearPosGroup.PosAt(currentTime),
                             new float2(arcLeniencyGeneral)
@@ -282,7 +355,7 @@ public class JudgementSystem : SystemBase
                     chartTime.value - InputManager.Instance.touchPoints[i].time <= Constants.FarWindow &&
                     InputManager.Instance.touchPoints[i].time - chartTime.value >= Constants.FarWindow &&
                     InputManager.Instance.touchPoints[i].trackPlaneValid &&
-                    InputManager.Instance.touchPoints[i].trackPlane.CollidingWith(laneAABB2Ds[track.Value]);
+                    InputManager.Instance.touchPoints[i].trackPlane.CollidesWith(laneAABB2Ds[track.value]);
 
                 if (holdFunnelPtrD->isHit)
                 {
@@ -358,7 +431,7 @@ public class JudgementSystem : SystemBase
                     noteForTouch[i].time < chartTime.value &&
                     InputManager.Instance.touchPoints[i].status == TouchPoint.Status.TAPPED &&
                     InputManager.Instance.touchPoints[i].inputPlaneValid &&
-                    InputManager.Instance.touchPoints[i].inputPlane.CollidingWith(
+                    InputManager.Instance.touchPoints[i].inputPlane.CollidesWith(
                         new AABB2D(
                             singlePosition.Value,
                             new float2(arcLeniencyGeneral)
@@ -406,7 +479,7 @@ public class JudgementSystem : SystemBase
                    !entityManager.Exists(noteForTouch[i].entity) &&
                     noteForTouch[i].time < chartTime.value &&
                     InputManager.Instance.touchPoints[i].trackPlaneValid &&
-                    InputManager.Instance.touchPoints[i].trackPlane.CollidingWith(laneAABB2Ds[track.Value])
+                    InputManager.Instance.touchPoints[i].trackPlane.CollidesWith(laneAABB2Ds[track.value])
                 )
                 {
                     //Check for judge later

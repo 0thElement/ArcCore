@@ -61,8 +61,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     Value = 1f
                 });
 
-                //Appear/disappear time
+                entityManager.SetComponentData<HoldIsHeld>(holdEntity, new HoldIsHeld(false));
+                entityManager.SetComponentData<HoldLastJudge>(holdEntity, new HoldLastJudge(false));
 
+                //Appear and disappear time
                 int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(startFloorPosition + Constants.RenderFloorPositionRange, 0);
                 int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(endFloorPosition - Constants.RenderFloorPositionRange, 0);
                 int appearTime = (t1 < t2) ? t1 : t2;
@@ -78,7 +80,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 ChartTimeSpan span = new ChartTimeSpan(hold.timing, hold.endTiming);
 
                 entityManager.SetComponentData(holdEntity, span);
-                entityManager.SetComponentData(holdEntity, new ChartHoldTime(hold.timing, append));
+                entityManager.SetComponentData(holdEntity, new ChartHoldTime(span, append));
                 entityManager.SetComponentData(holdEntity, new ChartPosition(hold.track));
 
                 //Add combo

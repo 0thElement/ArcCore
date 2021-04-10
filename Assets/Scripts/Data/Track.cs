@@ -4,6 +4,6 @@ namespace ArcCore.Data
 {
     public struct Track : IComponentData
     {
-        public int Value;
+        public int value;
     }
 }

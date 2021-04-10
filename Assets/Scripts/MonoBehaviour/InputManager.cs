@@ -37,7 +37,6 @@ namespace ArcCore.MonoBehaviours
             this.fingerId = fingerId;
         }
 
-        [BurstDiscard]
         public void MutatePlanes(AABB2D? inputPlane, AABB2D? trackPlane)
         {
             this.inputPlane = inputPlane.GetValueOrDefault();
@@ -46,7 +45,6 @@ namespace ArcCore.MonoBehaviours
             trackPlaneValid = trackPlane != null;
         }
 
-        [BurstDiscard]
         public static TouchPoint FromNullables(AABB2D? inputPlane, AABB2D? trackPlane, int time, Status status, int fingerId)
             => new TouchPoint(
                 inputPlane.GetValueOrDefault(), inputPlane != null,
@@ -60,6 +58,7 @@ namespace ArcCore.MonoBehaviours
     public class InputManager : MonoBehaviour
     {
         public static InputManager Instance { get; private set; }
+        public static TouchPoint Get(int index) => Instance.touchPoints[index];
 
         public const int MaxTouches = 10;
 

@@ -23,7 +23,7 @@ namespace ArcCore.Utility
         public float MinY => Center.y - Extents.y;
         public float MaxY => Center.y + Extents.y;
 
-        public bool CollidingWith(AABB2D other)
+        public bool CollidesWith(AABB2D other)
             => MinX <= other.MaxX && MaxX >= other.MinX
             && MinY <= other.MaxY && MaxY >= other.MinY;
 

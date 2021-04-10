@@ -6,12 +6,12 @@ namespace ArcCore.Data
     [GenerateAuthoringComponent]
     public struct ChartHoldTime : IComponentData
     {
-        public double timeAccumulator;
+        public double time;
         public readonly double timeIncrement;
 
         public int iteration;
 
-        public ChartHoldTime(double acc, double inc) => (timeAccumulator, timeIncrement, iteration) = (acc, inc, 0);
+        public ChartHoldTime(ChartTimeSpan span, double inc) => (time, timeIncrement, iteration) = (span.start, inc, 0);
 
         /// <returns>
         /// <c>false</c> if the hold has reached its end
@@ -25,8 +25,15 @@ namespace ArcCore.Data
             //TODO: (CHECK WITH 0th)
             if (newacc + timeIncrement >= span.end) return false;
 
-            timeAccumulator = newacc;
+            time = newacc;
             return true;
         }
+
+        public bool CheckSpan(int currentTime, int leadin = Constants.LostWindow, int leadout = Constants.LostWindow)
+            => time - leadin <= currentTime && currentTime <= time + leadout;
+        public bool CheckStart(int currentTime, int leadin = Constants.LostWindow)
+            => time - leadin <= currentTime;
+        public bool CheckOutOfRange(int currentTime)
+            => time + Constants.FarWindow < currentTime;
     }
 }

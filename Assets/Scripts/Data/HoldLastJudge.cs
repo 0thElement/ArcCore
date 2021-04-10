@@ -3,10 +3,10 @@
 namespace ArcCore.Data
 {
     [GenerateAuthoringComponent]
-    public struct HoldIsHeld : IComponentData
+    public struct HoldLastJudge : IComponentData
     {
         public bool value;
-        public HoldIsHeld(bool v) 
+        public HoldLastJudge(bool v) 
             => value = v;
     }
 }
