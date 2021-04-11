@@ -95,6 +95,8 @@ public class JudgementSystem : SystemBase
 
         //Command buffering
         var commandBuffer = beginSimulationEntityCommandBufferSystem.CreateCommandBuffer();
+
+        //Score management data
         int maxPureCount = ScoreManager.Instance.maxPureCount,
             latePureCount = ScoreManager.Instance.latePureCount,
             earlyPureCount = ScoreManager.Instance.earlyPureCount,
@@ -103,6 +105,50 @@ public class JudgementSystem : SystemBase
             lostCount = ScoreManager.Instance.lostCount,
             combo = ScoreManager.Instance.currentCombo;
 
+        void JudgeLost()
+        {
+            lostCount++;
+            combo = 0;
+        }
+        void JudgeMaxPure()
+        {
+            maxPureCount++;
+            combo++;
+        }
+        void Judge(int time)
+        {
+            int timeDiff = time - currentTime;
+            if (timeDiff > Constants.FarWindow)
+            {
+                lostCount++;
+                combo = 0;
+            }
+            else if (timeDiff > Constants.PureWindow)
+            {
+                earlyFarCount++;
+                combo++;
+            }
+            else if (timeDiff > Constants.MaxPureWindow)
+            {
+                earlyPureCount++;
+                combo++;
+            }
+            else if (timeDiff > -Constants.MaxPureWindow)
+            {
+                JudgeMaxPure();
+            }
+            else if (timeDiff > -Constants.PureWindow)
+            {
+                latePureCount++;
+                combo++;
+            }
+            else
+            {
+                lateFarCount++;
+                combo++;
+            }
+        } 
+
         //Execute for each touch
         for (int i = 0; i < InputManager.MaxTouches; i++)
         {
@@ -110,7 +156,7 @@ public class JudgementSystem : SystemBase
             bool tapped = false;
 
             //Track taps
-            if (touch.trackPlaneValid) {
+            if (touch.TrackRangeValid) {
 
                 //Hold notes
                 Entities.WithAll<WithinJudgeRange>().ForEach(
@@ -136,16 +182,15 @@ public class JudgementSystem : SystemBase
                         //Increment or kill holds out of time for judging
                         if (holdTime.CheckOutOfRange(currentTime))
                         {
-                            lostCount++;
-                            combo = 0;
-
+                            JudgeLost();
                             lastJudge.value = false;
 
-                            if (!holdTime.Increment(span)) Disable();
+                            if (!holdTime.Increment(span)) 
+                                Disable();
                         }
 
-                        //Invalidate holds not in range
-                        if (!laneAABB2Ds[position.lane].CollidesWith(touch.trackPlane)) return;
+                        //Invalidate holds not in range; should also rule out all invalid data, i.e. positions with a lane of -1
+                        if (!touch.trackRange.Contains(position.lane)) return;
 
                         //Holds not requiring a tap
                         if(held.value)
@@ -153,12 +198,11 @@ public class JudgementSystem : SystemBase
                             //If valid:
                             if (touch.status != TouchPoint.Status.RELEASED)
                             {
-                                maxPureCount++;
-                                combo++;
-
+                                JudgeMaxPure();
                                 lastJudge.value = true;
 
-                                if (!holdTime.Increment(span)) Disable();
+                                if (!holdTime.Increment(span)) 
+                                    Disable();
                             }
                             //If invalid:
                             else
@@ -169,12 +213,11 @@ public class JudgementSystem : SystemBase
                         //Holds requiring a tap
                         else if(touch.status == TouchPoint.Status.TAPPED)
                         {
-                            maxPureCount++;
-                            combo++;
-
+                            JudgeMaxPure();
                             lastJudge.value = true;
 
-                            if (!holdTime.Increment(span)) Disable();
+                            if (!holdTime.Increment(span)) 
+                                Disable();
 
                             tapped = true;
                         }
@@ -186,21 +229,37 @@ public class JudgementSystem : SystemBase
                     //Tap notes; no EntityReference, those only exist on arctaps
                     Entities.WithAll<WithinJudgeRange>().WithNone<EntityReference>().ForEach(
 
-                        (Entity en, in ChartTime time, in ChartPosition position)
+                        (Entity entity, in ChartTime time, in ChartPosition position)
 
                             =>
 
                         {
                             //Invalidate if already tapped
                             if (tapped) return;
-    
-                            //Invalidate if... i cant think and im gonna stop here for now. im sorry
+
+                            //Increment or kill holds out of time for judging
+                            if (time.CheckOutOfRange(currentTime))
+                            {
+                                JudgeLost();
+                                entityManager.DestroyEntity(entity);
+                            }
+
+                            //Invalidate if not in range of a tap; should also rule out all invalid data, i.e. positions with a lane of -1
+                            if (!touch.trackRange.Contains(position.lane)) return;
+
+                            //Register tap lul
+                            Judge(time.value);
+                            tapped = true;
+
+                            //Destroy tap
+                            entityManager.DestroyEntity(entity);
                         }
 
                     );
                 }
 
             }
+            //ARCTAPS AND ARCS HERE!!!! CONSULT ABOUT ARCS SOON DUMMY
         }
 
         // Handle arc fingers once they are released //
@@ -270,7 +329,7 @@ public class JudgementSystem : SystemBase
                 if (linearPosGroup.startTime <= InputManager.Instance.touchPoints[i].time &&
                     linearPosGroup.endTime >= InputManager.Instance.touchPoints[i].time &&
                     InputManager.Instance.touchPoints[i].status != TouchPoint.Status.RELEASED &&
-                    InputManager.Instance.touchPoints[i].inputPlaneValid &&
+                    InputManager.Instance.touchPoints[i].InputPlaneValid &&
                     InputManager.Instance.touchPoints[i].inputPlane.CollidesWith(
                         new AABB2D(
                             linearPosGroup.PosAt(currentTime),
@@ -430,7 +489,7 @@ public class JudgementSystem : SystemBase
                    !entityManager.Exists(noteForTouch[i].entity) &&
                     noteForTouch[i].time < chartTime.value &&
                     InputManager.Instance.touchPoints[i].status == TouchPoint.Status.TAPPED &&
-                    InputManager.Instance.touchPoints[i].inputPlaneValid &&
+                    InputManager.Instance.touchPoints[i].InputPlaneValid &&
                     InputManager.Instance.touchPoints[i].inputPlane.CollidesWith(
                         new AABB2D(
                             singlePosition.Value,

@@ -18,39 +18,23 @@ namespace ArcCore.MonoBehaviours
         }
 
         public AABB2D inputPlane;
-        public bool   inputPlaneValid;
-        public AABB2D trackPlane;
-        public bool   trackPlaneValid;
+        public TrackRange trackRange;
+
+        public bool InputPlaneValid => !inputPlane.IsNone;
+        public bool TrackRangeValid => !trackRange.IsNone;
 
         public int time;
         public Status status;
         public int fingerId;
 
-        public TouchPoint(AABB2D inputPlane, bool inputPlaneValid, AABB2D trackPlane, bool trackPlaneValid, int time, Status status, int fingerId)
+        public TouchPoint(AABB2D inputPlane, TrackRange trackRange, int time, Status status, int fingerId)
         {
             this.inputPlane = inputPlane;
-            this.inputPlaneValid = inputPlaneValid;
-            this.trackPlane = trackPlane;
-            this.trackPlaneValid = trackPlaneValid;
+            this.trackRange = trackRange;
             this.time = time;
             this.status = status;
             this.fingerId = fingerId;
         }
-
-        public void MutatePlanes(AABB2D? inputPlane, AABB2D? trackPlane)
-        {
-            this.inputPlane = inputPlane.GetValueOrDefault();
-            inputPlaneValid = inputPlane != null;
-            this.trackPlane = trackPlane.GetValueOrDefault();
-            trackPlaneValid = trackPlane != null;
-        }
-
-        public static TouchPoint FromNullables(AABB2D? inputPlane, AABB2D? trackPlane, int time, Status status, int fingerId)
-            => new TouchPoint(
-                inputPlane.GetValueOrDefault(), inputPlane != null,
-                trackPlane.GetValueOrDefault(), trackPlane != null,
-                time, status, fingerId
-                );
     }
 
     //ORDERING IS IMPORTANT HERE; POLL_INPUT MUST OCCUR BEFORE ALL JUDGING.
@@ -80,6 +64,7 @@ namespace ArcCore.MonoBehaviours
 
         void OnDestroy()
         {
+            KillConnection();
             touchPoints.Dispose();
         }
 
@@ -123,12 +108,13 @@ namespace ArcCore.MonoBehaviours
             {
                 Touch t = Input.touches[i];
 
+                int pTime = (int)math.round((time - t.deltaTime) * 1000);
+
                 if (t.phase == TouchPhase.Began && FreeId(t.fingerId) && SafeIndex() != MaxTouches)
                 {
 
-                    (AABB2D? ipt, AABB2D? track) = ProjectionMaths.PerformInputRaycast(cameraCast, t);
-                    int timeT = (int)math.round((time - t.deltaTime) * 1000);
-                    touchPoints[safeIndex] = TouchPoint.FromNullables(ipt, track, timeT, TouchPoint.Status.TAPPED, t.fingerId);
+                    (AABB2D ipt, TrackRange track) = ProjectionMaths.PerformInputRaycast(cameraCast, t);
+                    touchPoints[safeIndex] = new TouchPoint(ipt, track, pTime, TouchPoint.Status.TAPPED, t.fingerId);
 
                 }
                 else if (t.phase == TouchPhase.Moved)
@@ -138,11 +124,11 @@ namespace ArcCore.MonoBehaviours
                     {
                         TouchPoint tp = touchPoints[index];
 
-                        (AABB2D? ipt, AABB2D? track) = ProjectionMaths.PerformInputRaycast(cameraCast, t);
-                        int timeT = (int)math.round((time - t.deltaTime) * 1000);
+                        (AABB2D ipt, TrackRange track) = ProjectionMaths.PerformInputRaycast(cameraCast, t);
 
-                        tp.MutatePlanes(ipt, track);
-                        tp.time = timeT;
+                        tp.inputPlane = ipt;
+                        tp.trackRange = track;
+                        tp.time = pTime;
                         tp.status = TouchPoint.Status.HELD;
 
                         touchPoints[index] = tp;
@@ -157,9 +143,7 @@ namespace ArcCore.MonoBehaviours
                     {
                         TouchPoint tp = touchPoints[index];
 
-                        int timeT = (int)math.round((time - t.deltaTime) * 1000);
-
-                        tp.time = timeT;
+                        tp.time = pTime;
                         tp.status = TouchPoint.Status.HELD;
 
                         touchPoints[index] = tp;

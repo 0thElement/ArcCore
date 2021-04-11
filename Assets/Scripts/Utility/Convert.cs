@@ -30,23 +30,12 @@ namespace ArcCore.Utility
     {
         public static float TrackToX(int track)
             => Constants.LaneWidth * 5 - Constants.LaneFullwidth * track;
-        /*{
-            switch(track)
-            {
-                case 1:
-                    return 6.375f;
-                case 2:
-                    return 2.125f;
-                case 3:
-                    return -2.125f;
-                case 4:
-                    return -6.375f;
-                default:
-                    return 6.375f;
-            }
-        }*/
+
         public static int XToTrack(float x)
-            => (int)math.round((x - Constants.LaneWidth) * Constants.LaneFullwidthRecip);
+            => ClampTrack((int)math.round((x - Constants.LaneWidth) * Constants.LaneFullwidthRecip));
+
+        public static int ClampTrack(int tr)
+            => math.clamp(tr, 1, 4);
 
         public static float O(float start, float end, float t) 
             => math.lerp(start, end, 1 - math.cos(math.PI / 2 * t));
