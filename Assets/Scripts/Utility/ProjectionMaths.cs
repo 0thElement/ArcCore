@@ -102,8 +102,8 @@ namespace ArcCore.Utility
                              distXProj + (projPosXZ.x - camPos.x) * TAN_EPSILON);
 
                     //Convert min and max to tracks
-                    int minTrack = Convert.XToTrack(xMin);
-                    int maxTrack = Convert.XToTrack(xMax);
+                    int minTrack = ArccoreConvert.XToTrack(xMin);
+                    int maxTrack = ArccoreConvert.XToTrack(xMax);
 
                     //Get track range
                     trackRange = new TrackRange(minTrack, maxTrack);

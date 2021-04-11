@@ -54,8 +54,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Entity tapEntity = entityManager.Instantiate(arcTapNoteEntityPrefab);
                 Entity shadowEntity = entityManager.Instantiate(shadowEntityPrefab);
 
-                float x = Convert.GetWorldX(arctap.position.x);
-                float y = Convert.GetWorldY(arctap.position.y);
+                float x = ArccoreConvert.GetWorldX(arctap.position.x);
+                float y = ArccoreConvert.GetWorldY(arctap.position.y);
                 const float z = 0;
 
                 entityManager.SetComponentData<Translation>(tapEntity, new Translation()
@@ -131,11 +131,11 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
             Entity lineEntity = entityManager.Instantiate(connectionLineEntityPrefab);
 
-            float x = Convert.GetWorldX(arctap.position.x);
-            float y = Convert.GetWorldY(arctap.position.y) - 0.5f;
+            float x = ArccoreConvert.GetWorldX(arctap.position.x);
+            float y = ArccoreConvert.GetWorldY(arctap.position.y) - 0.5f;
             const float z = 0;
 
-            float dx = Convert.TrackToX(tap.track) - x;
+            float dx = ArccoreConvert.TrackToX(tap.track) - x;
             float dy = -y;
 
             float3 direction = new float3(dx, dy, 0);

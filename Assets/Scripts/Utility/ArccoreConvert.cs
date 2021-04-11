@@ -26,7 +26,7 @@ namespace ArcCore.Utility
         reset
     }
 
-    public class Convert
+    public class ArccoreConvert
     {
         public static float TrackToX(int track)
             => Constants.LaneWidth * 5 - Constants.LaneFullwidth * track;

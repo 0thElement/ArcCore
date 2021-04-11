@@ -141,8 +141,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
                     float3 start;
                     float3 end = new float3(
-                        Convert.GetWorldX(arc.startX),
-                        Convert.GetWorldY(arc.startY),
+                        ArccoreConvert.GetWorldX(arc.startX),
+                        ArccoreConvert.GetWorldY(arc.startY),
                         Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
                     );
 
@@ -151,8 +151,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                         float t = (i + 1) * segmentLength;
                         start = end;
                         end = new float3(
-                            Convert.GetWorldX(Convert.GetXAt(t / duration, arc.startX, arc.endX, arc.easing)),
-                            Convert.GetWorldY(Convert.GetYAt(t / duration, arc.startY, arc.endY, arc.easing)),
+                            ArccoreConvert.GetWorldX(ArccoreConvert.GetXAt(t / duration, arc.startX, arc.endX, arc.easing)),
+                            ArccoreConvert.GetWorldY(ArccoreConvert.GetYAt(t / duration, arc.startY, arc.endY, arc.easing)),
                             Conductor.Instance.GetFloorPositionFromTiming((int)(arc.timing + t), arc.timingGroup)
                         );
 
@@ -161,8 +161,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
                     start = end;
                     end = new float3(
-                        Convert.GetWorldX(arc.endX),
-                        Convert.GetWorldY(arc.endY),
+                        ArccoreConvert.GetWorldX(arc.endX),
+                        ArccoreConvert.GetWorldY(arc.endY),
                         Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                     );
 
@@ -258,9 +258,9 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         {
             Entity heightEntity = entityManager.Instantiate(heightIndicatorEntityPrefab);
 
-            float height = Convert.GetWorldY(arc.startY) - 0.45f;
+            float height = ArccoreConvert.GetWorldY(arc.startY) - 0.45f;
 
-            float x = Convert.GetWorldX(arc.startX); 
+            float x = ArccoreConvert.GetWorldX(arc.startX); 
             float y = height / 2;
             const float z = 0;
 
@@ -316,8 +316,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Value = floorpos 
             });
 
-            float x = Convert.GetWorldX(arc.startX); 
-            float y = Convert.GetWorldY(arc.startY); 
+            float x = ArccoreConvert.GetWorldX(arc.startX); 
+            float y = ArccoreConvert.GetWorldY(arc.startY); 
             const float z = 0;
             entityManager.SetComponentData<Translation>(headEntity, new Translation()
             {
@@ -362,21 +362,21 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
                 float timePosEnd = math.min(timeF + Constants.FarWindow, arc.endTiming);
 
-                float arcStartX = Convert.GetWorldX(arc.startX);
-                float arcStartY = Convert.GetWorldY(arc.startY);
-                float arcEndX = Convert.GetWorldX(arc.endX);
-                float arcEndY = Convert.GetWorldY(arc.endY);
+                float arcStartX = ArccoreConvert.GetWorldX(arc.startX);
+                float arcStartY = ArccoreConvert.GetWorldY(arc.startY);
+                float arcEndX = ArccoreConvert.GetWorldX(arc.endX);
+                float arcEndY = ArccoreConvert.GetWorldY(arc.endY);
 
                 LinearPosGroup currentLpg = new LinearPosGroup()
                 {
                     startPosition = new float2(
-                        Convert.GetXAt(math.unlerp(arc.timing, arc.endTiming, timeF), arcStartX, arcEndX, arc.easing),
-                        Convert.GetYAt(math.unlerp(arc.timing, arc.endTiming, timeF), arcStartY, arcEndY, arc.easing)
+                        ArccoreConvert.GetXAt(math.unlerp(arc.timing, arc.endTiming, timeF), arcStartX, arcEndX, arc.easing),
+                        ArccoreConvert.GetYAt(math.unlerp(arc.timing, arc.endTiming, timeF), arcStartY, arcEndY, arc.easing)
                     ),
                     startTime = (int)timeF,
                     endPosition = new float2(
-                        Convert.GetXAt(math.unlerp(arc.timing, arc.endTiming, timePosEnd), arcStartX, arcEndX, arc.easing),
-                        Convert.GetYAt(math.unlerp(arc.timing, arc.endTiming, timePosEnd), arcStartY, arcEndY, arc.easing)
+                        ArccoreConvert.GetXAt(math.unlerp(arc.timing, arc.endTiming, timePosEnd), arcStartX, arcEndX, arc.easing),
+                        ArccoreConvert.GetYAt(math.unlerp(arc.timing, arc.endTiming, timePosEnd), arcStartY, arcEndY, arc.easing)
                     ),
                     endTime = (int)timePosEnd
                 };

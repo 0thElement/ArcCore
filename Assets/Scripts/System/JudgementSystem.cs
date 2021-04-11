@@ -7,6 +7,7 @@ using ArcCore.Data;
 using ArcCore.MonoBehaviours;
 using Unity.Rendering;
 using ArcCore.Utility;
+using ArcCore.Structs;
 using Unity.Mathematics;
 using ArcCore.MonoBehaviours.EntityCreation;
 using ArcCore;
@@ -22,7 +23,9 @@ public class JudgementSystem : SystemBase
 
     public bool IsReady => currentArcFingers.IsCreated;
     public EntityQuery tapQuery, arcQuery, arctapQuery, holdQuery;
+
     public const float arcLeniencyGeneral = 2f;
+    public static readonly float2 arctapBoxExtents = new float2(4f, 1f); //DUMMY VALUES
 
     BeginSimulationEntityCommandBufferSystem beginSimulationEntityCommandBufferSystem;
 
@@ -36,10 +39,10 @@ public class JudgementSystem : SystemBase
 
         laneAABB2Ds = new NativeArray<AABB2D>(
             new AABB2D[] {
-                new AABB2D(new float2(Convert.TrackToX(1), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
-                new AABB2D(new float2(Convert.TrackToX(2), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
-                new AABB2D(new float2(Convert.TrackToX(3), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
-                new AABB2D(new float2(Convert.TrackToX(4), 0), new float2(Constants.LaneWidth, float.PositiveInfinity))
+                new AABB2D(new float2(ArccoreConvert.TrackToX(1), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
+                new AABB2D(new float2(ArccoreConvert.TrackToX(2), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
+                new AABB2D(new float2(ArccoreConvert.TrackToX(3), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
+                new AABB2D(new float2(ArccoreConvert.TrackToX(4), 0), new float2(Constants.LaneWidth, float.PositiveInfinity))
                     },
             Allocator.Persistent
             );
@@ -95,6 +98,11 @@ public class JudgementSystem : SystemBase
 
         //Command buffering
         var commandBuffer = beginSimulationEntityCommandBufferSystem.CreateCommandBuffer();
+
+        //Particles
+        NativeList<SkyParticleAction>   skyParticleActions   = new NativeList<SkyParticleAction>  (Allocator.TempJob);
+        NativeList<ComboParticleAction> comboParticleActions = new NativeList<ComboParticleAction>(Allocator.TempJob);
+        NativeList<TrackParticleAction> trackParticleActions = new NativeList<TrackParticleAction>(Allocator.TempJob);
 
         //Score management data
         int maxPureCount = ScoreManager.Instance.maxPureCount,
@@ -259,7 +267,44 @@ public class JudgementSystem : SystemBase
                 }
 
             }
-            //ARCTAPS AND ARCS HERE!!!! CONSULT ABOUT ARCS SOON DUMMY
+
+            //Refuse to judge arctaps if above checks have found a tap already
+            if (!tapped)
+            {
+                //Tap notes; no EntityReference, those only exist on arctaps
+                Entities.WithAll<WithinJudgeRange>().ForEach(
+
+                    (Entity entity, in ChartTime time, in ChartPosition position, in EntityReference enRef)
+
+                        =>
+
+                    {
+                        //Invalidate if already tapped
+                        if (tapped) return;
+
+                        //Increment or kill holds out of time for judging
+                        if (time.CheckOutOfRange(currentTime))
+                        {
+                            JudgeLost();
+                            entityManager.DestroyEntity(entity);
+                            entityManager.DestroyEntity(enRef.Value);
+                        }
+
+                        //Invalidate if not in range of a tap; should also rule out all invalid data, i.e. positions with a lane of -1
+                        if (!touch.inputPlane.CollidesWith(new AABB2D(position.xy - arctapBoxExtents, position.xy + arctapBoxExtents))) 
+                            return;
+
+                        //Register tap lul
+                        Judge(time.value);
+                        tapped = true;
+
+                        //Destroy tap
+                        entityManager.DestroyEntity(entity);
+                    }
+
+                );
+            }
+
         }
 
         // Handle arc fingers once they are released //
@@ -376,211 +421,15 @@ public class JudgementSystem : SystemBase
         // Destroy array after use
         arcEns.Dispose();
 
-
-        // Handle all holds //
-        NativeArray<Entity> holdEns = holdQuery.ToEntityArray(Allocator.TempJob);
-        for (int en = 0; en < holdEns.Length; en++)
-        {
-            Entity entity = holdEns[en];
-
-            // Get entity components
-            HoldFunnelPtr holdFunnelPtr = entityManager.GetComponentData<HoldFunnelPtr>(entity);
-            ChartTime chartTime         = entityManager.GetComponentData<ChartTime>    (entity);
-            Track track                 = entityManager.GetComponentData<Track>        (entity);
-
-            HoldFunnel* holdFunnelPtrD = holdFunnelPtr.Value;
-
-            //Kill old entities and make lost
-            if (chartTime.value + Constants.FarWindow < currentTime)
-            {
-
-                ScoreManager.Instance.AddJudge(JudgeManage.JudgeType.LOST);
-
-                entityManager.AddComponent(entity, typeof(Disabled));
-
-                return;
-
-            }
-
-            //Reset hold value
-            if (currentTime > chartTime.value)
-            {
-                holdFunnelPtrD->visualState = LongnoteVisualState.JUDGED_LOST;
-            }
-
-            for (int i = 0; i < InputManager.Instance.touchPoints.Length; i++)
-            {
-                bool generalJudgeValid =
-                    chartTime.value - InputManager.Instance.touchPoints[i].time <= Constants.FarWindow &&
-                    InputManager.Instance.touchPoints[i].time - chartTime.value >= Constants.FarWindow &&
-                    InputManager.Instance.touchPoints[i].trackPlaneValid &&
-                    InputManager.Instance.touchPoints[i].trackPlane.CollidesWith(laneAABB2Ds[track.value]);
-
-                if (holdFunnelPtrD->isHit)
-                {
-                    if (generalJudgeValid)
-                    {
-
-                        if (InputManager.Instance.touchPoints[i].status == TouchPoint.Status.RELEASED)
-                        {
-                            holdFunnelPtrD->isHit = false;
-                        }
-                        else
-                        {
-
-                            ScoreManager.Instance.AddJudge(JudgeManage.JudgeType.MAX_PURE);
-
-                            entityManager.AddComponent(entity, typeof(Disabled));
-
-                        }
-
-                        return;
-
-                    }
-                }
-                else
-                {
-                    if (
-                       !entityManager.Exists(noteForTouch[i].entity) &&
-                        noteForTouch[i].time < chartTime.value &&
-                        InputManager.Instance.touchPoints[i].status == TouchPoint.Status.TAPPED &&
-                        generalJudgeValid
-                    )
-                    {
-                        //Check for judge later
-                        noteForTouch[i] = new JudgeEntityRef(entity, chartTime.value, JudgeEntityRef.EntityType.HOLD);
-                        return;
-                    }
-                }
-            }
-        }
-
-        // Destroy array after use
-        holdEns.Dispose();
+        // Repopulate managed data
+        ScoreManager.Instance.currentCombo = combo;
+        ScoreManager.Instance.maxPureCount = maxPureCount;
+        ScoreManager.Instance.latePureCount = latePureCount;
+        ScoreManager.Instance.lateFarCount = lateFarCount;
+        ScoreManager.Instance.earlyPureCount = earlyPureCount;
+        ScoreManager.Instance.earlyFarCount = earlyFarCount;
+        ScoreManager.Instance.lostCount = lostCount;
 
 
-        // Handle all arctaps //
-        NativeArray<Entity> arctapEns = arctapQuery.ToEntityArray(Allocator.TempJob);
-        for (int en = 0; en < arctapEns.Length; en++)
-        {
-            Entity entity = arctapEns[en];
-
-            // Get entity components
-            EntityReference entityReference = entityManager.GetComponentData<EntityReference>(entity);
-            ChartPosition singlePosition   = entityManager.GetComponentData<ChartPosition> (entity);
-            ChartTime chartTime             = entityManager.GetComponentData<ChartTime>      (entity);
-
-            //Kill all remaining entities if they are overaged
-            if (chartTime.value + Constants.FarWindow < currentTime)
-            {
-
-                ScoreManager.Instance.AddJudge(JudgeManage.JudgeType.LOST);
-
-                entityManager.AddComponent(entity, typeof(Disabled));
-                entityManager.AddComponent(entityReference.Value, typeof(Disabled));
-
-                return;
-
-            }
-
-            for (int i = 0; i < InputManager.Instance.touchPoints.Length; i++)
-            {
-                if (
-                   !entityManager.Exists(noteForTouch[i].entity) &&
-                    noteForTouch[i].time < chartTime.value &&
-                    InputManager.Instance.touchPoints[i].status == TouchPoint.Status.TAPPED &&
-                    InputManager.Instance.touchPoints[i].InputPlaneValid &&
-                    InputManager.Instance.touchPoints[i].inputPlane.CollidesWith(
-                        new AABB2D(
-                            singlePosition.Value,
-                            new float2(arcLeniencyGeneral)
-                            )
-                        ))
-                {
-                    //Check for judge later
-                    noteForTouch[i] = new JudgeEntityRef(entity, chartTime.value, JudgeEntityRef.EntityType.ARCTAP);
-                    return;
-                }
-            }
-        }
-
-        // Destroy array after use
-        arctapEns.Dispose();
-
-
-        // Handle all taps //
-        NativeArray<Entity> tapEns = tapQuery.ToEntityArray(Allocator.TempJob);
-        for (int en = 0; en < tapEns.Length; en++)
-        {
-            Entity entity = tapEns[en];
-
-            // Get entity components
-            EntityReference entityReference = entityManager.GetComponentData<EntityReference>(entity);
-            ChartTime chartTime             = entityManager.GetComponentData<ChartTime>      (entity);
-            Track track                     = entityManager.GetComponentData<Track>          (entity);
-
-            //Kill all remaining entities if they are overaged
-            if (chartTime.value + Constants.FarWindow < currentTime)
-            {
-
-                ScoreManager.Instance.AddJudge(JudgeManage.JudgeType.LOST);
-
-                entityManager.AddComponent(entity, typeof(Disabled));
-                entityManager.AddComponent(entityReference.Value, typeof(Disabled));
-
-                return;
-
-            }
-
-            for (int i = 0; i < InputManager.Instance.touchPoints.Length; i++)
-            {
-                if (
-                   !entityManager.Exists(noteForTouch[i].entity) &&
-                    noteForTouch[i].time < chartTime.value &&
-                    InputManager.Instance.touchPoints[i].trackPlaneValid &&
-                    InputManager.Instance.touchPoints[i].trackPlane.CollidesWith(laneAABB2Ds[track.value])
-                )
-                {
-                    //Check for judge later
-                    noteForTouch[i] = new JudgeEntityRef(entity, chartTime.value, JudgeEntityRef.EntityType.TAP);
-                    return;
-                }
-            }
-        }
-
-        // Destroy array after use
-        tapEns.Dispose();
-
-
-        // Complete code and find types //
-        for (int t = 0; t < noteForTouch.Length; t++)
-        {
-            if (!noteForTouch[t].exists) continue;
-
-            Entity minEntity = noteForTouch[t].entity;
-
-            if (noteForTouch[t].entityType == JudgeEntityRef.EntityType.HOLD)
-            {
-                HoldFunnelPtr holdFunnelPtr = entityManager.GetComponentData<HoldFunnelPtr>(minEntity);
-                holdFunnelPtr.Value->visualState = LongnoteVisualState.JUDGED_PURE;
-                entityManager.AddComponent(minEntity, typeof(Disabled));
-                ScoreManager.Instance.AddJudge(JudgeManage.JudgeType.MAX_PURE);
-            }
-            else
-            {
-                JudgeManage.JudgeType type = JudgeManage.GetType(currentTime - noteForTouch[t].time);
-                Entity entityReferenced = entityManager.GetComponentData<EntityReference>(minEntity).Value;
-
-                if(noteForTouch[t].entityType == JudgeEntityRef.EntityType.ARCTAP)
-                {
-                    // Destroy shadow
-                    entityManager.AddComponent(entityManager.GetComponentData<EntityReference>(entityReferenced).Value, typeof(Disabled));
-                }
-
-                entityManager.AddComponent(minEntity, typeof(Disabled));
-                entityManager.AddComponent(entityReferenced, typeof(Disabled));
-                ScoreManager.Instance.AddJudge(type);
-            }
-        }
     }
 }

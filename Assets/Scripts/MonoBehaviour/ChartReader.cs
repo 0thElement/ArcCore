@@ -369,8 +369,8 @@ namespace ArcCore.MonoBehaviours
 
                     float p = (float) (t - timing) / (endTiming - timing);
 
-                    float x = Convert.GetXAt(p, startX, endX, easing);
-                    float y = Convert.GetYAt(p, startY, endY, easing);
+                    float x = ArccoreConvert.GetXAt(p, startX, endX, easing);
+                    float y = ArccoreConvert.GetYAt(p, startY, endY, easing);
 
                     affArcTapList.Add(new AffArcTap()
                     {
