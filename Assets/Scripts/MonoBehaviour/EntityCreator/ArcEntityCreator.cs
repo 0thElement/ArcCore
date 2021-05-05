@@ -95,7 +95,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             List<Entity> createdJudgeEntities = new List<Entity>();
 
             //SET UP NEW JUDGES HEREEEEE
-            ArcJudge[][]
+            List<List<ArcJudge>> judges = new List<List<ArcJudge>>();
+            List<AffArc> rawArcs = new List<AffArc>();
 
             foreach (List<AffArc> listByColor in affArcList)
             {
@@ -136,8 +137,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     if (isHeadArc || arc.startY != arc.endY)
                         CreateHeightIndicator(arc, heightIndicatorColorMaterialInstance);
 
-                    ArcFunnel* arcFunnelPtr = CreateArcFunnelPtr();
-
                     //Generate arc segments and shadow segment(each segment is its own entity)
                     int duration = arc.endTiming - arc.timing;
                     int v1 = duration < 1000 ? 14 : 7;
@@ -162,7 +161,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                             Conductor.Instance.GetFloorPositionFromTiming((int)(arc.timing + t), arc.timingGroup)
                         );
 
-                        CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup, arcFunnelPtr);
+                        CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup);
                     }
 
                     start = end;
@@ -172,8 +171,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                         Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                     );
 
-                    CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup, arcFunnelPtr);
-                    CreateJudgeEntities(arc, colorId, arcFunnelPtr, createdJudgeEntities);
+                    CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup);
+                    CreateJudgeEntities(arc, colorId, createdJudgeEntities);
                     
                 }
 
@@ -187,7 +186,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             return &funnel;
         }
 
-        private unsafe void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end, int timingGroup, ArcFunnel* arcFunnelPtr)
+        private unsafe void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end, int timingGroup)
         {
             Entity arcInstEntity = entityManager.Instantiate(arcNoteEntityPrefab);
             Entity arcShadowEntity = entityManager.Instantiate(arcShadowEntityPrefab);
@@ -233,14 +232,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             //Shear along xy + scale along z matrix
             entityManager.SetComponentData<LocalToWorld>(arcInstEntity, ltwArc);
             entityManager.SetComponentData<LocalToWorld>(arcShadowEntity, ltwShadow);
-
-            ArcFunnelPtr afp = new ArcFunnelPtr()
-            {
-                Value = arcFunnelPtr
-            };
-
-            entityManager.SetComponentData<ArcFunnelPtr>(arcInstEntity, afp);
-            entityManager.SetComponentData<ArcFunnelPtr>(arcShadowEntity, afp);
 
             entityManager.SetComponentData<ShaderCutoff>(arcInstEntity, CutoffUtils.Unjudged);
             entityManager.SetComponentData<ShaderRedmix>(arcInstEntity, new ShaderRedmix() { Value = 0f });
@@ -345,7 +336,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.SetComponentData<ShaderCutoff>(headEntity, CutoffUtils.Unjudged);
         }
 
-        private unsafe void CreateJudgeEntities(AffArc arc, int colorId, ArcFunnel* arcFunnelPtr, List<Entity> createdJudgeEntities)
+        private unsafe void CreateJudgeEntities(AffArc arc, int colorId, List<Entity> createdJudgeEntities)
         {
             float timeF = arc.timing;
             int timingEventIdx = Conductor.Instance.GetTimingEventIndexFromTiming(arc.timing, arc.timingGroup);

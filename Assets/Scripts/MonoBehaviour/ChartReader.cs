@@ -62,6 +62,10 @@ namespace ArcCore.MonoBehaviours
                         startY, endY, easing
                     )
                );
+
+        public const float RADIUS = 1.5f;
+        public Circle2D ColliderAt(int time)
+            => new Circle2D(PositionAt(time), RADIUS);
     }
 
     public struct AffTrace

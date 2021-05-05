@@ -84,8 +84,9 @@ public class JudgementSystem : SystemBase
     }
     public void SetupColors()
     {
-        arcFingers = new NativeArray<int>(utils.new_fill_aclen(-1), Allocator.Persistent);
-        arcStates = new NativeArray<ArcCompleteState>(utils.new_fill_aclen(new ArcCompleteState(ArcState.Normal)), Allocator.Persistent);
+        arcFingers = new NativeArray<int>(utils.newarr_fill_aclen(-1), Allocator.Persistent);
+        arcStates = new NativeArray<ArcCompleteState>(utils.newarr_fill_aclen(new ArcCompleteState(ArcState.Normal)), Allocator.Persistent);
+        rawArcVIdxs = new NativeArray<int>(rawArcs.Length, Allocator.Persistent);
     }
     protected override void OnDestroy()
     {
@@ -326,21 +327,97 @@ After:
 
                 );
             }
+        }
 
-            // Handle all arcs //
-            Job.WithCode(
+        NativeArray<TouchPoint> touchpoints = InputManager.Instance.touchPoints;
 
-                delegate ()
+        // Handle all arcs //
+        Job.WithBurst().WithCode(
+
+            delegate ()
+            {
+                for (int c = 0; c < arcJudges.RowCount; c++)
                 {
-                    for (int c = 0; c < arcJudges.RowCount; c++)
+                    //Label to go to start of arc logic again
+                    START_LOOP:
+
+                    if (!arcJudges.HasCurrent(c)) continue;
+                    ArcJudge cjudge = arcJudges.Current(c);
+
+                    if (cjudge.time <= currentTime) //NO LEAD-IN WIGGLE ROOM
                     {
-                        if()
+                        //if an arc judge has expired:
+                        lostCount++;
+                        combo = 0;
+
+                        //move to next if applicable
+                        if (arcJudges.MoveNext(c)) goto START_LOOP;
+                    }
+
+                    if (cjudge.time <= currentTime + Constants.FarWindow)
+                    {
+                        //if judge is in range:
+                        Circle2D cCollider = rawArcs[cjudge.rawArcIdx].ColliderAt(currentTime);
+
+                        bool isCorrectTouch = false; //will this touch make arc red
+                        int touchIdx = -1; //which touch?
+                        for (int t = 0; t < touchpoints.Length; t++)
+                        {
+                            if (cCollider.CollidesWith(touchpoints[t].inputPlane))
+                            {
+                                if (touchpoints[t].fingerId == -1 || touchpoints[t].fingerId == arcFingers[c])
+                                {
+                                    touchIdx = t;
+                                    isCorrectTouch = true;
+                                    break;
+                                }
+                                else
+                                {
+                                    touchIdx = t;
+                                }
+                            }
+                        }
+
+                        if (touchIdx != -1)
+                        {
+                            //IF TOUCH WAS CORRECT FINGER
+                            TouchPoint touch = touchpoints[touchIdx];
+
+                            if (isCorrectTouch && arcStates[c].state != ArcState.Red)
+                            {
+                                //IS VALID TOUCH
+                                if (touch.status == TouchPoint.Status.RELEASED)
+                                {
+                                    //RELEASED MID-ARC
+                                    arcStates[c] = new ArcCompleteState(arcStates[c], ArcState.Red);
+                                    arcFingers[c] = -1;
+
+                                    lostCount++;
+                                    combo = 0;
+                                }
+                                else
+                                {
+                                    //CORRECT JUDGE
+                                    maxPureCount++;
+                                    combo = 0;
+
+                                    arcJudges.MoveNext(c);
+                                }
+                            }
+                            else
+                            {
+                                //IS INVALID TOUCH
+                                arcStates[c] = new ArcCompleteState(arcStates[c], ArcState.Red);
+
+                                lostCount++;
+                                combo = 0;
+                            }
+                        }
                     }
                 }
+            }
 
-            ).Run();
-
-        }
+        ).Run();
 
         // Repopulate managed data
         ScoreManager.Instance.currentCombo = combo;

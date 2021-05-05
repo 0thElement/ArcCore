@@ -18,26 +18,18 @@ public class ShaderParamsApplySystem : SystemBase
         EntityManager entityManager = EntityManager;
         int currentTime = Conductor.Instance.receptorTime;
 
-        //ARCS
-        Entities.WithAll<WithinJudgeRange>().ForEach(
+        NativeArray<ArcCompleteState> arcStates = JudgementSystem.Instance.arcStates;
 
-            (ref ShaderCutoff cutoff, ref ShaderRedmix redmix, in ArcFunnelPtr arcFunnelPtr)
+        //ARCS
+        Entities.WithNone<Translation>().ForEach(
+
+            (ref ShaderCutoff cutoff, ref ShaderRedmix redmix, in ColorID color)
 
                 =>
 
             {
-                ArcFunnel* arcFunnelPtrD = arcFunnelPtr.Value;
-
-                if (arcFunnelPtrD->isRed)
-                {
-                    redmix.Value = math.min(redmix.Value + 0.08f, 1);
-                }
-                else
-                {
-                    redmix.Value = 0;
-                }
-
-                cutoff.Value = (float)arcFunnelPtrD->visualState;
+                redmix.Value = arcStates[color.Value].redRoll;
+                cutoff.Value = arcStates[color.Value].alphaRoll;
             }
 
         )
@@ -45,7 +37,7 @@ public class ShaderParamsApplySystem : SystemBase
             .Schedule();
 
         //TRACES
-        Entities.WithAll<WithinJudgeRange>().ForEach(
+        Entities.WithNone<Translation>().ForEach(
 
             (ref ShaderCutoff cutoff, in ChartTime time)
 
@@ -60,7 +52,7 @@ public class ShaderParamsApplySystem : SystemBase
             .Schedule();
 
         //HOLDS
-        Entities.WithAll<WithinJudgeRange>().WithNone<Translation>().ForEach(
+        Entities.ForEach(
 
             (ref ShaderCutoff cutoff, in HoldFunnelPtr holdFunnelPtr)
 

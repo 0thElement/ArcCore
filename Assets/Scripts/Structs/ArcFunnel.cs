@@ -132,6 +132,7 @@ public struct NativeMatrIterator<T> : IDisposable where T: struct
 
     public T Current(int row) => this[row, indices[row]];
     public T SetCurrent(int row, T value) => this[row, indices[row]] = value;
+    public bool HasCurrent(int row) => indices[row] >= startIndices[row + 1];
 
     public T this[int r, int c]
     {
