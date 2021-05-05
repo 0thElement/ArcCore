@@ -33,6 +33,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         private int redColorShaderId;
         public EntityArchetype arcJudgeArchetype { get; private set; }
 
+        public static int ColorCount => Instance.arcColors.Length;
+
         /// <summary>
         /// Time between two judge points of a similar area and differing colorIDs in which both points will be set as unscrict
         /// </summary>
@@ -91,6 +93,10 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         {
             int colorId=0;
             List<Entity> createdJudgeEntities = new List<Entity>();
+
+            //SET UP NEW JUDGES HEREEEEE
+            ArcJudge[][]
+
             foreach (List<AffArc> listByColor in affArcList)
             {
                 listByColor.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });

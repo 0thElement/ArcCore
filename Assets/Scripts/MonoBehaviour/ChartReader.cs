@@ -50,6 +50,18 @@ namespace ArcCore.MonoBehaviours
         public float startY;
         public float endY;
         public int timingGroup;
+
+        public float2 PositionAt(int time)
+            => new float2(
+                    ArccoreConvert.GetXAt(
+                        math.unlerp(time, timing, endTiming),
+                        startX, endX, easing
+                    ),
+                    ArccoreConvert.GetYAt(
+                        math.unlerp(time, timing, endTiming),
+                        startY, endY, easing
+                    )
+               );
     }
 
     public struct AffTrace

@@ -18,14 +18,18 @@ public class JudgementSystem : SystemBase
 {
     public static JudgementSystem Instance { get; private set; }
     public EntityManager entityManager;
-    public NativeArray<int> currentArcFingers;
-    public NativeArray<AABB2D> laneAABB2Ds;
+    public NativeArray<Rect2D> laneAABB2Ds;
 
-    public bool IsReady => currentArcFingers.IsCreated;
+    public bool IsReady => arcFingers.IsCreated;
     public EntityQuery tapQuery, arcQuery, arctapQuery, holdQuery;
 
     public const float arcLeniencyGeneral = 2f;
     public static readonly float2 arctapBoxExtents = new float2(4f, 1f); //DUMMY VALUES
+
+    public NativeMatrIterator<ArcJudge> arcJudges;
+    public NativeArray<ArcCompleteState> arcStates;
+    public NativeArray<int> arcFingers;
+    public NativeArray<AffArc> rawArcs;
 
     BeginSimulationEntityCommandBufferSystem beginSimulationEntityCommandBufferSystem;
 
@@ -37,12 +41,12 @@ public class JudgementSystem : SystemBase
 
         beginSimulationEntityCommandBufferSystem = World.GetOrCreateSystem<BeginSimulationEntityCommandBufferSystem>();
 
-        laneAABB2Ds = new NativeArray<AABB2D>(
-            new AABB2D[] {
-                new AABB2D(new float2(ArccoreConvert.TrackToX(1), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
-                new AABB2D(new float2(ArccoreConvert.TrackToX(2), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
-                new AABB2D(new float2(ArccoreConvert.TrackToX(3), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
-                new AABB2D(new float2(ArccoreConvert.TrackToX(4), 0), new float2(Constants.LaneWidth, float.PositiveInfinity))
+        laneAABB2Ds = new NativeArray<Rect2D>(
+            new Rect2D[] {
+                new Rect2D(new float2(ArccoreConvert.TrackToX(1), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
+                new Rect2D(new float2(ArccoreConvert.TrackToX(2), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
+                new Rect2D(new float2(ArccoreConvert.TrackToX(3), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
+                new Rect2D(new float2(ArccoreConvert.TrackToX(4), 0), new float2(Constants.LaneWidth, float.PositiveInfinity))
                     },
             Allocator.Persistent
             );
@@ -80,11 +84,11 @@ public class JudgementSystem : SystemBase
     }
     public void SetupColors()
     {
-        currentArcFingers = new NativeArray<int>(ArcEntityCreator.Instance.arcColors.Length, Allocator.Persistent);
+        arcFingers = new NativeArray<int>(utils.new_fill_aclen(-1), Allocator.Persistent);
+        arcStates = new NativeArray<ArcCompleteState>(utils.new_fill_aclen(new ArcCompleteState(ArcState.Normal)), Allocator.Persistent);
     }
     protected override void OnDestroy()
     {
-        currentArcFingers.Dispose();
         laneAABB2Ds.Dispose();
     }
     protected override unsafe void OnUpdate()
@@ -155,7 +159,18 @@ public class JudgementSystem : SystemBase
                 lateFarCount++;
                 combo++;
             }
-        } 
+        }
+
+        //Clean up arc fingers
+        for (int c = 0; c < ArcEntityCreator.ColorCount; c++)
+        {
+            if (arcJudges.PeekAhead(c, 1).time > currentTime + Constants.FarWindow)
+            {
+                arcFingers[c] = -1;
+                if (arcStates[c].state == ArcState.Red) 
+                    arcStates[c] = new ArcCompleteState(arcStates[c], ArcState.Unheld);
+            }
+        }
 
         //Execute for each touch
         for (int i = 0; i < InputManager.MaxTouches; i++)
@@ -274,7 +289,7 @@ public class JudgementSystem : SystemBase
                 //Tap notes; no EntityReference, those only exist on arctaps
                 Entities.WithAll<WithinJudgeRange>().ForEach(
 
-                    (Entity entity, in ChartTime time, in ChartPosition position, in EntityReference enRef)
+                    ((Entity entity, in ChartTime time, in ChartPosition position, in EntityReference enRef)
 
                         =>
 
@@ -291,7 +306,14 @@ public class JudgementSystem : SystemBase
                         }
 
                         //Invalidate if not in range of a tap; should also rule out all invalid data, i.e. positions with a lane of -1
+
+/* Unmerged change from project 'Assembly-CSharp.Player'
+Before:
                         if (!touch.inputPlane.CollidesWith(new AABB2D(position.xy - arctapBoxExtents, position.xy + arctapBoxExtents))) 
+After:
+                        if (!touch.inputPlane.CollidesWith(new ArcCore.Utility.AABB2D(position.xy - arctapBoxExtents, position.xy + arctapBoxExtents))) 
+*/
+                        if (!touch.inputPlane.CollidesWith((Rect2D)new Rect2D(position.xy - arctapBoxExtents, position.xy + arctapBoxExtents))) 
                             return;
 
                         //Register tap lul
@@ -300,126 +322,25 @@ public class JudgementSystem : SystemBase
 
                         //Destroy tap
                         entityManager.DestroyEntity(entity);
-                    }
+                    })
 
                 );
             }
 
-        }
+            // Handle all arcs //
+            Job.WithCode(
 
-        // Handle arc fingers once they are released //
-        for(int i = 0; i < currentArcFingers.Length; i++)
-        {
-            if(currentArcFingers[i] != -1)
-            {
-                bool remove = true;
-                for(int j = 0; j < InputManager.Instance.touchPoints.Length; j++)
+                delegate ()
                 {
-                    bool statusIsReleased = InputManager.Instance.touchPoints[j].status == TouchPoint.Status.RELEASED;
-                    if (InputManager.Instance.touchPoints[j].fingerId == currentArcFingers[i])
+                    for (int c = 0; c < arcJudges.RowCount; c++)
                     {
-                        if (!statusIsReleased)
-                        {
-                            remove = false;
-                        }
-                        break;
+                        if()
                     }
                 }
 
-                if(remove)
-                {
-                    currentArcFingers[i] = -1;
-                }
-            }
+            ).Run();
+
         }
-
-        // Handle all arcs //
-        NativeArray<Entity> arcEns = arcQuery.ToEntityArray(Allocator.TempJob);
-        for (int en = 0; en < arcEns.Length; en++)
-        {
-            Entity entity = arcEns[en];
-
-            // Get entity components
-            ArcFunnelPtr arcFunnelPtr     = entityManager.GetComponentData<ArcFunnelPtr>  (entity);
-            ColorID colorID               = entityManager.GetComponentData<ColorID>       (entity);
-            LinearPosGroup linearPosGroup = entityManager.GetComponentData<LinearPosGroup>(entity);
-            StrictArcJudge strictArcJudge = entityManager.GetComponentData<StrictArcJudge>(entity);
-
-            // Get arc funnel pointer to allow indirect struct access
-            ArcFunnel* arcFunnelPtrD = arcFunnelPtr.Value;
-
-            // Kill all points that have passed
-            if (linearPosGroup.endTime < currentTime)
-            {
-
-                arcFunnelPtrD->visualState =
-                    arcFunnelPtrD->isHit ?
-                    LongnoteVisualState.JUDGED_PURE :
-                    LongnoteVisualState.JUDGED_LOST;
-
-                ScoreManager.Instance.AddJudge(JudgeManage.JudgeType.LOST);
-                //PARTICLE MANAGEMENT HERE OR IN SCORE MANAGER
-
-                entityManager.AddComponent(entity, typeof(Disabled));
-
-                return;
-
-            }
-
-            // Loop through all touch points
-            for (int i = 0; i < InputManager.Instance.touchPoints.Length; i++)
-            {
-
-                // Arc hit by finger
-                if (linearPosGroup.startTime <= InputManager.Instance.touchPoints[i].time &&
-                    linearPosGroup.endTime >= InputManager.Instance.touchPoints[i].time &&
-                    InputManager.Instance.touchPoints[i].status != TouchPoint.Status.RELEASED &&
-                    InputManager.Instance.touchPoints[i].InputPlaneValid &&
-                    InputManager.Instance.touchPoints[i].inputPlane.CollidesWith(
-                        new AABB2D(
-                            linearPosGroup.PosAt(currentTime),
-                            new float2(arcLeniencyGeneral)
-                            )
-                        ))
-                {
-
-                    // Set hit to true
-                    arcFunnelPtrD->isHit = true;
-
-                    // Set red based on current finger id
-                    arcFunnelPtrD->isRed =
-                       (InputManager.Instance.touchPoints[i].fingerId != currentArcFingers[colorID.Value] &&
-                        currentArcFingers[colorID.Value] != -1) || !strictArcJudge.Value;
-
-                    // If the point not is strict, remove the current finger id to allow for switching
-                    if (!strictArcJudge.Value)
-                    {
-                        currentArcFingers[colorID.Value] = -1;
-                    }
-                    // If there is no finger currently, allow there to be a new one permitted that the arc is not hit
-                    else if (currentArcFingers[colorID.Value] != InputManager.Instance.touchPoints[i].fingerId && !arcFunnelPtrD->isHit)
-                    {
-                        currentArcFingers[colorID.Value] = InputManager.Instance.touchPoints[i].fingerId;
-                    }
-
-                    // Kill arc judger
-                    if (arcFunnelPtrD->isRed)
-                    {
-                        ScoreManager.Instance.AddJudge(JudgeManage.JudgeType.LOST);
-                    }
-                    else
-                    {
-                        ScoreManager.Instance.AddJudge(JudgeManage.JudgeType.MAX_PURE);
-                    }
-
-                    entityManager.AddComponent(entity, typeof(Disabled));
-
-                }
-            }
-        }
-
-        // Destroy array after use
-        arcEns.Dispose();
 
         // Repopulate managed data
         ScoreManager.Instance.currentCombo = combo;

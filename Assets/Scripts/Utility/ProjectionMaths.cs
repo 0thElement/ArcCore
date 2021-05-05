@@ -20,7 +20,7 @@ namespace ArcCore.Utility
         public static float DotYZ(this float3 a, float3 b)
            => a.y * b.y + a.z * b.z;
 
-        public static (AABB2D inputPlane, TrackRange trackRange) PerformInputRaycast(Camera cam, Touch touch)
+        public static (Rect2D inputPlane, TrackRange trackRange) PerformInputRaycast(Camera cam, Touch touch)
         {
             Ray baseRay = cam.ScreenPointToRay(touch.position);
 
@@ -28,13 +28,13 @@ namespace ArcCore.Utility
             float3 camToOrigin = -camPos;
 
             //-GET AABB2D FOR INPUT PLANE-//
-            AABB2D inputPlane;
+            Rect2D inputPlane;
 
             //Edge case: tap will never collide with plane
             //Multiplication allows for simultaneous checks for no z difference between camera and origin, and invalid z signs
             if (camToOrigin.z * baseRay.direction.z <= 0)
             {
-                inputPlane = AABB2D.none;
+                inputPlane = Rect2D.none;
             }
             else
             {
@@ -63,7 +63,7 @@ namespace ArcCore.Utility
                              distYProj + (projPosXY.y - camPos.y) * TAN_EPSILON);
 
                 //Input plane
-                inputPlane = new AABB2D(new float2(xMax, yMax), new float2(xMin, yMin));
+                inputPlane = new Rect2D(new float2(xMax, yMax), new float2(xMin, yMin));
             }
 
             //-GET TRACK RANGE-//
