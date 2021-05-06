@@ -2,9 +2,9 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
-using ArcCore.Data;
-using ArcCore.MonoBehaviours;
-using ArcCore.Tags;
+using ArcCore.Components;
+using ArcCore.Behaviours;
+using ArcCore.Components.Tags;
 
 [UpdateInGroup(typeof(InitializationSystemGroup))]
 [UpdateAfter(typeof(ChunkScopingSystem))]

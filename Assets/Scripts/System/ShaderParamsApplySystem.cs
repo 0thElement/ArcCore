@@ -4,10 +4,10 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
-using ArcCore.Data;
-using ArcCore.MonoBehaviours;
-using ArcCore.Tags;
+using ArcCore.Components;
+using ArcCore.Behaviours;
 using Unity.Rendering;
+using ArcCore.Structs;
 
 [UpdateAfter(typeof(JudgementSystem))]
 public class ShaderParamsApplySystem : SystemBase
@@ -29,7 +29,7 @@ public class ShaderParamsApplySystem : SystemBase
 
             {
                 redmix.Value = arcStates[color.Value].redRoll;
-                cutoff.Value = arcStates[color.Value].alphaRoll;
+                cutoff.Value = arcStates[color.Value].alphaRoll; //pls fix 0
             }
 
         )
@@ -54,7 +54,7 @@ public class ShaderParamsApplySystem : SystemBase
         //HOLDS
         Entities.ForEach(
 
-            (ref ShaderCutoff cutoff, in HoldFunnelPtr holdFunnelPtr)
+            (ref ShaderCutoff cutoff, in HoldFunnelPtr holdFunnelPtr) //wtf is this garbage. pls talk to me to find out
 
                 =>
 

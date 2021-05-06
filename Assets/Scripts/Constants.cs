@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ArcCore
+﻿namespace ArcCore
 {
     public static class Constants
     {
@@ -25,5 +19,6 @@ namespace ArcCore
 
         public const float LaneFullwidthRecip = 1 / LaneFullwidth;
 
+        public const float ArcColliderRadius = 1.5f;
     }
 }

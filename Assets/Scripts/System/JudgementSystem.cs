@@ -3,22 +3,23 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Transforms;
-using ArcCore.Data;
-using ArcCore.MonoBehaviours;
+using ArcCore.Components;
+using ArcCore.Behaviours;
 using Unity.Rendering;
 using ArcCore.Utility;
 using ArcCore.Structs;
 using Unity.Mathematics;
-using ArcCore.MonoBehaviours.EntityCreation;
+using ArcCore.Behaviours.EntityCreation;
 using ArcCore;
-using ArcCore.Tags;
+using ArcCore.Parsing;
+using ArcCore.Components.Tags;
+using ArcCore.Math;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 public class JudgementSystem : SystemBase
 {
     public static JudgementSystem Instance { get; private set; }
     public EntityManager entityManager;
-    public NativeArray<Rect2D> laneAABB2Ds;
 
     public bool IsReady => arcFingers.IsCreated;
     public EntityQuery tapQuery, arcQuery, arctapQuery, holdQuery;
@@ -40,47 +41,6 @@ public class JudgementSystem : SystemBase
         entityManager = defaultWorld.EntityManager;
 
         beginSimulationEntityCommandBufferSystem = World.GetOrCreateSystem<BeginSimulationEntityCommandBufferSystem>();
-
-        laneAABB2Ds = new NativeArray<Rect2D>(
-            new Rect2D[] {
-                new Rect2D(new float2(Conversion.TrackToX(1), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
-                new Rect2D(new float2(Conversion.TrackToX(2), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
-                new Rect2D(new float2(Conversion.TrackToX(3), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
-                new Rect2D(new float2(Conversion.TrackToX(4), 0), new float2(Constants.LaneWidth, float.PositiveInfinity))
-                    },
-            Allocator.Persistent
-            );
-
-        holdQuery = GetEntityQuery(
-                typeof(HoldFunnelPtr),
-                typeof(ChartTime),
-                typeof(Track),
-                typeof(WithinJudgeRange),
-                typeof(JudgeHoldPoint)
-            );
-
-        arctapQuery = GetEntityQuery(
-                typeof(EntityReference),
-                typeof(ChartTime),
-                typeof(ChartPosition),
-                typeof(WithinJudgeRange)
-            );
-
-
-        tapQuery = GetEntityQuery(
-                typeof(EntityReference),
-                typeof(ChartTime),
-                typeof(Track),
-                typeof(WithinJudgeRange)
-            );
-
-        arcQuery = GetEntityQuery(
-                typeof(ArcFunnelPtr),
-                typeof(LinearPosGroup),
-                typeof(ColorID),
-                typeof(StrictArcJudge),
-                typeof(WithinJudgeRange)
-            );
     }
     public void SetupColors()
     {
@@ -89,7 +49,6 @@ public class JudgementSystem : SystemBase
     }
     protected override void OnDestroy()
     {
-        laneAABB2Ds.Dispose();
         arcJudges.Dispose();
         arcFingers.Dispose();
         arcStates.Dispose();

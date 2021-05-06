@@ -2,8 +2,8 @@
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
-using ArcCore.Data;
-using ArcCore.MonoBehaviours;
+using ArcCore.Components;
+using ArcCore.Behaviours;
 
 [UpdateInGroup(typeof(InitializationSystemGroup))]
 public class ChunkScopingSystem : SystemBase

@@ -3,8 +3,8 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Transforms;
-using ArcCore.Data;
-using ArcCore.MonoBehaviours;
+using ArcCore.Components;
+using ArcCore.Behaviours;
 using ArcCore.Tags;
 using Unity.Rendering;
 

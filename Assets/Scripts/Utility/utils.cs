@@ -1,5 +1,5 @@
-using ArcCore.MonoBehaviours;
-using ArcCore.MonoBehaviours.EntityCreation;
+using ArcCore.Behaviours;
+using ArcCore.Behaviours.EntityCreation;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;

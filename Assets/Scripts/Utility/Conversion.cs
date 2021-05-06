@@ -1,31 +1,11 @@
-using ArcCore.MonoBehaviours;
+using ArcCore.Behaviours;
+using ArcCore.Parsing;
 using System;
 using Unity.Mathematics;
 using UnityEngine;
 
 namespace ArcCore.Utility
 {
-    public enum ArcEasing
-    {
-        b,
-        s,
-        si,
-        so,
-        sisi,
-        soso,
-        siso,
-        sosi
-    }
-
-    public enum CameraEasing
-    {
-        l,
-        qi,
-        qo,
-        s,
-        reset
-    }
-
     public class Conversion
     {
         public static float TrackToX(int track)
