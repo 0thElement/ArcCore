@@ -92,7 +92,6 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         public unsafe void CreateEntities(List<List<AffArc>> affArcList)
         {
             int colorId=0;
-            List<Entity> createdJudgeEntities = new List<Entity>();
 
             //SET UP NEW JUDGES HEREEEEE
             List<List<ArcJudge>> judges = new List<List<ArcJudge>>();
@@ -112,6 +111,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
                 foreach (AffArc arc in listByColor)
                 {
+                    rawArcs.Add(arc);
+
                     //Precalc and assign a connected arc id to avoid having to figure out connection during gameplay
                     //this is really dumb but i don't want to split this into another class
                     float4 arcStartPoint = new float4((float)arc.timingGroup, (float)arc.timing, arc.startX, arc.startY);
@@ -172,12 +173,15 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     );
 
                     CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup);
-                    CreateJudgeEntities(arc, colorId, createdJudgeEntities);
+                    CreateJudgeEntities(arc, colorId, rawArcs.Count - 1, judges, rawArcs);
                     
                 }
 
                 colorId++;
             }
+
+            JudgementSystem.Instance.rawArcs = new NativeArray<AffArc>(rawArcs.ToArray(), Allocator.Persistent);
+            JudgementSystem.Instance.arcJudges = new NativeMatrIterator<ArcJudge>(utils.list_arr_2d(judges), Allocator.Persistent);
         }
 
         private unsafe ArcFunnel* CreateArcFunnelPtr()
@@ -336,7 +340,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
             entityManager.SetComponentData<ShaderCutoff>(headEntity, CutoffUtils.Unjudged);
         }
 
-        private unsafe void CreateJudgeEntities(AffArc arc, int colorId, List<Entity> createdJudgeEntities)
+        private unsafe void CreateJudgeEntities(AffArc arc, int colorId, int cArcIdx, List<List<ArcJudge>> judges, List<AffArc> rawArcs)
         {
             float timeF = arc.timing;
             int timingEventIdx = Conductor.Instance.GetTimingEventIndexFromTiming(arc.timing, arc.timingGroup);
@@ -355,73 +359,22 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     nextEvent = Conductor.Instance.GetNextTimingEventOrNull(timingEventIdx, arc.timingGroup);
                 }
 
-                int time = (int)timeF;
+                ArcJudge newJudge = new ArcJudge((int)timeF, cArcIdx, true);
 
-                float timePosEnd = math.min(timeF + Constants.FarWindow, arc.endTiming);
-
-                float arcStartX = ArccoreConvert.GetWorldX(arc.startX);
-                float arcStartY = ArccoreConvert.GetWorldY(arc.startY);
-                float arcEndX = ArccoreConvert.GetWorldX(arc.endX);
-                float arcEndY = ArccoreConvert.GetWorldY(arc.endY);
-
-                LinearPosGroup currentLpg = new LinearPosGroup()
+                for (int i = 0; i < judges.Count; i++)
                 {
-                    startPosition = new float2(
-                        ArccoreConvert.GetXAt(math.unlerp(arc.timing, arc.endTiming, timeF), arcStartX, arcEndX, arc.easing),
-                        ArccoreConvert.GetYAt(math.unlerp(arc.timing, arc.endTiming, timeF), arcStartY, arcEndY, arc.easing)
-                    ),
-                    startTime = (int)timeF,
-                    endPosition = new float2(
-                        ArccoreConvert.GetXAt(math.unlerp(arc.timing, arc.endTiming, timePosEnd), arcStartX, arcEndX, arc.easing),
-                        ArccoreConvert.GetYAt(math.unlerp(arc.timing, arc.endTiming, timePosEnd), arcStartY, arcEndY, arc.easing)
-                    ),
-                    endTime = (int)timePosEnd
-                };
+                    ArcJudge judge = judges[colorId][i];
 
-                bool IsStrict = true;
-                foreach (Entity en in createdJudgeEntities)
-                {
-                    if (entityManager.GetComponentData<ColorID>(en).Value != colorId)
+                    if (math.abs(judge.time - newJudge.time) < judgeStrictnessLeniency &&
+                        math.distance(rawArcs[judge.rawArcIdx].PositionAt(judge.time), rawArcs[newJudge.rawArcIdx].PositionAt(newJudge.time)) < judgeStrictnessDist)
                     {
-                        LinearPosGroup otherLpg = entityManager.GetComponentData<LinearPosGroup>(en);
-                        if(math.abs(otherLpg.TimeCenter() - currentLpg.TimeCenter()) < judgeStrictnessLeniency &&
-                           math.distance(otherLpg.PosAt(time), currentLpg.PosAt(time)) < judgeStrictnessDist)
-                        {
-                            entityManager.SetComponentData<StrictArcJudge>(en, new StrictArcJudge()
-                            {
-                                Value = false
-                            });
-
-                            IsStrict = false;
-                            break;
-                        }
+                        judges[colorId][i] = new ArcJudge(judge, false);
+                        newJudge = new ArcJudge(newJudge, false);
+                        break;
                     }
                 }
 
-                Entity judgeEntity = entityManager.CreateEntity(arcJudgeArchetype);
-                entityManager.SetComponentData<ChartTime>(judgeEntity, new ChartTime()
-                {
-                    value = time
-                });
-                entityManager.SetComponentData<LinearPosGroup>(judgeEntity, currentLpg);
-                entityManager.SetComponentData<ColorID>(judgeEntity, new ColorID()
-                {
-                    Value = colorId
-                });
-                entityManager.SetComponentData<ArcFunnelPtr>(judgeEntity, new ArcFunnelPtr()
-                {
-                    Value = arcFunnelPtr
-                });
-                entityManager.SetComponentData<AppearTime>(judgeEntity, new AppearTime()
-                {
-                    Value = (int)time - Constants.LostWindow
-                });
-                entityManager.SetComponentData<StrictArcJudge>(judgeEntity, new StrictArcJudge()
-                {
-                    Value = IsStrict
-                });
-
-                createdJudgeEntities.Add(judgeEntity);
+                judges[colorId].Add(newJudge);
                 ScoreManager.Instance.maxCombo++;
             }
         }

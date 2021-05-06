@@ -35,5 +35,15 @@ namespace ArcCore.Utility
             }
             return list.ToArray();
         }
+
+        public static T[][] list_arr_2d<T>(List<List<T>> list)
+        {
+            T[][] n = new T[list.Count][];
+            for(int i = 0; i < n.Length; i++)
+            {
+                n[i] = list[i].ToArray();
+            }
+            return n;
+        }
     }
 }

@@ -33,6 +33,9 @@ public readonly struct ArcJudge
         this.rawArcIdx = rawArcIdx;
         this.isStrict = isStrict;
     }
+
+    public ArcJudge(ArcJudge judge, bool strict)
+        : this(judge.time, judge.rawArcIdx, strict) {;}
 }
 
 public enum ArcState
@@ -97,7 +100,7 @@ public struct ArcCompleteState
 public struct NativeMatrIterator<T> : IDisposable where T: struct
 {
     private NativeArray<T> contents;
-    private NativeArray<int> startIndices;
+    private readonly NativeArray<int> startIndices;
     private NativeArray<int> indices;
 
     public NativeArray<int> Indices => indices;
@@ -140,7 +143,7 @@ public struct NativeMatrIterator<T> : IDisposable where T: struct
         set => contents[r + startIndices[r] + c] = value;
     }
 
-    public bool MoveNext(int row) => ++indices[row] >= contents.Length;
+    public bool MoveNext(int row) => ++indices[row] < startIndices[row];
 
     public void Reset(int row) => indices[row] = 0;
 
