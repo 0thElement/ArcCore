@@ -38,7 +38,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 //Main Entity
                 Entity tapEntity = entityManager.Instantiate(tapNoteEntityPrefab);
 
-                float x = ArccoreConvert.TrackToX(tap.track);
+                float x = Conversion.TrackToX(tap.track);
                 const float y = 0;
                 const float z = 0;
 

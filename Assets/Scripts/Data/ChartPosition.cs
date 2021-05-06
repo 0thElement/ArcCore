@@ -7,9 +7,16 @@ namespace ArcCore.Data
     public struct ChartPosition : IComponentData
     {
         public float2 xy;
+        public ChartPosition(float2 xy) => 
+            this.xy = xy;
+    }
+
+    [GenerateAuthoringComponent]
+    public struct ChartLane : IComponentData
+    {
         public int lane;
 
-        public ChartPosition(float2 xy) => (this.xy, lane) = (xy, 0);
-        public ChartPosition(int lane) => (xy, this.lane) = (float2.zero, lane);
+        public ChartLane(int lane) => 
+            this.lane = lane;
     }
 }

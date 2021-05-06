@@ -147,8 +147,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
                     float3 start;
                     float3 end = new float3(
-                        ArccoreConvert.GetWorldX(arc.startX),
-                        ArccoreConvert.GetWorldY(arc.startY),
+                        Conversion.GetWorldX(arc.startX),
+                        Conversion.GetWorldY(arc.startY),
                         Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
                     );
 
@@ -157,8 +157,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                         float t = (i + 1) * segmentLength;
                         start = end;
                         end = new float3(
-                            ArccoreConvert.GetWorldX(ArccoreConvert.GetXAt(t / duration, arc.startX, arc.endX, arc.easing)),
-                            ArccoreConvert.GetWorldY(ArccoreConvert.GetYAt(t / duration, arc.startY, arc.endY, arc.easing)),
+                            Conversion.GetWorldX(Conversion.GetXAt(t / duration, arc.startX, arc.endX, arc.easing)),
+                            Conversion.GetWorldY(Conversion.GetYAt(t / duration, arc.startY, arc.endY, arc.easing)),
                             Conductor.Instance.GetFloorPositionFromTiming((int)(arc.timing + t), arc.timingGroup)
                         );
 
@@ -167,8 +167,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
                     start = end;
                     end = new float3(
-                        ArccoreConvert.GetWorldX(arc.endX),
-                        ArccoreConvert.GetWorldY(arc.endY),
+                        Conversion.GetWorldX(arc.endX),
+                        Conversion.GetWorldY(arc.endY),
                         Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                     );
 
@@ -259,9 +259,9 @@ namespace ArcCore.MonoBehaviours.EntityCreation
         {
             Entity heightEntity = entityManager.Instantiate(heightIndicatorEntityPrefab);
 
-            float height = ArccoreConvert.GetWorldY(arc.startY) - 0.45f;
+            float height = Conversion.GetWorldY(arc.startY) - 0.45f;
 
-            float x = ArccoreConvert.GetWorldX(arc.startX); 
+            float x = Conversion.GetWorldX(arc.startX); 
             float y = height / 2;
             const float z = 0;
 
@@ -317,8 +317,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Value = floorpos 
             });
 
-            float x = ArccoreConvert.GetWorldX(arc.startX); 
-            float y = ArccoreConvert.GetWorldY(arc.startY); 
+            float x = Conversion.GetWorldX(arc.startX); 
+            float y = Conversion.GetWorldY(arc.startY); 
             const float z = 0;
             entityManager.SetComponentData<Translation>(headEntity, new Translation()
             {

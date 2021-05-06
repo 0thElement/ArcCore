@@ -61,7 +61,7 @@ namespace ArcCore.Structs
         public readonly Type type;
         public readonly int track;
 
-        public float3 Position => new float3(ArccoreConvert.TrackToX(track),0,0);
+        public float3 Position => new float3(Conversion.TrackToX(track),0,0);
         public Enum TypeID => type;
     }
 }

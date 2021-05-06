@@ -43,10 +43,10 @@ public class JudgementSystem : SystemBase
 
         laneAABB2Ds = new NativeArray<Rect2D>(
             new Rect2D[] {
-                new Rect2D(new float2(ArccoreConvert.TrackToX(1), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
-                new Rect2D(new float2(ArccoreConvert.TrackToX(2), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
-                new Rect2D(new float2(ArccoreConvert.TrackToX(3), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
-                new Rect2D(new float2(ArccoreConvert.TrackToX(4), 0), new float2(Constants.LaneWidth, float.PositiveInfinity))
+                new Rect2D(new float2(Conversion.TrackToX(1), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
+                new Rect2D(new float2(Conversion.TrackToX(2), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
+                new Rect2D(new float2(Conversion.TrackToX(3), 0), new float2(Constants.LaneWidth, float.PositiveInfinity)),
+                new Rect2D(new float2(Conversion.TrackToX(4), 0), new float2(Constants.LaneWidth, float.PositiveInfinity))
                     },
             Allocator.Persistent
             );
@@ -86,11 +86,14 @@ public class JudgementSystem : SystemBase
     {
         arcFingers = new NativeArray<int>(utils.newarr_fill_aclen(-1), Allocator.Persistent);
         arcStates = new NativeArray<ArcCompleteState>(utils.newarr_fill_aclen(new ArcCompleteState(ArcState.Normal)), Allocator.Persistent);
-        rawArcVIdxs = new NativeArray<int>(rawArcs.Length, Allocator.Persistent);
     }
     protected override void OnDestroy()
     {
         laneAABB2Ds.Dispose();
+        arcJudges.Dispose();
+        arcFingers.Dispose();
+        arcStates.Dispose();
+        rawArcs.Dispose();
     }
     protected override unsafe void OnUpdate()
     {
@@ -162,7 +165,7 @@ public class JudgementSystem : SystemBase
             }
         }
 
-        //Clean up arc fingers
+        //Clean up red arcs
         for (int c = 0; c < ArcEntityCreator.ColorCount; c++)
         {
             if (arcJudges.PeekAhead(c, 1).time > currentTime + Constants.FarWindow)
@@ -185,7 +188,7 @@ public class JudgementSystem : SystemBase
                 //Hold notes
                 Entities.WithAll<WithinJudgeRange>().ForEach(
 
-                    (Entity entity, ref HoldLastJudge held, ref ChartHoldTime holdTime, ref HoldLastJudge lastJudge, in ChartTimeSpan span, in ChartPosition position)
+                    (Entity entity, ref HoldLastJudge held, ref ChartHoldTime holdTime, ref HoldLastJudge lastJudge, in ChartTimeSpan span, in ChartLane position)
 
                         =>
 
@@ -253,7 +256,7 @@ public class JudgementSystem : SystemBase
                     //Tap notes; no EntityReference, those only exist on arctaps
                     Entities.WithAll<WithinJudgeRange>().WithNone<EntityReference>().ForEach(
 
-                        (Entity entity, in ChartTime time, in ChartPosition position)
+                        (Entity entity, in ChartTime time, in ChartLane position)
 
                             =>
 
@@ -412,7 +415,27 @@ After:
                                 lostCount++;
                                 combo = 0;
                             }
+
+                            //skip cleanup, above code handles it (?)
+                            continue;
                         }
+                    }
+
+                    //check for dead fingers
+                    bool arcFingerFound = false;
+
+                    for(int t = 0; t < touchpoints.Length; t++)
+                    {
+                        if(touchpoints[t].fingerId == arcFingers[c])
+                        {
+                            arcFingerFound = (touchpoints[t].status != TouchPoint.Status.RELEASED);
+                            break;
+                        }
+                    }
+
+                    if(!arcFingerFound)
+                    {
+                        arcFingers[c] = -1;
                     }
                 }
             }

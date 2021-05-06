@@ -53,11 +53,11 @@ namespace ArcCore.MonoBehaviours
 
         public float2 PositionAt(int time)
             => new float2(
-                    ArccoreConvert.GetXAt(
+                    Conversion.GetXAt(
                         math.unlerp(time, timing, endTiming),
                         startX, endX, easing
                     ),
-                    ArccoreConvert.GetYAt(
+                    Conversion.GetYAt(
                         math.unlerp(time, timing, endTiming),
                         startY, endY, easing
                     )
@@ -385,8 +385,8 @@ namespace ArcCore.MonoBehaviours
 
                     float p = (float) (t - timing) / (endTiming - timing);
 
-                    float x = ArccoreConvert.GetXAt(p, startX, endX, easing);
-                    float y = ArccoreConvert.GetYAt(p, startY, endY, easing);
+                    float x = Conversion.GetXAt(p, startX, endX, easing);
+                    float y = Conversion.GetYAt(p, startY, endY, easing);
 
                     affArcTapList.Add(new AffArcTap()
                     {

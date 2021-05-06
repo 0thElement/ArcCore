@@ -18,19 +18,19 @@ namespace ArcCore.MonoBehaviours
         }
 
         public Rect2D inputPlane;
-        public TrackRange trackRange;
+        public int track;
 
         public bool InputPlaneValid => !inputPlane.IsNone;
-        public bool TrackRangeValid => !trackRange.IsNone;
+        public bool TrackValid => track != -1;
 
         public int time;
         public Status status;
         public int fingerId;
 
-        public TouchPoint(Rect2D inputPlane, TrackRange trackRange, int time, Status status, int fingerId)
+        public TouchPoint(Rect2D inputPlane, int track, int time, Status status, int fingerId)
         {
             this.inputPlane = inputPlane;
-            this.trackRange = trackRange;
+            this.track = track;
             this.time = time;
             this.status = status;
             this.fingerId = fingerId;
@@ -113,7 +113,7 @@ namespace ArcCore.MonoBehaviours
                 if (t.phase == TouchPhase.Began && FreeId(t.fingerId) && SafeIndex() != MaxTouches)
                 {
 
-                    (Rect2D ipt, TrackRange track) = ProjectionMaths.PerformInputRaycast(cameraCast, t);
+                    (Rect2D ipt, int track) = Projection.PerformInputRaycast(cameraCast, t);
                     touchPoints[safeIndex] = new TouchPoint(ipt, track, pTime, TouchPoint.Status.TAPPED, t.fingerId);
 
                 }
@@ -124,10 +124,10 @@ namespace ArcCore.MonoBehaviours
                     {
                         TouchPoint tp = touchPoints[index];
 
-                        (Rect2D ipt, TrackRange track) = ProjectionMaths.PerformInputRaycast(cameraCast, t);
+                        (Rect2D ipt, int track) = Projection.PerformInputRaycast(cameraCast, t);
 
                         tp.inputPlane = ipt;
-                        tp.trackRange = track;
+                        tp.track = track;
                         tp.time = pTime;
                         tp.status = TouchPoint.Status.HELD;
 

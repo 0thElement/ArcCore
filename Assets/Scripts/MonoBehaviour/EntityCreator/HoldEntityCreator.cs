@@ -34,7 +34,7 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 //Main entity
                 Entity holdEntity = entityManager.Instantiate(holdNoteEntityPrefab);
 
-                float x = ArccoreConvert.TrackToX(hold.track);
+                float x = Conversion.TrackToX(hold.track);
                 const float y = 0;
                 const float z = 0;
 

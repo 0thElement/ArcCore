@@ -48,49 +48,39 @@ public enum ArcState
 public struct ArcCompleteState
 {
     public ArcState state;
-    public float alphaRoll;
     public float redRoll;
+    public float cutoff;
 
-    public const float maxAlphaRoll = 1;
-    public const float minAlphaRoll = 0.8f;
     public const float maxRedRoll = 1;
     public const float minRedRoll = 0;
-
-    private const float alphaRange = maxAlphaRoll - minAlphaRoll;
     private const float redRange = maxRedRoll - minRedRoll;
 
     public ArcCompleteState(ArcState state)
     {
         this.state = state;
-        alphaRoll = 1f;
         redRoll = 0f;
+        cutoff = 0f;
     }
 
     public ArcCompleteState(ArcCompleteState from, ArcState withState)
     {
         state = withState;
-        alphaRoll = from.alphaRoll;
         redRoll = from.redRoll;
+        cutoff = from.cutoff;
     }
 
-    public void Update(float deltaTime = 0.02f)
+    public void Update(float currentBpm, float deltaTime = 0.02f)
     {
         const float dfac = 10;
         float timef = deltaTime * dfac;
         switch(state)
         {
             case ArcState.Normal:
-                alphaRoll = math.max(alphaRoll + timef * alphaRange, maxAlphaRoll);
-                redRoll = math.min(redRoll - timef * redRange, minRedRoll);
-                return;
-
             case ArcState.Unheld:
-                alphaRoll = math.min(alphaRoll - timef * alphaRange, minAlphaRoll);
                 redRoll = math.min(redRoll - timef * redRange, minRedRoll);
                 return;
 
             case ArcState.Red:
-                alphaRoll = math.max(alphaRoll + timef * alphaRange, maxAlphaRoll);
                 redRoll = math.min(redRoll + timef * redRange, maxRedRoll);
                 return;
         }

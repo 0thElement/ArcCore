@@ -87,8 +87,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
                 float3 start;
                 float3 end = new float3(
-                    ArccoreConvert.GetWorldX(trace.startX),
-                    ArccoreConvert.GetWorldY(trace.startY),
+                    Conversion.GetWorldX(trace.startX),
+                    Conversion.GetWorldY(trace.startY),
                     Conductor.Instance.GetFloorPositionFromTiming(trace.timing, trace.timingGroup)
                 );
 
@@ -97,8 +97,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                     int t = (int)((i + 1) * segmentLength);
                     start = end;
                     end = new float3(
-                        ArccoreConvert.GetWorldX(ArccoreConvert.GetXAt((float)t / duration, trace.startX, trace.endX, trace.easing)),
-                        ArccoreConvert.GetWorldY(ArccoreConvert.GetYAt((float)t / duration, trace.startY, trace.endY, trace.easing)),
+                        Conversion.GetWorldX(Conversion.GetXAt((float)t / duration, trace.startX, trace.endX, trace.easing)),
+                        Conversion.GetWorldY(Conversion.GetYAt((float)t / duration, trace.startY, trace.endY, trace.easing)),
                         Conductor.Instance.GetFloorPositionFromTiming(trace.timing + t, trace.timingGroup)
                     );
 
@@ -107,8 +107,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
 
                 start = end;
                 end = new float3(
-                    ArccoreConvert.GetWorldX(trace.endX),
-                    ArccoreConvert.GetWorldY(trace.endY),
+                    Conversion.GetWorldX(trace.endX),
+                    Conversion.GetWorldY(trace.endY),
                     Conductor.Instance.GetFloorPositionFromTiming(trace.endTiming, trace.timingGroup)
                 );
 
@@ -186,8 +186,8 @@ namespace ArcCore.MonoBehaviours.EntityCreation
                 Value = floorpos
             });
 
-            float x = ArccoreConvert.GetWorldX(trace.startX); 
-            float y = ArccoreConvert.GetWorldY(trace.startY); 
+            float x = Conversion.GetWorldX(trace.startX); 
+            float y = Conversion.GetWorldY(trace.startY); 
             const float z = 0;
             entityManager.SetComponentData<Translation>(headEntity, new Translation()
             {
