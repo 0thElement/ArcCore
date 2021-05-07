@@ -142,7 +142,7 @@ public class JudgementSystem : SystemBase
             bool tapped = false;
 
             //Track taps
-            if (touch.TrackRangeValid) {
+            if (touch.TrackValid) {
 
                 //Hold notes
                 Entities.WithAll<WithinJudgeRange>().ForEach(
@@ -176,7 +176,7 @@ public class JudgementSystem : SystemBase
                         }
 
                         //Invalidate holds not in range; should also rule out all invalid data, i.e. positions with a lane of -1
-                        if (!touch.trackRange.Contains(position.lane)) return;
+                        if (touch.track != position.lane) return;
 
                         //Holds not requiring a tap
                         if(held.value)
@@ -231,7 +231,7 @@ public class JudgementSystem : SystemBase
                             }
 
                             //Invalidate if not in range of a tap; should also rule out all invalid data, i.e. positions with a lane of -1
-                            if (!touch.trackRange.Contains(position.lane)) return;
+                            if (touch.track != position.lane) return;
 
                             //Register tap lul
                             Judge(time.value);

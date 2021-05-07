@@ -34,7 +34,6 @@ namespace ArcCore.Behaviours.EntityCreation
         private EntityManager entityManager;
         private int colorShaderId;
         private int redColorShaderId;
-        public EntityArchetype arcJudgeArchetype { get; private set; }
 
         public static int ColorCount => Instance.arcColors.Length;
 
@@ -82,7 +81,7 @@ namespace ArcCore.Behaviours.EntityCreation
             JudgementSystem.Instance.SetupColors();
         }
 
-        public unsafe void CreateEntities(List<List<AffArc>> affArcList)
+        public void CreateEntities(List<List<AffArc>> affArcList)
         {
             int colorId=0;
 
@@ -339,9 +338,9 @@ namespace ArcCore.Behaviours.EntityCreation
             {
                 timeF += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
 
-                if (nextEvent.HasValue && nextEvent.Value.timing < timeF)
+                if (nextEvent is not null && nextEvent.timing < timeF)
                 {
-                    timeF = nextEvent.Value.timing;
+                    timeF = nextEvent.timing;
                     timingEventIdx++;
                     timingEvent = Conductor.Instance.GetTimingEvent(timingEventIdx, arc.timingGroup);
                     nextEvent = Conductor.Instance.GetNextTimingEventOrNull(timingEventIdx, arc.timingGroup);
