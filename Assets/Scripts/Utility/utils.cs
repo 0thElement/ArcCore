@@ -45,5 +45,11 @@ namespace ArcCore.Utility
             }
             return n;
         }
+
+        public static int b2i(bool b)
+            => b ? 1 : 0;
+
+        public static bool i2b(int i)
+            => i != 0;
     }
 }

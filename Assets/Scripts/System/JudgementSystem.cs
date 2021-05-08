@@ -147,7 +147,7 @@ public class JudgementSystem : SystemBase
                 //Hold notes
                 Entities.WithAll<WithinJudgeRange>().ForEach(
 
-                    (Entity entity, ref HoldLastJudge held, ref ChartHoldTime holdTime, ref HoldLastJudge lastJudge, in ChartTimeSpan span, in ChartLane position)
+                    (Entity entity, ref HoldIsTapped held, ref ChartHoldTime holdTime, in ChartTimeSpan span, in ChartLane position)
 
                         =>
 
@@ -158,18 +158,11 @@ public class JudgementSystem : SystemBase
                         //Invalidate holds out of time range
                         if (!holdTime.CheckStart(Constants.FarWindow)) return;
 
-                        //Disable judgenotes
-                        void Disable()
-                        {
-                            commandBuffer.RemoveComponent<WithinJudgeRange>(entity);
-                            commandBuffer.AddComponent<PastJudgeRange>(entity);
-                        }
-
                         //Increment or kill holds out of time for judging
                         if (holdTime.CheckOutOfRange(currentTime))
                         {
                             JudgeLost();
-                            lastJudge.value = false;
+                            held.value = false;
 
                             if (!holdTime.Increment(span)) 
                                 Disable();

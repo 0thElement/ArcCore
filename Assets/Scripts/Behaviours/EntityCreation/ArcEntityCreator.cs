@@ -338,9 +338,9 @@ namespace ArcCore.Behaviours.EntityCreation
             {
                 timeF += (timingEvent.bpm >= 255 ? 60_000f : 30_000f) / timingEvent.bpm;
 
-                if (nextEvent is not null && nextEvent.timing < timeF)
+                if (nextEvent is not null && nextEvent?.timing < timeF)
                 {
-                    timeF = nextEvent.timing;
+                    timeF = (float)nextEvent?.timing;
                     timingEventIdx++;
                     timingEvent = Conductor.Instance.GetTimingEvent(timingEventIdx, arc.timingGroup);
                     nextEvent = Conductor.Instance.GetNextTimingEventOrNull(timingEventIdx, arc.timingGroup);

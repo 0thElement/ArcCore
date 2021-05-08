@@ -61,7 +61,7 @@ namespace ArcCore.Behaviours.EntityCreation
                     Value = 1f
                 });
 
-                entityManager.SetComponentData<HoldIsHeld>(holdEntity, new HoldIsHeld(false));
+                entityManager.SetComponentData<HoldIsTapped>(holdEntity, new HoldIsTapped(false));
                 entityManager.SetComponentData<HoldLastJudge>(holdEntity, new HoldLastJudge(false));
 
                 //Appear and disappear time
