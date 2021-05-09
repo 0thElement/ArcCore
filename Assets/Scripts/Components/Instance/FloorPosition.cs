@@ -5,7 +5,12 @@ namespace ArcCore.Components
     [GenerateAuthoringComponent]
     public struct FloorPosition : IComponentData
     {
-        public float Value;
+        public float value;
+
+        public FloorPosition(float value)
+        {
+            this.value = value;
+        }
     }
 
 }

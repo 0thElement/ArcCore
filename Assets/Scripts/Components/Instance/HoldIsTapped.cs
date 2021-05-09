@@ -3,7 +3,7 @@ using Unity.Entities;
 
 namespace ArcCore.Components
 {
-    [GenerateAuthoringComponent]
+    [GenerateAuthoringComponent, System.Obsolete("bad idea, loser", true)]
     public struct HoldIsTapped : IComponentData
     {
         public int value;
@@ -17,5 +17,7 @@ namespace ArcCore.Components
 
         public HoldIsTapped Updated() 
             => new HoldIsTapped { value = value - utils.b2i(value > 0) };
+
+        public bool State => value != 0;
     }
 }

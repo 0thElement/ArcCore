@@ -28,8 +28,8 @@ public class ShaderParamsApplySystem : SystemBase
                 =>
 
             {
-                redmix.Value = arcStates[color.Value].redRoll;
-                cutoff.Value = arcStates[color.Value].alphaRoll; //pls fix 0
+                redmix.Value = arcStates[color.value].redRoll;
+                cutoff.Value = arcStates[color.value].alphaRoll; //pls fix 0
             }
 
         )

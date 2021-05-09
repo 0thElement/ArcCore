@@ -9,5 +9,14 @@ namespace ArcCore.Parsing
         public float3 rotate;
         public CameraEasing easing;
         public int duration;
+
+        public AffCamera(int timing, float3 position, float3 rotate, CameraEasing easing, int duration)
+        {
+            this.timing = timing;
+            this.position = position;
+            this.rotate = rotate;
+            this.easing = easing;
+            this.duration = duration;
+        }
     }
 }

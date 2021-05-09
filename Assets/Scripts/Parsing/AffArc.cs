@@ -15,6 +15,18 @@ namespace ArcCore.Parsing
         public float endY;
         public int timingGroup;
 
+        public AffArc(int timing, int endTiming, float startX, float endX, ArcEasing easing, float startY, float endY, int timingGroup)
+        {
+            this.timing = timing;
+            this.endTiming = endTiming;
+            this.startX = startX;
+            this.endX = endX;
+            this.easing = easing;
+            this.startY = startY;
+            this.endY = endY;
+            this.timingGroup = timingGroup;
+        }
+
         public float2 PositionAt(int time)
             => new float2(
                     Conversion.GetXAt(

@@ -48,18 +48,18 @@ namespace ArcCore.Behaviours.EntityCreation
 
                 float floorpos = Conductor.Instance.GetFloorPositionFromTiming(tap.timing, tap.timingGroup);
                 entityManager.SetComponentData(tapEntity, new FloorPosition(){
-                    Value = floorpos 
+                    value = floorpos 
                 });
                 entityManager.SetComponentData(tapEntity, new TimingGroup()
                 {
-                    Value = tap.timingGroup
+                    value = tap.timingGroup
                 });
 
                 int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, tap.timingGroup);
                 int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, tap.timingGroup);
                 int appearTime = (t1 < t2) ? t1 : t2;
 
-                entityManager.SetComponentData(tapEntity, new AppearTime(){ Value = appearTime });
+                entityManager.SetComponentData(tapEntity, new AppearTime(){ value = appearTime });
                 
                 entityManager.SetComponentData(tapEntity, new ChartTime(tap.timing));
                 entityManager.SetComponentData(tapEntity, new ChartPosition(tap.track));

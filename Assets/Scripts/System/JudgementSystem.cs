@@ -34,6 +34,14 @@ public class JudgementSystem : SystemBase
 
     BeginSimulationEntityCommandBufferSystem beginSimulationEntityCommandBufferSystem;
 
+    private enum JudgeEnType
+    {
+        NONE,
+        ARCTAP,
+        TAP,
+        HOLD
+    }
+
     protected override void OnCreate()
     {
         Instance = this;
@@ -136,10 +144,11 @@ public class JudgementSystem : SystemBase
         }
 
         //Execute for each touch
+        Job.WithBurst(FloatMode.)
         for (int i = 0; i < InputManager.MaxTouches; i++)
         {
             TouchPoint touch = InputManager.Get(i);
-            bool tapped = false;
+
 
             //Track taps
             if (touch.TrackValid) {
@@ -147,13 +156,13 @@ public class JudgementSystem : SystemBase
                 //Hold notes
                 Entities.WithAll<WithinJudgeRange>().ForEach(
 
-                    (Entity entity, ref HoldIsTapped held, ref ChartHoldTime holdTime, in ChartTimeSpan span, in ChartLane position)
+                    (Entity entity, ref HoldIsTapped held, ref ChartIncrTime holdTime, in ChartTimeSpan span, in ChartLane position)
 
                         =>
 
                     {
                         //Invalidate holds if they require a tap and this touch has been parsed as a tap already
-                        if (!held.value && tapped) return;
+                        if (!held.State && tapped) return;
 
                         //Invalidate holds out of time range
                         if (!holdTime.CheckStart(Constants.FarWindow)) return;
@@ -258,7 +267,7 @@ public class JudgementSystem : SystemBase
                         {
                             JudgeLost();
                             entityManager.DestroyEntity(entity);
-                            entityManager.DestroyEntity(enRef.Value);
+                            entityManager.DestroyEntity(enRef.value);
                         }
 
                         //Invalidate if not in range of a tap; should also rule out all invalid data, i.e. positions with a lane of -1

@@ -5,6 +5,11 @@ namespace ArcCore.Components
     [GenerateAuthoringComponent]
     public struct TimingGroup : IComponentData
     {
-        public int Value;
+        public int value;
+
+        public TimingGroup(int value)
+        {
+            this.value = value;
+        }
     }
 }

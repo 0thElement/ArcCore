@@ -10,6 +10,8 @@ namespace ArcCore.Components
     [GenerateAuthoringComponent]
     public struct EntityReference : IComponentData
     {
-        public Entity Value;
+        public Entity value;
+        public EntityReference(Entity value)
+            => this.value = value;
     }
 }

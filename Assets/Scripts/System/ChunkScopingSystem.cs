@@ -68,10 +68,10 @@ public class ChunkScopingSystem : SystemBase
             var appearTimeType = entityManager.GetArchetypeChunkComponentType<AppearTime>(true);
             NativeArray<AppearTime> appearTimeList = chunk.GetNativeArray<AppearTime>(appearTimeType);
 
-            int min = appearTimeList[0].Value;
+            int min = appearTimeList[0].value;
             foreach (AppearTime appearTime in appearTimeList)
             {
-                if (min > appearTime.Value) min = appearTime.Value;
+                if (min > appearTime.value) min = appearTime.value;
             }
 
             var chunkAppearTimeType = entityManager.GetArchetypeChunkComponentType<ChunkAppearTime>(false);
@@ -93,10 +93,10 @@ public class ChunkScopingSystem : SystemBase
             var disappearTimeType = entityManager.GetArchetypeChunkComponentType<DisappearTime>(true);
             NativeArray<DisappearTime> disappearTimeList = chunk.GetNativeArray<DisappearTime>(disappearTimeType);
 
-            int max = disappearTimeList[0].Value;
+            int max = disappearTimeList[0].value;
             foreach (DisappearTime disappearTime in disappearTimeList)
             {
-                if (max < disappearTime.Value) max = disappearTime.Value;
+                if (max < disappearTime.value) max = disappearTime.value;
             }
 
             var chunkDisappearTimeType = entityManager.GetArchetypeChunkComponentType<ChunkDisappearTime>(false);

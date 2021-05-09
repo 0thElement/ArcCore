@@ -27,7 +27,7 @@ public class JudgeEntitiesScopingSystem : SystemBase
                     => 
 
                 {
-                    if (currentTime >= appearTime.Value)
+                    if (currentTime >= appearTime.value)
                     {
                         commandBuffer.AddComponent<WithinJudgeRange>(entity);
                     }

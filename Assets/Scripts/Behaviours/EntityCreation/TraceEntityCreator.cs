@@ -126,7 +126,7 @@ namespace ArcCore.Behaviours.EntityCreation
             });
             entityManager.SetComponentData<FloorPosition>(traceEntity, new FloorPosition()
             {
-                Value = start.z
+                value = start.z
             });
 
             float dx = start.x - end.x;
@@ -146,7 +146,7 @@ namespace ArcCore.Behaviours.EntityCreation
 
             entityManager.SetComponentData<TimingGroup>(traceEntity, new TimingGroup()
             {
-                Value = timingGroup
+                value = timingGroup
             });
 
             entityManager.SetComponentData<ShaderCutoff>(traceEntity, new ShaderCutoff()
@@ -161,11 +161,11 @@ namespace ArcCore.Behaviours.EntityCreation
 
             entityManager.SetComponentData<AppearTime>(traceEntity, new AppearTime()
             {
-                Value = appearTime
+                value = appearTime
             });
             entityManager.SetComponentData<DisappearTime>(traceEntity, new DisappearTime()
             {
-                Value = disappearTime
+                value = disappearTime
             });
             entityManager.SetComponentData<ChartTime>(traceEntity, new ChartTime()
             {
@@ -183,7 +183,7 @@ namespace ArcCore.Behaviours.EntityCreation
             float floorpos = Conductor.Instance.GetFloorPositionFromTiming(trace.timing, trace.timingGroup);
             entityManager.SetComponentData<FloorPosition>(headEntity, new FloorPosition()
             {
-                Value = floorpos
+                value = floorpos
             });
 
             float x = Conversion.GetWorldX(trace.startX); 
@@ -195,7 +195,7 @@ namespace ArcCore.Behaviours.EntityCreation
             });
             entityManager.SetComponentData<TimingGroup>(headEntity, new TimingGroup()
             {
-                Value = trace.timingGroup
+                value = trace.timingGroup
             });
             
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, 0);
@@ -204,7 +204,7 @@ namespace ArcCore.Behaviours.EntityCreation
 
             entityManager.SetComponentData<AppearTime>(headEntity, new AppearTime()
             {
-                Value = appearTime
+                value = appearTime
             });
 
             entityManager.SetComponentData<ShaderCutoff>(headEntity, new ShaderCutoff()

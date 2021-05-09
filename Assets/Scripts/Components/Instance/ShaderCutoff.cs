@@ -8,6 +8,11 @@ namespace ArcCore.Components
     [GenerateAuthoringComponent]
     public struct ShaderCutoff : IComponentData
     {
-        public float Value;
+        public float value;
+
+        public ShaderCutoff(float value)
+        {
+            this.value = value;
+        }
     }
 }

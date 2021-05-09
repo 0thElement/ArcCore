@@ -188,7 +188,7 @@ namespace ArcCore.Behaviours.EntityCreation
 
             FloorPosition fpos = new FloorPosition()
             {
-                Value = start.z
+                value = start.z
             };
 
             entityManager.SetComponentData<FloorPosition>(arcInstEntity, fpos);
@@ -196,7 +196,7 @@ namespace ArcCore.Behaviours.EntityCreation
 
             TimingGroup group = new TimingGroup()
             {
-                Value = timingGroup
+                value = timingGroup
             };
 
             entityManager.SetComponentData<TimingGroup>(arcInstEntity, group);
@@ -233,11 +233,11 @@ namespace ArcCore.Behaviours.EntityCreation
 
             entityManager.SetComponentData<AppearTime>(arcInstEntity, new AppearTime()
             {
-                Value = appearTime
+                value = appearTime
             });
             entityManager.SetComponentData<DisappearTime>(arcInstEntity, new DisappearTime()
             {
-                Value = disappearTime
+                value = disappearTime
             });
         }
 
@@ -273,11 +273,11 @@ namespace ArcCore.Behaviours.EntityCreation
             float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup);
             entityManager.AddComponentData<FloorPosition>(heightEntity, new FloorPosition()
             {
-                Value = floorpos
+                value = floorpos
             });
             entityManager.SetComponentData<TimingGroup>(heightEntity, new TimingGroup()
             {
-                Value = arc.timingGroup
+                value = arc.timingGroup
             });
 
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arc.timingGroup);
@@ -285,7 +285,7 @@ namespace ArcCore.Behaviours.EntityCreation
             int appearTime = (t1 < t2) ? t1 : t2;
 
             entityManager.SetComponentData<AppearTime>(heightEntity, new AppearTime(){
-                Value = appearTime
+                value = appearTime
             });
         }
 
@@ -300,7 +300,7 @@ namespace ArcCore.Behaviours.EntityCreation
             float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup);
             entityManager.SetComponentData<FloorPosition>(headEntity, new FloorPosition()
             {
-                Value = floorpos 
+                value = floorpos 
             });
 
             float x = Conversion.GetWorldX(arc.startX); 
@@ -312,7 +312,7 @@ namespace ArcCore.Behaviours.EntityCreation
             });
             entityManager.SetComponentData<TimingGroup>(headEntity, new TimingGroup()
             {
-                Value = arc.timingGroup
+                value = arc.timingGroup
             });
 
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arc.timingGroup);
@@ -320,7 +320,7 @@ namespace ArcCore.Behaviours.EntityCreation
             int appearTime = (t1 < t2) ? t1 : t2;
 
             entityManager.SetComponentData<AppearTime>(headEntity, new AppearTime(){
-                Value = appearTime
+                value = appearTime
             });
             
             //WHY WAS THIS HERE FUCKKKKKK

@@ -16,7 +16,7 @@ public class MovingNotesSystem : SystemBase
 
         //All note except arcs
         Entities.ForEach((ref Translation translation, in FloorPosition floorPosition, in TimingGroup group) => {
-            translation.Value.z = floorPosition.Value - currentFloorPosition[group.Value]; 
+            translation.Value.z = floorPosition.value - currentFloorPosition[group.value]; 
         }).Schedule();
 
         //Arc segments
@@ -24,7 +24,7 @@ public class MovingNotesSystem : SystemBase
             ForEach((ref LocalToWorld lcwMatrix, in FloorPosition floorPosition, in TimingGroup group) =>
             {
 
-                lcwMatrix.Value.c3.z = floorPosition.Value - currentFloorPosition[group.Value];
+                lcwMatrix.Value.c3.z = floorPosition.value - currentFloorPosition[group.value];
 
             }).Schedule();
     }

@@ -13,7 +13,7 @@ namespace ArcCore.Math
             max = math.max(a, b);
         }
 
-        private Rect2D(float ax, float ay, float bx, float by)
+        public Rect2D(float ax, float ay, float bx, float by)
         {
             min = new float2(ax, ay);
             max = new float2(bx, by);

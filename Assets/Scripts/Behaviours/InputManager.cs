@@ -4,6 +4,8 @@ using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Math;
 using ArcCore.Structs;
+using System.Collections.Generic;
+using System.Collections;
 
 namespace ArcCore.Behaviours
 {
@@ -13,13 +15,56 @@ namespace ArcCore.Behaviours
     {
         public static InputManager Instance { get; private set; }
         public static TouchPoint Get(int index) => Instance.touchPoints[index];
+        public static Enumerator GetEnumerator() => new Enumerator(Instance);
 
         public const int MaxTouches = 10;
 
+        [HideInInspector]
         public NativeArray<TouchPoint> touchPoints;
+        [HideInInspector]
         public int safeIndex = 0;
 
         public Camera cameraCast;
+
+        public struct Enumerator : IEnumerator<TouchPoint>
+        {
+            private readonly NativeArray<TouchPoint> touchPoints;
+            private int index;
+
+            public Enumerator(InputManager inputManager)
+            {
+                touchPoints = inputManager.touchPoints;
+                index = -1;
+            }
+
+            public TouchPoint Current
+            {
+                get => touchPoints[index];
+            }
+
+            object IEnumerator.Current
+            {
+                get => touchPoints[index];
+            }
+
+            public void Dispose()
+            {}
+
+            public bool MoveNext()
+            {
+                while(Current.fingerId == -1)
+                {
+                    index++;
+                    if (index > InputManager.MaxTouches) return false;
+                }
+                return true;
+            }
+
+            public void Reset()
+            {
+                index = -1;
+            }
+        }
 
         void Awake()
         {
@@ -29,20 +74,14 @@ namespace ArcCore.Behaviours
 
         void Start()
         {
-            CreateConnection();
+            Conductor.Instance.OnTimeCalculated += PollInput;
         }
 
         void OnDestroy()
         {
-            KillConnection();
+            Conductor.Instance.OnTimeCalculated -= PollInput;
             touchPoints.Dispose();
         }
-
-        public void CreateConnection()
-            => Conductor.Instance.OnTimeCalculated += PollInput;
-
-        public void KillConnection()
-            => Conductor.Instance.OnTimeCalculated -= PollInput;
 
         private bool FreeId(int id) => !touchPoints.Any(t => t.fingerId == id);
         private int IdIndex(int id)
@@ -71,6 +110,8 @@ namespace ArcCore.Behaviours
                     touchPoint.fingerId = -1;
 
                     touchPoints[ti] = touchPoint;
+
+                    if (safeIndex < ti) safeIndex = ti;
                 }
             }
 
@@ -80,12 +121,13 @@ namespace ArcCore.Behaviours
 
                 int pTime = (int)math.round((time - t.deltaTime) * 1000);
 
-                if (t.phase == TouchPhase.Began && FreeId(t.fingerId) && SafeIndex() != MaxTouches)
+                if (t.phase == TouchPhase.Began)
                 {
-
-                    (Rect2D ipt, int track) = Projection.PerformInputRaycast(cameraCast, t);
-                    touchPoints[safeIndex] = new TouchPoint(ipt, track, pTime, TouchPoint.Status.TAPPED, t.fingerId);
-
+                    if (FreeId(t.fingerId) && SafeIndex() != MaxTouches)
+                    {
+                        (Rect2D ipt, int track) = Projection.PerformInputRaycast(cameraCast, t);
+                        touchPoints[safeIndex] = new TouchPoint(ipt, track, pTime, TouchPoint.Status.TAPPED, t.fingerId);
+                    }
                 }
                 else if (t.phase == TouchPhase.Moved)
                 {

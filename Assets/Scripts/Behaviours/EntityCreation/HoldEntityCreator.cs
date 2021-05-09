@@ -51,10 +51,10 @@ namespace ArcCore.Behaviours.EntityCreation
                     Value = new float3(scalex, scaley, scalez)
                 });
                 entityManager.SetComponentData<FloorPosition>(holdEntity, new FloorPosition(){
-                    Value = startFloorPosition
+                    value = startFloorPosition
                 });
                 entityManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(){
-                    Value = hold.timingGroup
+                    value = hold.timingGroup
                 });
                 entityManager.SetComponentData<ShaderCutoff>(holdEntity, new ShaderCutoff()
                 {
@@ -70,8 +70,8 @@ namespace ArcCore.Behaviours.EntityCreation
                 int appearTime = (t1 < t2) ? t1 : t2;
                 int disappearTime = (t1 < t2) ? t2 : t1;
 
-                entityManager.SetComponentData<AppearTime>(holdEntity, new AppearTime(){ Value = appearTime });
-                entityManager.SetComponentData<DisappearTime>(holdEntity, new DisappearTime(){ Value = disappearTime });
+                entityManager.SetComponentData<AppearTime>(holdEntity, new AppearTime(){ value = appearTime });
+                entityManager.SetComponentData<DisappearTime>(holdEntity, new DisappearTime(){ value = disappearTime });
 
                 //Judge entities
                 TimingEvent timingEvent = Conductor.Instance.GetTimingEventFromTiming(hold.timing, hold.timingGroup);
@@ -80,7 +80,7 @@ namespace ArcCore.Behaviours.EntityCreation
                 ChartTimeSpan span = new ChartTimeSpan(hold.timing, hold.endTiming);
 
                 entityManager.SetComponentData(holdEntity, span);
-                entityManager.SetComponentData(holdEntity, new ChartHoldTime(span, append));
+                entityManager.SetComponentData(holdEntity, new ChartIncrTime(span, append));
                 entityManager.SetComponentData(holdEntity, new ChartPosition(hold.track));
 
                 //Add combo
