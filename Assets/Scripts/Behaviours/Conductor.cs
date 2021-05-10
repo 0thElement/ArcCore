@@ -24,9 +24,6 @@ namespace ArcCore.Behaviours
         public long timeOfLastMix;
         public int songLength;
         public NativeArray<float> currentFloorPosition;
-
-        public delegate void TimeCalculatedAction(float time);
-        public event TimeCalculatedAction OnTimeCalculated;
         
         public void Awake()
         {
@@ -48,7 +45,8 @@ namespace ArcCore.Behaviours
                 (float)(AudioSettings.dspTime - dspStartPlayingTime + TimeThreadless.TimeSince_T2S(timeOfLastMix)) * 1000)
                 - offset;
             UpdateCurrentFloorPosition();
-            OnTimeCalculated(receptorTime);
+
+            InputManager.Instance.PollInput();
         }
         public void SetOffset(int value)
         {
@@ -181,12 +179,6 @@ namespace ArcCore.Behaviours
             {
                 currentFloorPosition[group] = GetFloorPositionFromTiming(receptorTime, group);
             }
-        }
-        
-
-        public void DisposeFloorPositionArray()
-        {
-            currentFloorPosition.Dispose();
         }
     }
 }

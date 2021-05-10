@@ -9,11 +9,11 @@ namespace ArcCore.Behaviours
     {
         public static ScoreManager Instance { get; private set; }
 
-        public float MAX_VALUE = 10_000_000f;
+        public const float MaxScore = 10_000_000f;
+        public float MaxScoreDyn => MaxScore + maxCombo;
 
         [HideInInspector] public int maxCombo;
-
-        public int
+        [HideInInspector] public int
             maxPureCount,
             latePureCount,
             earlyPureCount,
@@ -21,7 +21,6 @@ namespace ArcCore.Behaviours
             earlyFarCount,
             lostCount,
             currentCombo;
-
         [HideInInspector] public float currentScore;
 
         public Text textUI;
@@ -66,8 +65,8 @@ namespace ArcCore.Behaviours
         public void UpdateScore()
         {
             currentScore =
-                (maxPureCount + latePureCount + earlyPureCount) * MAX_VALUE / maxCombo +
-                (lateFarCount + earlyFarCount) * MAX_VALUE / maxCombo / 2 +
+                (maxPureCount + latePureCount + earlyPureCount) * MaxScore / maxCombo +
+                (lateFarCount + earlyFarCount) * MaxScore / maxCombo / 2 +
                  maxPureCount;
             textUI.text = $"{(int)currentScore:D8}";
         }

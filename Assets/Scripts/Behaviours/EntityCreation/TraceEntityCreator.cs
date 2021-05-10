@@ -151,7 +151,7 @@ namespace ArcCore.Behaviours.EntityCreation
 
             entityManager.SetComponentData<ShaderCutoff>(traceEntity, new ShaderCutoff()
             {
-                Value = 1f
+                value = 1f
             });
 
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, 0);
@@ -209,7 +209,7 @@ namespace ArcCore.Behaviours.EntityCreation
 
             entityManager.SetComponentData<ShaderCutoff>(headEntity, new ShaderCutoff()
             {
-                Value = 1f
+                value = 1f
             });
 
             entityManager.SetComponentData<ChartTime>(headEntity, new ChartTime()

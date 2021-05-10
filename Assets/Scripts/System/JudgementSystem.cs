@@ -1,4 +1,9 @@
-﻿using Unity.Burst;
+﻿//COMMENT THIS OUT IN ORDER TO HIDE CONTENTS OF THIS FILE
+//#define FlooferWroteThisHahahahahaSexUwu
+
+
+#if FlooferWroteThisHahahahahaSexUwu
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
@@ -184,7 +189,7 @@ public class JudgementSystem : SystemBase
                         if(held.value)
                         {
                             //If valid:
-                            if (touch.status != TouchPoint.Status.RELEASED)
+                            if (touch.status != TouchPoint.Status.Released)
                             {
                                 JudgeMaxPure();
                                 lastJudge.value = true;
@@ -199,7 +204,7 @@ public class JudgementSystem : SystemBase
                             }
                         }
                         //Holds requiring a tap
-                        else if(touch.status == TouchPoint.Status.TAPPED)
+                        else if(touch.status == TouchPoint.Status.Tapped)
                         {
                             JudgeMaxPure();
                             lastJudge.value = true;
@@ -350,7 +355,7 @@ After:
                             if (isCorrectTouch && arcStates[c].state != ArcState.Red)
                             {
                                 //IS VALID TOUCH
-                                if (touch.status == TouchPoint.Status.RELEASED)
+                                if (touch.status == TouchPoint.Status.Released)
                                 {
                                     //RELEASED MID-ARC
                                     arcStates[c] = new ArcCompleteState(arcStates[c], ArcState.Red);
@@ -389,7 +394,7 @@ After:
                     {
                         if(touchpoints[t].fingerId == arcFingers[c])
                         {
-                            arcFingerFound = (touchpoints[t].status != TouchPoint.Status.RELEASED);
+                            arcFingerFound = (touchpoints[t].status != TouchPoint.Status.Released);
                             break;
                         }
                     }
@@ -415,3 +420,4 @@ After:
 
     }
 }
+#endif

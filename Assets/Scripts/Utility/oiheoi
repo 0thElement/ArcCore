@@ -1,0 +1,14 @@
+arcs
+ time incrementor
+ time span
+ arc index
+
+time incrementor: end time
+chart time:       start time
+color id
+timing group
+
+arc data needed:
+ - start pos
+ - end pos
+ - ease type

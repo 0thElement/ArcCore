@@ -24,6 +24,9 @@ namespace ArcCore.Behaviours
         [HideInInspector]
         public int safeIndex = 0;
 
+        [HideInInspector]
+        public QuadArr<int> tracksHeld;
+
         public Camera cameraCast;
 
         public struct Enumerator : IEnumerator<TouchPoint>
@@ -70,16 +73,11 @@ namespace ArcCore.Behaviours
         {
             Instance = this;
             touchPoints = new NativeArray<TouchPoint>(MaxTouches, Allocator.Persistent);
-        }
-
-        void Start()
-        {
-            Conductor.Instance.OnTimeCalculated += PollInput;
+            tracksHeld = default;
         }
 
         void OnDestroy()
         {
-            Conductor.Instance.OnTimeCalculated -= PollInput;
             touchPoints.Dispose();
         }
 
@@ -99,11 +97,11 @@ namespace ArcCore.Behaviours
             return safeIndex = MaxTouches;
         }
 
-        private void PollInput(float time)
+        public void PollInput()
         {
             for (int ti = 0; ti < touchPoints.Length; ti++)
             {
-                if(touchPoints[ti].status == TouchPoint.Status.RELEASED)
+                if(touchPoints[ti].status == TouchPoint.Status.Released)
                 {
                     TouchPoint touchPoint = touchPoints[ti];
 
@@ -119,14 +117,17 @@ namespace ArcCore.Behaviours
             {
                 Touch t = Input.touches[i];
 
-                int pTime = (int)math.round((time - t.deltaTime) * 1000);
-
                 if (t.phase == TouchPhase.Began)
                 {
                     if (FreeId(t.fingerId) && SafeIndex() != MaxTouches)
                     {
-                        (Rect2D ipt, int track) = Projection.PerformInputRaycast(cameraCast, t);
-                        touchPoints[safeIndex] = new TouchPoint(ipt, track, pTime, TouchPoint.Status.TAPPED, t.fingerId);
+                        (Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.position), t);
+                        touchPoints[safeIndex] = new TouchPoint(ipt, track, TouchPoint.Status.Tapped, t.fingerId);
+
+                        if(track != -1)
+                        {
+                            tracksHeld[track]++;
+                        }
                     }
                 }
                 else if (t.phase == TouchPhase.Moved)
@@ -135,15 +136,18 @@ namespace ArcCore.Behaviours
                     if (index != -1)
                     {
                         TouchPoint tp = touchPoints[index];
+                        int oTrack = tp.track;
 
-                        (Rect2D ipt, int track) = Projection.PerformInputRaycast(cameraCast, t);
-
-                        tp.inputPlane = ipt;
-                        tp.track = track;
-                        tp.time = pTime;
-                        tp.status = TouchPoint.Status.HELD;
+                        (tp.inputPlane, tp.track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.position), t);
+                        tp.status = TouchPoint.Status.Sustained;
 
                         touchPoints[index] = tp;
+
+                        if(oTrack != tp.track)
+                        {
+                            if (oTrack != -1) tracksHeld[oTrack]--;
+                            if (tp.track != -1) tracksHeld[tp.track]++;
+                        }
                     }
 
                 }
@@ -155,8 +159,7 @@ namespace ArcCore.Behaviours
                     {
                         TouchPoint tp = touchPoints[index];
 
-                        tp.time = pTime;
-                        tp.status = TouchPoint.Status.HELD;
+                        tp.status = TouchPoint.Status.Sustained;
 
                         touchPoints[index] = tp;
                     }
@@ -170,9 +173,11 @@ namespace ArcCore.Behaviours
                     {
                         TouchPoint tp = touchPoints[index];
 
-                        tp.status = TouchPoint.Status.RELEASED;
+                        tp.status = TouchPoint.Status.Released;
 
                         touchPoints[index] = tp;
+
+                        if (tp.track != -1) tracksHeld[tp.track]--;
                     }
 
                 }

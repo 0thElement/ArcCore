@@ -3,9 +3,9 @@
 namespace ArcCore.Components
 {
     [GenerateAuthoringComponent]
-    public struct ArcdataIndex : IComponentData
+    public struct ArcGroupStartTime : IComponentData
     {
         public int value;
-        public ArcdataIndex(int value) => this.value = value;
+        public ArcGroupStartTime(int v) => value = v;
     }
 }

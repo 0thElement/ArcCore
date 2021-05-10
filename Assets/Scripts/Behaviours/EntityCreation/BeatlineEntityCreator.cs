@@ -3,6 +3,8 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Components;
+using ArcCore.Parsing;
+using ArcCore.Components.Chunk;
 
 namespace ArcCore.Behaviours.EntityCreation
 {

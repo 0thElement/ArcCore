@@ -5,6 +5,8 @@ using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Utility;
 using ArcCore.Components;
+using ArcCore.Parsing;
+using ArcCore.Components.Chunk;
 
 namespace ArcCore.Behaviours.EntityCreation
 {
@@ -40,6 +42,7 @@ namespace ArcCore.Behaviours.EntityCreation
 
                 const float scalex = 1;
                 const float scaley = 1;
+
                 float endFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.endTiming, hold.timingGroup);
                 float startFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.timing, hold.timingGroup);
                 float scalez = - endFloorPosition + startFloorPosition;
@@ -50,19 +53,15 @@ namespace ArcCore.Behaviours.EntityCreation
                 entityManager.AddComponentData<NonUniformScale>(holdEntity, new NonUniformScale(){
                     Value = new float3(scalex, scaley, scalez)
                 });
-                entityManager.SetComponentData<FloorPosition>(holdEntity, new FloorPosition(){
-                    value = startFloorPosition
-                });
-                entityManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(){
-                    value = hold.timingGroup
-                });
-                entityManager.SetComponentData<ShaderCutoff>(holdEntity, new ShaderCutoff()
+
+                entityManager.SetComponentData<FloorPosition>(holdEntity, new FloorPosition(startFloorPosition));
+                entityManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(hold.timingGroup));
+                /*entityManager.SetComponentData<ShaderCutoff>(holdEntity, new ShaderCutoff()
                 {
                     Value = 1f
-                });
+                });*/
 
-                entityManager.SetComponentData<HoldIsTapped>(holdEntity, new HoldIsTapped(false));
-                entityManager.SetComponentData<HoldLastJudge>(holdEntity, new HoldLastJudge(false));
+                entityManager.SetComponentData(holdEntity, new ChartLane(hold.track));
 
                 //Appear and disappear time
                 int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(startFloorPosition + Constants.RenderFloorPositionRange, 0);
@@ -70,21 +69,15 @@ namespace ArcCore.Behaviours.EntityCreation
                 int appearTime = (t1 < t2) ? t1 : t2;
                 int disappearTime = (t1 < t2) ? t2 : t1;
 
-                entityManager.SetComponentData<AppearTime>(holdEntity, new AppearTime(){ value = appearTime });
-                entityManager.SetComponentData<DisappearTime>(holdEntity, new DisappearTime(){ value = disappearTime });
+                entityManager.SetComponentData<AppearTime>(holdEntity, new AppearTime(appearTime));
+                entityManager.SetComponentData<DisappearTime>(holdEntity, new DisappearTime(disappearTime));
 
                 //Judge entities
-                TimingEvent timingEvent = Conductor.Instance.GetTimingEventFromTiming(hold.timing, hold.timingGroup);
-                double append = (timingEvent.bpm >= 255 ? 60_000d : 30_000d) / timingEvent.bpm;
-
-                ChartTimeSpan span = new ChartTimeSpan(hold.timing, hold.endTiming);
-
-                entityManager.SetComponentData(holdEntity, span);
-                entityManager.SetComponentData(holdEntity, new ChartIncrTime(span, append));
-                entityManager.SetComponentData(holdEntity, new ChartPosition(hold.track));
+                float startBpm = Conductor.Instance.GetTimingEventFromTiming(hold.timing, hold.timingGroup).bpm;
+                entityManager.SetComponentData(holdEntity, ChartIncrTime.FromBpm(hold.timing, hold.endTiming, startBpm, out int comboCount));
 
                 //Add combo
-                ScoreManager.Instance.maxCombo += span.GetHoldCount(append);
+                ScoreManager.Instance.maxCombo += comboCount;
             }
         }
     }
