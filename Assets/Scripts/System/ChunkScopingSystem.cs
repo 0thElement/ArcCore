@@ -4,6 +4,8 @@ using Unity.Entities;
 using UnityEngine;
 using ArcCore.Components;
 using ArcCore.Behaviours;
+using ArcCore.Components.Chunk;
+using ArcCore.Components.Tags;
 
 [UpdateInGroup(typeof(InitializationSystemGroup))]
 public class ChunkScopingSystem : SystemBase
@@ -23,7 +25,7 @@ public class ChunkScopingSystem : SystemBase
     {
         makeAppearQueryDesc = new EntityQueryDesc
         {
-            None = new ComponentType[] {typeof(DisappearedTag), typeof(Prefab)},
+            None = new ComponentType[] {typeof(Disappeared), typeof(Prefab)},
             All = new ComponentType[] {ComponentType.ChunkComponentReadOnly<ChunkAppearTime>(), typeof(Disabled)}
         };
         makeAppearQuery = GetEntityQuery(makeAppearQueryDesc);
@@ -162,7 +164,7 @@ public class ChunkScopingSystem : SystemBase
             else if (disappearTime < minNextDisappear) minNextDisappear = disappearTime;
         }
 
-        entityManager.AddComponent<DisappearedTag>(disappearTimeChangedQuery);
+        entityManager.AddComponent<Disappeared>(disappearTimeChangedQuery);
         entityManager.AddComponent<Disabled>(disappearTimeChangedQuery);
         chunks.Dispose();
 

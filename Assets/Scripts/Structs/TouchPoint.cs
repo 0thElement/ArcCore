@@ -17,7 +17,7 @@ namespace ArcCore.Structs
         public int track;
 
         public Rect2D InputPlane => inputPlane.GetValueOrDefault();
-        public bool InputPlaneValid => inputPlane is not null;
+        public bool InputPlaneValid => inputPlane.HasValue;
         public bool TrackValid => track != -1;
 
         //public int time;

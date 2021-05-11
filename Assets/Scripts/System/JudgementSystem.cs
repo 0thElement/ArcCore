@@ -1,8 +1,5 @@
 ﻿//COMMENT THIS OUT IN ORDER TO HIDE CONTENTS OF THIS FILE
 //#define FlooferWroteThisHahahahahaSexUwu
-
-
-#if FlooferWroteThisHahahahahaSexUwu
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -67,8 +64,12 @@ public class JudgementSystem : SystemBase
         arcStates.Dispose();
         rawArcs.Dispose();
     }
+
+
     protected override unsafe void OnUpdate()
     {
+
+#if FlooferWroteThisHahahahahaSexUwu
         //Only execute after full initialization
         if (!IsReady)
             return;
@@ -418,6 +419,6 @@ After:
         ScoreManager.Instance.lostCount = lostCount;
 
 
+#endif
     }
 }
-#endif

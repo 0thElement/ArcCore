@@ -2,6 +2,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
+using ArcCore;
 using ArcCore.Components;
 using ArcCore.Behaviours;
 using ArcCore.Components.Tags;
@@ -20,14 +21,14 @@ public class JudgeEntitiesScopingSystem : SystemBase
         int currentTime = Conductor.Instance.receptorTime;
         var commandBuffer = commandBufferSystem.CreateCommandBuffer();
 
-        Entities.WithNone<WithinJudgeRange, PastJudgeRange>().WithAny<ChartTime,ChartTimeSpan>().ForEach(
+        Entities.WithNone<WithinJudgeRange, PastJudgeRange>().ForEach(
 
-                (Entity entity, in AppearTime appearTime) 
+                (Entity entity, in ChartTime chartTime) 
 
                     => 
 
                 {
-                    if (currentTime >= appearTime.value)
+                    if (currentTime >= chartTime.value - Constants.LostWindow)
                     {
                         commandBuffer.AddComponent<WithinJudgeRange>(entity);
                     }

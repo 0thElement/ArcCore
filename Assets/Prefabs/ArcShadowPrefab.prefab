@@ -11,10 +11,10 @@ GameObject:
   - component: {fileID: 5903428592244881430}
   - component: {fileID: 501788067219946787}
   - component: {fileID: 1437154339568805217}
-  - component: {fileID: 6485649514946026521}
-  - component: {fileID: 649795004564846257}
-  - component: {fileID: 1281809482901500433}
-  - component: {fileID: 384023863154197468}
+  - component: {fileID: 3208676114895942268}
+  - component: {fileID: 8684378539622194505}
+  - component: {fileID: 985373435326257392}
+  - component: {fileID: 9191018317805537883}
   m_Layer: 0
   m_Name: ArcShadowPrefab
   m_TagString: Untagged
@@ -83,7 +83,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!114 &6485649514946026521
+--- !u!114 &3208676114895942268
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -92,11 +92,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 345932005286596484}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c90d8617e11b6f444b10dd4a6f3b6e3a, type: 3}
+  m_Script: {fileID: 11500000, guid: db1afbabdc0c3bb4eb3dd13c34d2ccd2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Value: 0
---- !u!114 &649795004564846257
+  value: 0
+--- !u!114 &8684378539622194505
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -105,11 +105,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 345932005286596484}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 08971367d0a285d48a9071c53667ae42, type: 3}
+  m_Script: {fileID: 11500000, guid: 73475df5cd9dd6945978bcc76d94c2a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Value: 0
---- !u!114 &1281809482901500433
+  value: 0
+--- !u!114 &985373435326257392
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -118,11 +118,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 345932005286596484}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 07610113e04f5d14787559fe662a2d81, type: 3}
+  m_Script: {fileID: 11500000, guid: 5507c7ab5aab54e4bb68ec1e20ae959e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Value: 0
---- !u!114 &384023863154197468
+  value: 0
+--- !u!114 &9191018317805537883
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -131,6 +131,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 345932005286596484}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9307a1ded40820c459d8fa711f42adba, type: 3}
+  m_Script: {fileID: 11500000, guid: 5fcc3ca50480ad747bde0bfe962eac8d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  value: 0

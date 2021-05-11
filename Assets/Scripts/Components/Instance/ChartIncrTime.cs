@@ -21,7 +21,7 @@ namespace ArcCore.Components
         /// </summary>
         public readonly int endTime;
 
-        public ChartIncrTime(int startTime, int endTime, float inc) => (time, this.endTime, timeIncrement) = (startTime, endTime, inc);
+        public ChartIncrTime(int startTime, int endTime, int inc) => (time, this.endTime, timeIncrement) = (startTime, endTime, inc);
         
         /// <summary>
         /// Create a new <see cref="ChartIncrTime"/> from a start time, end time and bpm.
@@ -30,13 +30,16 @@ namespace ArcCore.Components
         /// </summary>
         public static ChartIncrTime FromBpm(int startTime, int endTime, float bpm, out int count)
         {
-            float i = GetIncr(bpm);
-            count = (int)((endTime - startTime) / i);
+            int i = GetIncr(bpm);
+            count = (endTime - startTime) / i;
             return new ChartIncrTime(startTime, endTime, i);
         }
 
-        public static float GetIncr(float bpm)
-            => math.abs((bpm >= 255 ? 60_000f : 30_000f) / bpm);
+        public static int GetIncr(float bpm)
+        {
+            int v = (int)math.abs((bpm >= 255 ? 60_000f : 30_000f) / bpm);
+            return math.max(1, v);
+        }
 
         /// <summary>
         /// Update the field <c>time</c> of this instance to reflect the next judge point in the hold or arc.

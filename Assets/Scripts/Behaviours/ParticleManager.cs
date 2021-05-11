@@ -18,7 +18,17 @@ namespace ArcCore.Behaviours
 
         }
 
-        public void ParseParticle(IParticleAction particleAction)
+        public void ParseParticle(TrackParticleAction ac)
+        {
+            //TODO
+        }
+
+        public void ParseParticle(ComboParticleAction ac)
+        {
+            //TODO
+        }
+
+        public void ParseParticle(SkyParticleAction ac)
         {
             //TODO
         }

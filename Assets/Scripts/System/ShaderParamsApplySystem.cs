@@ -18,8 +18,8 @@ public class ShaderParamsApplySystem : SystemBase
         EntityManager entityManager = EntityManager;
         int currentTime = Conductor.Instance.receptorTime;
 
-        NativeArray<ArcCompleteState> arcStates = JudgementSystem.Instance.arcStates;
-
+        //NativeArray<ArcCompleteState> arcStates = JudgementSystem.Instance.arcStates;
+        /*
         //ARCS
         Entities.WithNone<Translation>().ForEach(
 
@@ -65,5 +65,6 @@ public class ShaderParamsApplySystem : SystemBase
         )
             .WithName("HoldShaders")
             .Schedule();
+        */
     }
 }

@@ -5,7 +5,6 @@ using Unity.Jobs;
 using Unity.Transforms;
 using ArcCore.Components;
 using ArcCore.Behaviours;
-using ArcCore.Tags;
 using Unity.Rendering;
 
 public class MovingNotesSystem : SystemBase

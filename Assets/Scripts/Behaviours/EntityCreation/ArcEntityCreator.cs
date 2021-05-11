@@ -216,6 +216,8 @@ namespace ArcCore.Behaviours.EntityCreation
             entityManager.SetComponentData(arcInstEntity, new TimingGroup(timingGroup));
             entityManager.SetComponentData(arcShadowEntity, new TimingGroup(timingGroup));
 
+            entityManager.SetComponentData(arcInstEntity, new EntityReference(arcShadowEntity));
+
             float dx = start.x - end.x;
             float dy = start.y - end.y;
             float dz = start.z - end.z;
@@ -238,7 +240,7 @@ namespace ArcCore.Behaviours.EntityCreation
             entityManager.SetComponentData(arcShadowEntity, ltwShadow);
 
             //FIX THIS SHIT, WHAT IS HAPPENINGGGGGG
-            entityManager.SetComponentData(arcInstEntity, new ShaderRedmix() { Value = 0f });
+            //entityManager.SetComponentData(arcInstEntity, new ShaderRedmix() { Value = 0f });
 
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, timingGroup);
             int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, timingGroup);
@@ -246,7 +248,10 @@ namespace ArcCore.Behaviours.EntityCreation
             int disappearTime = (t1 < t2) ? t2 : t1;
 
             entityManager.SetComponentData(arcInstEntity, new AppearTime(appearTime));
+            entityManager.SetComponentData(arcShadowEntity, new AppearTime(appearTime));
+
             entityManager.SetComponentData(arcInstEntity, new DisappearTime(disappearTime));
+            entityManager.SetComponentData(arcShadowEntity, new DisappearTime(disappearTime));
         }
 
         private void CreateHeightIndicator(AffArc arc, Material material)

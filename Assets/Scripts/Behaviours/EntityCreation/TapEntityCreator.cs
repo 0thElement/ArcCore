@@ -64,7 +64,7 @@ namespace ArcCore.Behaviours.EntityCreation
                 entityManager.SetComponentData(tapEntity, new AppearTime(){ value = appearTime });
                 
                 entityManager.SetComponentData(tapEntity, new ChartTime(tap.timing));
-                entityManager.SetComponentData(tapEntity, new ChartPosition(tap.track));
+                entityManager.SetComponentData(tapEntity, new ChartLane(tap.track));
 
                 ScoreManager.Instance.maxCombo++;
             }
