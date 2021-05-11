@@ -29,10 +29,8 @@ public class JudgementSystem : SystemBase
     public const float arcLeniencyGeneral = 2f;
     public static readonly float2 arctapBoxExtents = new float2(4f, 1f); //DUMMY VALUES
 
-    public NativeMatrIterator<ArcJudge> arcJudges;
     public NativeArray<ArcCompleteState> arcStates;
     public NativeArray<int> arcFingers;
-    public NativeArray<AffArc> rawArcs;
 
     BeginSimulationEntityCommandBufferSystem beginSimulationEntityCommandBufferSystem;
 
@@ -59,10 +57,8 @@ public class JudgementSystem : SystemBase
     }
     protected override void OnDestroy()
     {
-        arcJudges.Dispose();
         arcFingers.Dispose();
         arcStates.Dispose();
-        rawArcs.Dispose();
     }
 
 
