@@ -56,7 +56,7 @@
                 fixed4 col = tex2D(_MainTex, i.uv);
                 // apply fog
                 UNITY_APPLY_FOG(i.fogCoord, col);
-                col.a = alpha_from_pos(col, i.worldpos.z);
+                col.a *= alpha_from_pos(i.worldpos.z);
                 return col;
             }
             ENDCG

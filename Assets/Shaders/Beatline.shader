@@ -53,7 +53,7 @@
             fixed4 frag (v2f i) : SV_Target
             {
                 float4 c = _Color;
-                c.a = alpha_from_pos(c, i.worldpos.z);
+                c.a *= alpha_from_pos(i.worldpos.z);
                 return c;
             }
             ENDCG
