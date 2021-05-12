@@ -8,6 +8,7 @@ using ArcCore.Utility;
 using ArcCore.Components;
 using ArcCore.Components.Chunk;
 using ArcCore.Parsing;
+using static ArcCore.EntityManagement;
 
 namespace ArcCore.Behaviours.EntityCreation
 {
@@ -20,35 +21,22 @@ namespace ArcCore.Behaviours.EntityCreation
         [SerializeField] private Material traceMaterial;
         [SerializeField] private Mesh traceMesh;
         [SerializeField] private Mesh headMesh;
+
         private Entity traceNoteEntityPrefab;
         private Entity headTraceNoteEntityPrefab;
-        private World defaultWorld;
-        private EntityManager entityManager;
         //private int colorShaderId;
+
         private void Awake()
         {
             Instance = this;
-            defaultWorld = World.DefaultGameObjectInjectionWorld;
-            entityManager = defaultWorld.EntityManager;
-            GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
-            traceNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(traceNotePrefab, settings);
-            //Remove these component to allow direct access to localtoworld matrices
-            //idk if this is a good way to set up an entity prefab in this case but this will do for now
-            entityManager.RemoveComponent<Translation>(traceNoteEntityPrefab);
-            entityManager.RemoveComponent<Rotation>(traceNoteEntityPrefab);
-            entityManager.RemoveComponent<ColorID>(traceNoteEntityPrefab);
-            entityManager.AddComponent<Disabled>(traceNoteEntityPrefab);
-            entityManager.AddChunkComponentData<ChunkAppearTime>(traceNoteEntityPrefab);
-            entityManager.AddChunkComponentData<ChunkDisappearTime>(traceNoteEntityPrefab);
-            entityManager.AddComponent(traceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
 
-            headTraceNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headTraceNotePrefab, settings);
-            entityManager.AddComponent(headTraceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
+            traceNoteEntityPrefab = GameObjectToNote(traceNotePrefab);
+            ExposeLocalToWorld(traceNoteEntityPrefab);
+            EManager.RemoveComponent<ColorID>(traceNoteEntityPrefab);
+            EManager.AddComponent(traceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
 
-            entityManager.AddComponent<Disabled>(headTraceNoteEntityPrefab);
-            entityManager.AddChunkComponentData<ChunkAppearTime>(headTraceNoteEntityPrefab);
-
-            //colorShaderId = Shader.PropertyToID("_Color");
+            headTraceNoteEntityPrefab = GameObjectToNote(headTraceNotePrefab);
+            EManager.AddComponent(headTraceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
         }
         //Similar to arc creation
         public void CreateEntities(List<AffTrace> affTraceList)
@@ -118,13 +106,13 @@ namespace ArcCore.Behaviours.EntityCreation
 
         private void CreateSegment(float3 start, float3 end, int timingGroup, int time)
         {
-            Entity traceEntity = entityManager.Instantiate(traceNoteEntityPrefab);
-            entityManager.SetSharedComponentData<RenderMesh>(traceEntity, new RenderMesh()
+            Entity traceEntity = EManager.Instantiate(traceNoteEntityPrefab);
+            EManager.SetSharedComponentData<RenderMesh>(traceEntity, new RenderMesh()
             {
                 mesh = traceMesh,
                 material = traceMaterial
             });
-            entityManager.SetComponentData<FloorPosition>(traceEntity, new FloorPosition()
+            EManager.SetComponentData<FloorPosition>(traceEntity, new FloorPosition()
             {
                 value = start.z
             });
@@ -134,7 +122,7 @@ namespace ArcCore.Behaviours.EntityCreation
             float dz = start.z - end.z;
 
             //Shear along xy + scale along z matrix
-            entityManager.SetComponentData<LocalToWorld>(traceEntity, new LocalToWorld()
+            EManager.SetComponentData<LocalToWorld>(traceEntity, new LocalToWorld()
             {
                 Value = new float4x4(
                     1, 0, dx, start.x,
@@ -144,14 +132,9 @@ namespace ArcCore.Behaviours.EntityCreation
                 )
             });
 
-            entityManager.SetComponentData<TimingGroup>(traceEntity, new TimingGroup()
+            EManager.SetComponentData<TimingGroup>(traceEntity, new TimingGroup()
             {
                 value = timingGroup
-            });
-
-            entityManager.SetComponentData<ShaderCutoff>(traceEntity, new ShaderCutoff()
-            {
-                value = 1f
             });
 
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, 0);
@@ -159,15 +142,15 @@ namespace ArcCore.Behaviours.EntityCreation
             int appearTime = (t1 < t2) ? t1 : t2;
             int disappearTime = (t1 < t2) ? t2 : t1;
 
-            entityManager.SetComponentData<AppearTime>(traceEntity, new AppearTime()
+            EManager.SetComponentData<AppearTime>(traceEntity, new AppearTime()
             {
                 value = appearTime
             });
-            entityManager.SetComponentData<DisappearTime>(traceEntity, new DisappearTime()
+            EManager.SetComponentData<DisappearTime>(traceEntity, new DisappearTime()
             {
                 value = disappearTime
             });
-            entityManager.SetComponentData<ChartTime>(traceEntity, new ChartTime()
+            EManager.SetComponentData<ChartTime>(traceEntity, new ChartTime()
             {
                 value = time
             });
@@ -175,13 +158,13 @@ namespace ArcCore.Behaviours.EntityCreation
 
         private void CreateHeadSegment(AffTrace trace)
         {
-            Entity headEntity = entityManager.Instantiate(headTraceNoteEntityPrefab);
-            entityManager.SetSharedComponentData<RenderMesh>(headEntity, new RenderMesh(){
+            Entity headEntity = EManager.Instantiate(headTraceNoteEntityPrefab);
+            EManager.SetSharedComponentData<RenderMesh>(headEntity, new RenderMesh(){
                 mesh = headMesh,
                 material = traceMaterial
             });
             float floorpos = Conductor.Instance.GetFloorPositionFromTiming(trace.timing, trace.timingGroup);
-            entityManager.SetComponentData<FloorPosition>(headEntity, new FloorPosition()
+            EManager.SetComponentData<FloorPosition>(headEntity, new FloorPosition()
             {
                 value = floorpos
             });
@@ -189,11 +172,11 @@ namespace ArcCore.Behaviours.EntityCreation
             float x = Conversion.GetWorldX(trace.startX); 
             float y = Conversion.GetWorldY(trace.startY); 
             const float z = 0;
-            entityManager.SetComponentData<Translation>(headEntity, new Translation()
+            EManager.SetComponentData<Translation>(headEntity, new Translation()
             {
                 Value = new float3(x, y, z)
             });
-            entityManager.SetComponentData<TimingGroup>(headEntity, new TimingGroup()
+            EManager.SetComponentData<TimingGroup>(headEntity, new TimingGroup()
             {
                 value = trace.timingGroup
             });
@@ -202,17 +185,12 @@ namespace ArcCore.Behaviours.EntityCreation
             int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, 0);
             int appearTime = (t1 < t2) ? t1 : t2;
 
-            entityManager.SetComponentData<AppearTime>(headEntity, new AppearTime()
+            EManager.SetComponentData<AppearTime>(headEntity, new AppearTime()
             {
                 value = appearTime
             });
 
-            entityManager.SetComponentData<ShaderCutoff>(headEntity, new ShaderCutoff()
-            {
-                value = 1f
-            });
-
-            entityManager.SetComponentData<ChartTime>(headEntity, new ChartTime()
+            EManager.SetComponentData<ChartTime>(headEntity, new ChartTime()
             {
                 value = trace.timing
             });

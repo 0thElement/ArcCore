@@ -107,6 +107,7 @@ namespace ArcCore.Behaviours
             i++;
             int currentTimingGroup = 0;
             affTimingList.Add(new List<AffTiming>());
+
             while (i < lines.Length)
             {
                 if (lines[i][0] == '}' || lines[i][0] == '{')
@@ -166,7 +167,7 @@ namespace ArcCore.Behaviours
             }
 
             Conductor.Instance.SetupTiming(affTimingList);
-            BeatlineEntityCreator.Instance.CreateEntities(affTimingList[0]);
+            //BeatlineEntityCreator.Instance.CreateEntities(affTimingList[0]);
             TapEntityCreator.Instance.CreateEntities(affTapList);
             HoldEntityCreator.Instance.CreateEntities(affHoldList);
             ArcEntityCreator.Instance.CreateEntities(affArcList);

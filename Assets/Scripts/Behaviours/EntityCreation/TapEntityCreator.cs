@@ -8,6 +8,7 @@ using ArcCore.Components;
 using Unity.Collections;
 using ArcCore.Components.Chunk;
 using ArcCore.Parsing;
+using static ArcCore.EntityManagement;
 
 namespace ArcCore.Behaviours.EntityCreation
 {
@@ -22,37 +23,31 @@ namespace ArcCore.Behaviours.EntityCreation
         private void Awake()
         {
             Instance = this;
-            tapNoteEntityPrefab = EntityManagement.GameObjectToEntity(tapNotePrefab);
-
-            EntityManager entityManager = EntityManagement.EntityManager;
-
-            entityManager.AddComponent<Disabled>(tapNoteEntityPrefab);
-            entityManager.AddChunkComponentData<ChunkAppearTime>(tapNoteEntityPrefab);
+            tapNoteEntityPrefab = GameObjectToNote(tapNotePrefab);
         }
 
         public void CreateEntities(List<AffTap> affTapList)
         {
             affTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
-            EntityManager entityManager = EntityManagement.EntityManager;
 
             foreach (AffTap tap in affTapList)
             {
                 //Main Entity
-                Entity tapEntity = entityManager.Instantiate(tapNoteEntityPrefab);
+                Entity tapEntity = EManager.Instantiate(tapNoteEntityPrefab);
 
                 float x = Conversion.TrackToX(tap.track);
                 const float y = 0;
                 const float z = 0;
 
-                entityManager.SetComponentData(tapEntity, new Translation(){ 
+                EManager.SetComponentData(tapEntity, new Translation(){ 
                     Value = new float3(x, y, z)
                 });
 
                 float floorpos = Conductor.Instance.GetFloorPositionFromTiming(tap.timing, tap.timingGroup);
-                entityManager.SetComponentData(tapEntity, new FloorPosition(){
+                EManager.SetComponentData(tapEntity, new FloorPosition(){
                     value = floorpos 
                 });
-                entityManager.SetComponentData(tapEntity, new TimingGroup()
+                EManager.SetComponentData(tapEntity, new TimingGroup()
                 {
                     value = tap.timingGroup
                 });
@@ -61,10 +56,10 @@ namespace ArcCore.Behaviours.EntityCreation
                 int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, tap.timingGroup);
                 int appearTime = (t1 < t2) ? t1 : t2;
 
-                entityManager.SetComponentData(tapEntity, new AppearTime(){ value = appearTime });
+                EManager.SetComponentData(tapEntity, new AppearTime(){ value = appearTime });
                 
-                entityManager.SetComponentData(tapEntity, new ChartTime(tap.timing));
-                entityManager.SetComponentData(tapEntity, new ChartLane(tap.track));
+                EManager.SetComponentData(tapEntity, new ChartTime(tap.timing));
+                EManager.SetComponentData(tapEntity, new ChartLane(tap.track));
 
                 ScoreManager.Instance.maxCombo++;
             }

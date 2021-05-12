@@ -7,6 +7,7 @@ using ArcCore.Utility;
 using ArcCore.Components;
 using ArcCore.Parsing;
 using ArcCore.Components.Chunk;
+using static ArcCore.EntityManagement;
 
 namespace ArcCore.Behaviours.EntityCreation
 {
@@ -18,23 +19,17 @@ namespace ArcCore.Behaviours.EntityCreation
         private void Awake()
         {
             Instance = this;
-            holdNoteEntityPrefab = EntityManagement.GameObjectToEntity(holdNotePrefab);
-
-            EntityManager entityManager = EntityManagement.EntityManager;
-
-            entityManager.AddComponent<Disabled>(holdNoteEntityPrefab);
-            entityManager.AddChunkComponentData<ChunkAppearTime>(holdNoteEntityPrefab);
+            holdNoteEntityPrefab = GameObjectToNote(holdNotePrefab);
         }
 
         public unsafe void CreateEntities(List<AffHold> affHoldList)
         {
             affHoldList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
-            EntityManager entityManager = EntityManagement.EntityManager;
 
             foreach (AffHold hold in affHoldList)
             {
                 //Main entity
-                Entity holdEntity = entityManager.Instantiate(holdNoteEntityPrefab);
+                Entity holdEntity = EManager.Instantiate(holdNoteEntityPrefab);
 
                 float x = Conversion.TrackToX(hold.track);
                 const float y = 0;
@@ -47,21 +42,21 @@ namespace ArcCore.Behaviours.EntityCreation
                 float startFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.timing, hold.timingGroup);
                 float scalez = - endFloorPosition + startFloorPosition;
 
-                entityManager.SetComponentData<Translation>(holdEntity, new Translation(){
+                EManager.SetComponentData<Translation>(holdEntity, new Translation(){
                     Value = new float3(x, y, z)
                 });
-                entityManager.AddComponentData<NonUniformScale>(holdEntity, new NonUniformScale(){
+                EManager.AddComponentData<NonUniformScale>(holdEntity, new NonUniformScale(){
                     Value = new float3(scalex, scaley, scalez)
                 });
 
-                entityManager.SetComponentData<FloorPosition>(holdEntity, new FloorPosition(startFloorPosition));
-                entityManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(hold.timingGroup));
+                EManager.SetComponentData<FloorPosition>(holdEntity, new FloorPosition(startFloorPosition));
+                EManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(hold.timingGroup));
                 /*entityManager.SetComponentData<ShaderCutoff>(holdEntity, new ShaderCutoff()
                 {
                     Value = 1f
                 });*/
 
-                entityManager.SetComponentData(holdEntity, new ChartLane(hold.track));
+                EManager.SetComponentData(holdEntity, new ChartLane(hold.track));
 
                 //Appear and disappear time
                 int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(startFloorPosition + Constants.RenderFloorPositionRange, 0);
@@ -69,12 +64,12 @@ namespace ArcCore.Behaviours.EntityCreation
                 int appearTime = (t1 < t2) ? t1 : t2;
                 int disappearTime = (t1 < t2) ? t2 : t1;
 
-                entityManager.SetComponentData<AppearTime>(holdEntity, new AppearTime(appearTime));
-                entityManager.SetComponentData<DisappearTime>(holdEntity, new DisappearTime(disappearTime));
+                EManager.SetComponentData<AppearTime>(holdEntity, new AppearTime(appearTime));
+                EManager.SetComponentData<DisappearTime>(holdEntity, new DisappearTime(disappearTime));
 
                 //Judge entities
                 float startBpm = Conductor.Instance.GetTimingEventFromTiming(hold.timing, hold.timingGroup).bpm;
-                entityManager.SetComponentData(holdEntity, ChartIncrTime.FromBpm(hold.timing, hold.endTiming, startBpm, out int comboCount));
+                EManager.SetComponentData(holdEntity, ChartIncrTime.FromBpm(hold.timing, hold.endTiming, startBpm, out int comboCount));
 
                 //Add combo
                 ScoreManager.Instance.maxCombo += comboCount;

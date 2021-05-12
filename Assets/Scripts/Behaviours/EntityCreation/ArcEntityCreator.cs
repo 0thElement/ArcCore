@@ -10,6 +10,7 @@ using ArcCore.Components;
 using ArcCore.Components.Chunk;
 using ArcCore.Parsing;
 using ArcCore.Structs;
+using static ArcCore.EntityManagement;
 
 namespace ArcCore.Behaviours.EntityCreation
 {
@@ -30,8 +31,6 @@ namespace ArcCore.Behaviours.EntityCreation
         private Entity headArcNoteEntityPrefab;
         private Entity heightIndicatorEntityPrefab;
         private Entity arcShadowEntityPrefab;
-        private World defaultWorld;
-        private EntityManager entityManager;
         private int colorShaderId;
         private int redColorShaderId;
 
@@ -51,32 +50,34 @@ namespace ArcCore.Behaviours.EntityCreation
         private void Awake()
         {
             Instance = this;
-            defaultWorld = World.DefaultGameObjectInjectionWorld;
-            entityManager = defaultWorld.EntityManager;
-            GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
-            arcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcNotePrefab, settings);
-            headArcNoteEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(headArcNotePrefab, settings);
-            heightIndicatorEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(heightIndicatorPrefab, settings);
-            arcShadowEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(arcShadowPrefab, settings);
+
+            arcNoteEntityPrefab = GameObjectToNote(arcNotePrefab);
+            ExposeLocalToWorld(arcNoteEntityPrefab);
+
+            headArcNoteEntityPrefab = GameObjectToNote(headArcNotePrefab);
+            heightIndicatorEntityPrefab = GameObjectToNote(heightIndicatorPrefab);
+
+            arcShadowEntityPrefab = GameObjectToNote(arcShadowPrefab);
+            ExposeLocalToWorld(arcShadowEntityPrefab);
             
             //Remove these component to allow direct access to localtoworld matrices
             //idk if this is a good way to set up an entity prefab in this case but this will do for now
-            entityManager.RemoveComponent<Translation>(arcNoteEntityPrefab);
-            entityManager.RemoveComponent<Rotation>(arcNoteEntityPrefab);
-            entityManager.AddComponent<Disabled>(arcNoteEntityPrefab);
-            entityManager.AddChunkComponentData<ChunkAppearTime>(arcNoteEntityPrefab);
-            entityManager.AddChunkComponentData<ChunkDisappearTime>(arcNoteEntityPrefab);
+            /*EManager.RemoveComponent<Translation>(arcNoteEntityPrefab);
+            EManager.RemoveComponent<Rotation>(arcNoteEntityPrefab);
+            EManager.AddComponent<Disabled>(arcNoteEntityPrefab);
+            EManager.AddChunkComponentData<ChunkAppearTime>(arcNoteEntityPrefab);
+            EManager.AddChunkComponentData<ChunkDisappearTime>(arcNoteEntityPrefab);
             
-            entityManager.RemoveComponent<Translation>(arcShadowEntityPrefab);
-            entityManager.RemoveComponent<Rotation>(arcShadowEntityPrefab);
+            EManager.RemoveComponent<Translation>(arcShadowEntityPrefab);
+            EManager.RemoveComponent<Rotation>(arcShadowEntityPrefab);
 
-            entityManager.AddComponent<Disabled>(headArcNoteEntityPrefab);
-            entityManager.AddChunkComponentData<ChunkAppearTime>(headArcNoteEntityPrefab);
+            EManager.AddComponent<Disabled>(headArcNoteEntityPrefab);
+            EManager.AddChunkComponentData<ChunkAppearTime>(headArcNoteEntityPrefab);
             
-            entityManager.AddComponent<Disabled>(heightIndicatorEntityPrefab);
-            entityManager.AddChunkComponentData<ChunkAppearTime>(heightIndicatorEntityPrefab);
+            EManager.AddComponent<Disabled>(heightIndicatorEntityPrefab);
+            EManager.AddChunkComponentData<ChunkAppearTime>(heightIndicatorEntityPrefab);*/
 
-            arcJudgeArchetype = entityManager.CreateArchetype(
+            arcJudgeArchetype = EManager.CreateArchetype(
                 
                 //Chart time
                 ComponentType.ReadOnly<ChartTime>(),
@@ -202,21 +203,21 @@ namespace ArcCore.Behaviours.EntityCreation
 
         private void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end, int timingGroup)
         {
-            Entity arcInstEntity = entityManager.Instantiate(arcNoteEntityPrefab);
-            Entity arcShadowEntity = entityManager.Instantiate(arcShadowEntityPrefab);
-            entityManager.SetSharedComponentData<RenderMesh>(arcInstEntity, new RenderMesh()
+            Entity arcInstEntity = EManager.Instantiate(arcNoteEntityPrefab);
+            Entity arcShadowEntity = EManager.Instantiate(arcShadowEntityPrefab);
+            EManager.SetSharedComponentData<RenderMesh>(arcInstEntity, new RenderMesh()
             {
                 mesh = arcMesh,
                 material = arcColorMaterialInstance
             });
 
-            entityManager.SetComponentData(arcInstEntity, new FloorPosition(start.z));
-            entityManager.SetComponentData(arcShadowEntity, new FloorPosition(start.z));
+            EManager.SetComponentData(arcInstEntity, new FloorPosition(start.z));
+            EManager.SetComponentData(arcShadowEntity, new FloorPosition(start.z));
 
-            entityManager.SetComponentData(arcInstEntity, new TimingGroup(timingGroup));
-            entityManager.SetComponentData(arcShadowEntity, new TimingGroup(timingGroup));
+            EManager.SetComponentData(arcInstEntity, new TimingGroup(timingGroup));
+            EManager.SetComponentData(arcShadowEntity, new TimingGroup(timingGroup));
 
-            entityManager.SetComponentData(arcInstEntity, new EntityReference(arcShadowEntity));
+            EManager.SetComponentData(arcInstEntity, new EntityReference(arcShadowEntity));
 
             float dx = start.x - end.x;
             float dy = start.y - end.y;
@@ -232,12 +233,19 @@ namespace ArcCore.Behaviours.EntityCreation
                 )
             };
 
-            LocalToWorld ltwShadow = ltwArc;
-            ltwShadow.Value.c2.zw = math.float2(1, 0);
+            LocalToWorld ltwShadow = new LocalToWorld()
+            {
+                Value = new float4x4(
+                    1, 0, dx, start.x,
+                    0, 1, 0, 0,
+                    0, 0, dz, 0,
+                    0, 0, 0, 1
+                )
+            };
 
             //Shear along xy + scale along z matrix
-            entityManager.SetComponentData(arcInstEntity, ltwArc);
-            entityManager.SetComponentData(arcShadowEntity, ltwShadow);
+            EManager.SetComponentData(arcInstEntity, ltwArc);
+            EManager.SetComponentData(arcShadowEntity, ltwShadow);
 
             //FIX THIS SHIT, WHAT IS HAPPENINGGGGGG
             //entityManager.SetComponentData(arcInstEntity, new ShaderRedmix() { Value = 0f });
@@ -247,16 +255,16 @@ namespace ArcCore.Behaviours.EntityCreation
             int appearTime = (t1 < t2) ? t1 : t2;
             int disappearTime = (t1 < t2) ? t2 : t1;
 
-            entityManager.SetComponentData(arcInstEntity, new AppearTime(appearTime));
-            entityManager.SetComponentData(arcShadowEntity, new AppearTime(appearTime));
+            EManager.SetComponentData(arcInstEntity, new AppearTime(appearTime));
+            EManager.SetComponentData(arcShadowEntity, new AppearTime(appearTime));
 
-            entityManager.SetComponentData(arcInstEntity, new DisappearTime(disappearTime));
-            entityManager.SetComponentData(arcShadowEntity, new DisappearTime(disappearTime));
+            EManager.SetComponentData(arcInstEntity, new DisappearTime(disappearTime));
+            EManager.SetComponentData(arcShadowEntity, new DisappearTime(disappearTime));
         }
 
         private void CreateHeightIndicator(AffArc arc, Material material)
         {
-            Entity heightEntity = entityManager.Instantiate(heightIndicatorEntityPrefab);
+            Entity heightEntity = EManager.Instantiate(heightIndicatorEntityPrefab);
 
             float height = Conversion.GetWorldY(arc.startY) - 0.45f;
 
@@ -268,57 +276,57 @@ namespace ArcCore.Behaviours.EntityCreation
             float scaleY = height;
             const float scaleZ = 1;
 
-            Mesh mesh = entityManager.GetSharedComponentData<RenderMesh>(heightEntity).mesh; 
-            entityManager.SetSharedComponentData<RenderMesh>(heightEntity, new RenderMesh()
+            Mesh mesh = EManager.GetSharedComponentData<RenderMesh>(heightEntity).mesh; 
+            EManager.SetSharedComponentData<RenderMesh>(heightEntity, new RenderMesh()
             {
                 mesh = mesh,
                 material = material 
             });
 
-            entityManager.SetComponentData(heightEntity, new Translation()
+            EManager.SetComponentData(heightEntity, new Translation()
             {
                 Value = new float3(x, y, z)
             });
-            entityManager.AddComponentData<NonUniformScale>(heightEntity, new NonUniformScale()
+            EManager.AddComponentData<NonUniformScale>(heightEntity, new NonUniformScale()
             {
                 Value = new float3(scaleX, scaleY, scaleZ)
             });
             float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup);
-            entityManager.AddComponentData<FloorPosition>(heightEntity, new FloorPosition(floorpos));
-            entityManager.SetComponentData(heightEntity, new TimingGroup(arc.timingGroup));
+            EManager.AddComponentData<FloorPosition>(heightEntity, new FloorPosition(floorpos));
+            EManager.SetComponentData(heightEntity, new TimingGroup(arc.timingGroup));
 
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arc.timingGroup);
             int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, arc.timingGroup);
             int appearTime = (t1 < t2) ? t1 : t2;
 
-            entityManager.SetComponentData(heightEntity, new AppearTime(appearTime));
+            EManager.SetComponentData(heightEntity, new AppearTime(appearTime));
         }
 
         private void CreateHeadSegment(AffArc arc, Material material)
         {
-            Entity headEntity = entityManager.Instantiate(headArcNoteEntityPrefab);
-            entityManager.SetSharedComponentData<RenderMesh>(headEntity, new RenderMesh(){
+            Entity headEntity = EManager.Instantiate(headArcNoteEntityPrefab);
+            EManager.SetSharedComponentData<RenderMesh>(headEntity, new RenderMesh(){
                 mesh = headMesh,
                 material = material
             });
 
             float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup);
-            entityManager.SetComponentData(headEntity, new FloorPosition(floorpos));
+            EManager.SetComponentData(headEntity, new FloorPosition(floorpos));
 
             float x = Conversion.GetWorldX(arc.startX); 
             float y = Conversion.GetWorldY(arc.startY); 
             const float z = 0;
-            entityManager.SetComponentData(headEntity, new Translation()
+            EManager.SetComponentData(headEntity, new Translation()
             {
                 Value = math.float3(x, y, z)
             });
-            entityManager.SetComponentData(headEntity, new TimingGroup(arc.timingGroup));
+            EManager.SetComponentData(headEntity, new TimingGroup(arc.timingGroup));
 
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arc.timingGroup);
             int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, arc.timingGroup);
             int appearTime = (t1 < t2) ? t1 : t2;
 
-            entityManager.SetComponentData(headEntity, new AppearTime(appearTime));
+            EManager.SetComponentData(headEntity, new AppearTime(appearTime));
             
             //Redo all the 
         }
@@ -326,22 +334,22 @@ namespace ArcCore.Behaviours.EntityCreation
         private void CreateJudgeEntity(AffArc arc, int colorId, int startGroupTime, float startBpm)
         {
 
-            Entity en = entityManager.CreateEntity(arcJudgeArchetype);
+            Entity en = EManager.CreateEntity(arcJudgeArchetype);
 
-            entityManager.SetComponentData(en, new ChartTime(arc.timing));
-            entityManager.SetComponentData(en, ChartIncrTime.FromBpm(arc.timing, arc.endTiming, startBpm, out int comboCount));
+            EManager.SetComponentData(en, new ChartTime(arc.timing));
+            EManager.SetComponentData(en, ChartIncrTime.FromBpm(arc.timing, arc.endTiming, startBpm, out int comboCount));
 
             ScoreManager.Instance.maxCombo += comboCount;
 
-            entityManager.SetComponentData(en, new ColorID(colorId));
-            entityManager.SetComponentData(en,
+            EManager.SetComponentData(en, new ColorID(colorId));
+            EManager.SetComponentData(en,
                 new ArcData(
                     math.float2(arc.startX, arc.startY),
                     math.float2(arc.endX, arc.endY),
                     arc.easing
                 ));
 
-            entityManager.SetComponentData(en, new ArcGroupStartTime(startGroupTime));
+            EManager.SetComponentData(en, new ArcGroupStartTime(startGroupTime));
             
         }
 

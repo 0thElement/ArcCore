@@ -8,6 +8,7 @@ using ArcCore.Utility;
 using ArcCore.Components;
 using ArcCore.Components.Chunk;
 using ArcCore.Parsing;
+using static ArcCore.EntityManagement;
 
 namespace ArcCore.Behaviours.EntityCreation
 {
@@ -26,20 +27,9 @@ namespace ArcCore.Behaviours.EntityCreation
         {
             Instance = this;
 
-            arcTapNoteEntityPrefab = EntityManagement.GameObjectToEntity(arcTapNotePrefab);
-            connectionLineEntityPrefab = EntityManagement.GameObjectToEntity(connectionLinePrefab);
-            shadowEntityPrefab = EntityManagement.GameObjectToEntity(shadowPrefab);
-
-            EntityManager entityManager = EntityManagement.EntityManager;
-
-            entityManager.AddComponent<Disabled>(arcTapNoteEntityPrefab);
-            entityManager.AddChunkComponentData<ChunkAppearTime>(arcTapNoteEntityPrefab);
-
-            entityManager.AddComponent<Disabled>(connectionLineEntityPrefab);
-            entityManager.AddChunkComponentData<ChunkAppearTime>(connectionLineEntityPrefab);
-
-            entityManager.AddComponent<Disabled>(shadowEntityPrefab);
-            entityManager.AddChunkComponentData<ChunkAppearTime>(shadowEntityPrefab);
+            arcTapNoteEntityPrefab = GameObjectToNote(arcTapNotePrefab);
+            connectionLineEntityPrefab = GameObjectToNote(connectionLinePrefab);
+            shadowEntityPrefab = GameObjectToNote(shadowPrefab);
         }
 
         public void CreateEntities(List<AffArcTap> affArcTapList, List<AffTap> affTapList)
@@ -48,23 +38,21 @@ namespace ArcCore.Behaviours.EntityCreation
             affTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
             int lowBound=0;
 
-            EntityManager entityManager = EntityManagement.EntityManager;
-
             foreach (AffArcTap arctap in affArcTapList)
             {
                 //Main entity
-                Entity tapEntity = entityManager.Instantiate(arcTapNoteEntityPrefab);
-                Entity shadowEntity = entityManager.Instantiate(shadowEntityPrefab);
+                Entity tapEntity = EManager.Instantiate(arcTapNoteEntityPrefab);
+                Entity shadowEntity = EManager.Instantiate(shadowEntityPrefab);
 
                 float x = Conversion.GetWorldX(arctap.position.x);
                 float y = Conversion.GetWorldY(arctap.position.y);
                 const float z = 0;
 
-                entityManager.SetComponentData<Translation>(tapEntity, new Translation()
+                EManager.SetComponentData<Translation>(tapEntity, new Translation()
                 {
                     Value = new float3(x, y, z)
                 });
-                entityManager.SetComponentData<Translation>(shadowEntity, new Translation()
+                EManager.SetComponentData<Translation>(shadowEntity, new Translation()
                 {
                     Value = new float3(x, 0, z)
                 });
@@ -75,18 +63,18 @@ namespace ArcCore.Behaviours.EntityCreation
                     value = floorpos
                 };
 
-                entityManager.SetComponentData<FloorPosition>(tapEntity, floorPositionF);
-                entityManager.SetComponentData<FloorPosition>(shadowEntity, floorPositionF);
+                EManager.SetComponentData<FloorPosition>(tapEntity, floorPositionF);
+                EManager.SetComponentData<FloorPosition>(shadowEntity, floorPositionF);
 
                 TimingGroup group = new TimingGroup()
                 {
                     value = arctap.timingGroup
                 };
 
-                entityManager.SetComponentData<TimingGroup>(tapEntity, group);
-                entityManager.SetComponentData<TimingGroup>(shadowEntity, group);
+                EManager.SetComponentData<TimingGroup>(tapEntity, group);
+                EManager.SetComponentData<TimingGroup>(shadowEntity, group);
 
-                entityManager.SetComponentData<EntityReference>(tapEntity, new EntityReference()
+                EManager.SetComponentData<EntityReference>(tapEntity, new EntityReference()
                 {
                     value = shadowEntity
                 });
@@ -95,12 +83,12 @@ namespace ArcCore.Behaviours.EntityCreation
                 int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arctap.timingGroup);
                 int appearTime = (t1 < t2) ? t1 : t2;
 
-                entityManager.SetComponentData<AppearTime>(tapEntity, new AppearTime(){ value = appearTime });
-                entityManager.SetComponentData<AppearTime>(shadowEntity, new AppearTime() { value = appearTime });
+                EManager.SetComponentData<AppearTime>(tapEntity, new AppearTime(){ value = appearTime });
+                EManager.SetComponentData<AppearTime>(shadowEntity, new AppearTime() { value = appearTime });
 
                 //Judge entities
-                entityManager.SetComponentData(tapEntity, new ChartTime(arctap.timing));
-                entityManager.SetComponentData(tapEntity, new ChartPosition(arctap.position));
+                EManager.SetComponentData(tapEntity, new ChartTime(arctap.timing));
+                EManager.SetComponentData(tapEntity, new ChartPosition(arctap.position));
 
                 //Connection line
                 while (lowBound < affTapList.Count && arctap.timing > affTapList[lowBound].timing)
@@ -129,7 +117,7 @@ namespace ArcCore.Behaviours.EntityCreation
 
         public void CreateConnections(AffArcTap arctap, AffTap tap, int appearTime)
         {
-            EntityManager entityManager = EntityManagement.EntityManager;
+            EntityManager entityManager = EntityManagement.EManager;
 
             Entity lineEntity = entityManager.Instantiate(connectionLineEntityPrefab);
 

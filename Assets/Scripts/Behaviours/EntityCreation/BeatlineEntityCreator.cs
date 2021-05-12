@@ -5,6 +5,7 @@ using UnityEngine;
 using ArcCore.Components;
 using ArcCore.Parsing;
 using ArcCore.Components.Chunk;
+using static ArcCore.EntityManagement;
 
 namespace ArcCore.Behaviours.EntityCreation
 {
@@ -14,18 +15,11 @@ namespace ArcCore.Behaviours.EntityCreation
         public static BeatlineEntityCreator Instance { get; private set; }
         [SerializeField] private GameObject beatlinePrefab;
         private Entity beatlineEntityPrefab;
-        private World defaultWorld;
-        private EntityManager entityManager;
         private void Awake()
         {
             Instance = this;
-            defaultWorld = World.DefaultGameObjectInjectionWorld;
-            entityManager = defaultWorld.EntityManager;
-            GameObjectConversionSettings settings = GameObjectConversionSettings.FromWorld(defaultWorld, null);
-            beatlineEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(beatlinePrefab, settings);
-            entityManager.AddComponent<Disabled>(beatlineEntityPrefab);
-            entityManager.AddChunkComponentData<ChunkAppearTime>(beatlineEntityPrefab);
-            entityManager.AddChunkComponentData<ChunkDisappearTime>(beatlineEntityPrefab);
+
+            beatlineEntityPrefab = GameObjectToNote(beatlinePrefab);
         }
 
         public void CreateEntities(List<AffTiming> affTimingList)
@@ -86,11 +80,11 @@ namespace ArcCore.Behaviours.EntityCreation
         {
             int timing = (int)Mathf.Round(timingf);
 
-            Entity lineEntity = entityManager.Instantiate(beatlineEntityPrefab);
+            Entity lineEntity = EManager.Instantiate(beatlineEntityPrefab);
 
             float floorpos = Conductor.Instance.GetFloorPositionFromTiming(timing, 0);
 
-            entityManager.SetComponentData<FloorPosition>(lineEntity, new FloorPosition(){
+            EManager.SetComponentData<FloorPosition>(lineEntity, new FloorPosition(){
                 value = floorpos
             });
 
@@ -99,8 +93,8 @@ namespace ArcCore.Behaviours.EntityCreation
             int appearTime = (t1 < t2) ? t1 : t2;
             int disappearTime = (t1 < t2) ? t2 : t1;
 
-            entityManager.SetComponentData<AppearTime>(lineEntity, new AppearTime(){ value = appearTime });
-            entityManager.SetComponentData<DisappearTime>(lineEntity, new DisappearTime(){ value = disappearTime });
+            EManager.SetComponentData<AppearTime>(lineEntity, new AppearTime(){ value = appearTime });
+            EManager.SetComponentData<DisappearTime>(lineEntity, new DisappearTime(){ value = disappearTime });
         }
     }
 
