@@ -5,6 +5,8 @@ namespace ArcCore.Structs
     public struct ArcCompleteState
     {
         public ArcState state;
+        public bool isRed;
+
         public float redRoll;
         public float cutoff;
 
@@ -15,32 +17,27 @@ namespace ArcCore.Structs
         public ArcCompleteState(ArcState state)
         {
             this.state = state;
+            isRed = false;
             redRoll = 0f;
             cutoff = 0f;
         }
 
-        public ArcCompleteState(ArcCompleteState from, ArcState withState)
+        public ArcCompleteState(ArcCompleteState from, ArcState? withState = null, bool? withRed = null)
         {
-            state = withState;
+            state = withState ?? from.state;
+            isRed = withRed ?? from.isRed;
             redRoll = from.redRoll;
             cutoff = from.cutoff;
         }
+
+        public ArcCompleteState Copy(ArcState? withState = null, bool? withRed = null)
+            => new ArcCompleteState(this, withState, withRed);
 
         public void Update(float currentBpm, float deltaTime = 0.02f)
         {
             const float dfac = 10;
             float timef = deltaTime * dfac;
-            switch (state)
-            {
-                case ArcState.Normal:
-                case ArcState.Unheld:
-                    redRoll = math.min(redRoll - timef * redRange, minRedRoll);
-                    return;
-
-                case ArcState.Red:
-                    redRoll = math.min(redRoll + timef * redRange, maxRedRoll);
-                    return;
-            }
+            redRoll = math.min(redRoll + (isRed ? -1 : 1) * timef * redRange, maxRedRoll);
         }
     }
 }

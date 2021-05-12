@@ -34,27 +34,27 @@ namespace ArcCore.Behaviours
         {
             switch(type)
             {
-                case JudgeManage.JudgeType.LOST:
+                case JudgeManage.JudgeType.Lost:
                     lostCount++;
                     currentCombo = 0;
                     break;
-                case JudgeManage.JudgeType.MAX_PURE:
+                case JudgeManage.JudgeType.MaxPure:
                     maxPureCount++;
                     currentCombo++;
                     break;
-                case JudgeManage.JudgeType.LATE_PURE:
+                case JudgeManage.JudgeType.LatePure:
                     latePureCount++;
                     currentCombo++;
                     break;
-                case JudgeManage.JudgeType.EARLY_PURE:
+                case JudgeManage.JudgeType.EarlyPure:
                     earlyPureCount++;
                     currentCombo++;
                     break;
-                case JudgeManage.JudgeType.LATE_FAR:
+                case JudgeManage.JudgeType.LateFar:
                     lateFarCount++;
                     currentCombo++;
                     break;
-                case JudgeManage.JudgeType.EARLY_FAR:
+                case JudgeManage.JudgeType.EarlyFar:
                     earlyFarCount++;
                     currentCombo++;
                     break;
