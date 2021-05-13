@@ -1,13 +1,13 @@
-﻿Shader "Unlit/ArcTap"
+﻿Shader "Unlit/ArcTapShadow"
 {
 	Properties
 	{
 		_MainTex ("Texture", 2D) = "white" {}
+		_Color ("Color", Color) = (1,1,1,1)
 	}
 	SubShader
 	{
 		Tags { "Queue" = "Overlay+1"  "RenderType"="Transparent" "CanUseSpriteAtlas"="true"  }
-		Cull Front
 		ZTest Always
 		Blend SrcAlpha OneMinusSrcAlpha
 
@@ -36,7 +36,7 @@
 			};
 
 			sampler2D _MainTex;
-            float4 _MainTex_ST;
+            float4 _MainTex_ST, _Color;
 
 			v2f vert (appdata v)
 			{
@@ -51,8 +51,8 @@
 			{
 				float farCut = -124.25 + i.worldpos.y * 6;
 				if(i.worldpos.z <= farCut) return 0;
-				float4 c = tex2D(_MainTex, i.uv);
-				c.a *= alpha_from_pos(i.worldpos.z);
+				float4 c = _Color;
+				c.a *= tex2D(_MainTex, i.uv).a * alpha_from_pos(i.worldpos.z);
 				return c;
 			}
 			ENDCG
