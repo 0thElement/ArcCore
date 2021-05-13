@@ -3,7 +3,6 @@
     public enum ArcState
     {
         Normal,
-        Unheld,
-        Red
+        Unheld
     }
 }

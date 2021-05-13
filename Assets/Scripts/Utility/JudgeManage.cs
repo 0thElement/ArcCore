@@ -1,31 +1,33 @@
-﻿using ArcCore;
-
-public static class JudgeManage
+﻿namespace ArcCore.Utility
 {
     public enum JudgeType
     {
-        MAX_PURE,
-        LATE_PURE,
-        EARLY_PURE,
-        LATE_FAR,
-        EARLY_FAR,
-        LOST
+        MaxPure,
+        LatePure,
+        EarlyPure,
+        LateFar,
+        EarlyFar,
+        Lost
     }
 
-    public static JudgeType GetType(int timeDifference)
+    public static class JudgeManage
     {
-        if (timeDifference > Constants.FarWindow)
-            return JudgeType.LOST;
-        else if (timeDifference > Constants.PureWindow)
-            return JudgeType.EARLY_FAR;
-        else if (timeDifference > Constants.MaxPureWindow)
-            return JudgeType.EARLY_PURE;
-        else if (timeDifference > -Constants.MaxPureWindow)
-            return JudgeType.MAX_PURE;
-        else if (timeDifference > -Constants.PureWindow)
-            return JudgeType.LATE_PURE;
-        else if (timeDifference > -Constants.FarWindow)
-            return JudgeType.LATE_FAR;
-        else return JudgeType.LOST;
+
+        public static JudgeType GetType(int timeDifference)
+        {
+            if (timeDifference > Constants.FarWindow)
+                return JudgeType.Lost;
+            else if (timeDifference > Constants.PureWindow)
+                return JudgeType.EarlyFar;
+            else if (timeDifference > Constants.MaxPureWindow)
+                return JudgeType.EarlyPure;
+            else if (timeDifference > -Constants.MaxPureWindow)
+                return JudgeType.MaxPure;
+            else if (timeDifference > -Constants.PureWindow)
+                return JudgeType.LatePure;
+            else if (timeDifference > -Constants.FarWindow)
+                return JudgeType.LateFar;
+            else return JudgeType.Lost;
+        }
     }
 }

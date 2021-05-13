@@ -15,6 +15,9 @@ namespace ArcCore.Parsing
         public float endY;
         public int timingGroup;
 
+        public float2 StartPos => new float2(startX, startY);
+        public float2 EndPos => new float2(endX, endY);
+
         public AffArc(int timing, int endTiming, float startX, float endX, ArcEasing easing, float startY, float endY, int timingGroup)
         {
             this.timing = timing;
@@ -27,18 +30,22 @@ namespace ArcCore.Parsing
             this.timingGroup = timingGroup;
         }
 
-        public float2 PositionAt(int time)
+        public float2 PositionAt(int time) => PositionAt(time, timing, endTiming, StartPos, EndPos, easing);
+        public Circle2D ColliderAt(int time) => ColliderAt(time, timing, endTiming, StartPos, EndPos, easing);
+
+        public static float2 PositionAt(int time, int timing, int endTiming, float2 start, float2 end, ArcEasing easing)
             => new float2(
                     Conversion.GetXAt(
-                        math.unlerp(time, timing, endTiming),
-                        startX, endX, easing
+                        math.clamp(math.unlerp(time, timing, endTiming), 0, 1),
+                        start.x, end.x, easing
                     ),
                     Conversion.GetYAt(
-                        math.unlerp(time, timing, endTiming),
-                        startY, endY, easing
+                        math.clamp(math.unlerp(time, timing, endTiming), 0, 1),
+                        start.y, end.y, easing
                     )
                );
-        public Circle2D ColliderAt(int time)
-            => new Circle2D(PositionAt(time), Constants.ArcColliderRadius);
+
+        public static Circle2D ColliderAt(int time, int timing, int endTiming, float2 start, float2 end, ArcEasing easing)
+            => new Circle2D(PositionAt(time, timing, endTiming, start, end, easing), Constants.ArcColliderRadius);
     }
 }
