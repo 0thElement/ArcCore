@@ -19,10 +19,13 @@ namespace ArcCore.Behaviours.EntityCreation
         [SerializeField] private GameObject traceNotePrefab;
         [SerializeField] private GameObject headTraceNotePrefab;
         [SerializeField] private Material traceMaterial;
+        [SerializeField] private Material traceShadowMaterial;
         [SerializeField] private Mesh traceMesh;
         [SerializeField] private Mesh headMesh;
+        [SerializeField] private Mesh traceShadowMesh;
 
         private Entity traceNoteEntityPrefab;
+        private Entity traceShadowEntityPrefab;
         private Entity headTraceNoteEntityPrefab;
         //private int colorShaderId;
 
@@ -32,6 +35,10 @@ namespace ArcCore.Behaviours.EntityCreation
 
             traceNoteEntityPrefab = GameObjectToNote(traceNotePrefab);
             ExposeLocalToWorld(traceNoteEntityPrefab);
+
+            traceShadowEntityPrefab = GameObjectToNote(traceNotePrefab);
+            ExposeLocalToWorld(traceShadowEntityPrefab);
+
             EManager.RemoveComponent<ColorID>(traceNoteEntityPrefab);
             EManager.AddComponent(traceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
 
@@ -107,15 +114,21 @@ namespace ArcCore.Behaviours.EntityCreation
         private void CreateSegment(float3 start, float3 end, int timingGroup, int time)
         {
             Entity traceEntity = EManager.Instantiate(traceNoteEntityPrefab);
+            Entity traceShadowEntity = EManager.Instantiate(traceShadowEntityPrefab);
+
             EManager.SetSharedComponentData<RenderMesh>(traceEntity, new RenderMesh()
             {
                 mesh = traceMesh,
                 material = traceMaterial
             });
-            EManager.SetComponentData<FloorPosition>(traceEntity, new FloorPosition()
+            EManager.SetSharedComponentData<RenderMesh>(traceShadowEntity, new RenderMesh()
             {
-                value = start.z
+                mesh = traceShadowMesh,
+                material = traceShadowMaterial
             });
+
+            EManager.SetComponentData<FloorPosition>(traceEntity, new FloorPosition() { value = start.z });
+            EManager.SetComponentData<FloorPosition>(traceShadowEntity, new FloorPosition() { value = start.z });
 
             float dx = start.x - end.x;
             float dy = start.y - end.y;
@@ -131,29 +144,31 @@ namespace ArcCore.Behaviours.EntityCreation
                     0, 0, 0,  1
                 )
             });
-
-            EManager.SetComponentData<TimingGroup>(traceEntity, new TimingGroup()
+            EManager.SetComponentData<LocalToWorld>(traceShadowEntity, new LocalToWorld()
             {
-                value = timingGroup
+                Value = new float4x4(
+                    1, 0, dx, start.x,
+                    0, 1, 0,  0,
+                    0, 0, dz, 0,
+                    0, 0, 0,  1
+                )
             });
+
+            EManager.SetComponentData<TimingGroup>(traceEntity, new TimingGroup() { value = timingGroup });
+            EManager.SetComponentData<TimingGroup>(traceShadowEntity, new TimingGroup() { value = timingGroup });
 
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, 0);
             int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, 0);
             int appearTime = (t1 < t2) ? t1 : t2;
             int disappearTime = (t1 < t2) ? t2 : t1;
 
-            EManager.SetComponentData<AppearTime>(traceEntity, new AppearTime()
-            {
-                value = appearTime
-            });
-            EManager.SetComponentData<DisappearTime>(traceEntity, new DisappearTime()
-            {
-                value = disappearTime
-            });
-            EManager.SetComponentData<ChartTime>(traceEntity, new ChartTime()
-            {
-                value = time
-            });
+            EManager.SetComponentData<AppearTime>(traceEntity, new AppearTime() { value = appearTime });
+            EManager.SetComponentData<AppearTime>(traceShadowEntity, new AppearTime() { value = appearTime });
+
+            EManager.SetComponentData<DisappearTime>(traceEntity, new DisappearTime() { value = disappearTime });
+            EManager.SetComponentData<DisappearTime>(traceShadowEntity, new DisappearTime() { value = disappearTime });
+
+            EManager.SetComponentData<ChartTime>(traceEntity, new ChartTime() { value = time });
         }
 
         private void CreateHeadSegment(AffTrace trace)

@@ -55,6 +55,7 @@ namespace ArcCore.Behaviours.EntityCreation
             ExposeLocalToWorld(arcNoteEntityPrefab);
 
             headArcNoteEntityPrefab = GameObjectToNote(headArcNotePrefab);
+
             heightIndicatorEntityPrefab = GameObjectToNote(heightIndicatorPrefab);
 
             arcShadowEntityPrefab = GameObjectToNote(arcShadowPrefab);
@@ -121,7 +122,6 @@ namespace ArcCore.Behaviours.EntityCreation
                     int startGroupTime = default;
 
                     //Precalc and assign a connected arc id to avoid having to figure out connection during gameplay
-                    //this is really dumb but i don't want to split this into another class
                     //placed into a new block to prevent data from being used later on
                     {
                         ArcEndpointData arcStartPoint = (arc.timingGroup, arc.timing, arc.startX, arc.startY);
@@ -305,6 +305,7 @@ namespace ArcCore.Behaviours.EntityCreation
         private void CreateHeadSegment(AffArc arc, Material material)
         {
             Entity headEntity = EManager.Instantiate(headArcNoteEntityPrefab);
+
             EManager.SetSharedComponentData<RenderMesh>(headEntity, new RenderMesh(){
                 mesh = headMesh,
                 material = material
@@ -316,10 +317,8 @@ namespace ArcCore.Behaviours.EntityCreation
             float x = Conversion.GetWorldX(arc.startX); 
             float y = Conversion.GetWorldY(arc.startY); 
             const float z = 0;
-            EManager.SetComponentData(headEntity, new Translation()
-            {
-                Value = math.float3(x, y, z)
-            });
+            EManager.SetComponentData(headEntity, new Translation() { Value = math.float3(x, y, z) });
+
             EManager.SetComponentData(headEntity, new TimingGroup(arc.timingGroup));
 
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arc.timingGroup);
@@ -327,8 +326,6 @@ namespace ArcCore.Behaviours.EntityCreation
             int appearTime = (t1 < t2) ? t1 : t2;
 
             EManager.SetComponentData(headEntity, new AppearTime(appearTime));
-            
-            //Redo all the 
         }
 
         private void CreateJudgeEntity(AffArc arc, int colorId, int startGroupTime, float startBpm)

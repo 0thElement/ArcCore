@@ -440,9 +440,12 @@ MonoBehaviour:
   headTraceNotePrefab: {fileID: 4008384927795449545, guid: 9b24d1c1972c41248a79cdcf8945cede,
     type: 3}
   traceMaterial: {fileID: 2100000, guid: 34c3ab2db1945b848a3df9cf1ea5c654, type: 2}
+  traceShadowMaterial: {fileID: 2100000, guid: 8d2d9654992ee9c49bf0298ecc30e19a, type: 2}
   traceMesh: {fileID: -1560609305294098807, guid: c8586b7b9fca50d488fe3feac4af49f5,
     type: 3}
   headMesh: {fileID: 2682099171716125172, guid: 9c37bcb1e6b4e1048b4709c8fc01a490,
+    type: 3}
+  traceShadowMesh: {fileID: -1996656762450497758, guid: 7eb034e112e7def419be91b43307c123,
     type: 3}
 --- !u!1 &478726823
 GameObject:
