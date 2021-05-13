@@ -1,5 +1,5 @@
 ﻿//COMMENT THIS OUT IN ORDER TO HIDE CONTENTS OF THIS FILE
-//#define FlooferWroteThisHahahahahaSexUwu
+#define JDG_ACTIVE
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -16,6 +16,7 @@ using ArcCore;
 using ArcCore.Parsing;
 using ArcCore.Components.Tags;
 using ArcCore.Math;
+using static ArcCore.EntityManagement;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 public class JudgementSystem : SystemBase
@@ -24,48 +25,45 @@ public class JudgementSystem : SystemBase
     public EntityManager entityManager;
 
     public bool IsReady => arcFingers.IsCreated;
-    public EntityQuery tapQuery, arcQuery, arctapQuery, holdQuery;
 
     public const float arcLeniencyGeneral = 2f;
     public static readonly float2 arctapBoxExtents = new float2(4f, 1f); //DUMMY VALUES
 
-    public NativeArray<ArcCompleteState> arcStates;
+    public NativeArray<ArcCompleteState> globalArcStates;
     public NativeArray<int> arcFingers;
 
     BeginSimulationEntityCommandBufferSystem beginSimulationEntityCommandBufferSystem;
 
     private enum JudgeEnType
     {
-        NONE,
-        ARCTAP,
-        TAP,
-        HOLD
+        None,
+        Arctap,
+        Tap,
+        Hold
     }
 
     protected override void OnCreate()
     {
-        Instance = this;
-        var defaultWorld = World.DefaultGameObjectInjectionWorld;
-        entityManager = defaultWorld.EntityManager;
-
+        entityManager = EManager;
         beginSimulationEntityCommandBufferSystem = World.GetOrCreateSystem<BeginSimulationEntityCommandBufferSystem>();
     }
+
     public void SetupColors()
     {
         arcFingers = new NativeArray<int>(utils.newarr_fill_aclen(-1), Allocator.Persistent);
-        arcStates = new NativeArray<ArcCompleteState>(utils.newarr_fill_aclen(new ArcCompleteState(ArcState.Normal)), Allocator.Persistent);
+        globalArcStates = new NativeArray<ArcCompleteState>(utils.newarr_fill_aclen(new ArcCompleteState(ArcState.Normal)), Allocator.Persistent);
     }
     protected override void OnDestroy()
     {
         arcFingers.Dispose();
-        arcStates.Dispose();
+        globalArcStates.Dispose();
     }
 
 
     protected override unsafe void OnUpdate()
     {
 
-#if FlooferWroteThisHahahahahaSexUwu
+#if JDG_ACTIVE
         //Only execute after full initialization
         if (!IsReady)
             return;
@@ -89,318 +87,341 @@ public class JudgementSystem : SystemBase
             earlyFarCount = ScoreManager.Instance.earlyFarCount,
             lostCount = ScoreManager.Instance.lostCount,
             combo = ScoreManager.Instance.currentCombo;
+        
+        void Judge(JudgeType type, int count = 1)
+        {
+            switch (type) 
+            {
+                case JudgeType.Lost:
+                    lostCount += count;
+                    combo = 0;
+                    break;
 
-        void JudgeLost()
-        {
-            lostCount++;
-            combo = 0;
-        }
-        void JudgeMaxPure()
-        {
-            maxPureCount++;
-            combo++;
-        }
-        void Judge(int time)
-        {
-            int timeDiff = time - currentTime;
-            if (timeDiff > Constants.FarWindow)
-            {
-                lostCount++;
-                combo = 0;
-            }
-            else if (timeDiff > Constants.PureWindow)
-            {
-                earlyFarCount++;
-                combo++;
-            }
-            else if (timeDiff > Constants.MaxPureWindow)
-            {
-                earlyPureCount++;
-                combo++;
-            }
-            else if (timeDiff > -Constants.MaxPureWindow)
-            {
-                JudgeMaxPure();
-            }
-            else if (timeDiff > -Constants.PureWindow)
-            {
-                latePureCount++;
-                combo++;
-            }
-            else
-            {
-                lateFarCount++;
-                combo++;
+                case JudgeType.EarlyFar:
+                    earlyFarCount += count;
+                    combo += count;
+                    break;
+
+                case JudgeType.EarlyPure:
+                    earlyPureCount += count;
+                    combo += count;
+                    break;
+
+                case JudgeType.MaxPure:
+                    maxPureCount += count;
+                    combo += count;
+                    break;
+
+                case JudgeType.LatePure:
+                    latePureCount += count;
+                    combo += count;
+                    break;
+
+                case JudgeType.LateFar:
+                    lateFarCount += count;
+                    combo += count;
+                    break;
             }
         }
 
-        //Clean up red arcs
-        for (int c = 0; c < ArcEntityCreator.ColorCount; c++)
+        Entity minEntity = Entity.Null;
+        JudgeEnType minEnType;
+        JudgeType judgeType;
+
+        //Hold local function
+        bool HoldBaseLogic(Entity entity, ref ChartIncrTime iTime, in ChartLane track)
         {
-            if (arcJudges.PeekAhead(c, 1).time > currentTime + Constants.FarWindow)
+            //Invalidate holds out of time range
+            if (iTime.time - Constants.FarWindow < currentTime) return false;
+
+            //Increment or kill holds out of time for judging
+            if (iTime.time + Constants.FarWindow < currentTime)
             {
-                arcFingers[c] = -1;
-                if (arcStates[c].state == ArcState.Red) 
-                    arcStates[c] = new ArcCompleteState(arcStates[c], ArcState.Unheld);
+                JudgeFromIncr(entity, ref iTime, JudgeType.Lost);
             }
+
+            return true;
         }
 
-        //Execute for each touch
-        Job.WithBurst(FloatMode.)
-        for (int i = 0; i < InputManager.MaxTouches; i++)
+        void JudgeFromIncr(Entity entity, ref ChartIncrTime iTime, JudgeType judgeType)
         {
-            TouchPoint touch = InputManager.Get(i);
+            if (!iTime.UpdateJudgePointCache(currentTime, out int comboCount))
+            {
+                commandBuffer.RemoveComponent<WithinJudgeRange>(entity);
+                commandBuffer.AddComponent<PastJudgeRange>(entity);
+            }
+            else Judge(judgeType, comboCount);
+        }
 
+        //Handle all unlocked holds
+        QuadArr<int> trackHits = InputManager.Instance.tracksHeld;
 
-            //Track taps
-            if (touch.TrackValid) {
+        Entities.WithNone<HoldLocked>().ForEach(
 
-                //Hold notes
-                Entities.WithAll<WithinJudgeRange>().ForEach(
+            (Entity entity, ref ChartIncrTime iTime, in ChartLane track)
 
-                    (Entity entity, ref HoldIsTapped held, ref ChartIncrTime holdTime, in ChartTimeSpan span, in ChartLane position)
+                    =>
 
-                        =>
+            {
 
-                    {
-                        //Invalidate holds if they require a tap and this touch has been parsed as a tap already
-                        if (!held.State && tapped) return;
+                if(!HoldBaseLogic(entity, ref iTime, in track)) return;
 
-                        //Invalidate holds out of time range
-                        if (!holdTime.CheckStart(Constants.FarWindow)) return;
-
-                        //Increment or kill holds out of time for judging
-                        if (holdTime.CheckOutOfRange(currentTime))
-                        {
-                            JudgeLost();
-                            held.value = false;
-
-                            if (!holdTime.Increment(span)) 
-                                Disable();
-                        }
-
-                        //Invalidate holds not in range; should also rule out all invalid data, i.e. positions with a lane of -1
-                        if (touch.track != position.lane) return;
-
-                        //Holds not requiring a tap
-                        if(held.value)
-                        {
-                            //If valid:
-                            if (touch.status != TouchPoint.Status.Released)
-                            {
-                                JudgeMaxPure();
-                                lastJudge.value = true;
-
-                                if (!holdTime.Increment(span)) 
-                                    Disable();
-                            }
-                            //If invalid:
-                            else
-                            {
-                                held.value = false;
-                            }
-                        }
-                        //Holds requiring a tap
-                        else if(touch.status == TouchPoint.Status.Tapped)
-                        {
-                            JudgeMaxPure();
-                            lastJudge.value = true;
-
-                            if (!holdTime.Increment(span)) 
-                                Disable();
-
-                            tapped = true;
-                        }
-                    }
-
-                );
-
-                if (!tapped) {
-                    //Tap notes; no EntityReference, those only exist on arctaps
-                    Entities.WithAll<WithinJudgeRange>().WithNone<EntityReference>().ForEach(
-
-                        (Entity entity, in ChartTime time, in ChartLane position)
-
-                            =>
-
-                        {
-                            //Invalidate if already tapped
-                            if (tapped) return;
-
-                            //Increment or kill holds out of time for judging
-                            if (time.CheckOutOfRange(currentTime))
-                            {
-                                JudgeLost();
-                                entityManager.DestroyEntity(entity);
-                            }
-
-                            //Invalidate if not in range of a tap; should also rule out all invalid data, i.e. positions with a lane of -1
-                            if (touch.track != position.lane) return;
-
-                            //Register tap lul
-                            Judge(time.value);
-                            tapped = true;
-
-                            //Destroy tap
-                            entityManager.DestroyEntity(entity);
-                        }
-
-                    );
+                //Invalidate holds not in range; should also rule out all invalid data, i.e. positions with a lane of -1
+                if (trackHits[track.lane] > 0)
+                {
+                    JudgeFromIncr(entity, ref iTime, JudgeType.MaxPure);
                 }
 
             }
 
-            //Refuse to judge arctaps if above checks have found a tap already
-            if (!tapped)
+        ).Run();
+
+        //Reset all isReds
+        for (int i = 0; i < globalArcStates.Length; i++)
+        {
+            globalArcStates[i] = globalArcStates[i].Copy(withState: ArcState.Unheld, withRed: true);
+        }
+
+        //Clear old items
+        //Holds:
+        Entities.WithAll<WithinJudgeRange, HoldLocked>().ForEach(
+
+            (Entity entity, ref ChartIncrTime iTime, in ChartLane track)
+
+                =>
+
             {
+
+                HoldBaseLogic(entity, ref iTime, in track);
+
+            }
+
+        ).Run();
+
+        //Tap notes; no EntityReference, those only exist on arctaps
+        Entities.WithAll<WithinJudgeRange>().ForEach(
+
+            (Entity entity, in ChartTime time, in ChartLane track)
+
+                =>
+
+            {
+                //Items out of time for judging
+                if (time.value + Constants.FarWindow < currentTime)
+                {
+                    Judge(JudgeType.Lost);
+                    commandBuffer.DestroyEntity(entity);
+                }
+
+            }
+
+        ).Run();
+
+        //Arctaps:
+        Entities.WithAll<WithinJudgeRange>().ForEach(
+
+            (Entity entity, in ChartTime time, in ChartPosition position, in EntityReference enRef)
+
+                =>
+
+            {
+                //Items out of time for judging
+                if (time.value + Constants.FarWindow < currentTime)
+                {
+                    Judge(JudgeType.Lost);
+                    commandBuffer.DestroyEntity(entity);
+                    commandBuffer.DestroyEntity(enRef.value);
+                }
+            }
+
+        ).Run();
+
+        //KILL OFF BEFORE CONTINUING
+        commandBuffer.Playback(entityManager);
+
+        //Execute for each touch
+        var touches = InputManager.GetEnumerator();
+        while (touches.MoveNext())
+        {
+            TouchPoint touch = touches.Current;
+            minEnType = JudgeEnType.None;
+            judgeType = JudgeType.Lost;
+
+            //Track taps
+            if (touch.TrackValid)
+            {
+
+                //Hold notes
+                Entities.WithAll<WithinJudgeRange, HoldLocked>().ForEach(
+
+                    (Entity entity, ref ChartIncrTime iTime, in ChartLane track)
+
+                        =>
+
+                    {
+
+                        if(!HoldBaseLogic(entity, ref iTime, in track)) return;
+
+                        //Invalidate holds not in range; should also rule out all invalid data, i.e. positions with a lane of -1
+                        if (touch.track != track.lane) return;
+
+                        if (touch.status == TouchPoint.Status.Tapped)
+                        {
+                            minEntity = entity;
+                            minEnType = JudgeEnType.Hold;
+                        }
+
+                    }
+
+                ).Run();
+
                 //Tap notes; no EntityReference, those only exist on arctaps
                 Entities.WithAll<WithinJudgeRange>().ForEach(
 
-                    ((Entity entity, in ChartTime time, in ChartPosition position, in EntityReference enRef)
+                    (Entity entity, in ChartTime time, in ChartLane track)
 
                         =>
 
                     {
-                        //Invalidate if already tapped
-                        if (tapped) return;
-
-                        //Increment or kill holds out of time for judging
-                        if (time.CheckOutOfRange(currentTime))
+                        //Items out of time for judging
+                        if (time.value + Constants.FarWindow < currentTime)
                         {
-                            JudgeLost();
-                            entityManager.DestroyEntity(entity);
-                            entityManager.DestroyEntity(enRef.value);
+                            Judge(JudgeType.Lost);
+                            commandBuffer.DestroyEntity(entity);
                         }
 
                         //Invalidate if not in range of a tap; should also rule out all invalid data, i.e. positions with a lane of -1
+                        if (touch.track != track.lane) return;
 
-/* Unmerged change from project 'Assembly-CSharp.Player'
-Before:
-                        if (!touch.inputPlane.CollidesWith(new AABB2D(position.xy - arctapBoxExtents, position.xy + arctapBoxExtents))) 
-After:
-                        if (!touch.inputPlane.CollidesWith(new ArcCore.Utility.AABB2D(position.xy - arctapBoxExtents, position.xy + arctapBoxExtents))) 
-*/
-                        if (!touch.inputPlane.CollidesWith((Rect2D)new Rect2D(position.xy - arctapBoxExtents, position.xy + arctapBoxExtents))) 
-                            return;
+                        //Register
+                        if (touch.status == TouchPoint.Status.Tapped)
+                        {
+                            minEntity = entity;
+                            minEnType = JudgeEnType.Tap;
+                            judgeType = JudgeManage.GetType(currentTime - time.value);
+                        }
+                    }
 
-                        //Register tap lul
-                        Judge(time.value);
-                        tapped = true;
+                ).Run();
 
-                        //Destroy tap
-                        entityManager.DestroyEntity(entity);
-                    })
-
-                );
             }
+
+            if (touch.InputPlaneValid)
+            {
+                //Arctap notes
+                Entities.WithAll<WithinJudgeRange>().ForEach(
+
+                    (Entity entity, in ChartTime time, in ChartPosition position, in EntityReference enRef)
+
+                        =>
+
+                    {
+                        //Items out of time for judging
+                        if (time.value + Constants.FarWindow < currentTime)
+                        {
+                            Judge(JudgeType.Lost);
+                            commandBuffer.DestroyEntity(entity);
+                            commandBuffer.DestroyEntity(enRef.value);
+                        }
+
+                        //Invalidate if not in range of a tap
+                        if (touch.InputPlane.CollidesWith(new Rect2D(position.xy - arctapBoxExtents, position.xy + arctapBoxExtents)))
+                        {
+                            minEntity = entity;
+                            minEnType = JudgeEnType.Arctap;
+                            judgeType = JudgeManage.GetType(currentTime - time.value);
+                        }
+                    }
+
+                ).Run();
+
+                //Arcs!
+                Entities.ForEach(
+
+                    (Entity entity, ref ChartIncrTime iTime, in ChartTime cTime, in ArcData arcData, in ColorID colorID)
+
+                        =>
+
+                    {
+
+                        ///Modified HoldBaseLogic
+                        //FUCK I DONT REMEMBER WHAT IT DOES BUT IT WORKS AAAA
+                        if (iTime.time < currentTime || !globalArcStates[colorID.value].isRed) return;
+
+                        //Increment or kill arcs out of time for judging
+                        if (iTime.time + Constants.FarWindow < currentTime)
+                        {
+                            JudgeFromIncr(entity, ref iTime, JudgeType.Lost);
+                        }
+
+                        Circle2D arcCollider = AffArc.ColliderAt(currentTime, cTime.value, iTime.endTime, arcData.start, arcData.end, arcData.easing);
+                        if (touch.InputPlane.CollidesWith(arcCollider))
+                        {
+                            if (touch.fingerId == -1 || touch.fingerId == arcFingers[colorID.value])
+                            {
+                                globalArcStates[colorID.value] = globalArcStates[colorID.value].Copy(withState: ArcState.Normal, withRed: false);
+                                JudgeFromIncr(entity, ref iTime, JudgeType.MaxPure);
+                            }
+                            
+                            globalArcStates[colorID.value] = globalArcStates[colorID.value].Copy(withState: ArcState.Normal);
+                        }
+    
+                    }
+
+                ).Run();
+            }
+
+            switch (minEnType)
+            {
+                case JudgeEnType.Hold:
+
+                    ChartIncrTime t = entityManager.GetComponentData<ChartIncrTime>(minEntity);
+
+                    if (!t.UpdateJudgePointCache(currentTime, out int comboCount))
+                    {
+                        commandBuffer.RemoveComponent<WithinJudgeRange>(minEntity);
+                        commandBuffer.AddComponent<PastJudgeRange>(minEntity);
+                    }
+                    else
+                    {
+                        entityManager.SetComponentData(minEntity, t);
+                        Judge(JudgeType.Lost, comboCount);
+                    }
+
+                    break;
+
+                case JudgeEnType.Arctap:
+
+                    EntityReference eref = entityManager.GetComponentData<EntityReference>(minEntity);
+                    commandBuffer.AddComponent<Disabled>(eref.value);
+
+                    continue;
+
+                case JudgeEnType.Tap:
+
+                    commandBuffer.AddComponent<Disabled>(minEntity);
+                    Judge(judgeType);
+
+                    break;
+            }
+
         }
 
-        NativeArray<TouchPoint> touchpoints = InputManager.Instance.touchPoints;
+        //Clean up arcs
+        Entities.ForEach(
 
-        // Handle all arcs //
-        Job.WithBurst().WithCode(
+            (Entity entity, ref ChartIncrTime iTime, in ChartTime cTime, in ColorID colorID)
 
-            delegate ()
+                =>
+
             {
-                for (int c = 0; c < arcJudges.RowCount; c++)
-                {
-                    //Label to go to start of arc logic again
-                    START_LOOP:
 
-                    if (!arcJudges.HasCurrent(c)) continue;
-                    ArcJudge cjudge = arcJudges.Current(c);
+                ///Modified HoldBaseLogic
+                //FUCK I DONT REMEMBER WHAT IT DOES BUT IT WORKS AAAA
+                if (iTime.time < currentTime || !globalArcStates[colorID.value].isRed) return;
 
-                    if (cjudge.time <= currentTime) //NO LEAD-IN WIGGLE ROOM
-                    {
-                        //if an arc judge has expired:
-                        lostCount++;
-                        combo = 0;
+                JudgeFromIncr(entity, ref iTime, JudgeType.Lost);
 
-                        //move to next if applicable
-                        if (arcJudges.MoveNext(c)) goto START_LOOP;
-                    }
-
-                    if (cjudge.time <= currentTime + Constants.FarWindow)
-                    {
-                        //if judge is in range:
-                        Circle2D cCollider = rawArcs[cjudge.rawArcIdx].ColliderAt(currentTime);
-
-                        bool isCorrectTouch = false; //will this touch make arc red
-                        int touchIdx = -1; //which touch?
-                        for (int t = 0; t < touchpoints.Length; t++)
-                        {
-                            if (cCollider.CollidesWith(touchpoints[t].inputPlane))
-                            {
-                                if (touchpoints[t].fingerId == -1 || touchpoints[t].fingerId == arcFingers[c])
-                                {
-                                    touchIdx = t;
-                                    isCorrectTouch = true;
-                                    break;
-                                }
-                                else
-                                {
-                                    touchIdx = t;
-                                }
-                            }
-                        }
-
-                        if (touchIdx != -1)
-                        {
-                            //IF TOUCH WAS CORRECT FINGER
-                            TouchPoint touch = touchpoints[touchIdx];
-
-                            if (isCorrectTouch && arcStates[c].state != ArcState.Red)
-                            {
-                                //IS VALID TOUCH
-                                if (touch.status == TouchPoint.Status.Released)
-                                {
-                                    //RELEASED MID-ARC
-                                    arcStates[c] = new ArcCompleteState(arcStates[c], ArcState.Red);
-                                    arcFingers[c] = -1;
-
-                                    lostCount++;
-                                    combo = 0;
-                                }
-                                else
-                                {
-                                    //CORRECT JUDGE
-                                    maxPureCount++;
-                                    combo = 0;
-
-                                    arcJudges.MoveNext(c);
-                                }
-                            }
-                            else
-                            {
-                                //IS INVALID TOUCH
-                                arcStates[c] = new ArcCompleteState(arcStates[c], ArcState.Red);
-
-                                lostCount++;
-                                combo = 0;
-                            }
-
-                            //skip cleanup, above code handles it (?)
-                            continue;
-                        }
-                    }
-
-                    //check for dead fingers
-                    bool arcFingerFound = false;
-
-                    for(int t = 0; t < touchpoints.Length; t++)
-                    {
-                        if(touchpoints[t].fingerId == arcFingers[c])
-                        {
-                            arcFingerFound = (touchpoints[t].status != TouchPoint.Status.Released);
-                            break;
-                        }
-                    }
-
-                    if(!arcFingerFound)
-                    {
-                        arcFingers[c] = -1;
-                    }
-                }
             }
 
         ).Run();

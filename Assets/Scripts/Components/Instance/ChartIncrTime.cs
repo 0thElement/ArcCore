@@ -10,7 +10,7 @@ namespace ArcCore.Components
         /// <summary>
         /// The current time of the judge point.
         /// </summary>
-        public float time;
+        public int time;
 
         /// <summary>
         /// The distance, in ms between two judge points.
@@ -31,7 +31,7 @@ namespace ArcCore.Components
         public static ChartIncrTime FromBpm(int startTime, int endTime, float bpm, out int count)
         {
             int i = GetIncr(bpm);
-            count = (endTime - startTime) / i;
+            count = (int)math.ceil((float)(endTime - startTime) / i) - 1;
             return new ChartIncrTime(startTime, endTime, i);
         }
 
@@ -49,14 +49,12 @@ namespace ArcCore.Components
         /// <c>false</c> if the hold has reached its end
         /// </returns>
         [BurstCompile(FloatMode = FloatMode.Fast)] 
-        public bool UpdateJudgePointCache(int ctime, bool lostExpected, out int count)
+        public bool UpdateJudgePointCache(int ctime, out int count)
         {
-            if (lostExpected) ctime -= Constants.FarWindow;
-
-            count = (int)(1 + (ctime - time) / timeIncrement);
+            count = math.max(1, (ctime - time - Constants.FarWindow) / timeIncrement);
             time += timeIncrement * count;
 
-            return time + timeIncrement <= endTime;
+            return time + timeIncrement < endTime;
         }
     }
 }
