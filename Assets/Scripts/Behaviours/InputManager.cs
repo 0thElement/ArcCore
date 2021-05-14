@@ -55,6 +55,7 @@ namespace ArcCore.Behaviours
 
             public bool MoveNext()
             {
+                index++;
                 while(Current.fingerId == -1)
                 {
                     index++;

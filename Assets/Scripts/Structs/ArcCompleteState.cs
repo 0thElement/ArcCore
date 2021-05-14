@@ -6,6 +6,7 @@ namespace ArcCore.Structs
     {
         public ArcState state;
         public bool isRed;
+        public bool finalized;
 
         public float redRoll;
         public float cutoff;
@@ -20,20 +21,28 @@ namespace ArcCore.Structs
             isRed = false;
             redRoll = 0f;
             cutoff = 0f;
+            finalized = false;
         }
 
-        public ArcCompleteState(ArcCompleteState from, ArcState? withState = null, bool? withRed = null)
+        public ArcCompleteState(ArcCompleteState from)
         {
-            state = withState ?? from.state;
-            isRed = withRed ?? from.isRed;
+            state = from.state;
+            isRed = from.isRed;
+            finalized = from.finalized;
             redRoll = from.redRoll;
             cutoff = from.cutoff;
         }
 
         public ArcCompleteState Copy(ArcState? withState = null, bool? withRed = null)
-            => new ArcCompleteState(this, withState, withRed);
+            => new ArcCompleteState(this) { state = withState ?? state, };
 
-        public void Update(float currentBpm, float deltaTime = 0.02f)
+        public ArcCompleteState Finalize()
+            => new ArcCompleteState(this)
+            {
+                finalized = true
+            };
+
+        public void Update(float deltaTime = 0.02f)
         {
             const float dfac = 10;
             float timef = deltaTime * dfac;

@@ -1,5 +1,7 @@
 ﻿//COMMENT THIS OUT IN ORDER TO HIDE CONTENTS OF THIS FILE
 #define JDG_ACTIVE
+//#define ARC_ACTIVE
+
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -24,13 +26,21 @@ public class JudgementSystem : SystemBase
     public static JudgementSystem Instance { get; private set; }
     public EntityManager entityManager;
 
-    public bool IsReady => arcFingers.IsCreated;
+    public bool IsReady =>
+#if ARC_ACTIVE 
+    arcFingers.IsCreated 
+#else 
+    true 
+#endif
+    ;
 
     public const float arcLeniencyGeneral = 2f;
     public static readonly float2 arctapBoxExtents = new float2(4f, 1f); //DUMMY VALUES
 
-    public NativeArray<ArcCompleteState> globalArcStates;
+#if ARC_ACTIVE
+    public NativeRefArray<ArcCompleteState> globalArcStates;
     public NativeArray<int> arcFingers;
+#endif
 
     BeginSimulationEntityCommandBufferSystem beginSimulationEntityCommandBufferSystem;
 
@@ -44,19 +54,24 @@ public class JudgementSystem : SystemBase
 
     protected override void OnCreate()
     {
+        Instance = this;
         entityManager = EManager;
         beginSimulationEntityCommandBufferSystem = World.GetOrCreateSystem<BeginSimulationEntityCommandBufferSystem>();
     }
 
     public void SetupColors()
     {
+#if ARC_ACTIVE
         arcFingers = new NativeArray<int>(utils.newarr_fill_aclen(-1), Allocator.Persistent);
-        globalArcStates = new NativeArray<ArcCompleteState>(utils.newarr_fill_aclen(new ArcCompleteState(ArcState.Normal)), Allocator.Persistent);
+        globalArcStates = new NativeRefArray<ArcCompleteState>(utils.newarr_fill_aclen(new ArcCompleteState(ArcState.Normal)), Allocator.Persistent);
+#endif
     }
     protected override void OnDestroy()
     {
+#if ARC_ACTIVE
         arcFingers.Dispose();
         globalArcStates.Dispose();
+#endif
     }
 
 
@@ -128,31 +143,6 @@ public class JudgementSystem : SystemBase
         JudgeEnType minEnType;
         JudgeType judgeType;
 
-        //Hold local function
-        bool HoldBaseLogic(Entity entity, ref ChartIncrTime iTime, in ChartLane track)
-        {
-            //Invalidate holds out of time range
-            if (iTime.time - Constants.FarWindow < currentTime) return false;
-
-            //Increment or kill holds out of time for judging
-            if (iTime.time + Constants.FarWindow < currentTime)
-            {
-                JudgeFromIncr(entity, ref iTime, JudgeType.Lost);
-            }
-
-            return true;
-        }
-
-        void JudgeFromIncr(Entity entity, ref ChartIncrTime iTime, JudgeType judgeType)
-        {
-            if (!iTime.UpdateJudgePointCache(currentTime, out int comboCount))
-            {
-                commandBuffer.RemoveComponent<WithinJudgeRange>(entity);
-                commandBuffer.AddComponent<PastJudgeRange>(entity);
-            }
-            else Judge(judgeType, comboCount);
-        }
-
         //Handle all unlocked holds
         QuadArr<int> trackHits = InputManager.Instance.tracksHeld;
 
@@ -164,12 +154,29 @@ public class JudgementSystem : SystemBase
 
             {
 
-                if(!HoldBaseLogic(entity, ref iTime, in track)) return;
+                //Invalidate holds out of time range
+                if (iTime.time - Constants.FarWindow < currentTime) return;
+
+                //Increment or kill holds out of time for judging
+                if (iTime.time + Constants.FarWindow < currentTime)
+                {
+                    if (!iTime.UpdateJudgePointCache(currentTime, out int comboCount))
+                    {
+                        commandBuffer.RemoveComponent<WithinJudgeRange>(entity);
+                        commandBuffer.AddComponent<PastJudgeRange>(entity);
+                    }
+                    else Judge(JudgeType.Lost, comboCount);
+                }
 
                 //Invalidate holds not in range; should also rule out all invalid data, i.e. positions with a lane of -1
                 if (trackHits[track.lane] > 0)
                 {
-                    JudgeFromIncr(entity, ref iTime, JudgeType.MaxPure);
+                    if (!iTime.UpdateJudgePointCache(currentTime, out int comboCount))
+                    {
+                        commandBuffer.RemoveComponent<WithinJudgeRange>(entity);
+                        commandBuffer.AddComponent<PastJudgeRange>(entity);
+                    }
+                    else Judge(JudgeType.MaxPure, comboCount);
                 }
 
             }
@@ -177,10 +184,14 @@ public class JudgementSystem : SystemBase
         ).Run();
 
         //Reset all isReds
+#if ARC_ACTIVE
         for (int i = 0; i < globalArcStates.Length; i++)
         {
-            globalArcStates[i] = globalArcStates[i].Copy(withState: ArcState.Unheld, withRed: true);
+            //IMPLEMENT SHIZ
+            globalArcStates[i]->state = ArcState.Unheld;
+            globalArcStates[i]->isRed = true;
         }
+#endif
 
         //Clear old items
         //Holds:
@@ -192,7 +203,19 @@ public class JudgementSystem : SystemBase
 
             {
 
-                HoldBaseLogic(entity, ref iTime, in track);
+                //Invalidate holds out of time range
+                if (iTime.time - Constants.FarWindow < currentTime) return;
+
+                //Increment or kill holds out of time for judging
+                if (iTime.time + Constants.FarWindow < currentTime)
+                {
+                    if (!iTime.UpdateJudgePointCache(currentTime, out int comboCount))
+                    {
+                        commandBuffer.RemoveComponent<WithinJudgeRange>(entity);
+                        commandBuffer.AddComponent<PastJudgeRange>(entity);
+                    }
+                    else Judge(JudgeType.Lost, comboCount);
+                }
 
             }
 
@@ -260,7 +283,19 @@ public class JudgementSystem : SystemBase
 
                     {
 
-                        if(!HoldBaseLogic(entity, ref iTime, in track)) return;
+                        //Invalidate holds out of time range
+                        if (iTime.time - Constants.FarWindow < currentTime) return;
+
+                        //Increment or kill holds out of time for judging
+                        if (iTime.time + Constants.FarWindow < currentTime)
+                        {
+                            if (!iTime.UpdateJudgePointCache(currentTime, out int comboCount))
+                            {
+                                commandBuffer.RemoveComponent<WithinJudgeRange>(entity);
+                                commandBuffer.AddComponent<PastJudgeRange>(entity);
+                            }
+                            else Judge(JudgeType.Lost, comboCount);
+                        }
 
                         //Invalidate holds not in range; should also rule out all invalid data, i.e. positions with a lane of -1
                         if (touch.track != track.lane) return;
@@ -335,6 +370,7 @@ public class JudgementSystem : SystemBase
 
                 ).Run();
 
+#if ARC_ACTIVE
                 //Arcs!
                 Entities.ForEach(
 
@@ -359,7 +395,7 @@ public class JudgementSystem : SystemBase
                         {
                             if (touch.fingerId == -1 || touch.fingerId == arcFingers[colorID.value])
                             {
-                                globalArcStates[colorID.value] = globalArcStates[colorID.value].Copy(withState: ArcState.Normal, withRed: false);
+                                globalArcStates.Ele = globalArcStates[colorID.value].Copy(withState: ArcState.Normal, withRed: false);
                                 JudgeFromIncr(entity, ref iTime, JudgeType.MaxPure);
                             }
                             
@@ -369,6 +405,8 @@ public class JudgementSystem : SystemBase
                     }
 
                 ).Run();
+
+#endif
             }
 
             switch (minEnType)
@@ -407,6 +445,7 @@ public class JudgementSystem : SystemBase
 
         }
 
+#if ARC_ACTIVE
         //Clean up arcs
         Entities.ForEach(
 
@@ -425,7 +464,7 @@ public class JudgementSystem : SystemBase
             }
 
         ).Run();
-
+#endif
         // Repopulate managed data
         ScoreManager.Instance.currentCombo = combo;
         ScoreManager.Instance.maxPureCount = maxPureCount;

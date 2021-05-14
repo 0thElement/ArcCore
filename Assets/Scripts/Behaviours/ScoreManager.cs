@@ -30,37 +30,6 @@ namespace ArcCore.Behaviours
             Instance = this;
         }
 
-        public void AddJudge(JudgeManage.JudgeType type)
-        {
-            switch(type)
-            {
-                case JudgeManage.JudgeType.Lost:
-                    lostCount++;
-                    currentCombo = 0;
-                    break;
-                case JudgeManage.JudgeType.MaxPure:
-                    maxPureCount++;
-                    currentCombo++;
-                    break;
-                case JudgeManage.JudgeType.LatePure:
-                    latePureCount++;
-                    currentCombo++;
-                    break;
-                case JudgeManage.JudgeType.EarlyPure:
-                    earlyPureCount++;
-                    currentCombo++;
-                    break;
-                case JudgeManage.JudgeType.LateFar:
-                    lateFarCount++;
-                    currentCombo++;
-                    break;
-                case JudgeManage.JudgeType.EarlyFar:
-                    earlyFarCount++;
-                    currentCombo++;
-                    break;
-            }
-        }
-
         //call later
         public void UpdateScore()
         {

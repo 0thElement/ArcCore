@@ -9,7 +9,54 @@ using Unity.Mathematics;
 
 namespace ArcCore.Structs
 {
+    public unsafe struct NativeRefArray<T> : IDisposable where T : unmanaged
+    {
+        private NativeArray<IntPtr> values;
 
+        public NativeRefArray(NativeArray<T> svalues, Allocator allocator)
+        {
+            values = new NativeArray<IntPtr>(svalues.Length, allocator);
+            for(int i = 0; i < svalues.Length; i++)
+            {
+                T val = svalues[i];
+                values[i] = (IntPtr)(&val);
+            }
+        }
+        public NativeRefArray(T[] svalues, Allocator allocator)
+        {
+            values = new NativeArray<IntPtr>(svalues.Length, allocator);
+            for (int i = 0; i < svalues.Length; i++)
+            {
+                T val = svalues[i];
+                values[i] = (IntPtr)(&val);
+            }
+        }
+        public NativeRefArray(int length, Allocator allocator, NativeArrayOptions options)
+        {
+            values = new NativeArray<IntPtr>(length, allocator, options);
+            for (int i = 0; i < length; i++)
+            {
+                T val = default;
+                values[i] = (IntPtr)(&val);
+            }
+        }
+
+        public T* this[int index]
+        {
+            get => (T*)values[index];
+            set => values[index] = (IntPtr)value;
+        }
+
+        public int Length => values.Length;
+        public bool IsCreated => values.IsCreated;
+
+        public void Dispose()
+        {
+            values.Dispose();
+        }
+    }
+
+    [Obsolete(null, error: true)]
     public struct NativeMatrIterator<T> : IDisposable where T : struct
     {
         private NativeArray<T> contents;
