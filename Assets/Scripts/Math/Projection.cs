@@ -7,53 +7,54 @@ namespace ArcCore.Math
 {
     public static class Projection
     {
-        public const float TAN_EPSILON = 0.10033f; //Equal to tan(0.1 rad)
+        public const float TAN_EPSILON = 0.01f; //Equal to tan(0.1 rad)
         public const float Y_MAX_FOR_TRACK = 1.9f; //Equal to Convert.GetWorldY(0.2f)
 
         [BurstCompile(FloatMode = FloatMode.Fast)]
-        public static (Rect2D? inputPlane, int track) PerformInputRaycast(Ray cameraRay, Touch touch)
+        public static (Rect2D? inputPlane, int track) PerformInputRaycast(Ray cameraRay)
         {
-            float3 camPos = cameraRay.origin;
-            float3 camToOrigin = -camPos;
+            float3 origin = cameraRay.origin;
+            float3 dir = math.normalize(cameraRay.direction);
 
             //-GET AABB2D FOR INPUT PLANE-//
             Rect2D? inputPlane;
 
+            //-LOCALS-//
+            float projPosX;
+
             //Edge case: tap will never collide with plane
             //Multiplication allows for simultaneous checks for no z difference between camera and origin, and invalid z signs
-            if (camToOrigin.z * cameraRay.direction.z <= 0)
+            if (origin.z * dir.z > 0)
             {
                 inputPlane = null;
             }
             else
             {
                 //Cast ray onto xy plane at z=0
-                float zratio = cameraRay.origin.z / cameraRay.direction.z;
-                float projPosX = cameraRay.origin.x - cameraRay.direction.x * zratio,
-                      projPosY = cameraRay.origin.y - cameraRay.direction.y * zratio;
+                float zratio = - origin.z / dir.z;
+                /***/ projPosX = origin.x + dir.x * zratio;
+                float projPosY = origin.y + dir.y * zratio;
 
                 //FIND X LENIENCY USING 0TH'S MAGIC
-                float deltaY = camPos.y - projPosY;
-                float distXProj = math.sqrt(deltaY * deltaY + camPos.z * camPos.z);
+                float deltaY = origin.y - projPosY;
+                float distProj = math.sqrt(deltaY * deltaY + origin.z * origin.z);
 
-                float xMax = distXProj * (projPosX - camPos.x + TAN_EPSILON * distXProj) / (
-                             distXProj - (projPosX - camPos.x) * TAN_EPSILON);
+                float xMax = distProj * (projPosX - origin.x + TAN_EPSILON * distProj) / (
+                             distProj - (projPosX - origin.x) * TAN_EPSILON);
                 
-                float xMin = distXProj * (projPosX - camPos.x - TAN_EPSILON * distXProj) / (
-                             distXProj + (projPosX - camPos.x) * TAN_EPSILON);
+                float xMin = distProj * (projPosX - origin.x - TAN_EPSILON * distProj) / (
+                             distProj + (projPosX - origin.x) * TAN_EPSILON);
 
                 //FIND Y LENIENCY USING 0TH'S MAGIC
-                float deltaX = camPos.x - projPosX;
-                float distYProj = math.sqrt(deltaX * deltaX + camPos.z * camPos.z);
-
-                float yMax = distYProj * (projPosY - camPos.y + TAN_EPSILON * distYProj) / (
-                             distYProj - (projPosY - camPos.y) * TAN_EPSILON);
+                float yMax = distProj * (projPosY - origin.y + TAN_EPSILON * distProj) / (
+                             distProj - (projPosY - origin.y) * TAN_EPSILON);
                 
-                float yMin = distYProj * (projPosY - camPos.y - TAN_EPSILON * distYProj) / (
-                             distYProj + (projPosY - camPos.y) * TAN_EPSILON);
+                float yMin = distProj * (projPosY - origin.y - TAN_EPSILON * distProj) / (
+                             distProj + (projPosY - origin.y) * TAN_EPSILON);
 
                 //Input plane
-                inputPlane = new Rect2D(xMin, yMin, xMax, yMax);
+                //inputPlane = new Rect2D(xMin, yMin, xMax, yMax);
+                inputPlane = new Rect2D(projPosX - 0.1f, projPosY - 0.1f, projPosX + 0.1f, projPosY + 0.1f);
             }
 
             //-GET TRACK RANGE-//
@@ -61,24 +62,30 @@ namespace ArcCore.Math
 
             //Check if the tap is too high on the input plane for a track tap
             if (
-                (inputPlane?.min.y < Y_MAX_FOR_TRACK || inputPlane.HasValue)
-                && camToOrigin.y * cameraRay.direction.y > 0
+                (!inputPlane.HasValue || inputPlane.Value.min.y < Y_MAX_FOR_TRACK)
+                && origin.y * cameraRay.direction.y < 0
                 )
             {
                 //Cast ray onto xz plane at y=0
-                float yratio = cameraRay.origin.y / cameraRay.direction.y;
-                float projX = cameraRay.origin.x - cameraRay.direction.x * yratio;
-                float projZ = cameraRay.origin.z - cameraRay.direction.z * yratio;
+                float yratio = - origin.y / dir.y;
+                /***/ projPosX = origin.x + dir.x * yratio;
+                float projPosZ = origin.z + dir.z * yratio;
 
                 //Check if cast falls out of acceptable range
-                if (-Constants.RenderFloorPositionRange <= projZ && projZ <= Constants.RenderFloorPositionRange)
+                if (-Constants.RenderFloorPositionRange <= projPosZ && projPosZ <= Constants.RenderFloorPositionRange)
                 {
-                    track = Conversion.XToTrack(projX);
+                    track = Conversion.XToTrack(projPosX);
+                }
+
+                //Reset to "no value" if track is invalid
+                if(track > 3 || track < 0)
+                {
+                    track = -1;
                 }
             }
 
             //RETURN
-            return (inputPlane: inputPlane, track: track);
+            return (inputPlane, track);
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿#define UPD
+
+using System.Linq;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -18,6 +20,7 @@ namespace ArcCore.Behaviours
         public static Enumerator GetEnumerator() => new Enumerator(Instance);
 
         public const int MaxTouches = 10;
+        public const int FreeTouch = -69;
 
         [HideInInspector]
         public NativeArray<TouchPoint> touchPoints;
@@ -58,12 +61,13 @@ namespace ArcCore.Behaviours
 
             public bool MoveNext()
             {
-                index++;
-                while(Current.fingerId == -1)
+                do
                 {
                     index++;
-                    if (index > InputManager.MaxTouches) return false;
-                }
+                    if (index >= MaxTouches) return false;
+                } 
+                while (Current.fingerId == FreeTouch);
+
                 return true;
             }
 
@@ -78,9 +82,16 @@ namespace ArcCore.Behaviours
             Instance = this;
             touchPoints = new NativeArray<TouchPoint>(MaxTouches, Allocator.Persistent);
             tracksHeld = default;
+
+            for(int i = 0; i < MaxTouches; i++)
+            {
+                var t = touchPoints[i];
+                t.fingerId = FreeTouch;
+                touchPoints[i] = t;
+            }
         }
 
-#if DEBUG
+#if UPD
         void Update()
         {
             foreach(var t in GetEnumerator())
@@ -92,8 +103,11 @@ namespace ArcCore.Behaviours
 
                 if(t.TrackValid)
                 {
-                    Debug.DrawRay(new Vector3(Utility.Conversion.TrackToX(t.track), 0, 0), Vector3.back, Color.red);
+                    Debug.DrawRay(new Vector3(Utility.Conversion.TrackToX(t.track), 0.01f, 0), Vector3.back * 150, Color.red);
                 }
+
+                Debug.Log(t.InputPlane.min);
+                Debug.Log(t.track);
             }
         }
 #endif
@@ -114,83 +128,37 @@ namespace ArcCore.Behaviours
         private int SafeIndex()
         {
             for (int i = safeIndex; i < MaxTouches; i++)
-                if (touchPoints[i].fingerId == -1)
+                if (touchPoints[i].fingerId == FreeTouch)
                     return safeIndex = i;
             return safeIndex = MaxTouches;
         }
 
         public void PollInput()
         {
+            //Debug.Log(safeIndex);
             for (int ti = 0; ti < touchPoints.Length; ti++)
             {
                 if(touchPoints[ti].status == TouchPoint.Status.Released)
                 {
                     TouchPoint touchPoint = touchPoints[ti];
 
-                    touchPoint.fingerId = -1;
+                    touchPoint.fingerId = FreeTouch;
 
                     touchPoints[ti] = touchPoint;
 
-                    if (safeIndex < ti) safeIndex = ti;
+                    if (ti < safeIndex) safeIndex = ti;
                 }
             }
 
             for (int i = 0; i < Input.touchCount; i++)
             {
                 Touch t = Input.touches[i];
+                int index;
 
-                if (t.phase == TouchPhase.Began)
-                {
-                    if (FreeId(t.fingerId) && SafeIndex() != MaxTouches)
-                    {
-                        (Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.position), t);
-                        touchPoints[safeIndex] = new TouchPoint(ipt, track, TouchPoint.Status.Tapped, t.fingerId);
-
-                        if(track != -1)
-                        {
-                            tracksHeld[track]++;
-                        }
-                    }
-                }
-                else if (t.phase == TouchPhase.Moved)
-                {
-                    int index = IdIndex(t.fingerId);
-                    if (index != -1)
-                    {
-                        TouchPoint tp = touchPoints[index];
-                        int oTrack = tp.track;
-
-                        (tp.inputPlane, tp.track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.position), t);
-                        tp.status = TouchPoint.Status.Sustained;
-
-                        touchPoints[index] = tp;
-
-                        if(oTrack != tp.track)
-                        {
-                            if (oTrack != -1) tracksHeld[oTrack]--;
-                            if (tp.track != -1) tracksHeld[tp.track]++;
-                        }
-                    }
-
-                }
-                else if (t.phase == TouchPhase.Stationary)
+                if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled)
                 {
 
-                    int index = IdIndex(t.fingerId);
-                    if (index != -1)
-                    {
-                        TouchPoint tp = touchPoints[index];
-
-                        tp.status = TouchPoint.Status.Sustained;
-
-                        touchPoints[index] = tp;
-                    }
-
-                }
-                else if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled)
-                {
-
-                    int index = IdIndex(t.fingerId);
+                    index = IdIndex(t.fingerId);
                     if (index != -1)
                     {
                         TouchPoint tp = touchPoints[index];
@@ -202,6 +170,55 @@ namespace ArcCore.Behaviours
                         if (tp.track != -1) tracksHeld[tp.track]--;
                     }
 
+                    continue;
+
+                }
+
+                if (SafeIndex() == MaxTouches) continue;
+
+                if (t.phase == TouchPhase.Began)
+                {
+                    if (FreeId(t.fingerId))
+                    {
+                        (Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.position));
+                        touchPoints[safeIndex] = new TouchPoint(ipt, track, TouchPoint.Status.Tapped, t.fingerId);
+
+                        if(track != -1)
+                        {
+                            tracksHeld[track]++;
+                        }
+                    }
+
+                    continue;
+                }
+
+                index = IdIndex(t.fingerId);
+                if (index == -1) continue;
+
+                if (t.phase == TouchPhase.Moved)
+                {
+                    TouchPoint tp = touchPoints[index];
+                    int oTrack = tp.track;
+
+                    (tp.inputPlane, tp.track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.position));
+                    tp.status = TouchPoint.Status.Sustained;
+
+                    touchPoints[index] = tp;
+
+                    if (oTrack != tp.track)
+                    {
+                        if (oTrack != -1) tracksHeld[oTrack]--;
+                        if (tp.track != -1) tracksHeld[tp.track]++;
+                    }
+
+                }
+                else if (t.phase == TouchPhase.Stationary)
+                {
+                    TouchPoint tp = touchPoints[index];
+
+                    tp.status = TouchPoint.Status.Sustained;
+
+                    touchPoints[index] = tp;
                 }
             }
         }

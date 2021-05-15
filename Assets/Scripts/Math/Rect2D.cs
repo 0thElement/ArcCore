@@ -7,6 +7,8 @@ namespace ArcCore.Math
         public readonly float2 min;
         public readonly float2 max;
 
+        public float2 Center => (min + max) / 2;
+
         public Rect2D(float2 a, float2 b)
         {
             min = math.min(a, b);

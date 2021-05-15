@@ -11,11 +11,16 @@ namespace ArcCore.Utility
         public static float TrackToX(int track)
             => Constants.LaneWidth * 5 - Constants.LaneFullwidth * track;
 
-        public static int XToTrack(float x)
-            => ClampTrack((int)math.round((x - Constants.LaneWidth) * Constants.LaneFullwidthRecip));
+        /*
+         * Constants.LaneWidth * 5 - Constants.LaneFullwidth * track = x
+         * x - laneWidth * 5 = -lanefullwidth * track
+         * track = -(x - laneWidth * 5) / lanefullwidth
+         * track = (laneWidth * 5 - x) / lanefullwidth
+         * 
+         */
 
-        public static int ClampTrack(int tr)
-            => math.clamp(tr, 1, 4);
+        public static int XToTrack(float x)
+            => (int)math.round((Constants.LaneWidth * 5 - x) * Constants.LaneFullwidthRecip);
 
         public static float O(float start, float end, float t) 
             => math.lerp(start, end, 1 - math.cos(math.PI / 2 * t));

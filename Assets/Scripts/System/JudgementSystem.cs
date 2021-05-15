@@ -1,5 +1,5 @@
 ﻿//COMMENT THIS OUT IN ORDER TO HIDE CONTENTS OF THIS FILE
-#define JDG_ACTIVE
+//#define JDG_ACTIVE
 //#define ARC_ACTIVE
 
 using Unity.Burst;
