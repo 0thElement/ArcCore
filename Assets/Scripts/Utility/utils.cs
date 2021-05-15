@@ -1,5 +1,6 @@
 using ArcCore.Behaviours;
 using ArcCore.Behaviours.EntityCreation;
+using ArcCore.Math;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -51,5 +52,16 @@ namespace ArcCore.Utility
 
         public static bool i2b(int i)
             => i != 0;
+
+#if DEBUG
+        public static void DebugDrawIptRect(Rect2D rect)
+        {
+            Debug.DrawLine(new Vector3(rect.min.x, rect.min.y, 0), new Vector3(rect.min.x, rect.max.y, 0), Color.red);
+            Debug.DrawLine(new Vector3(rect.min.x, rect.max.y, 0), new Vector3(rect.max.x, rect.max.y, 0), Color.red);
+            Debug.DrawLine(new Vector3(rect.max.x, rect.max.y, 0), new Vector3(rect.max.x, rect.min.y, 0), Color.red);
+            Debug.DrawLine(new Vector3(rect.max.x, rect.min.y, 0), new Vector3(rect.min.x, rect.min.y, 0), Color.red);
+            Debug.DrawLine(new Vector3(rect.max.x, rect.max.y, 0), new Vector3(rect.min.x, rect.min.y, 0), Color.red);
+        }
+#endif
     }
 }

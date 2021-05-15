@@ -29,10 +29,13 @@ namespace ArcCore.Behaviours
 
         public Camera cameraCast;
 
-        public struct Enumerator : IEnumerator<TouchPoint>
+        public struct Enumerator : IEnumerator<TouchPoint>, IEnumerable<TouchPoint>
         {
             private readonly NativeArray<TouchPoint> touchPoints;
             private int index;
+
+            public IEnumerator<TouchPoint> GetEnumerator() => this;
+            IEnumerator IEnumerable.GetEnumerator() => this;
 
             public Enumerator(InputManager inputManager)
             {
@@ -76,6 +79,24 @@ namespace ArcCore.Behaviours
             touchPoints = new NativeArray<TouchPoint>(MaxTouches, Allocator.Persistent);
             tracksHeld = default;
         }
+
+#if DEBUG
+        void Update()
+        {
+            foreach(var t in GetEnumerator())
+            {
+                if(t.InputPlaneValid)
+                {
+                    Utility.utils.DebugDrawIptRect(t.InputPlane);
+                }
+
+                if(t.TrackValid)
+                {
+                    Debug.DrawRay(new Vector3(Utility.Conversion.TrackToX(t.track), 0, 0), Vector3.back, Color.red);
+                }
+            }
+        }
+#endif
 
         void OnDestroy()
         {
