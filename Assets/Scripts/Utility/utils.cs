@@ -1,3 +1,5 @@
+// #define DEBUG
+
 using ArcCore.Behaviours;
 using ArcCore.Behaviours.EntityCreation;
 using ArcCore.Math;
@@ -56,6 +58,7 @@ namespace ArcCore.Utility
 #if DEBUG
         public static void DebugDrawIptRect(Rect2D rect)
         {
+            Debug.Log("draw");
             Debug.DrawLine(new Vector3(rect.min.x, rect.min.y, 0), new Vector3(rect.min.x, rect.max.y, 0), Color.red);
             Debug.DrawLine(new Vector3(rect.min.x, rect.max.y, 0), new Vector3(rect.max.x, rect.max.y, 0), Color.red);
             Debug.DrawLine(new Vector3(rect.max.x, rect.max.y, 0), new Vector3(rect.max.x, rect.min.y, 0), Color.red);

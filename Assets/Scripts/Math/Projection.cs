@@ -7,7 +7,7 @@ namespace ArcCore.Math
 {
     public static class Projection
     {
-        public const float TAN_EPSILON = 0.01f; //Equal to tan(0.1 rad)
+        public const float TAN_EPSILON = 0.01f; //Equal to tan(0.01 rad) //Go learn trig again floof, tan(x) ~= x
         public const float Y_MAX_FOR_TRACK = 1.9f; //Equal to Convert.GetWorldY(0.2f)
 
         [BurstCompile(FloatMode = FloatMode.Fast)]
@@ -37,24 +37,29 @@ namespace ArcCore.Math
 
                 //FIND X LENIENCY USING 0TH'S MAGIC
                 float deltaY = origin.y - projPosY;
-                float distProj = math.sqrt(deltaY * deltaY + origin.z * origin.z);
+                float deltaX = origin.x - projPosX;
+                float distToXAxis = math.sqrt(deltaY * deltaY + origin.z * origin.z);
+                float distToYAxis = math.sqrt(deltaX * deltaX + origin.z * origin.z);
 
-                float xMax = distProj * (projPosX - origin.x + TAN_EPSILON * distProj) / (
-                             distProj - (projPosX - origin.x) * TAN_EPSILON);
+                float xMax = distToXAxis * (projPosX - origin.x + TAN_EPSILON * distToXAxis) / (
+                             distToXAxis - (projPosX - origin.x) * TAN_EPSILON)
+                             + origin.x;
                 
-                float xMin = distProj * (projPosX - origin.x - TAN_EPSILON * distProj) / (
-                             distProj + (projPosX - origin.x) * TAN_EPSILON);
+                float xMin = distToXAxis * (projPosX - origin.x - TAN_EPSILON * distToXAxis) / (
+                             distToXAxis + (projPosX - origin.x) * TAN_EPSILON)
+                             + origin.x;
 
                 //FIND Y LENIENCY USING 0TH'S MAGIC
-                float yMax = distProj * (projPosY - origin.y + TAN_EPSILON * distProj) / (
-                             distProj - (projPosY - origin.y) * TAN_EPSILON);
+                float yMax = distToYAxis * (projPosY - origin.y + TAN_EPSILON * distToYAxis) / (
+                             distToYAxis - (projPosY - origin.y) * TAN_EPSILON)
+                             + origin.y;
                 
-                float yMin = distProj * (projPosY - origin.y - TAN_EPSILON * distProj) / (
-                             distProj + (projPosY - origin.y) * TAN_EPSILON);
+                float yMin = distToYAxis * (projPosY - origin.y - TAN_EPSILON * distToYAxis) / (
+                             distToYAxis + (projPosY - origin.y) * TAN_EPSILON)
+                             + origin.y;
 
                 //Input plane
-                //inputPlane = new Rect2D(xMin, yMin, xMax, yMax);
-                inputPlane = new Rect2D(projPosX - 0.1f, projPosY - 0.1f, projPosX + 0.1f, projPosY + 0.1f);
+                inputPlane = new Rect2D(xMin, yMin, xMax, yMax);
             }
 
             //-GET TRACK RANGE-//

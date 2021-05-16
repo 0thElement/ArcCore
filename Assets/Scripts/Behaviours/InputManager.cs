@@ -1,6 +1,4 @@
-﻿#define UPD
-
-using System.Linq;
+﻿using System.Linq;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -109,8 +107,25 @@ namespace ArcCore.Behaviours
                 Debug.Log(t.InputPlane.min);
                 Debug.Log(t.track);
             }
+            var mousepos = Input.mousePosition;
+            (Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(new Vector2(mousepos.x, mousepos.y)));
+            TouchPoint p = new TouchPoint(ipt, track, TouchPoint.Status.Tapped, 0);
+
+            if(p.InputPlaneValid)
+            {
+                Utility.utils.DebugDrawIptRect(p.InputPlane);
+            }
+
+            if(p.TrackValid)
+            {
+                Debug.DrawRay(new Vector3(Utility.Conversion.TrackToX(p.track), 0.01f, 0), Vector3.back * 150, Color.red);
+            }
+
+            Debug.Log(p.InputPlane.min);
+            Debug.Log(p.track);
         }
 #endif
+
 
         void OnDestroy()
         {
