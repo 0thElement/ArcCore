@@ -6,6 +6,7 @@ using ArcCore.Utility;
 using ArcCore.Behaviours.EntityCreation;
 using ArcCore.Behaviours;
 using ArcCore.Parsing;
+using System.Text.RegularExpressions;
 
 namespace ArcCore.Behaviours
 {
@@ -31,16 +32,15 @@ namespace ArcCore.Behaviours
         private void Start()
         {
             // Temporary
-            path = Path.Combine(Application.dataPath, "TempAssets", "5.aff");
             AffError err;
-            if ((err = ReadChartOld(path)) != null)
+            if ((err = ReadChart(Constants.GetDebugChart())) != null)
                 Debug.LogError(err);
         }
 
-        private void ReadChart(string path)
+        private void ReadChartNew(string path)
         {
             string text = File.ReadAllText(path);
-            StringParser parser = new StringParser(text);
+            StringParserNew parser = new StringParserNew(text);
 
             //Header
             parser.SkipWhitespace();
@@ -51,12 +51,12 @@ namespace ArcCore.Behaviours
                     case "AudioOffset":
 
                         parser.SkipWhitespace();
-                        int off = parser.GetInt(ends: StringParser.Whitespace, exceptionMessage: "Not a valid audio offset!");
+                        int off = parser.GetInt(ends: StringParserNew.Whitespace, exceptionMessage: "Not a valid audio offset!");
 
                         SetAudioOffset(off);
 
-                        parser.SkipPastAll(StringParser.MidSpace);
-                        parser.Require(StringParser.LineEnd);
+                        parser.SkipPastAll(StringParserNew.MidSpace);
+                        parser.Require(StringParserNew.LineEnd);
 
                         break;
                 }
@@ -69,9 +69,13 @@ namespace ArcCore.Behaviours
             }
         }
 
-        private AffError ReadChartOld(string path)
+        private AffError ReadChartFromFile(string path)
         {
-            string[] lines = File.ReadAllLines(path);
+            return ReadChart(File.ReadAllText(path));
+        }
+        private AffError ReadChart(string data)
+        {
+            string[] lines = Regex.Split(data, "\r\n|\r|\n");
 
             //Read all header options
             int i = 0;
@@ -84,7 +88,7 @@ namespace ArcCore.Behaviours
             {
                 if (lines[i].IndexOf(":") != -1)
                 {
-                    StringParserOld lineParser = new StringParserOld(lines[i]);
+                    StringParser lineParser = new StringParser(lines[i]);
 
                     if (!lineParser.ReadString(out string option, ":"))
                         return getError(AffErrorType.no_found_item);
@@ -116,7 +120,7 @@ namespace ArcCore.Behaviours
                     continue;
                 }
 
-                StringParserOld lineParser = new StringParserOld(lines[i]);
+                StringParser lineParser = new StringParser(lines[i]);
 
                 if (!lineParser.ReadString(out string type, "("))
                     return getError(AffErrorType.invalid_line_format);
@@ -184,10 +188,10 @@ namespace ArcCore.Behaviours
             Conductor.Instance.SetOffset(offset);
         }
 
-        private AffErrorType NoFoundOr(StringParserOld.Status status, AffErrorType t)
-            => status == StringParserOld.Status.failure_invalid_terminator ? AffErrorType.no_found_item : t;
+        private AffErrorType NoFoundOr(StringParser.Status status, AffErrorType t)
+            => status == StringParser.Status.failure_invalid_terminator ? AffErrorType.no_found_item : t;
 
-        private AffErrorType AddTiming(StringParserOld lineParser, int currentTimingGroup)
+        private AffErrorType AddTiming(StringParser lineParser, int currentTimingGroup)
         {
             if (!lineParser.ParseInt(out int timing, ","))
                 return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_time);
@@ -202,7 +206,7 @@ namespace ArcCore.Behaviours
             return AffErrorType.none;
         }
 
-        private AffErrorType AddTap(StringParserOld lineParser, int currentTimingGroup)
+        private AffErrorType AddTap(StringParser lineParser, int currentTimingGroup)
         {
             if (!lineParser.ParseInt(out int timing, ","))
                 return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_time);
@@ -217,7 +221,7 @@ namespace ArcCore.Behaviours
             return AffErrorType.none;
         }
 
-        private AffErrorType AddHold(StringParserOld lineParser, int currentTimingGroup)
+        private AffErrorType AddHold(StringParser lineParser, int currentTimingGroup)
         {
             if (!lineParser.ParseInt(out int timing, ","))
                 return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_time);
@@ -235,7 +239,7 @@ namespace ArcCore.Behaviours
             return AffErrorType.none;
         }
 
-        private AffErrorType AddArc(StringParserOld lineParser, int currentTimingGroup)
+        private AffErrorType AddArc(StringParser lineParser, int currentTimingGroup)
         {
 
             if (!lineParser.ParseInt(out int timing, ","))
@@ -361,7 +365,7 @@ namespace ArcCore.Behaviours
             return true;
         }
 
-        private AffErrorType AddCamera(StringParserOld lineParser)
+        private AffErrorType AddCamera(StringParser lineParser)
         {
             if (!lineParser.ParseInt(out int timing, ","))
                 return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_time);
@@ -434,7 +438,7 @@ namespace ArcCore.Behaviours
             return true;
         }
 
-        public AffErrorType AddSceneControlEvent(StringParserOld lineParser)
+        public AffErrorType AddSceneControlEvent(StringParser lineParser)
         {
             //todo: scenecontrol support, maybe 
             return AffErrorType.none;

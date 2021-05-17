@@ -1,4 +1,6 @@
-﻿namespace ArcCore
+﻿#define DebugChart
+
+namespace ArcCore
 {
     public static class Constants
     {
@@ -23,5 +25,13 @@
 
         public const int HoldLenienceTime = 6; //0.100 seconds
         public const int ArcRedMaxTime = 20;   //0.333 seconds
+
+#if DebugChart
+        public static string GetDebugChart() =>
+@"
+CHART HERE
+";
+#endif
+
     }
 }
