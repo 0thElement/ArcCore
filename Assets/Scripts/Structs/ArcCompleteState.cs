@@ -1,7 +1,9 @@
-﻿using Unity.Mathematics;
+﻿using System;
+using Unity.Mathematics;
 
 namespace ArcCore.Structs
 {
+
     public struct ArcCompleteState
     {
         public ArcState state;

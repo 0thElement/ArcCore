@@ -75,7 +75,12 @@ namespace ArcCore.Behaviours
         }
         private AffError ReadChart(string data)
         {
-            string[] lines = Regex.Split(data, "\r\n|\r|\n");
+            string[] lines = Regex.Split(data, "\n\r|\r\n|\r|\n");
+
+            for(int l = 0; l < lines.Length; l++)
+            {
+                lines[l] = lines[l].Trim();
+            }
 
             //Read all header options
             int i = 0;
@@ -178,6 +183,7 @@ namespace ArcCore.Behaviours
             TraceEntityCreator.Instance.CreateEntities(affTraceList);
             ArcTapEntityCreator.Instance.CreateEntities(affArcTapList, affTapList);
 
+            Debug.Log("Finished loading entities");
             Conductor.Instance.PlayMusic();
 
             return null;
