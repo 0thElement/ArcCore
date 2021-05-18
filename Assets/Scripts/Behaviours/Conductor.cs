@@ -16,6 +16,7 @@ namespace ArcCore.Behaviours
         private AudioSource audioSource;
 
         [SerializeField] public int offset;
+        [SerializeField, Range(1f,6.5f)] public float chartSpeed;
         [HideInInspector] private float dspStartPlayingTime;
         [HideInInspector] public List<float> groupFloorPosition;
         private List<List<TimingEvent>> timingEventGroups;
@@ -24,6 +25,7 @@ namespace ArcCore.Behaviours
         public long timeOfLastMix;
         public int songLength;
         public NativeArray<float> currentFloorPosition;
+        private float scrollSpeed;
         
         public void Awake()
         {
@@ -62,6 +64,8 @@ namespace ArcCore.Behaviours
         }
         public void SetupTiming(List<List<AffTiming>> timingGroups) {
             //precalculate floorposition value for timing events
+
+            scrollSpeed = -chartSpeed / timingGroups[0][0].bpm / 25f;
             timingEventGroups = new List<List<TimingEvent>>(timingGroups.Count); 
 
             currentFloorPosition = new NativeArray<float>(new float[timingGroups.Count], Allocator.Persistent);
@@ -103,7 +107,7 @@ namespace ArcCore.Behaviours
         {
             List<TimingEvent> group = timingEventGroups[timingGroup];
 
-            if (timing<group[0].timing) return group[0].bpm*(timing - group[0].timing) / -1300;
+            if (timing<group[0].timing) return group[0].bpm*(timing - group[0].timing) * scrollSpeed;
 
             //caching the index so we dont have to loop the entire thing every time
             //list access should be largely local anyway
@@ -120,7 +124,7 @@ namespace ArcCore.Behaviours
 
             groupIndexCache[timingGroup] = i;
 
-            return (group[i].floorPosition + (timing - group[i].timing) * group[i].bpm) / -1300;
+            return (group[i].floorPosition + (timing - group[i].timing) * group[i].bpm) * scrollSpeed;
         }
 
         public int GetTimingEventIndexFromTiming(int timing, int timingGroup)
@@ -152,7 +156,7 @@ namespace ArcCore.Behaviours
         public int GetFirstTimingFromFloorPosition(float floorposition, int timingGroup)
         {
             int maxIndex = timingEventGroups[timingGroup].Count;
-            floorposition *= -1300;
+            floorposition /= scrollSpeed;
 
             TimingEvent first = timingEventGroups[timingGroup][0];
             if (first.bpm * (floorposition - first.floorPosition) < 0) return Mathf.RoundToInt((floorposition - first.floorPosition)/ first.bpm);

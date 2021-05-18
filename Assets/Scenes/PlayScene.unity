@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.37311918, g: 0.3807398, b: 0.35872716, a: 1}
+  m_IndirectSpecularColor: {r: 0.37311953, g: 0.38074014, b: 0.3587274, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -197,6 +197,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   offset: 0
+  chartSpeed: 6.5
   groupFloorPosition: []
   receptorTime: 0
   timeOfLastMix: 0
@@ -689,6 +690,7 @@ MonoBehaviour:
   lostCount: 0
   currentCombo: 0
   currentScore: 0
+  currentScoreDisplay: 0
   maxCombo: 0
   comboTextUI: {fileID: 1719732240}
   scoreTextUI: {fileID: 518063974}
