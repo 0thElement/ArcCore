@@ -56,7 +56,7 @@
             fixed4 frag (v2f i) : SV_Target
             {
 				if(_Cutoff == 1 && i.worldpos.z * _Direction > 0) return 0;
-				if(i.worldpos.z < -100 || i.worldpos.z > 100) return 0;
+				if(i.worldpos.z < -124.25 || i.worldpos.z > 124.25) return 0;
 
                 fixed4 col = (_Highlight > 0) ? tex2D(_HighlightTex, i.uv) : tex2D(_MainTex, i.uv);
 
