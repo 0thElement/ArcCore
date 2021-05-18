@@ -13,5 +13,8 @@ public class JudgementFinalizeSystem : SystemBase
         if (!GameState.isChartMode) return;
 
         ScoreManager.Instance.UpdateScore();
+
+        JudgementExpireSystem.Instance.particleBuffer.Playback();
+        JudgementExpireSystem.Instance.particleBuffer.Dispose();
     }
 }

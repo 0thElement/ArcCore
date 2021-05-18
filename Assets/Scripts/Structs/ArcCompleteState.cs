@@ -1,9 +1,14 @@
-﻿using System;
+﻿using ArcCore.Components;
+using System;
+using Unity.Collections;
+using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Rendering;
+using UnityEngine;
+using ArcCore.Behaviours;
 
 namespace ArcCore.Structs
 {
-
     public struct ArcCompleteState
     {
         public ArcState state;

@@ -74,17 +74,11 @@ namespace ArcCore.Behaviours.EntityCreation
                 EManager.SetComponentData<TimingGroup>(tapEntity, group);
                 EManager.SetComponentData<TimingGroup>(shadowEntity, group);
 
-                EManager.SetComponentData<EntityReference>(tapEntity, new EntityReference()
-                {
-                    value = shadowEntity
-                });
-
                 int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, arctap.timingGroup);
                 int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arctap.timingGroup);
                 int appearTime = (t1 < t2) ? t1 : t2;
 
                 EManager.SetComponentData<AppearTime>(tapEntity, new AppearTime(){ value = appearTime });
-                EManager.SetComponentData<AppearTime>(shadowEntity, new AppearTime() { value = appearTime });
 
                 //Judge entities
                 EManager.SetComponentData(tapEntity, new ChartTime(arctap.timing));
@@ -111,6 +105,11 @@ namespace ArcCore.Behaviours.EntityCreation
                     if (arctap.timingGroup == affTapList[j].timingGroup)
                         CreateConnections(arctap, affTapList[j], appearTime);
                 }
+
+                EManager.SetComponentData<EntityReference>(tapEntity, new EntityReference()
+                {
+                    value = shadowEntity
+                });
             }
 
         }

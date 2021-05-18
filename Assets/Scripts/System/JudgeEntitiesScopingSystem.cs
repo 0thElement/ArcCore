@@ -11,15 +11,10 @@ using ArcCore.Components.Tags;
 [UpdateAfter(typeof(ChunkScopingSystem))]
 public class JudgeEntitiesScopingSystem : SystemBase
 {
-    EndInitializationEntityCommandBufferSystem commandBufferSystem;
-    protected override void OnCreate()
-    {
-        commandBufferSystem = World.GetOrCreateSystem<EndInitializationEntityCommandBufferSystem>();
-    }
     protected override void OnUpdate()
     {
         int currentTime = Conductor.Instance.receptorTime;
-        var commandBuffer = commandBufferSystem.CreateCommandBuffer();
+        var commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
 
         Entities.WithNone<WithinJudgeRange, PastJudgeRange>().ForEach(
 
@@ -28,13 +23,16 @@ public class JudgeEntitiesScopingSystem : SystemBase
                     => 
 
                 {
-                    if (currentTime >= chartTime.value - Constants.LostWindow)
+                    if (currentTime + Constants.LostWindow >= chartTime.value)
                     {
                         commandBuffer.AddComponent<WithinJudgeRange>(entity);
                     }
                 }
 
             ).Run();
+
+        commandBuffer.Playback(EntityManager);
+        commandBuffer.Dispose();
     }
 }
 //For testing later

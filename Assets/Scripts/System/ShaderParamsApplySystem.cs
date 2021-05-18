@@ -9,7 +9,7 @@ using ArcCore.Behaviours;
 using Unity.Rendering;
 using ArcCore.Structs;
 
-[UpdateAfter(typeof(JudgementSystem))]
+[UpdateAfter(typeof(JudgementFinalizeSystem))]
 public class ShaderParamsApplySystem : SystemBase
 {
 
