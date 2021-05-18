@@ -681,7 +681,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8419db1fb6d6643488d7ab837eb0ed86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxCombo: 0
   maxPureCount: 0
   latePureCount: 0
   earlyPureCount: 0
@@ -690,7 +689,9 @@ MonoBehaviour:
   lostCount: 0
   currentCombo: 0
   currentScore: 0
-  textUI: {fileID: 0}
+  maxCombo: 0
+  comboTextUI: {fileID: 1719732240}
+  scoreTextUI: {fileID: 518063974}
 --- !u!1 &560663231
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,7 +1,13 @@
-﻿using ArcCore.Utility;
+﻿using ArcCore.Structs;
+using ArcCore.Utility;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using Unity.Mathematics;
+
+//- Header for unity files -//
+    using hidden = UnityEngine.HideInInspector;
+    using serialized = UnityEngine.SerializeField;
 
 namespace ArcCore.Behaviours
 {
@@ -12,8 +18,7 @@ namespace ArcCore.Behaviours
         public const float MaxScore = 10_000_000f;
         public float MaxScoreDyn => MaxScore + maxCombo;
 
-        [HideInInspector] public int maxCombo;
-        [HideInInspector] public int
+        [hidden] public int
             maxPureCount,
             latePureCount,
             earlyPureCount,
@@ -21,13 +26,21 @@ namespace ArcCore.Behaviours
             earlyFarCount,
             lostCount,
             currentCombo;
-        [HideInInspector] public float currentScore;
 
-        public Text textUI;
+        [hidden] public float currentScore, currentScoreDisplay;
+        [hidden] public int maxCombo;
+
+        public Text comboTextUI, scoreTextUI;
 
         void Awake()
         {
             Instance = this;
+        }
+
+        public void ResetScores()
+        {
+            currentScore = 0;
+            currentScoreDisplay = 0;
         }
 
         //call later
@@ -37,7 +50,10 @@ namespace ArcCore.Behaviours
                 (maxPureCount + latePureCount + earlyPureCount) * MaxScore / maxCombo +
                 (lateFarCount + earlyFarCount) * MaxScore / maxCombo / 2 +
                  maxPureCount;
-            textUI.text = $"{(int)currentScore:D8}";
+            currentScoreDisplay += math.ceil((currentScore - currentScoreDisplay) / 1.8f);
+
+            comboTextUI.text = $"{currentCombo}";
+            scoreTextUI.text = $"{(int)currentScoreDisplay:D8}";
         }
     }
 }

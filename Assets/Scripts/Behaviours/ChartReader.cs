@@ -186,6 +186,8 @@ namespace ArcCore.Behaviours
             Debug.Log("Finished loading entities");
             Conductor.Instance.PlayMusic();
 
+            GameState.isChartMode = true;
+
             return null;
         }
 

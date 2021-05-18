@@ -13,5 +13,7 @@
 
         public static Ref<T> New(T value = default) =>
             new Ref<T>(&value);
+
+        public static implicit operator Ref<T>(T value) => New(value);
     }
 }
