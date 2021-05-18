@@ -11,8 +11,8 @@ using ArcCore.Components.Tags;
 public class ChunkScopingSystem : SystemBase
 {
     private int currentTime;
-    private int nextMakeAppearUpdateTime = 0;
-    private int nextMakeDisappearUpdateTime = 0;
+    private int nextMakeAppearUpdateTime = int.MinValue;
+    private int nextMakeDisappearUpdateTime = int.MinValue;
     private EntityQueryDesc makeAppearQueryDesc;
     private EntityQuery makeAppearQuery;
     private EntityQuery makeDisappearQuery;

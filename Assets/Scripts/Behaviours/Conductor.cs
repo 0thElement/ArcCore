@@ -101,9 +101,10 @@ namespace ArcCore.Behaviours
 
         public float GetFloorPositionFromTiming(int timing, int timingGroup)
         {
-            if (timing<0) return timingEventGroups[0][0].bpm*timing / -1300;
-
             List<TimingEvent> group = timingEventGroups[timingGroup];
+
+            if (timing<group[0].timing) return group[0].bpm*(timing - group[0].timing) / -1300;
+
             //caching the index so we dont have to loop the entire thing every time
             //list access should be largely local anyway
             int i = groupIndexCache[timingGroup];
@@ -152,6 +153,9 @@ namespace ArcCore.Behaviours
         {
             int maxIndex = timingEventGroups[timingGroup].Count;
             floorposition *= -1300;
+
+            TimingEvent first = timingEventGroups[timingGroup][0];
+            if (first.bpm * (floorposition - first.floorPosition) < 0) return Mathf.RoundToInt((floorposition - first.floorPosition)/ first.bpm);
 
             for (int i = 0; i < maxIndex - 1; i++)
             {
