@@ -1,4 +1,5 @@
-﻿using ArcCore.Utility;
+﻿using ArcCore.Behaviours;
+using ArcCore.Utility;
 using Unity.Burst;
 using Unity.Mathematics;
 using UnityEngine;
@@ -63,7 +64,7 @@ namespace ArcCore.Math
             }
 
             //-GET TRACK RANGE-//
-            int track = -1;
+            int track = InputManager.FreeTouch;
 
             //Check if the tap is too high on the input plane for a track tap
             if (
@@ -85,7 +86,7 @@ namespace ArcCore.Math
                 //Reset to "no value" if track is invalid
                 if(track > 3 || track < 0)
                 {
-                    track = -1;
+                    track = InputManager.FreeTouch;
                 }
             }
 
