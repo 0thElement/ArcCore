@@ -1,4 +1,5 @@
 ﻿#define UPD
+#define MOBILE_TEST
 
 using System.Linq;
 using Unity.Collections;
@@ -28,8 +29,8 @@ namespace ArcCore.Behaviours
         public int safeIndex = 0;
 
         [HideInInspector]
-        public QuadArr<int> tracksHeld;
-        public QuadArr<bool> tracksTapped;
+        public NativeQuadArr<int> tracksHeld;
+        public NativeQuadArr<bool> tracksTapped;
 
         public Camera cameraCast;
 
@@ -110,6 +111,7 @@ namespace ArcCore.Behaviours
                 Debug.Log(t.InputPlane.min);
                 Debug.Log(t.track);
             }
+#if !MOBILE_TEST
             var mousepos = Input.mousePosition;
             (Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(new Vector2(mousepos.x, mousepos.y)));
             TouchPoint p = new TouchPoint(ipt, track, TouchPoint.Status.Tapped, 0);
@@ -126,11 +128,12 @@ namespace ArcCore.Behaviours
 
             Debug.Log(p.InputPlane.min);
             Debug.Log(p.track);
+#endif
         }
 #endif
 
 
-        void OnDestroy()
+            void OnDestroy()
         {
             touchPoints.Dispose();
         }

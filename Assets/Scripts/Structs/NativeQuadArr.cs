@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace ArcCore.Structs
 {
-    public struct QuadArr<T> : IEnumerable<T> where T : struct
+    public struct NativeQuadArr<T> : IEnumerable<T> where T : struct
     {
         private T v1, v2, v3, v4;
 
-        public QuadArr(T value1, T value2, T value3, T value4)
+        public NativeQuadArr(T value1, T value2, T value3, T value4)
         {
             v1 = value1;
             v2 = value2;
@@ -21,16 +21,11 @@ namespace ArcCore.Structs
             {
                 switch(idx)
                 {
-                    case 0:
-                        return v1;
-                    case 1:
-                        return v2;
-                    case 2:
-                        return v3;
-                    case 3:
-                        return v4;
-                    default:
-                        throw new System.IndexOutOfRangeException();
+                    case 0: return v1;
+                    case 1: return v2;
+                    case 2: return v3;
+                    case 3: return v4;
+                    default: throw new System.IndexOutOfRangeException();
                 }
             }
             set
@@ -68,9 +63,9 @@ namespace ArcCore.Structs
         public struct Enumerator : IEnumerator<T>
         {
             private int n;
-            private readonly QuadArr<T> v;
+            private readonly NativeQuadArr<T> v;
 
-            internal Enumerator(QuadArr<T> arr)
+            internal Enumerator(NativeQuadArr<T> arr)
             {
                 v = arr;
                 n = -1;

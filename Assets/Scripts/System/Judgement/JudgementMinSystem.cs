@@ -78,7 +78,7 @@ public class JudgementMinSystem : SystemBase
                 Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime>().WithoutBurst().ForEach(
                     (Entity en, in ChartTime chartTime, in ChartPosition cp) =>
                     {
-                        if (chartTime.value < minTime && touchPoints.Current.InputPlane.CollidesWith(new Rect2D(cp.xy - arctapBoxExtents, cp.xy + arctapBoxExtents)))
+                        if (chartTime.value < minTime && touch.inputPlane.Value.CollidesWith(new Rect2D(cp.xy - arctapBoxExtents, cp.xy + arctapBoxExtents)))
                         {
                             minTime = chartTime.value;
                             minEntity = en;
