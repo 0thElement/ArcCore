@@ -55,5 +55,41 @@ namespace ArcCore.Behaviours
             comboTextUI.text = $"{currentCombo}";
             scoreTextUI.text = $"{(int)currentScoreDisplay:D8}";
         }
+
+        public void AddJudge(JudgeType type, int cnt = 1)
+        {
+            switch(type)
+            {
+                case JudgeType.EarlyFar:
+                    earlyFarCount += cnt;
+                    currentCombo += cnt;
+                    break;
+
+                case JudgeType.EarlyPure:
+                    earlyPureCount += cnt;
+                    currentCombo += cnt;
+                    break;
+
+                case JudgeType.MaxPure:
+                    maxPureCount += cnt;
+                    currentCombo += cnt;
+                    break;
+
+                case JudgeType.LateFar:
+                    lateFarCount += cnt;
+                    currentCombo += cnt;
+                    break;
+
+                case JudgeType.LatePure:
+                    latePureCount += cnt;
+                    currentCombo += cnt;
+                    break;
+
+                case JudgeType.Lost:
+                    lostCount += cnt;
+                    currentCombo = 0;
+                    break;
+            }
+        }
     }
 }

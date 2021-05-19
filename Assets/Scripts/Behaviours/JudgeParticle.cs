@@ -14,7 +14,7 @@ namespace ArcCore.Behaviours
             SafeAwake();
         }
 
-        public virtual void SafeAwake() {}
+        public new virtual void SafeAwake() {}
 
         public void LateUpdate()
         {

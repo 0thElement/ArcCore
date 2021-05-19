@@ -10,7 +10,8 @@ namespace ArcCore.Behaviours
             LostJudgeType,
             PureJudgeType,
             FarJudgeType,
-            TapEffectType
+            TapEffectType,
+            Void
         }
 
         public static ParticleCreator Instance { get; private set; }
@@ -28,32 +29,9 @@ namespace ArcCore.Behaviours
             Instance = this;
         }
 
-        public void CreateParticle(float2 position, ParticleType type)
+        public void PlayParticleAt(float2 position, ParticleType type)
         {
-            ScreenSprite newObj;
-
-            switch (type) 
-            {
-                case ParticleType.PureJudgeType:
-                    newObj = Instantiate(pureJudgeBase).GetComponent<ScreenSprite>();
-                    break;
-
-                case ParticleType.FarJudgeType:
-                    newObj = Instantiate(farJudgeBase).GetComponent<ScreenSprite>();
-                    break;
-
-                case ParticleType.LostJudgeType:
-                    newObj = Instantiate(lostJudgeBase).GetComponent<ScreenSprite>();
-                    break;
-
-                default:
-                    //default in case of error:
-                    newObj = Instantiate(lostJudgeBase).GetComponent<ScreenSprite>();
-                    break;
-            }
-
-            var proj = Camera.main.WorldToScreenPoint(new Vector3(position.x, position.y, 0));
-            newObj.screenPos = new float2(proj.x, proj.y);
+            
         }
     }
 }

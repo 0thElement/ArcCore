@@ -12,13 +12,7 @@ using ArcCore.Utility;
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 public class JudgementExpireSystem : SystemBase
 {
-    public static JudgementExpireSystem Instance { get; private set; }
-    public ParticleBuffer particleBuffer;
-
-    protected override void OnCreate()
-    {
-        Instance = this;
-    }
+    public static ParticleBuffer particleBuffer;
 
     protected override void OnUpdate()
     {
@@ -85,6 +79,6 @@ public class JudgementExpireSystem : SystemBase
         ScoreManager.Instance.lostCount = lostCount;
         ScoreManager.Instance.currentCombo = currentCombo;
 
-        this.particleBuffer = particleBuffer;
+        JudgementExpireSystem.particleBuffer = particleBuffer;
     }
 }

@@ -4,8 +4,9 @@ using ArcCore.Components;
 using ArcCore.Components.Tags;
 using Unity.Collections;
 using Unity.Entities;
+using UnityEngine;
 
-[UpdateAfter(typeof(JudgementExpireSystem))]
+[UpdateInGroup(typeof(SimulationSystemGroup)), UpdateAfter(typeof(JudgementExpireSystem))]
 public class JudgementFinalizeSystem : SystemBase
 {
     protected override void OnUpdate()
@@ -14,7 +15,10 @@ public class JudgementFinalizeSystem : SystemBase
 
         ScoreManager.Instance.UpdateScore();
 
-        JudgementExpireSystem.Instance.particleBuffer.Playback();
-        JudgementExpireSystem.Instance.particleBuffer.Dispose();
+        if (JudgementExpireSystem.particleBuffer.IsCreated)
+        {
+            JudgementExpireSystem.particleBuffer.Playback();
+            JudgementExpireSystem.particleBuffer.Dispose();
+        }
     }
 }

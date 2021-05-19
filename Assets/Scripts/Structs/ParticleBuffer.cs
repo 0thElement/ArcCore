@@ -52,7 +52,7 @@ namespace ArcCore.Structs
         private NativeList<ParticleDesc> values;
         public ParticleBuffer(Allocator allocator)
         {
-            values = new NativeList<ParticleDesc>(allocator);
+            values = new NativeList<ParticleDesc>(4, allocator);
         }
 
         public void CreateParticle(float2 position, ParticleCreator.ParticleType type)
@@ -62,11 +62,13 @@ namespace ArcCore.Structs
 
         public void Playback()
         {
-            for(int i = 0; i < values.Length; i++)
+            for(int i = 1; i < values.Length; i++)
             {
-                ParticleCreator.Instance.CreateParticle(values[i].particlePos, values[i].type);
+                ParticleCreator.Instance.PlayParticleAt(values[i].particlePos, values[i].type);
             }
         }
+
+        public bool IsCreated => values.IsCreated;
 
         public void Dispose()
         {

@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿#define UPD
+
+using System.Linq;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -27,6 +29,7 @@ namespace ArcCore.Behaviours
 
         [HideInInspector]
         public QuadArr<int> tracksHeld;
+        public QuadArr<bool> tracksTapped;
 
         public Camera cameraCast;
 
@@ -151,6 +154,9 @@ namespace ArcCore.Behaviours
         public void PollInput()
         {
             //Debug.Log(safeIndex);
+            tracksTapped[0] = tracksTapped[1] = tracksTapped[2] = tracksTapped[3] = false;
+
+
             for (int ti = 0; ti < touchPoints.Length; ti++)
             {
                 if(touchPoints[ti].status == TouchPoint.Status.Released)
@@ -201,6 +207,7 @@ namespace ArcCore.Behaviours
                         if(track != -1)
                         {
                             tracksHeld[track]++;
+                            tracksTapped[track] = true;
                         }
                     }
 
