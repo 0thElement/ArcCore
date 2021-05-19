@@ -1,17 +1,25 @@
-﻿Shader "Arcade/Arc"
+﻿Shader "Unlit/Arc"
 {
 	Properties
 	{
 		_MainTex ("Texture", 2D) = "white" {}
+		_HighlightTex ("Highlight Texture", 2D) = "white" {}
+		_RedCol ("Red Color", Color) = (1,1,1,1)
+		_GrayCol ("Gray Color", Color) = (1,1,1,1)
 		_Color ("Color", Color) = (1,1,1,1)
-		_From ("From", Float) = 0
-		_To ("To", Float) = 1 
+		
+		_Direction ("Direction", Float) = 1
 		_Cutoff ("Cutoff", Float) = 0
+
+		//Highlight = 0 -> normal, 1 -> highlight, -1 -> gray	
+		_Highlight ("Highlight", Float) = 0
+		_RedMix ("Red Mix", Float) = 0
 	}
 	SubShader
 	{
 		Tags { "Queue" = "Transparent"  "RenderType" = "Transparent" "CanUseSpriteAtlas"="true"  }
         Cull Off
+		ZTest Off
 		Blend SrcAlpha OneMinusSrcAlpha
   
 		Pass
@@ -40,28 +48,37 @@
 				float3 worldpos : TEXCOORD1;
 			};
 			 
-			float _From,_To,_Cutoff;
-			float4 _Color;
+			float _Direction,_Cutoff,_RedMix,_Highlight;
+			float4 _Color,_RedCol,_GrayCol;
             float4 _MainTex_ST;
-			sampler2D _MainTex;
+			sampler2D _MainTex, _HighlightTex;
 
 			v2f vert (appdata v)
 			{
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-				o.color = v.color * _Color;
+				o.color = v.color * lerp(_Color, _RedCol, _RedMix);
 				o.worldpos = mul(unity_ObjectToWorld, v.vertex);
 				return o;
 			}
 
 			half4 frag (v2f i) : SV_Target
 			{
-			    if((i.worldpos.z > 0 && _Cutoff <= 0) || (i.uv.y < _From || i.uv.y > _To)) return 0;
-				float4 c = tex2D(_MainTex,i.uv);
+				if(_Cutoff == 1 && i.worldpos.z * _Direction > 0) return 0;
+
+				float4 c = (_Highlight > 0) ? tex2D(_HighlightTex, i.uv) : tex2D(_MainTex,i.uv);
 				float4 inColor = i.color;
-				c *= inColor;
-				c.a = alpha_from_pos(c, i.worldpos.z);
+
+				c *=  inColor;
+				c.a *= alpha_from_pos(i.worldpos.z) * 0.86;
+
+				if (_Highlight < 0)
+				{
+					c = lerp(c, _GrayCol, 0.2);
+					c.a *= 0.85;
+				}
+
 				return c;
 			}
 			ENDCG

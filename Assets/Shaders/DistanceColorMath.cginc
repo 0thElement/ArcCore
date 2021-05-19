@@ -1,4 +1,4 @@
-	float alpha_from_pos(float4 col, float z) 
+	float alpha_from_pos(float z) 
 	{
-		return clamp(5 * col.a + 0.04024144869 * col.a * z, 0, col.a);
+		return clamp(5 + 0.04024144869 * z, 0, 1);
 	}
