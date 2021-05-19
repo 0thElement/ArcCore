@@ -30,29 +30,30 @@ namespace ArcCore.Behaviours
 
         public void CreateParticle(float2 position, ParticleType type)
         {
-            GameObject newObj;
+            ScreenSprite newObj;
 
             switch (type) 
             {
                 case ParticleType.PureJudgeType:
-                    newObj = Instantiate(pureJudgeBase);
+                    newObj = Instantiate(pureJudgeBase).GetComponent<ScreenSprite>();
                     break;
 
                 case ParticleType.FarJudgeType:
-                    newObj = Instantiate(farJudgeBase);
+                    newObj = Instantiate(farJudgeBase).GetComponent<ScreenSprite>();
                     break;
 
                 case ParticleType.LostJudgeType:
-                    newObj = Instantiate(lostJudgeBase);
+                    newObj = Instantiate(lostJudgeBase).GetComponent<ScreenSprite>();
                     break;
 
                 default:
                     //default in case of error:
-                    newObj = Instantiate(lostJudgeBase);
+                    newObj = Instantiate(lostJudgeBase).GetComponent<ScreenSprite>();
                     break;
             }
 
-            newObj.transform.position = new Vector3(position.x, position.y);
+            var proj = Camera.main.WorldToScreenPoint(new Vector3(position.x, position.y, 0));
+            newObj.screenPos = new float2(proj.x, proj.y);
         }
     }
 }
