@@ -30,7 +30,7 @@ public class JudgementExpireSystem : SystemBase
             (Entity en, in ChartTime chartTime, in ChartLane cl) => {
                 if(currentTime - Constants.FarWindow > chartTime.value)
                 {
-                    commandBuffer.DestroyEntity(en);
+                    commandBuffer.DisableEntity(en);
                     lostCount++;
                     currentCombo = 0;
                     particleBuffer.CreateParticle(new float2(Conversion.TrackToX(cl.lane), 1), ParticleCreator.ParticleType.LostJudgeType);
@@ -43,8 +43,8 @@ public class JudgementExpireSystem : SystemBase
             (Entity en, in ChartTime chartTime, in EntityReference enRef, in ChartPosition cp) => {
                 if (currentTime - Constants.FarWindow > chartTime.value)
                 {
-                    commandBuffer.DestroyEntity(enRef.value);
-                    commandBuffer.DestroyEntity(en);
+                    commandBuffer.DisableEntity(enRef.value);
+                    commandBuffer.DisableEntity(en);
                     lostCount++;
                     currentCombo = 0;
                     particleBuffer.CreateParticle(Conversion.GetWorldPos(cp.xy), ParticleCreator.ParticleType.LostJudgeType);

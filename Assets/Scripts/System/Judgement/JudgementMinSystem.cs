@@ -95,13 +95,13 @@ public class JudgementMinSystem : SystemBase
                 case MinType.Void: break;
 
                 case MinType.Tap:
-                    EntityManager.DestroyEntity(minEntity);
+                    EntityManager.DisableEntity(minEntity);
                     ScoreManager.Instance.AddJudge(minJType);
                     break;
 
                 case MinType.Arctap:
-                    EntityManager.DestroyEntity(EntityManager.GetComponentData<EntityReference>(minEntity).value);
-                    EntityManager.DestroyEntity(minEntity);
+                    EntityManager.DisableEntity(EntityManager.GetComponentData<EntityReference>(minEntity).value);
+                    EntityManager.DisableEntity(minEntity);
                     ScoreManager.Instance.AddJudge(minJType);
                     break;
 
