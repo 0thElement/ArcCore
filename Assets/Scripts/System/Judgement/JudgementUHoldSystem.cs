@@ -43,6 +43,7 @@ public class JudgementUHoldSystem : SystemBase
         ).Run();
 
         commandBuffer.Playback(EntityManager);
+        commandBuffer.Dispose();
         ScoreManager.Instance.maxPureCount = maxPureCount;
         ScoreManager.Instance.currentCombo = currentCombo;
     }
