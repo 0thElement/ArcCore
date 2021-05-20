@@ -65,7 +65,7 @@ public class JudgementMinSystem : SystemBase
                         {
                             minTime = chartIncrTime.time;
                             minEntity = en;
-                            minType = MinType.Tap;
+                            minType = MinType.Hold;
                             minJType = JudgeType.MaxPure;
                         }
                     }
