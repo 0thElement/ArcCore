@@ -39,7 +39,7 @@ public class JudgementExpireSystem : SystemBase
         ).Run();
 
         //- ARCTAPS -//
-        Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime>().WithoutBurst().ForEach(
+        Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime>().ForEach(
             (Entity en, in ChartTime chartTime, in EntityReference enRef, in ChartPosition cp) => {
                 if (currentTime - Constants.FarWindow > chartTime.value)
                 {

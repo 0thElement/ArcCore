@@ -29,8 +29,8 @@ namespace ArcCore.Behaviours
         public int safeIndex = 0;
 
         [HideInInspector]
-        public NativeQuadArr<int> tracksHeld;
-        public NativeQuadArr<bool> tracksTapped;
+        public NTrackArray<int> tracksHeld;
+        public NTrackArray<bool> tracksTapped;
 
         public Camera cameraCast;
 
@@ -144,8 +144,8 @@ namespace ArcCore.Behaviours
 
                 if (track != -1)
                 {
-                    tracksHeld[track-1]++;
-                    tracksTapped[track-1] = true;
+                    tracksHeld[track]++;
+                    tracksTapped[track] = true;
                 }
             } 
             else if(Input.GetMouseButtonUp(0))
@@ -156,7 +156,7 @@ namespace ArcCore.Behaviours
 
                 touchPoints[0] = tp;
 
-                if (tp.track != -1) tracksHeld[tp.track-1]--;
+                if (tp.track != -1) tracksHeld[tp.track]--;
             }
             else if(Input.GetMouseButton(0))
             {
@@ -170,8 +170,8 @@ namespace ArcCore.Behaviours
 
                 if (oTrack != tp.track)
                 {
-                    if (oTrack != -1) tracksHeld[oTrack-1]--;
-                    if (tp.track != -1) tracksHeld[tp.track-1]++;
+                    if (oTrack != -1) tracksHeld[oTrack]--;
+                    if (tp.track != -1) tracksHeld[tp.track]++;
                 }
             }
         }
@@ -179,8 +179,6 @@ namespace ArcCore.Behaviours
         public void PollInput()
         {
             //Debug.Log(safeIndex);
-            tracksTapped[0] = tracksTapped[1] = tracksTapped[2] = tracksTapped[3] = false;
-
 
             for (int ti = 0; ti < touchPoints.Length; ti++)
             {
@@ -217,7 +215,7 @@ namespace ArcCore.Behaviours
 
                         touchPoints[index] = tp;
 
-                        if (tp.track != -1) tracksHeld[tp.track-1]--;
+                        if (tp.track != -1) tracksHeld[tp.track]--;
                     }
 
                     continue;
@@ -235,8 +233,7 @@ namespace ArcCore.Behaviours
 
                         if(track != -1)
                         {
-                            tracksHeld[track-1]++;
-                            tracksTapped[track-1] = true;
+                            tracksHeld[track]++;
                         }
                     }
 
@@ -258,8 +255,8 @@ namespace ArcCore.Behaviours
 
                     if (oTrack != tp.track)
                     {
-                        if (oTrack != -1) tracksHeld[oTrack-1]--;
-                        if (tp.track != -1) tracksHeld[tp.track-1]++;
+                        if (oTrack != -1) tracksHeld[oTrack]--;
+                        if (tp.track != -1) tracksHeld[tp.track]++;
                     }
 
                 }

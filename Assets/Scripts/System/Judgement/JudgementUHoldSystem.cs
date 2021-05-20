@@ -20,16 +20,16 @@ public class JudgementUHoldSystem : SystemBase
         int currentTime = Conductor.Instance.receptorTime;
         int maxPureCount = ScoreManager.Instance.maxPureCount,
             currentCombo = ScoreManager.Instance.currentCombo;
-        NativeQuadArr<int> tracksHeld = InputManager.Instance.tracksHeld;
+        NTrackArray<int> tracksHeld = InputManager.Instance.tracksHeld;
 
         EntityCommandBuffer commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
 
-        Entities.WithNone<HoldLocked>().WithoutBurst().ForEach(
+        Entities.WithNone<HoldLocked>().ForEach(
             (Entity en, ref ChartIncrTime chartIncrTime, in ChartLane lane) =>
             { 
                 if(chartIncrTime.time > currentTime - Constants.FarWindow && tracksHeld[lane.lane] > 0)
                 {
-                    if(!chartIncrTime.UpdateJudgePointCache(currentTime, out int count))
+                    if(!chartIncrTime.UpdateJudgePointCachePure(currentTime, out int count))
                     {
                         commandBuffer.RemoveComponent<WithinJudgeRange>(en);
                         commandBuffer.AddComponent<PastJudgeRange>(en);

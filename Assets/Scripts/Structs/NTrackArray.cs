@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace ArcCore.Structs
 {
-    public struct NativeQuadArr<T> : IEnumerable<T> where T : struct
+    public struct NTrackArray<T> : IEnumerable<T> where T : struct
     {
         private T v1, v2, v3, v4;
 
-        public NativeQuadArr(T value1, T value2, T value3, T value4)
+        public NTrackArray(T value1, T value2, T value3, T value4)
         {
             v1 = value1;
             v2 = value2;
@@ -21,10 +21,10 @@ namespace ArcCore.Structs
             {
                 switch(idx)
                 {
-                    case 0: return v1;
-                    case 1: return v2;
-                    case 2: return v3;
-                    case 3: return v4;
+                    case 1: return v1;
+                    case 2: return v2;
+                    case 3: return v3;
+                    case 4: return v4;
                     default: throw new System.IndexOutOfRangeException();
                 }
             }
@@ -32,16 +32,16 @@ namespace ArcCore.Structs
             {
                 switch (idx)
                 {
-                    case 0:
+                    case 1:
                         v1 = value;
                         break;
-                    case 1:
+                    case 2:
                         v2 = value;
                         break;
-                    case 2:
+                    case 3:
                         v3 = value;
                         break;
-                    case 3:
+                    case 4:
                         v4 = value;
                         break;
                     default:
@@ -63,12 +63,12 @@ namespace ArcCore.Structs
         public struct Enumerator : IEnumerator<T>
         {
             private int n;
-            private readonly NativeQuadArr<T> v;
+            private readonly NTrackArray<T> v;
 
-            internal Enumerator(NativeQuadArr<T> arr)
+            internal Enumerator(NTrackArray<T> arr)
             {
                 v = arr;
-                n = -1;
+                n = 0;
             }
 
             public T Current => v[n];
@@ -79,12 +79,12 @@ namespace ArcCore.Structs
 
             public bool MoveNext()
             {
-                return ++n < 4;
+                return ++n <= 4;
             }
 
             public void Reset()
             {
-                n = -1;
+                n = 0;
             }
         }
     }
