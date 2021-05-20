@@ -64,7 +64,7 @@ namespace ArcCore.Math
             }
 
             //-GET TRACK RANGE-//
-            int track = InputManager.FreeTouch;
+            int track = -1;
 
             //Check if the tap is too high on the input plane for a track tap
             if (
@@ -84,9 +84,9 @@ namespace ArcCore.Math
                 }
 
                 //Reset to "no value" if track is invalid
-                if(track > 3 || track < 0)
+                if(track > 4 || track < 1)
                 {
-                    track = InputManager.FreeTouch;
+                    track = -1;
                 }
             }
 

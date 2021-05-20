@@ -19,12 +19,12 @@ public class JudgementUHoldSystem : SystemBase
 
         int currentTime = Conductor.Instance.receptorTime;
         int maxPureCount = ScoreManager.Instance.maxPureCount,
-            currentCount = ScoreManager.Instance.currentCombo;
+            currentCombo = ScoreManager.Instance.currentCombo;
         NativeQuadArr<int> tracksHeld = InputManager.Instance.tracksHeld;
 
         EntityCommandBuffer commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
 
-        Entities.WithNone<HoldLocked>().ForEach(
+        Entities.WithNone<HoldLocked>().WithoutBurst().ForEach(
             (Entity en, ref ChartIncrTime chartIncrTime, in ChartLane lane) =>
             { 
                 if(chartIncrTime.time > currentTime - Constants.FarWindow && tracksHeld[lane.lane] > 0)
@@ -37,12 +37,13 @@ public class JudgementUHoldSystem : SystemBase
                     }
 
                     maxPureCount += count;
-                    currentCount += count;
+                    currentCombo += count;
                 }
             }
         ).Run();
 
         commandBuffer.Playback(EntityManager);
         ScoreManager.Instance.maxPureCount = maxPureCount;
+        ScoreManager.Instance.currentCombo = currentCombo;
     }
 }

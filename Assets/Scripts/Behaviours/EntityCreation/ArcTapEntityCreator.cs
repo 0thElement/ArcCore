@@ -82,7 +82,7 @@ namespace ArcCore.Behaviours.EntityCreation
 
                 //Judge entities
                 EManager.SetComponentData(tapEntity, new ChartTime(arctap.timing));
-                EManager.SetComponentData(tapEntity, new ChartPosition(arctap.position));
+                EManager.SetComponentData(tapEntity, new ChartPosition(Conversion.GetWorldPos(arctap.position)));
 
                 //Connection line
                 while (lowBound < affTapList.Count && arctap.timing > affTapList[lowBound].timing)
