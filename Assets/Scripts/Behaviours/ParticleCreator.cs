@@ -76,7 +76,7 @@ namespace ArcCore.Behaviours
         //WILL REMOVE LATER
         public void PlayParticleAt(float2 position, JudgeType type)
         {
-            PlayTapParticleAt(position, type);
+            PlayTapParticleAt(position, type, JudgeDetail.None);
         }
 
         public void PlayTapParticleAt(float2 position, JudgeType judgeType, JudgeDetail judgeDetail)
