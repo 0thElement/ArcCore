@@ -5,33 +5,40 @@ namespace ArcCore.Behaviours
 {
     public class ParticleCreator : MonoBehaviour
     {
-        public enum ParticleType
+        public enum TextParticleType
         {
             LostJudgeType,
             PureJudgeType,
-            FarJudgeType,
-            TapEffectType,
-            Void
+            FarJudgeType
         }
 
         public static ParticleCreator Instance { get; private set; }
 
-        public GameObject lostJudgeBase,
-            pureJudgeBase,
-            farJudgeBase,
-            tapEffectBase;
+        [SerializeField] private int tapJudgePoolSize;
+        [SerializeField] private int arcJudgePoolSize;
+        [SerializeField] private GameObject lostJudgeBase;
+        [SerializeField] private GameObject pureJudgeBase;
+        [SerializeField] private GameObject farJudgeBase;
+        [SerializeField] private GameObject tapEffectBase;
+        [SerializeField] private GameObject holdEffectBase;
+        [SerializeField] private SpriteRenderer[] laneHighlights;
 
-        //later use
-        public Sprite tapEffectSprite;
+        private GameObject[] textParticlePool;
+        private GameObject[] spriteParticlePool;
+        private GameObject[] arcParticlePool;
 
         private void Awake()
         {
             Instance = this;
+            textParticlePool = new GameObject[tapJudgePoolSize];
+            spriteParticlePool = new GameObject[tapJudgePoolSize];
+            arcParticlePool = new GameObject[arcJudgePoolSize];
         }
 
-        public void PlayParticleAt(float2 position, ParticleType type)
+        public void PlayParticleAt(float2 position, TextParticleType type)
         {
             
+            Debug.Log(position.x + " " + position.y + " " + type);
         }
     }
 }

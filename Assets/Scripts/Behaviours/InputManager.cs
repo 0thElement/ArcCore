@@ -1,4 +1,4 @@
-﻿#define UPD
+﻿// #define UPD
 
 using System.Linq;
 using Unity.Collections;
