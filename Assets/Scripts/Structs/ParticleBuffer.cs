@@ -12,9 +12,9 @@ namespace ArcCore.Structs
         private struct ParticleDesc
         {
             public float2 position;
-            public ParticleCreator.TextParticleType type;
+            public ParticleCreator.JudgeType type;
 
-            public ParticleDesc(float2 position, ParticleCreator.TextParticleType type)
+            public ParticleDesc(float2 position, ParticleCreator.JudgeType type)
             {
                 this.position = position;
                 this.type = type;
@@ -35,18 +35,18 @@ namespace ArcCore.Structs
                 return hashCode;
             }
 
-            public void Deconstruct(out float2 position, out ParticleCreator.TextParticleType type)
+            public void Deconstruct(out float2 position, out ParticleCreator.JudgeType type)
             {
                 position = this.position;
                 type = this.type;
             }
 
-            public static implicit operator (float2 position, ParticleCreator.TextParticleType type)(ParticleDesc value)
+            public static implicit operator (float2 position, ParticleCreator.JudgeType type)(ParticleDesc value)
             {
                 return (value.position, value.type);
             }
 
-            public static implicit operator ParticleDesc((float2 position, ParticleCreator.TextParticleType type) value)
+            public static implicit operator ParticleDesc((float2 position, ParticleCreator.JudgeType type) value)
             {
                 return new ParticleDesc(value.position, value.type);
             }
@@ -57,7 +57,7 @@ namespace ArcCore.Structs
             queue = new NativeQueue<ParticleDesc>(allocator);
         }
 
-        public void CreateParticle(float2 position, ParticleCreator.TextParticleType type)
+        public void CreateParticle(float2 position, ParticleCreator.JudgeType type)
         {
             queue.Enqueue(new ParticleDesc(position, type));
         }

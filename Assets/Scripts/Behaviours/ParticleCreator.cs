@@ -6,11 +6,17 @@ namespace ArcCore.Behaviours
 {
     public class ParticleCreator : MonoBehaviour
     {
-        public enum TextParticleType
+        public enum JudgeType
         {
-            LostJudgeType,
-            FarJudgeType,
-            PureJudgeType
+            Lost,
+            Far,
+            Pure
+        }
+        public enum JudgeDetail
+        {
+            None,
+            Early,
+            Late
         }
 
         public static ParticleCreator Instance { get; private set; }
@@ -68,25 +74,39 @@ namespace ArcCore.Behaviours
         }
 
         //WILL REMOVE LATER
-        public void PlayParticleAt(float2 position, TextParticleType type)
+        public void PlayParticleAt(float2 position, JudgeType type)
         {
             PlayTapParticleAt(position, type);
         }
 
-        public void PlayTapParticleAt(float2 position, TextParticleType judgeType)
+        public void PlayTapParticleAt(float2 position, JudgeType judgeType, JudgeDetail judgeDetail)
         {
+            //Tap effect
             GameObject tap = tapParticlePool[currentTapParticleIndex];
-            GameObject text = textParticlePool[currentTextParticleIndex];
-
             tap.GetComponent<Transform>().position = new float3(position, 0);
             tap.GetComponent<ParticleSystem>().Play();
 
+            IncrementOrCycle(ref currentTapParticleIndex, tapParticlePoolSize - 1);
+
+            //Lost - Far - Pure
+            GameObject text = textParticlePool[currentTextParticleIndex];
             text.GetComponent<Transform>().position = new float3(position, 0);
             text.GetComponent<Renderer>().material = textJudgeMaterials[(int)judgeType];
             text.GetComponent<ParticleSystem>().Play();
 
-            IncrementOrCycle(ref currentTapParticleIndex, tapParticlePoolSize - 1);
             IncrementOrCycle(ref currentTextParticleIndex, textParticlePoolSize - 1);
+
+            //Early - Late
+            if (judgeDetail == JudgeDetail.Early) 
+            {
+                // centreJudgeRenderer.material = EarlyJudgeMaterial;
+                // centreJudgeParticleSystem.Play();
+            }
+            if (judgeDetail == JudgeDetail.Late) 
+            {
+                // centreJudgeRenderer.material = LateJudgeMaterial;
+                // centreJudgeParticleSystem.Play();
+            }
         }
     }
 }

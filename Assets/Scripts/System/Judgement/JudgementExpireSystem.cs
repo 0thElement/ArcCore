@@ -33,7 +33,7 @@ public class JudgementExpireSystem : SystemBase
                     commandBuffer.DestroyEntity(en);
                     lostCount++;
                     currentCombo = 0;
-                    particleBuffer.CreateParticle(new float2(Conversion.TrackToX(cl.lane), 1), ParticleCreator.TextParticleType.LostJudgeType);
+                    particleBuffer.CreateParticle(new float2(Conversion.TrackToX(cl.lane), 1), ParticleCreator.JudgeType.Lost);
                 }
             }
         ).Run();
@@ -47,7 +47,7 @@ public class JudgementExpireSystem : SystemBase
                     commandBuffer.DestroyEntity(en);
                     lostCount++;
                     currentCombo = 0;
-                    particleBuffer.CreateParticle(Conversion.GetWorldPos(cp.xy), ParticleCreator.TextParticleType.LostJudgeType);
+                    particleBuffer.CreateParticle(Conversion.GetWorldPos(cp.xy), ParticleCreator.JudgeType.Lost);
                 }
             }
         ).Run();
@@ -65,7 +65,7 @@ public class JudgementExpireSystem : SystemBase
                     }
                     lostCount += count;
                     currentCombo = 0;
-                    particleBuffer.CreateParticle(new float2(Conversion.TrackToX(cl.lane), 1), ParticleCreator.TextParticleType.LostJudgeType);
+                    particleBuffer.CreateParticle(new float2(Conversion.TrackToX(cl.lane), 1), ParticleCreator.JudgeType.Lost);
                 }
             }
         ).Run();
