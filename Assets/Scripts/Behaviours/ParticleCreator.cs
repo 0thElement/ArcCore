@@ -32,8 +32,6 @@ namespace ArcCore.Behaviours
         [SerializeField] private GameObject arcParticleBase;
         [SerializeField] private GameObject holdParticleBase;
 
-        [SerializeField] private SpriteRenderer[] laneHighlights;
-
         private GameObject[] textParticlePool;
         private GameObject[] tapParticlePool;
         private GameObject[] arcParticlePool;
@@ -42,6 +40,7 @@ namespace ArcCore.Behaviours
         private int currentTapParticleIndex = 0;
         private int currentArcParticleIndex = 0;
         private Dictionary<int, int> arcGroupToPoolIndex = new Dictionary<int, int>();
+
         //TODO: SETUP HOLD PARTICLE
         private void SetupPoolArray(ref GameObject[] array, int size, GameObject baseObject)
         {
@@ -76,10 +75,10 @@ namespace ArcCore.Behaviours
         //WILL REMOVE LATER
         public void PlayParticleAt(float2 position, JudgeType type)
         {
-            PlayTapParticleAt(position, type, JudgeDetail.None);
+            TapAt(position, type, JudgeDetail.None);
         }
 
-        public void PlayTapParticleAt(float2 position, JudgeType judgeType, JudgeDetail judgeDetail)
+        public void TapAt(float2 position, JudgeType judgeType, JudgeDetail judgeDetail)
         {
             //Tap effect
             GameObject tap = tapParticlePool[currentTapParticleIndex];
@@ -107,6 +106,10 @@ namespace ArcCore.Behaviours
                 // centreJudgeRenderer.material = LateJudgeMaterial;
                 // centreJudgeParticleSystem.Play();
             }
+
+            //DEBUG PURPOSE ONLY
+            InputVisualFeedback.Instance.PlayLaneEffect(position);
         }
+
     }
 }
