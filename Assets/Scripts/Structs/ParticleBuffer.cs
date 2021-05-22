@@ -1,80 +1,81 @@
 ﻿using System;
 using Unity.Collections;
-using Unity.Burst;
 using Unity.Mathematics;
 using ArcCore.Behaviours;
+using UnityEngine;
 
 namespace ArcCore.Structs
 {
     public struct ParticleBuffer : IDisposable
     {
-        private struct ParticleDesc
+        private struct TapParticleDesc
         {
             public float2 position;
             public ParticleCreator.JudgeType type;
-
-            public ParticleDesc(float2 position, ParticleCreator.JudgeType type)
-            {
-                this.position = position;
-                this.type = type;
-            }
-
-            public override bool Equals(object obj)
-            {
-                return obj is ParticleDesc other &&
-                       position.Equals(other.position) &&
-                       type == other.type;
-            }
-
-            public override int GetHashCode()
-            {
-                int hashCode = -797515996;
-                hashCode = hashCode * -1521134295 + position.GetHashCode();
-                hashCode = hashCode * -1521134295 + type.GetHashCode();
-                return hashCode;
-            }
-
-            public void Deconstruct(out float2 position, out ParticleCreator.JudgeType type)
-            {
-                position = this.position;
-                type = this.type;
-            }
-
-            public static implicit operator (float2 position, ParticleCreator.JudgeType type)(ParticleDesc value)
-            {
-                return (value.position, value.type);
-            }
-
-            public static implicit operator ParticleDesc((float2 position, ParticleCreator.JudgeType type) value)
-            {
-                return new ParticleDesc(value.position, value.type);
-            }
+            public ParticleCreator.JudgeDetail detail;
         }
-        private NativeQueue<ParticleDesc> queue;
+
+        private struct HoldParticleDesc
+        {
+            public int lane;
+            public bool isHit;
+            public bool isHoldEnd;
+        }
+
+        private NativeQueue<TapParticleDesc> tapQueue;
+        private NativeQueue<HoldParticleDesc> holdQueue;
+        // private NativeQueue<TapParticleDesc> arcQueue;
+
         public ParticleBuffer(Allocator allocator)
         {
-            queue = new NativeQueue<ParticleDesc>(allocator);
+            tapQueue = new NativeQueue<TapParticleDesc>(allocator);
+            holdQueue = new NativeQueue<HoldParticleDesc>(allocator);
+            // arcQueue = new NativeQueue<TapParticleDesc>(allocator);
         }
 
-        public void CreateParticle(float2 position, ParticleCreator.JudgeType type)
+        public void PlayTapParticle(float2 position, ParticleCreator.JudgeType type, ParticleCreator.JudgeDetail detail)
         {
-            queue.Enqueue(new ParticleDesc(position, type));
+            tapQueue.Enqueue(new TapParticleDesc{position = position, type = type, detail = detail});
+        }
+
+        public void PlayHoldParticle(int lane, bool isHit)
+        {
+            holdQueue.Enqueue(new HoldParticleDesc{lane = lane, isHit = isHit, isHoldEnd = false});
+        }
+        public void DisableLaneParticle(int lane)
+        {
+            holdQueue.Enqueue(new HoldParticleDesc{lane = lane, isHit = false, isHoldEnd = true});
         }
 
         public void Playback()
         {
-            while (queue.Count > 0)
+            while (tapQueue.Count > 0)
             {
-                ParticleDesc particleDesc = queue.Dequeue();
-                ParticleCreator.Instance.PlayParticleAt(particleDesc.position, particleDesc.type);
+                TapParticleDesc particleDesc = tapQueue.Dequeue();
+                ParticleCreator.Instance.TapAt(particleDesc.position, particleDesc.type, particleDesc.detail);
+            }
+
+            while (holdQueue.Count > 0)
+            {
+                HoldParticleDesc particleDesc = holdQueue.Dequeue();
+                if (particleDesc.isHoldEnd)
+                {
+                    ParticleCreator.Instance.DisableLane(particleDesc.lane);
+                }
+                else
+                {
+                    ParticleCreator.Instance.HoldAt(particleDesc.lane, particleDesc.isHit);
+                }
             }
         }
 
-        public bool IsCreated => queue.IsCreated;
+        public bool IsCreated => tapQueue.IsCreated;
 
         public void Dispose()
         {
-            queue.Dispose();
+            tapQueue.Dispose();
+            holdQueue.Dispose();
+            // arcQueue.Dispose();
         }
     }
 }

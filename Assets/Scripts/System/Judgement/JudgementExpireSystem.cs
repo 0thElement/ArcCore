@@ -33,7 +33,12 @@ public class JudgementExpireSystem : SystemBase
                     commandBuffer.DestroyEntity(en);
                     lostCount++;
                     currentCombo = 0;
-                    particleBuffer.CreateParticle(new float2(Conversion.TrackToX(cl.lane), 1), ParticleCreator.JudgeType.Lost);
+
+                    particleBuffer.PlayTapParticle(
+                        new float2(Conversion.TrackToX(cl.lane), 1),
+                        ParticleCreator.JudgeType.Lost,
+                        ParticleCreator.JudgeDetail.None
+                    );
                 }
             }
         ).Run();
@@ -47,7 +52,12 @@ public class JudgementExpireSystem : SystemBase
                     commandBuffer.DestroyEntity(en);
                     lostCount++;
                     currentCombo = 0;
-                    particleBuffer.CreateParticle(Conversion.GetWorldPos(cp.xy), ParticleCreator.JudgeType.Lost);
+
+                    particleBuffer.PlayTapParticle(
+                        Conversion.GetWorldPos(cp.xy),
+                        ParticleCreator.JudgeType.Lost,
+                        ParticleCreator.JudgeDetail.None
+                    );
                 }
             }
         ).Run();
@@ -65,7 +75,17 @@ public class JudgementExpireSystem : SystemBase
                     }
                     lostCount += count;
                     currentCombo = 0;
-                    particleBuffer.CreateParticle(new float2(Conversion.TrackToX(cl.lane), 1), ParticleCreator.JudgeType.Lost);
+                    particleBuffer.PlayHoldParticle(cl.lane - 1, false);
+                }
+            }
+        ).Run();
+
+        Entities.WithAll<ChartTime>().ForEach(
+            (Entity en, in ChartIncrTime chartIncrTime, in ChartLane cl) => {
+                if (currentTime - Constants.FarWindow > chartIncrTime.endTime)
+                {
+                    commandBuffer.AddComponent<Disabled>(en);
+                    particleBuffer.DisableLaneParticle(cl.lane - 1);
                 }
             }
         ).Run();
