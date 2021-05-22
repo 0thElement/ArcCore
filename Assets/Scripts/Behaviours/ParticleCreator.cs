@@ -40,6 +40,11 @@ namespace ArcCore.Behaviours
         private GameObject[] tapParticlePool;
         private GameObject[] arcParticlePool;
 
+        [SerializeField] private Renderer earlylateJudgeRenderer;
+        [SerializeField] private ParticleSystem earlylateJudgeParticleSystem;
+        [SerializeField] private Material earlyJudgeMaterial;
+        [SerializeField] private Material lateJudgeMaterial;
+
         private int currentTextParticleIndex = 0;
         private int currentTapParticleIndex = 0;
         private int currentArcParticleIndex = 0;
@@ -97,21 +102,23 @@ namespace ArcCore.Behaviours
             //Early - Late
             if (judgeDetail == JudgeDetail.Early) 
             {
-                // centreJudgeRenderer.material = EarlyJudgeMaterial;
-                // centreJudgeParticleSystem.Play();
+                earlylateJudgeRenderer.material = earlyJudgeMaterial;
+                earlylateJudgeParticleSystem.Clear();
+                earlylateJudgeParticleSystem.Play();
             }
             if (judgeDetail == JudgeDetail.Late) 
             {
-                // centreJudgeRenderer.material = LateJudgeMaterial;
-                // centreJudgeParticleSystem.Play();
+                earlylateJudgeRenderer.material = lateJudgeMaterial;
+                earlylateJudgeParticleSystem.Clear();
+                earlylateJudgeParticleSystem.Play();
             }
         }
 
         //WILL REMOVE LATER
         public void PlayParticleAt(float2 position, JudgeType type)
         {
-            TapAt(position, type, JudgeDetail.None);
-            HoldAt(Conversion.XToTrack(position.x)-1, true);
+            TapAt(position, type, JudgeDetail.Early);
+            // HoldAt(Conversion.XToTrack(position.x)-1, true);
         }
 
 
