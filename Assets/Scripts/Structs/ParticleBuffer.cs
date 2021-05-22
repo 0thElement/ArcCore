@@ -6,7 +6,6 @@ using ArcCore.Behaviours;
 
 namespace ArcCore.Structs
 {
-    [BurstCompile]
     public struct ParticleBuffer : IDisposable
     {
         private struct ParticleDesc
