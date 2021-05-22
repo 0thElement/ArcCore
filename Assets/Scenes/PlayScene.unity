@@ -491,12 +491,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7234255468f340d4daa1fa3cb7a4d999, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lostJudgeBase: {fileID: 2287206275833320715, guid: cfb0f39d7d3aece4c933b46a0f8980c7,
+  textParticlePoolSize: 100
+  tapParticlePoolSize: 50
+  arcParticlePoolSize: 10
+  textJudgeMaterials:
+  - {fileID: 2100000, guid: e721c71e3c78b104087159df33602562, type: 2}
+  - {fileID: 2100000, guid: f7655ef33b463fe4e966141c3dc67a26, type: 2}
+  - {fileID: 2100000, guid: 0dbd22eb58858374bb54bcc8cb4c053b, type: 2}
+  - {fileID: 2100000, guid: 1f3b793efef2378498300204427018df, type: 2}
+  textParticleBase: {fileID: 2168658041522373843, guid: e315c788f3d4ac144a2bdce65a0ba334,
     type: 3}
-  pureJudgeBase: {fileID: 0}
-  farJudgeBase: {fileID: 0}
-  tapEffectBase: {fileID: 0}
-  tapEffectSprite: {fileID: 0}
+  tapParticleBase: {fileID: 2168658041522373843, guid: e315c788f3d4ac144a2bdce65a0ba334,
+    type: 3}
+  arcParticleBase: {fileID: 2168658041522373843, guid: e315c788f3d4ac144a2bdce65a0ba334,
+    type: 3}
+  holdParticleBase: {fileID: 2168658041522373843, guid: e315c788f3d4ac144a2bdce65a0ba334,
+    type: 3}
+  laneHighlights:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
 --- !u!1 &478726823
 GameObject:
   m_ObjectHideFlags: 0
