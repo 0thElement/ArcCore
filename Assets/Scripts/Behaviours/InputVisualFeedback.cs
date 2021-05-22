@@ -29,14 +29,14 @@ namespace ArcCore.Behaviours
                 lane.color = new Color(1, 1, 1, alpha);
             }
         }
-        private void HighlightTrack(int track)
+        public void HighlightTrack(int track)
         {
             laneHighlights[track].color = new Color(1, 1, 1, highlightAlpha);
         }
 
         public void PlayLaneEffect(float2 position)
         {
-            if (position.y < 2f) HighlightTrack(Conversion.XToTrack(position.x) - 1);
+            if (position.y > -2f && position.y < 2f) HighlightTrack(Conversion.XToTrack(position.x) - 1);
         }
     }
 }

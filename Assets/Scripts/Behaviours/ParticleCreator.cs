@@ -1,6 +1,7 @@
 ﻿using Unity.Mathematics;
 using System.Collections.Generic;
 using UnityEngine;
+using ArcCore.Utility;
 
 namespace ArcCore.Behaviours
 {
@@ -30,7 +31,10 @@ namespace ArcCore.Behaviours
         [SerializeField] private GameObject textParticleBase;
         [SerializeField] private GameObject tapParticleBase;
         [SerializeField] private GameObject arcParticleBase;
-        [SerializeField] private GameObject holdParticleBase;
+        
+        [SerializeField] private ParticleSystem[] laneParticles;
+        [SerializeField] private int laneParticlesBurstCount;
+        private float[] laneParticleScheduledStopTime = new float[4];
 
         private GameObject[] textParticlePool;
         private GameObject[] tapParticlePool;
@@ -72,22 +76,17 @@ namespace ArcCore.Behaviours
 
         }
 
-        //WILL REMOVE LATER
-        public void PlayParticleAt(float2 position, JudgeType type)
+        private void TapParticleAt(float2 position)
         {
-            TapAt(position, type, JudgeDetail.None);
-        }
-
-        public void TapAt(float2 position, JudgeType judgeType, JudgeDetail judgeDetail)
-        {
-            //Tap effect
             GameObject tap = tapParticlePool[currentTapParticleIndex];
             tap.GetComponent<Transform>().position = new float3(position, 0);
             tap.GetComponent<ParticleSystem>().Play();
 
             IncrementOrCycle(ref currentTapParticleIndex, tapParticlePoolSize - 1);
+        }
 
-            //Lost - Far - Pure
+        private void TextParticleAt(float2 position, JudgeType judgeType, JudgeDetail judgeDetail)
+        {
             GameObject text = textParticlePool[currentTextParticleIndex];
             text.GetComponent<Transform>().position = new float3(position, 0);
             text.GetComponent<Renderer>().material = textJudgeMaterials[(int)judgeType];
@@ -106,10 +105,45 @@ namespace ArcCore.Behaviours
                 // centreJudgeRenderer.material = LateJudgeMaterial;
                 // centreJudgeParticleSystem.Play();
             }
+        }
+
+        //WILL REMOVE LATER
+        public void PlayParticleAt(float2 position, JudgeType type)
+        {
+            TapAt(position, type, JudgeDetail.None);
+            HoldAt(Conversion.XToTrack(position.x)-1, true);
+        }
+
+
+        public void TapAt(float2 position, JudgeType judgeType, JudgeDetail judgeDetail)
+        {
+            TapParticleAt(position);
+            TextParticleAt(position, judgeType, judgeDetail);
 
             //DEBUG PURPOSE ONLY
             InputVisualFeedback.Instance.PlayLaneEffect(position);
         }
 
+        //HOLD PARTICLE IS CLOSELY RELATED TO SHADER. WILL REENABLE THIS AFTER SHADER IS DONE
+        // public void HoldAt(int track, bool isHit)
+        // {
+        //     //probably will break if holds overlap on one lane
+        //     //fuck whoever does that
+        //     if (isHit)
+        //     {
+        //         laneParticles[track].Play();
+        //         TextParticleAt(new float2(Conversion.TrackToX(track), Conversion.GetWorldY(0)), JudgeType.Pure, JudgeDetail.None);
+        //     }
+        //     else
+        //     {
+        //         DisableLane(track);
+        //     }
+        // }
+
+        // public void DisableLane(int track)
+        // {
+        //     laneParticles[track].Stop();
+        //     laneParticles[track].Clear();
+        // }
     }
 }

@@ -4,11 +4,9 @@ using Unity.Mathematics;
 
 namespace ArcCore.Components
 {
-    [GenerateAuthoringComponent, System.Obsolete(null, error: true)]
+    [GenerateAuthoringComponent]
     public struct ChartTimeEnd : IComponentData
     {
         public int value;
-
-        public ChartTimeEnd(int value) => this.value = value;
     }
 }
