@@ -1,4 +1,5 @@
 ﻿using ArcCore.Math;
+using Unity.Mathematics;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -13,6 +14,7 @@ namespace ArcCore.Structs
             Released
         }
 
+        public float2? inputPosition;
         public Rect2D? inputPlane;
         public int track;
 
@@ -24,8 +26,9 @@ namespace ArcCore.Structs
         public Status status;
         public int fingerId;
 
-        public TouchPoint(Rect2D? inputPlane, int track, /*int time,*/ Status status, int fingerId)
+        public TouchPoint(float2? inputPosition, Rect2D? inputPlane, int track, /*int time,*/ Status status, int fingerId)
         {
+            this.inputPosition = inputPosition;
             this.inputPlane = inputPlane;
             this.track = track;
             //this.time = time;

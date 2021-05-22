@@ -1,5 +1,3 @@
-using Unity.Mathematics;
-using ArcCore.Utility;
 using UnityEngine;
 
 namespace ArcCore.Behaviours
@@ -12,8 +10,17 @@ namespace ArcCore.Behaviours
         [SerializeField] private float highlightDuration = 0.5f; 
         [SerializeField] private float highlightAlpha = 0.5f; 
 
+        private GameObject[] horizontalLines;
+        [SerializeField] private GameObject horizontalLinePrefab;
+
         private void Awake()
         {
+            horizontalLines = new GameObject[10];
+            for (int i=0; i<10; i++)
+            {
+                horizontalLines[i] = Instantiate(horizontalLinePrefab, transform);
+            }
+
             Instance = this;
         }
 
@@ -29,14 +36,19 @@ namespace ArcCore.Behaviours
                 lane.color = new Color(1, 1, 1, alpha);
             }
         }
-        public void HighlightTrack(int track)
+        public void HighlightLane(int track)
         {
             laneHighlights[track].color = new Color(1, 1, 1, highlightAlpha);
         }
-
-        public void PlayLaneEffect(float2 position)
+        public void HorizontalLineAt(float height, int fingerid)
         {
-            if (position.y > -2f && position.y < 2f) HighlightTrack(Conversion.XToTrack(position.x) - 1);
+            horizontalLines[fingerid].SetActive(true);
+            horizontalLines[fingerid].transform.position = new Vector3(0, height, 0);
+        }
+
+        public void DisableLines()
+        {
+            for (int i=0; i<10; i++) horizontalLines[i].SetActive(false);
         }
     }
 }

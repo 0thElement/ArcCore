@@ -92,27 +92,12 @@ namespace ArcCore.Behaviours
             }
         }
 
-#if UPD
         void Update()
         {
-            foreach(var t in GetEnumerator())
-            {
-                if(t.InputPlaneValid)
-                {
-                    Utility.utils.DebugDrawIptRect(t.InputPlane);
-                }
-
-                if(t.TrackValid)
-                {
-                    Debug.DrawRay(new Vector3(Utility.Conversion.TrackToX(t.track), 0.01f, 0), Vector3.back * 150, Color.red);
-                }
-
-                Debug.Log(t.InputPlane.min);
-                Debug.Log(t.track);
-            }
+#if UPD
             var mousepos = Input.mousePosition;
-            (Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(new Vector2(mousepos.x, mousepos.y)));
-            TouchPoint p = new TouchPoint(ipt, track, TouchPoint.Status.Tapped, 0);
+            (float2 exact, Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(new Vector2(mousepos.x, mousepos.y)));
+            TouchPoint p = new TouchPoint(exact, ipt, track, TouchPoint.Status.Tapped, 0);
 
             if(p.InputPlaneValid)
             {
@@ -126,8 +111,20 @@ namespace ArcCore.Behaviours
 
             Debug.Log(p.InputPlane.min);
             Debug.Log(p.track);
-        }
 #endif
+            foreach (var t in GetEnumerator())
+            {
+                InputVisualFeedback.Instance.DisableLines();
+                if (t.InputPlaneValid && t.inputPosition.Value.y > 2f)
+                {
+                    InputVisualFeedback.Instance.HorizontalLineAt(t.inputPosition.Value.y, t.fingerId);
+                }
+                if (t.TrackValid)
+                {
+                    InputVisualFeedback.Instance.HighlightLane(t.track);
+                }
+            }
+        }
 
 
         void OnDestroy()
@@ -201,8 +198,8 @@ namespace ArcCore.Behaviours
                 {
                     if (FreeId(t.fingerId))
                     {
-                        (Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.position));
-                        touchPoints[safeIndex] = new TouchPoint(ipt, track, TouchPoint.Status.Tapped, t.fingerId);
+                        (float2? exact, Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.position));
+                        touchPoints[safeIndex] = new TouchPoint(exact, ipt, track, TouchPoint.Status.Tapped, t.fingerId);
 
                         if(track != -1)
                         {
@@ -222,7 +219,7 @@ namespace ArcCore.Behaviours
                     TouchPoint tp = touchPoints[index];
                     int oTrack = tp.track;
 
-                    (tp.inputPlane, tp.track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.position));
+                    (tp.inputPosition, tp.inputPlane, tp.track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.position));
                     tp.status = TouchPoint.Status.Sustained;
 
                     touchPoints[index] = tp;
