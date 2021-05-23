@@ -42,6 +42,7 @@ namespace ArcCore.Behaviours
         }
         public void HorizontalLineAt(float height, int fingerid)
         {
+            if (height > 5.5f) height = 5.5f; 
             horizontalLines[fingerid].SetActive(true);
             horizontalLines[fingerid].transform.position = new Vector3(0, height, 0);
         }

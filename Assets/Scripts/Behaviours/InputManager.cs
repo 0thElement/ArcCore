@@ -1,4 +1,5 @@
 // #define UPD
+#define TestOnComputer
 
 using System.Linq;
 using Unity.Collections;
@@ -103,7 +104,7 @@ namespace ArcCore.Behaviours
                 }
                 if (t.TrackValid)
                 {
-                    InputVisualFeedback.Instance.HighlightLane(t.track);
+                    InputVisualFeedback.Instance.HighlightLane(t.track - 1);
                 }
                 
 #if UPD
@@ -148,8 +149,8 @@ namespace ArcCore.Behaviours
         {
             if(Input.GetMouseButtonDown(0))
             {
-                (Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(Input.mousePosition));
-                touchPoints[0] = new TouchPoint(ipt, track, TouchPoint.Status.Tapped, 1);
+                (float2? exact, Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(Input.mousePosition));
+                touchPoints[0] = new TouchPoint(exact, ipt, track, TouchPoint.Status.Tapped, 1);
 
                 if (track != -1)
                 {
@@ -172,7 +173,7 @@ namespace ArcCore.Behaviours
                 TouchPoint tp = touchPoints[0];
                 int oTrack = tp.track;
 
-                (tp.inputPlane, tp.track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(Input.mousePosition));
+                (tp.inputPosition, tp.inputPlane, tp.track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(Input.mousePosition));
                 tp.status = TouchPoint.Status.Sustained;
 
                 touchPoints[0] = tp;
