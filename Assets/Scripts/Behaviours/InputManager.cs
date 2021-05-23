@@ -14,11 +14,13 @@ namespace ArcCore.Behaviours
 {
     //ORDERING IS IMPORTANT HERE; POLL_INPUT MUST OCCUR BEFORE ALL JUDGING.
     //UNSURE HOW TO DO THIS
-    public class InputManager : MonoBehaviour
+    public class InputManager : MonoBehaviour, IEnumerable<TouchPoint>
     {
         public static InputManager Instance { get; private set; }
         public static TouchPoint Get(int index) => Instance.touchPoints[index];
-        public static Enumerator GetEnumerator() => new Enumerator(Instance);
+
+        public IEnumerator<TouchPoint> GetEnumerator() => new Enumerator(this);
+        IEnumerator IEnumerable.GetEnumerator() => new Enumerator(this);
 
         public const int MaxTouches = 10;
         public const int FreeTouch = -69;
@@ -34,13 +36,10 @@ namespace ArcCore.Behaviours
 
         public Camera cameraCast;
 
-        public struct Enumerator : IEnumerator<TouchPoint>, IEnumerable<TouchPoint>
+        public struct Enumerator : IEnumerator<TouchPoint>
         {
             private readonly NativeArray<TouchPoint> touchPoints;
             private int index;
-
-            public IEnumerator<TouchPoint> GetEnumerator() => this;
-            IEnumerator IEnumerable.GetEnumerator() => this;
 
             public Enumerator(InputManager inputManager)
             {
