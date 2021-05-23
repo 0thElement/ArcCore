@@ -8,7 +8,5 @@ namespace ArcCore.Components
     public struct ChartTimeEnd : IComponentData
     {
         public int value;
-
-        public ChartTimeEnd(int value) => this.value = value;
     }
 }

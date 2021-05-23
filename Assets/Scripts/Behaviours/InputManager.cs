@@ -1,5 +1,4 @@
-﻿#define UPD
-#define TestOnComputer
+// #define UPD
 
 using System.Linq;
 using Unity.Collections;
@@ -93,11 +92,21 @@ namespace ArcCore.Behaviours
             }
         }
 
-#if UPD
         void Update()
         {
-            foreach(var t in GetEnumerator())
+            foreach (var t in GetEnumerator())
             {
+                InputVisualFeedback.Instance.DisableLines();
+                if (t.InputPlaneValid && t.inputPosition.Value.y > 2f)
+                {
+                    InputVisualFeedback.Instance.HorizontalLineAt(t.inputPosition.Value.y, t.fingerId);
+                }
+                if (t.TrackValid)
+                {
+                    InputVisualFeedback.Instance.HighlightLane(t.track);
+                }
+                
+#if UPD
                 if(t.InputPlaneValid)
                 {
                     Utility.utils.DebugDrawIptRect(t.InputPlane);
@@ -110,9 +119,9 @@ namespace ArcCore.Behaviours
 
                 Debug.Log(t.InputPlane.min);
                 Debug.Log(t.track);
+#endif
             }
         }
-#endif
 
         void OnDestroy()
         {
@@ -228,8 +237,8 @@ namespace ArcCore.Behaviours
                 {
                     if (FreeId(t.fingerId))
                     {
-                        (Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.position));
-                        touchPoints[safeIndex] = new TouchPoint(ipt, track, TouchPoint.Status.Tapped, t.fingerId);
+                        (float2? exact, Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.position));
+                        touchPoints[safeIndex] = new TouchPoint(exact, ipt, track, TouchPoint.Status.Tapped, t.fingerId);
 
                         if(track != -1)
                         {
@@ -248,7 +257,7 @@ namespace ArcCore.Behaviours
                     TouchPoint tp = touchPoints[index];
                     int oTrack = tp.track;
 
-                    (tp.inputPlane, tp.track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.position));
+                    (tp.inputPosition, tp.inputPlane, tp.track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.position));
                     tp.status = TouchPoint.Status.Sustained;
 
                     touchPoints[index] = tp;

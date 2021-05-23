@@ -12,29 +12,33 @@ namespace ArcCore.Math
         public const float Y_MAX_FOR_TRACK = 1.9f; //Equal to Convert.GetWorldY(0.2f)
 
         [BurstCompile(FloatMode = FloatMode.Fast)]
-        public static (Rect2D? inputPlane, int track) PerformInputRaycast(Ray cameraRay)
+        public static (float2? exactInput, Rect2D? inputPlane, int track) PerformInputRaycast(Ray cameraRay)
         {
             float3 origin = cameraRay.origin;
             float3 dir = math.normalize(cameraRay.direction);
 
             //-GET AABB2D FOR INPUT PLANE-//
             Rect2D? inputPlane;
+            float2? exactInput;
 
             //-LOCALS-//
-            float projPosX;
+            float projPosX, projPosY;
 
             //Edge case: tap will never collide with plane
             //Multiplication allows for simultaneous checks for no z difference between camera and origin, and invalid z signs
             if (origin.z * dir.z > 0)
             {
                 inputPlane = null;
+                exactInput = null;
             }
             else
             {
                 //Cast ray onto xy plane at z=0
                 float zratio = - origin.z / dir.z;
                 /***/ projPosX = origin.x + dir.x * zratio;
-                float projPosY = origin.y + dir.y * zratio;
+                /***/ projPosY = origin.y + dir.y * zratio;
+
+                exactInput = new float2(projPosX, projPosY);
 
                 //FIND X LENIENCY USING 0TH'S MAGIC
                 float deltaY = origin.y - projPosY;
@@ -91,7 +95,7 @@ namespace ArcCore.Math
             }
 
             //RETURN
-            return (inputPlane, track);
+            return (exactInput, inputPlane, track);
         }
     }
 }
