@@ -109,17 +109,9 @@ public class JudgementMinSystem : SystemBase
 
                 case MinType.Hold:
                     ChartIncrTime chartIncrTime = EntityManager.GetComponentData<ChartIncrTime>(minEntity);
-                    if (!chartIncrTime.UpdateJudgePointCache(currentTime, out int count))
-                    {
-                        EntityManager.RemoveComponent<WithinJudgeRange>(minEntity);
-                        EntityManager.AddComponent<PastJudgeRange>(minEntity);
-                        //this ideology might be problematic! (doubling chunk count again)
-                    }
-                    else
-                    {
-                        EntityManager.SetComponentData(minEntity, chartIncrTime);
-                        EntityManager.RemoveComponent<HoldLocked>(minEntity);
-                    }
+                    chartIncrTime.UpdateJudgePointCache(currentTime, out int count);
+                    EntityManager.SetComponentData(minEntity, chartIncrTime);
+                    EntityManager.RemoveComponent<HoldLocked>(minEntity);
                     ScoreManager.Instance.AddJudge(minJType, count);
                     break;
             }

@@ -24,18 +24,12 @@ public class JudgementUHoldSystem : SystemBase
 
         EntityCommandBuffer commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
 
-        Entities.WithNone<HoldLocked>().ForEach(
+        Entities.WithNone<HoldLocked, PastJudgeRange>().ForEach(
             (Entity en, ref ChartIncrTime chartIncrTime, in ChartLane lane) =>
             { 
                 if(chartIncrTime.time > currentTime - Constants.FarWindow && tracksHeld[lane.lane] > 0)
                 {
-                    if(!chartIncrTime.UpdateJudgePointCachePure(currentTime, out int count))
-                    {
-                        commandBuffer.RemoveComponent<WithinJudgeRange>(en);
-                        commandBuffer.AddComponent<PastJudgeRange>(en);
-                        //this ideology might be problematic! (doubling chunk count again)
-                    }
-
+                    chartIncrTime.UpdateJudgePointCachePure(currentTime, out int count);
                     maxPureCount += count;
                     currentCombo += count;
                 }

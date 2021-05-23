@@ -69,13 +69,9 @@ public class JudgementExpireSystem : SystemBase
             (Entity en, ref ChartIncrTime chartIncrTime, in ChartLane cl) => {
                 if (currentTime - Constants.FarWindow > chartIncrTime.time)
                 {
-                    if (!chartIncrTime.UpdateJudgePointCache(currentTime, out int count))
-                    {
-                        commandBuffer.RemoveComponent<WithinJudgeRange>(en);
-                        commandBuffer.AddComponent<PastJudgeRange>(en); 
-                        //this ideology might be problematic! (doubling chunk count again)
-                    }
+                    chartIncrTime.UpdateJudgePointCache(currentTime, out int count);
                     lostCount += count;
+                    if (count > 0) currentCombo = 0;
                     currentCombo = 0;
                     // particleBuffer.PlayHoldParticle(cl.lane - 1, false);
                 }
@@ -87,6 +83,7 @@ public class JudgementExpireSystem : SystemBase
                 if (currentTime - Constants.FarWindow > chartIncrTime.endTime)
                 {
                     commandBuffer.AddComponent<Disabled>(en);
+                    commandBuffer.AddComponent<PastJudgeRange>(en);
                     particleBuffer.DisableLaneParticle(cl.lane - 1);
                 }
             }

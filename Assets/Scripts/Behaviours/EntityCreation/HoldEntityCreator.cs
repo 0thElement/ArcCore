@@ -51,6 +51,7 @@ namespace ArcCore.Behaviours.EntityCreation
 
                 EManager.SetComponentData<FloorPosition>(holdEntity, new FloorPosition(startFloorPosition));
                 EManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(hold.timingGroup));
+                EManager.SetComponentData<ChartTime >(holdEntity, new ChartTime{value = hold.timing});
                 /*entityManager.SetComponentData<ShaderCutoff>(holdEntity, new ShaderCutoff()
                 {
                     Value = 1f
