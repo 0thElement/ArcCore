@@ -96,12 +96,14 @@ public class JudgementMinSystem : SystemBase
 
                 case MinType.Tap:
                     EntityManager.DisableEntity(minEntity);
+                    EntityManager.AddComponent<PastJudgeRange>(minEntity);
                     ScoreManager.Instance.AddJudge(minJType);
                     break;
 
                 case MinType.Arctap:
                     EntityManager.DisableEntity(EntityManager.GetComponentData<EntityReference>(minEntity).value);
                     EntityManager.DisableEntity(minEntity);
+                    EntityManager.AddComponent<PastJudgeRange>(minEntity);
                     ScoreManager.Instance.AddJudge(minJType);
                     break;
 
