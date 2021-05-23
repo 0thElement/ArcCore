@@ -95,9 +95,9 @@ namespace ArcCore.Behaviours
 
         void Update()
         {
+            InputVisualFeedback.Instance.DisableLines();
             foreach (var t in GetEnumerator())
             {
-                InputVisualFeedback.Instance.DisableLines();
                 if (t.InputPlaneValid && t.inputPosition.Value.y > 2f)
                 {
                     InputVisualFeedback.Instance.HorizontalLineAt(t.inputPosition.Value.y, t.fingerId);

@@ -31,6 +31,7 @@ public class JudgementExpireSystem : SystemBase
                 if(currentTime - Constants.FarWindow > chartTime.value)
                 {
                     commandBuffer.DisableEntity(en);
+                    commandBuffer.AddComponent<PastJudgeRange>(en);
                     lostCount++;
                     currentCombo = 0;
 
@@ -50,11 +51,12 @@ public class JudgementExpireSystem : SystemBase
                 {
                     commandBuffer.DisableEntity(enRef.value);
                     commandBuffer.DisableEntity(en);
+                    commandBuffer.AddComponent<PastJudgeRange>(en);
                     lostCount++;
                     currentCombo = 0;
 
                     particleBuffer.PlayTapParticle(
-                        Conversion.GetWorldPos(cp.xy),
+                        cp.xy,
                         ParticleCreator.JudgeType.Lost,
                         ParticleCreator.JudgeDetail.None
                     );
@@ -75,7 +77,7 @@ public class JudgementExpireSystem : SystemBase
                     }
                     lostCount += count;
                     currentCombo = 0;
-                    particleBuffer.PlayHoldParticle(cl.lane - 1, false);
+                    // particleBuffer.PlayHoldParticle(cl.lane - 1, false);
                 }
             }
         ).Run();

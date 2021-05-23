@@ -34,7 +34,7 @@ public class ChunkScopingSystem : SystemBase
 
         var appearTimeChangedQueryDesc = new EntityQueryDesc() 
         {
-            None = new ComponentType[] {typeof(Prefab)},
+            None = new ComponentType[] {typeof(Prefab), typeof(PastJudgeRange)},
             All = new ComponentType[] {ComponentType.ChunkComponent<ChunkAppearTime>(), typeof(Disabled), typeof(AppearTime)}
         };
         appearTimeChangedQuery = GetEntityQuery(appearTimeChangedQueryDesc);
