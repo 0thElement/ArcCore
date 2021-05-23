@@ -1,4 +1,4 @@
-﻿/*using ArcCore;
+﻿using ArcCore;
 using ArcCore.Behaviours;
 using ArcCore.Components;
 using ArcCore.Components.Tags;
@@ -28,92 +28,99 @@ public class JudgementMinSystem : SystemBase
 
         int currentTime = Conductor.Instance.receptorTime;
 
-        QuadArr<int> tracksHeld = InputManager.Instance.tracksHeld;
-        QuadArr<bool> tracksTapped = InputManager.Instance.tracksTapped;
-
         Entity minEntity = Entity.Null;
-        int minTime = int.MaxValue;
-        MinType minType = MinType.Void;
+        int minTime;
+        MinType minType;
         JudgeType minJType = JudgeType.Lost;
 
-        //- TAPS -//
-        Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime, EntityReference>().ForEach(
-            (Entity en, in ChartTime chartTime, in ChartLane cl) => {
-                if(chartTime.value < minTime && tracksTapped[cl.lane])
-                {
-                    minTime = chartTime.value;
-                    minEntity = en;
-                    minType = MinType.Tap;
-                    minJType = JudgeManage.GetType(currentTime - chartTime.value);
-                }
-            }
-        ).Run();
+        var touchPoints = InputManager.GetEnumerator();
+        while (touchPoints.MoveNext())
+        {
+            minTime = int.MaxValue;
+            minType = MinType.Void;
 
-        //- LOCKED HOLDS -//
-        Entities.WithAll<WithinJudgeRange, ChartTime, HoldLocked>().ForEach(
-            (Entity en, ref ChartIncrTime chartIncrTime, in ChartLane cl) => {
-                if (chartIncrTime.time < minTime && tracksTapped[cl.lane])
-                {
-                    minTime = chartIncrTime.time;
-                    minEntity = en;
-                    minType = MinType.Tap;
-                    minJType = JudgeType.MaxPure;
-                }
-            }
-        ).Run();
+            TouchPoint touch = touchPoints.Current;
+            if (touch.status != TouchPoint.Status.Tapped) continue;
 
-        InputManager.Enumerator touchPoints = InputManager.GetEnumerator();
-
-        //- ARCTAPS -//
-        Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime>().WithoutBurst().ForEach(
-            (Entity en, in ChartTime chartTime, in ChartPosition cp) => {
-                if (chartTime.value < minTime)
-                {
-                    touchPoints.Reset();
-                    while (touchPoints.MoveNext())
+            if (touch.TrackValid)
+            {
+                //- TAPS -//
+                Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime, EntityReference>().ForEach(
+                    (Entity en, in ChartTime chartTime, in ChartLane cl) =>
                     {
-                        if (!touchPoints.Current.InputPlaneValid) continue;
-                        if (touchPoints.Current.InputPlane.CollidesWith(new Rect2D(cp.xy - arctapBoxExtents, cp.xy + arctapBoxExtents)))
+                        if (chartTime.value < minTime && touch.track == cl.lane)
+                        {
+                            minTime = chartTime.value;
+                            minEntity = en;
+                            minType = MinType.Tap;
+                            minJType = JudgeManage.GetType(currentTime - chartTime.value);
+                        }
+                    }
+                ).Run();
+
+                //- LOCKED HOLDS -//
+                Entities.WithAll<WithinJudgeRange, ChartTime, HoldLocked>().ForEach(
+                    (Entity en, ref ChartIncrTime chartIncrTime, in ChartLane cl) => {
+                        if (chartIncrTime.time < minTime && touch.track == cl.lane)
+                        {
+                            minTime = chartIncrTime.time;
+                            minEntity = en;
+                            minType = MinType.Hold;
+                            minJType = JudgeType.MaxPure;
+                        }
+                    }
+                ).Run();
+            }
+
+            if (touch.InputPlaneValid)
+            {
+                //- ARCTAPS -//
+                Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime>().WithoutBurst().ForEach(
+                    (Entity en, in ChartTime chartTime, in ChartPosition cp) =>
+                    {
+                        if (chartTime.value < minTime && touch.inputPlane.Value.CollidesWith(new Rect2D(cp.xy - arctapBoxExtents, cp.xy + arctapBoxExtents)))
                         {
                             minTime = chartTime.value;
                             minEntity = en;
                             minType = MinType.Arctap;
                             minJType = JudgeManage.GetType(currentTime - chartTime.value);
-                            break;
                         }
                     }
-                }
+                ).Run();
             }
-        ).Run();
 
-        //- HANDLE MIN ENTITY -//
-        switch (minType)
-        {
-            case MinType.Tap:
-                EntityManager.DestroyEntity(minEntity);
-                ScoreManager.Instance.AddJudge(minJType);
-                break;
+            //- HANDLE MIN ENTITY -//
+            switch (minType)
+            {
+                case MinType.Void: break;
 
-            case MinType.Arctap:
-                EntityManager.DestroyEntity(EntityManager.GetComponentData<EntityReference>(minEntity).value);
-                EntityManager.DestroyEntity(minEntity);
-                ScoreManager.Instance.AddJudge(minJType);
-                break;
+                case MinType.Tap:
+                    EntityManager.DisableEntity(minEntity);
+                    ScoreManager.Instance.AddJudge(minJType);
+                    break;
 
-            case MinType.Hold:
-                ChartIncrTime chartIncrTime = EntityManager.GetComponentData<ChartIncrTime>(minEntity);
-                if (!chartIncrTime.UpdateJudgePointCache(currentTime, out int count))
-                {
-                    EntityManager.RemoveComponent<WithinJudgeRange>(minEntity);
-                    EntityManager.AddComponent<PastJudgeRange>(minEntity);
-                    //this ideology might be problematic! (doubling chunk count again)
-                }
-                else
-                {
-                    EntityManager.SetComponentData(minEntity, chartIncrTime);
-                }
-                ScoreManager.Instance.AddJudge(minJType, count);
-                break;
+                case MinType.Arctap:
+                    EntityManager.DisableEntity(EntityManager.GetComponentData<EntityReference>(minEntity).value);
+                    EntityManager.DisableEntity(minEntity);
+                    ScoreManager.Instance.AddJudge(minJType);
+                    break;
+
+                case MinType.Hold:
+                    ChartIncrTime chartIncrTime = EntityManager.GetComponentData<ChartIncrTime>(minEntity);
+                    if (!chartIncrTime.UpdateJudgePointCache(currentTime, out int count))
+                    {
+                        EntityManager.RemoveComponent<WithinJudgeRange>(minEntity);
+                        EntityManager.AddComponent<PastJudgeRange>(minEntity);
+                        //this ideology might be problematic! (doubling chunk count again)
+                    }
+                    else
+                    {
+                        EntityManager.SetComponentData(minEntity, chartIncrTime);
+                        EntityManager.RemoveComponent<HoldLocked>(minEntity);
+                    }
+                    ScoreManager.Instance.AddJudge(minJType, count);
+                    break;
+            }
         }
     }
-}*/
+}

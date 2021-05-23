@@ -30,7 +30,7 @@ public class JudgementExpireSystem : SystemBase
             (Entity en, in ChartTime chartTime, in ChartLane cl) => {
                 if(currentTime - Constants.FarWindow > chartTime.value)
                 {
-                    commandBuffer.DestroyEntity(en);
+                    commandBuffer.DisableEntity(en);
                     lostCount++;
                     currentCombo = 0;
 
@@ -44,12 +44,12 @@ public class JudgementExpireSystem : SystemBase
         ).Run();
 
         //- ARCTAPS -//
-        Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime>().WithoutBurst().ForEach(
+        Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime>().ForEach(
             (Entity en, in ChartTime chartTime, in EntityReference enRef, in ChartPosition cp) => {
                 if (currentTime - Constants.FarWindow > chartTime.value)
                 {
-                    commandBuffer.DestroyEntity(enRef.value);
-                    commandBuffer.DestroyEntity(en);
+                    commandBuffer.DisableEntity(enRef.value);
+                    commandBuffer.DisableEntity(en);
                     lostCount++;
                     currentCombo = 0;
 

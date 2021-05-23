@@ -6,11 +6,13 @@ using ArcCore.Math;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
 namespace ArcCore.Utility
 {
+
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Intrinsic-esque")]
     public static class utils
     {

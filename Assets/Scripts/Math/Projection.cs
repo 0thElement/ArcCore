@@ -1,4 +1,5 @@
-﻿using ArcCore.Utility;
+﻿using ArcCore.Behaviours;
+using ArcCore.Utility;
 using Unity.Burst;
 using Unity.Mathematics;
 using UnityEngine;
@@ -87,7 +88,7 @@ namespace ArcCore.Math
                 }
 
                 //Reset to "no value" if track is invalid
-                if(track > 3 || track < 0)
+                if(track > 4 || track < 1)
                 {
                     track = -1;
                 }

@@ -43,7 +43,6 @@ namespace ArcCore.Components
 
         /// <summary>
         /// Update the field <c>time</c> of this instance to reflect the next judge point in the hold or arc.
-        /// If <paramref name="lostExpected"/>, do not advance past any points that may still be valid.
         /// </summary>
         /// <returns>
         /// <c>false</c> if the hold has reached its end
@@ -52,6 +51,21 @@ namespace ArcCore.Components
         public bool UpdateJudgePointCache(int ctime, out int count)
         {
             count = math.max(1, (ctime - time - Constants.FarWindow) / timeIncrement);
+            time += timeIncrement * count;
+
+            return time + timeIncrement < endTime;
+        }
+
+        /// <summary>
+        /// Update the field <c>time</c> of this instance to reflect the next judge point in the hold or arc.
+        /// </summary>
+        /// <returns>
+        /// <c>false</c> if the hold has reached its end
+        /// </returns>
+        [BurstCompile(FloatMode = FloatMode.Fast)]
+        public bool UpdateJudgePointCachePure(int ctime, out int count)
+        {
+            count = math.max(1, (ctime - time) / timeIncrement);
             time += timeIncrement * count;
 
             return time + timeIncrement < endTime;

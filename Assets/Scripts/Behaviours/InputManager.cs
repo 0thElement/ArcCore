@@ -1,4 +1,4 @@
-﻿// #define UPD
+// #define UPD
 
 using System.Linq;
 using Unity.Collections;
@@ -28,8 +28,8 @@ namespace ArcCore.Behaviours
         public int safeIndex = 0;
 
         [HideInInspector]
-        public QuadArr<int> tracksHeld;
-        public QuadArr<bool> tracksTapped;
+        public NTrackArray<int> tracksHeld;
+        public NTrackArray<bool> tracksTapped;
 
         public Camera cameraCast;
 
@@ -94,24 +94,6 @@ namespace ArcCore.Behaviours
 
         void Update()
         {
-#if UPD
-            var mousepos = Input.mousePosition;
-            (float2 exact, Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(new Vector2(mousepos.x, mousepos.y)));
-            TouchPoint p = new TouchPoint(exact, ipt, track, TouchPoint.Status.Tapped, 0);
-
-            if(p.InputPlaneValid)
-            {
-                Utility.utils.DebugDrawIptRect(p.InputPlane);
-            }
-
-            if(p.TrackValid)
-            {
-                Debug.DrawRay(new Vector3(Utility.Conversion.TrackToX(p.track), 0.01f, 0), Vector3.back * 150, Color.red);
-            }
-
-            Debug.Log(p.InputPlane.min);
-            Debug.Log(p.track);
-#endif
             foreach (var t in GetEnumerator())
             {
                 InputVisualFeedback.Instance.DisableLines();
@@ -123,9 +105,23 @@ namespace ArcCore.Behaviours
                 {
                     InputVisualFeedback.Instance.HighlightLane(t.track);
                 }
+                
+#if UPD
+                if(t.InputPlaneValid)
+                {
+                    Utility.utils.DebugDrawIptRect(t.InputPlane);
+                }
+
+                if(t.TrackValid)
+                {
+                    Debug.DrawRay(new Vector3(Utility.Conversion.TrackToX(t.track), 0.01f, 0), Vector3.back * 150, Color.red);
+                }
+
+                Debug.Log(t.InputPlane.min);
+                Debug.Log(t.track);
+#endif
             }
         }
-
 
         void OnDestroy()
         {
@@ -148,11 +144,50 @@ namespace ArcCore.Behaviours
             return safeIndex = MaxTouches;
         }
 
+        public void PollMouseInput()
+        {
+            if(Input.GetMouseButtonDown(0))
+            {
+                (Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(Input.mousePosition));
+                touchPoints[0] = new TouchPoint(ipt, track, TouchPoint.Status.Tapped, 1);
+
+                if (track != -1)
+                {
+                    tracksHeld[track]++;
+                    tracksTapped[track] = true;
+                }
+            } 
+            else if(Input.GetMouseButtonUp(0))
+            {
+                TouchPoint tp = touchPoints[0];
+
+                tp.status = TouchPoint.Status.Released;
+
+                touchPoints[0] = tp;
+
+                if (tp.track != -1) tracksHeld[tp.track]--;
+            }
+            else if(Input.GetMouseButton(0))
+            {
+                TouchPoint tp = touchPoints[0];
+                int oTrack = tp.track;
+
+                (tp.inputPlane, tp.track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(Input.mousePosition));
+                tp.status = TouchPoint.Status.Sustained;
+
+                touchPoints[0] = tp;
+
+                if (oTrack != tp.track)
+                {
+                    if (oTrack != -1) tracksHeld[oTrack]--;
+                    if (tp.track != -1) tracksHeld[tp.track]++;
+                }
+            }
+        }
+
         public void PollInput()
         {
             //Debug.Log(safeIndex);
-            tracksTapped[0] = tracksTapped[1] = tracksTapped[2] = tracksTapped[3] = false;
-
 
             for (int ti = 0; ti < touchPoints.Length; ti++)
             {
@@ -167,6 +202,10 @@ namespace ArcCore.Behaviours
                     if (ti < safeIndex) safeIndex = ti;
                 }
             }
+
+#if TestOnComputer
+            PollMouseInput();
+#else
 
             for (int i = 0; i < Input.touchCount; i++)
             {
@@ -204,7 +243,6 @@ namespace ArcCore.Behaviours
                         if(track != -1)
                         {
                             tracksHeld[track]++;
-                            tracksTapped[track] = true;
                         }
                     }
 
@@ -240,6 +278,7 @@ namespace ArcCore.Behaviours
                     touchPoints[index] = tp;
                 }
             }
+#endif
         }
     }
 }

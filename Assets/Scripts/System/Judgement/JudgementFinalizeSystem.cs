@@ -6,7 +6,7 @@ using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
-[UpdateInGroup(typeof(SimulationSystemGroup)), UpdateAfter(typeof(JudgementExpireSystem))]
+[UpdateInGroup(typeof(SimulationSystemGroup)), UpdateAfter(typeof(JudgementUHoldSystem))]
 public class JudgementFinalizeSystem : SystemBase
 {
     protected override void OnUpdate()
