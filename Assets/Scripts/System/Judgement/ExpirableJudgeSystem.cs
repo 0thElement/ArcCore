@@ -9,11 +9,9 @@ using ArcCore.Structs;
 using Unity.Mathematics;
 using ArcCore.Utility;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
-public class JudgementExpireSystem : SystemBase
+[UpdateInGroup(typeof(SimulationSystemGroup)), UpdateAfter(typeof(ParticleJudgeSystem))]
+public class ExpirableJudgeSystem : SystemBase
 {
-    public static ParticleBuffer particleBuffer;
-
     protected override void OnUpdate()
     {
         if (!GameState.isChartMode) return;
@@ -23,7 +21,7 @@ public class JudgementExpireSystem : SystemBase
             currentTime = Conductor.Instance.receptorTime;
 
         var commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
-        var particleBuffer = new ParticleBuffer(Allocator.Persistent);
+        var particleBuffer = ParticleJudgeSystem.particleBuffer;
 
         //- TAPS -//
         Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime, EntityReference>().ForEach(
@@ -71,9 +69,14 @@ public class JudgementExpireSystem : SystemBase
                 {
                     chartIncrTime.UpdateJudgePointCache(currentTime, out int count);
                     lostCount += count;
-                    if (count > 0) currentCombo = 0;
                     currentCombo = 0;
                     // particleBuffer.PlayHoldParticle(cl.lane - 1, false);
+                    
+                    particleBuffer.PlayTapParticle(
+                        new float2(Conversion.TrackToX(cl.lane), 1),
+                        ParticleCreator.JudgeType.Lost,
+                        ParticleCreator.JudgeDetail.None
+                    );
                 }
             }
         ).Run();
@@ -97,7 +100,5 @@ public class JudgementExpireSystem : SystemBase
 
         ScoreManager.Instance.lostCount = lostCount;
         ScoreManager.Instance.currentCombo = currentCombo;
-
-        JudgementExpireSystem.particleBuffer = particleBuffer;
     }
 }

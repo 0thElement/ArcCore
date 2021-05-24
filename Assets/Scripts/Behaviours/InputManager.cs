@@ -95,7 +95,7 @@ namespace ArcCore.Behaviours
         void Update()
         {
             InputVisualFeedback.Instance.DisableLines();
-            foreach (var t in GetEnumerator())
+            foreach (var t in this)
             {
                 if (t.InputPlaneValid && t.inputPosition.Value.y > 2f)
                 {

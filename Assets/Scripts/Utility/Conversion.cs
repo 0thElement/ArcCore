@@ -22,6 +22,9 @@ namespace ArcCore.Utility
         public static int XToTrack(float x)
             => (int)math.round((Constants.LaneWidth * 5 - x) * Constants.LaneFullwidthRecip);
 
+        public static float2 TrackToXYParticle(int track)
+            => new float2(TrackToX(track), 0);
+
         public static float O(float start, float end, float t) 
             => math.lerp(start, end, 1 - math.cos(math.PI / 2 * t));
         public static float I(float start, float end, float t)

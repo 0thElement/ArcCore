@@ -10,8 +10,8 @@ using Unity.Mathematics;
 using ArcCore.Utility;
 using ArcCore.Math;
 
-[UpdateInGroup(typeof(SimulationSystemGroup)), UpdateAfter(typeof(JudgementExpireSystem))]
-public class JudgementMinSystem : SystemBase
+[UpdateInGroup(typeof(SimulationSystemGroup)), UpdateAfter(typeof(ExpirableJudgeSystem))]
+public class TappableJudgeSystem : SystemBase
 {
     public static readonly float2 arctapBoxExtents = new float2(4f, 1f);
     private enum MinType
@@ -28,12 +28,14 @@ public class JudgementMinSystem : SystemBase
 
         int currentTime = Conductor.Instance.receptorTime;
 
+        var particleBuffer = ParticleJudgeSystem.particleBuffer;
+
         Entity minEntity = Entity.Null;
         int minTime;
         MinType minType;
         JudgeType minJType = JudgeType.Lost;
 
-        var touchPoints = InputManager.GetEnumerator();
+        var touchPoints = InputManager.Instance.GetEnumerator();
         while (touchPoints.MoveNext())
         {
             minTime = int.MaxValue;
@@ -98,6 +100,10 @@ public class JudgementMinSystem : SystemBase
                     EntityManager.DisableEntity(minEntity);
                     EntityManager.AddComponent<PastJudgeRange>(minEntity);
                     ScoreManager.Instance.AddJudge(minJType);
+                    particleBuffer.PlayTapParticle(/*fuck i forgot what goes here*/
+                        Conversion.TrackToXYParticle(EntityManager.GetComponentData<ChartLane>(minEntity).lane),
+                        minJType
+                    );
                     break;
 
                 case MinType.Arctap:
@@ -105,6 +111,10 @@ public class JudgementMinSystem : SystemBase
                     EntityManager.DisableEntity(minEntity);
                     EntityManager.AddComponent<PastJudgeRange>(minEntity);
                     ScoreManager.Instance.AddJudge(minJType);
+                    particleBuffer.PlayTapParticle(/*fuck i forgot what goes here*/
+                        Conversion.GetWorldPos(EntityManager.GetComponentData<ChartPosition>(minEntity).xy),
+                        minJType
+                    );
                     break;
 
                 case MinType.Hold:
@@ -113,6 +123,10 @@ public class JudgementMinSystem : SystemBase
                     EntityManager.SetComponentData(minEntity, chartIncrTime);
                     EntityManager.RemoveComponent<HoldLocked>(minEntity);
                     ScoreManager.Instance.AddJudge(minJType, count);
+                    particleBuffer.PlayTapParticle(/*fuck i forgot what goes here*/
+                        Conversion.TrackToXYParticle(EntityManager.GetComponentData<ChartLane>(minEntity).lane),
+                        minJType
+                    );
                     break;
             }
         }

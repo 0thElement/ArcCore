@@ -10,8 +10,8 @@ using Unity.Mathematics;
 using ArcCore.Utility;
 using ArcCore.Math;
 
-[UpdateInGroup(typeof(SimulationSystemGroup)), UpdateAfter(typeof(JudgementMinSystem))]
-public class JudgementUHoldSystem : SystemBase
+[UpdateInGroup(typeof(SimulationSystemGroup)), UpdateAfter(typeof(TappableJudgeSystem))]
+public class UnlockedHoldJudgeSystem : SystemBase
 {
     protected override void OnUpdate()
     {
@@ -24,6 +24,8 @@ public class JudgementUHoldSystem : SystemBase
 
         EntityCommandBuffer commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
 
+        var particleBuffer = ParticleJudgeSystem.particleBuffer;
+
         Entities.WithNone<HoldLocked, PastJudgeRange>().ForEach(
             (Entity en, ref ChartIncrTime chartIncrTime, in ChartLane lane) =>
             { 
@@ -32,6 +34,7 @@ public class JudgementUHoldSystem : SystemBase
                     chartIncrTime.UpdateJudgePointCachePure(currentTime, out int count);
                     maxPureCount += count;
                     currentCombo += count;
+                    particleBuffer.PlayTapParticle(Conversion.TrackToXYParticle(lane.lane), ParticleCreator.JudgeType.Pure, ParticleCreator.JudgeDetail.None);
                 }
             }
         ).Run();

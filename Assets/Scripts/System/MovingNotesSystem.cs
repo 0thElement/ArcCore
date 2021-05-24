@@ -7,7 +7,7 @@ using ArcCore.Components;
 using ArcCore.Behaviours;
 using Unity.Rendering;
 
-[UpdateAfter(typeof(JudgementFinalizeSystem))]
+[UpdateAfter(typeof(FinalJudgeSystem))]
 public class MovingNotesSystem : SystemBase
 {
     protected override void OnUpdate()

@@ -6,8 +6,8 @@ using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
-[UpdateInGroup(typeof(SimulationSystemGroup)), UpdateAfter(typeof(JudgementUHoldSystem))]
-public class JudgementFinalizeSystem : SystemBase
+[UpdateInGroup(typeof(SimulationSystemGroup)), UpdateAfter(typeof(UnlockedHoldJudgeSystem))]
+public class FinalJudgeSystem : SystemBase
 {
     protected override void OnUpdate()
     {
@@ -15,10 +15,9 @@ public class JudgementFinalizeSystem : SystemBase
 
         ScoreManager.Instance.UpdateScore();
 
-        if (JudgementExpireSystem.particleBuffer.IsCreated)
+        if (ParticleJudgeSystem.particleBuffer.IsCreated)
         {
-            JudgementExpireSystem.particleBuffer.Playback();
-            JudgementExpireSystem.particleBuffer.Dispose();
+            ParticleJudgeSystem.FinalizeFrame();
         }
     }
 }

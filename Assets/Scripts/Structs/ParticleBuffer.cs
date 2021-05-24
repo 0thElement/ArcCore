@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 using ArcCore.Behaviours;
 using UnityEngine;
+using ArcCore.Utility;
 
 namespace ArcCore.Structs
 {
@@ -36,6 +37,46 @@ namespace ArcCore.Structs
         public void PlayTapParticle(float2 position, ParticleCreator.JudgeType type, ParticleCreator.JudgeDetail detail)
         {
             tapQueue.Enqueue(new TapParticleDesc{position = position, type = type, detail = detail});
+        }
+
+        public void PlayTapParticle(float2 position, JudgeType type)
+        {
+            ParticleCreator.JudgeType jt = (ParticleCreator.JudgeType)(-1);
+            switch(type)
+            {
+                case JudgeType.Lost:
+                    jt = ParticleCreator.JudgeType.Lost;
+                    break;
+                case JudgeType.LateFar:
+                case JudgeType.EarlyFar:
+                    jt = ParticleCreator.JudgeType.Far;
+                    break;
+                case JudgeType.EarlyPure:
+                case JudgeType.LatePure:
+                case JudgeType.MaxPure:
+                    jt = ParticleCreator.JudgeType.Pure;
+                    break;
+            }
+
+            //I WANT TO USE SWITCH EXPRESSIONS BUT FUCKING UNITY IS AWFUL AND I WANT TO DIE FUCK
+            ParticleCreator.JudgeDetail jd = (ParticleCreator.JudgeDetail)(-1);
+            switch(type)
+            {
+                case JudgeType.Lost:
+                case JudgeType.MaxPure:
+                    jd = ParticleCreator.JudgeDetail.None;
+                    break;
+                case JudgeType.EarlyFar:
+                case JudgeType.EarlyPure:
+                    jd = ParticleCreator.JudgeDetail.Early;
+                    break;
+                case JudgeType.LateFar:
+                case JudgeType.LatePure:
+                    jd = ParticleCreator.JudgeDetail.Late;
+                    break;
+            }
+
+            tapQueue.Enqueue(new TapParticleDesc { position = position, type = jt, detail = jd });
         }
 
         public void PlayHoldParticle(int lane, bool isHit)
