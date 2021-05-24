@@ -3,7 +3,7 @@
 
 Arcaea Fanmade charts test player built with Unity DOTS
 ## Current status
-Working on rendering side
+Working on arc judgement
 ## Technologies
 Built with Unity 2019.4.21f1
 Packages used:
