@@ -1,4 +1,5 @@
 # ArcCore
+[![CodeFactor](https://www.codefactor.io/repository/github/0thelement/arccore/badge)](https://www.codefactor.io/repository/github/0thelement/arccore)
 Arcaea Fanmade charts test player built with Unity DOTS
 ## Current status
 Working on rendering side
