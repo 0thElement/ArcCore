@@ -2,7 +2,7 @@
 
 using Unity.Entities;
 
-namespace ArcCore.Utility
+namespace ArcCore.Gameplay.Utility
 {
     public static class ExtensionMethods
     {

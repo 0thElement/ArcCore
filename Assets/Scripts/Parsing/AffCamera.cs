@@ -1,6 +1,6 @@
 ﻿using Unity.Mathematics;
 
-namespace ArcCore.Parsing
+namespace ArcCore.Gameplay.Parsing
 {
     public struct AffCamera
     {

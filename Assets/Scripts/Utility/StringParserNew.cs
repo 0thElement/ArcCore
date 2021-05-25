@@ -1,4 +1,4 @@
-﻿namespace ArcCore.Utility
+﻿namespace ArcCore.Gameplay.Utility
 {
     using System;
     using Impl = System.Runtime.CompilerServices.MethodImplAttribute;

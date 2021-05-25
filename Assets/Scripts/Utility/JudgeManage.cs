@@ -1,4 +1,4 @@
-﻿namespace ArcCore.Utility
+﻿namespace ArcCore.Gameplay.Utility
 {
     public enum JudgeType
     {

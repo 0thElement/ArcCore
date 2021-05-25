@@ -1,6 +1,4 @@
-﻿#define DebugChart
-
-namespace ArcCore
+﻿namespace ArcCore
 {
     public static class Constants
     {
@@ -26,7 +24,6 @@ namespace ArcCore
         public const int HoldLenienceTime = 6; //0.100 seconds
         public const int ArcRedMaxTime = 20;   //0.333 seconds
 
-#if DebugChart
         public static string GetDebugChart() =>
 @"
 AudioOffset:150
@@ -95,7 +92,6 @@ arc(22996,23363,-0.38,-0.38,b,0.00,0.00,0,none,false);
 arc(22996,23363,1.38,1.38,b,0.00,0.00,1,none,false);
 arc(22996,22996,0.50,1.38,b,1.00,0.00,1,none,false);
 ".Trim();
-#endif
 
     }
 }

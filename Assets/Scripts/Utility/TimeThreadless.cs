@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ArcCore.Utility
+namespace ArcCore.Gameplay.Utility
 {
     public class TimeThreadless
     {

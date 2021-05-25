@@ -1,9 +1,9 @@
 ﻿using System;
 using Unity.Collections;
 using Unity.Mathematics;
-using ArcCore.Behaviours;
+using ArcCore.Gameplay.Behaviours;
 using UnityEngine;
-using ArcCore.Utility;
+using ArcCore.Gameplay.Utility;
 
 namespace ArcCore.Structs
 {

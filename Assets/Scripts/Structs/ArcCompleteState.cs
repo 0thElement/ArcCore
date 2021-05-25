@@ -1,11 +1,11 @@
-﻿using ArcCore.Components;
+﻿using ArcCore.Gameplay.Components;
 using System;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Rendering;
 using UnityEngine;
-using ArcCore.Behaviours;
+using ArcCore.Gameplay.Behaviours;
 
 namespace ArcCore.Structs
 {

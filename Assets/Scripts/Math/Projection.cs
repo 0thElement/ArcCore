@@ -1,5 +1,5 @@
-﻿using ArcCore.Behaviours;
-using ArcCore.Utility;
+﻿using ArcCore.Gameplay.Behaviours;
+using ArcCore.Gameplay.Utility;
 using Unity.Burst;
 using Unity.Mathematics;
 using UnityEngine;
@@ -21,9 +21,6 @@ namespace ArcCore.Math
             Rect2D? inputPlane;
             float2? exactInput;
 
-            //-LOCALS-//
-            float projPosX, projPosY;
-
             //Edge case: tap will never collide with plane
             //Multiplication allows for simultaneous checks for no z difference between camera and origin, and invalid z signs
             if (origin.z * dir.z > 0)
@@ -35,32 +32,36 @@ namespace ArcCore.Math
             {
                 //Cast ray onto xy plane at z=0
                 float zratio = - origin.z / dir.z;
-                /***/ projPosX = origin.x + dir.x * zratio;
-                /***/ projPosY = origin.y + dir.y * zratio;
+                float projPosX = origin.x + (dir.x * zratio);
+                float projPosY = origin.y + (dir.y * zratio);
 
                 exactInput = new float2(projPosX, projPosY);
 
                 //FIND X LENIENCY USING 0TH'S MAGIC
                 float deltaY = origin.y - projPosY;
                 float deltaX = origin.x - projPosX;
-                float distToXAxis = math.sqrt(deltaY * deltaY + origin.z * origin.z);
-                float distToYAxis = math.sqrt(deltaX * deltaX + origin.z * origin.z);
 
-                float xMax = distToXAxis * (projPosX - origin.x + TAN_EPSILON * distToXAxis) / (
-                             distToXAxis - (projPosX - origin.x) * TAN_EPSILON)
+                float distToXAxis = math.sqrt((deltaY * deltaY) + (origin.z * origin.z));
+                float distToYAxis = math.sqrt((deltaX * deltaX) + (origin.z * origin.z));
+
+                float nDeltaX = -deltaX;
+                float nDeltaY = -deltaY;
+
+                float xMax = distToXAxis * (nDeltaX + (TAN_EPSILON * distToXAxis)) / (
+                             distToXAxis - (nDeltaX * TAN_EPSILON))
                              + origin.x;
                 
-                float xMin = distToXAxis * (projPosX - origin.x - TAN_EPSILON * distToXAxis) / (
-                             distToXAxis + (projPosX - origin.x) * TAN_EPSILON)
+                float xMin = distToXAxis * (nDeltaX - (TAN_EPSILON * distToXAxis)) / (
+                             distToXAxis + (nDeltaX * TAN_EPSILON))
                              + origin.x;
 
                 //FIND Y LENIENCY USING 0TH'S MAGIC
-                float yMax = distToYAxis * (projPosY - origin.y + TAN_EPSILON * distToYAxis) / (
-                             distToYAxis - (projPosY - origin.y) * TAN_EPSILON)
+                float yMax = distToYAxis * (nDeltaY + (TAN_EPSILON * distToYAxis)) / (
+                             distToYAxis - (nDeltaY * TAN_EPSILON))
                              + origin.y;
                 
-                float yMin = distToYAxis * (projPosY - origin.y - TAN_EPSILON * distToYAxis) / (
-                             distToYAxis + (projPosY - origin.y) * TAN_EPSILON)
+                float yMin = distToYAxis * (nDeltaY - (TAN_EPSILON * distToYAxis)) / (
+                             distToYAxis + nDeltaY * TAN_EPSILON)
                              + origin.y;
 
                 //Input plane
@@ -78,13 +79,13 @@ namespace ArcCore.Math
             {
                 //Cast ray onto xz plane at y=0
                 float yratio = - origin.y / dir.y;
-                /***/ projPosX = origin.x + dir.x * yratio;
-                float projPosZ = origin.z + dir.z * yratio;
+                float lProjPosX = origin.x + (dir.x * yratio);
+                float lProjPosZ = origin.z + (dir.z * yratio);
 
                 //Check if cast falls out of acceptable range
-                if (-Constants.RenderFloorPositionRange <= projPosZ && projPosZ <= Constants.RenderFloorPositionRange)
+                if (-Constants.RenderFloorPositionRange <= lProjPosZ && lProjPosZ <= Constants.RenderFloorPositionRange)
                 {
-                    track = Conversion.XToTrack(projPosX);
+                    track = Conversion.XToTrack(lProjPosX);
                 }
 
                 //Reset to "no value" if track is invalid

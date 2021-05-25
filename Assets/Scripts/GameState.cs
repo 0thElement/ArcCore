@@ -1,6 +1,4 @@
-﻿#define DebugChart
-
-namespace ArcCore
+﻿namespace ArcCore
 {
     public static class GameState
     {

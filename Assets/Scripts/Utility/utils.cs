@@ -1,7 +1,7 @@
 // #define DEBUG
 
-using ArcCore.Behaviours;
-using ArcCore.Behaviours.EntityCreation;
+using ArcCore.Gameplay.Behaviours;
+using ArcCore.Gameplay.Behaviours.EntityCreation;
 using ArcCore.Math;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace ArcCore.Utility
+namespace ArcCore.Gameplay.Utility
 {
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Intrinsic-esque")]
