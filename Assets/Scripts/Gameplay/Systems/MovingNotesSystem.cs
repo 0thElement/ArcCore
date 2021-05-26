@@ -30,11 +30,10 @@ namespace ArcCore.Gameplay.Systems
             }).Schedule();
 
             //Arc segments
-            Entities.WithNone<Translation>().
-                ForEach((ref LocalToWorld lcwMatrix, in FloorPosition floorPosition, in TimingGroup group) =>
-                {
-                    lcwMatrix.Value.c3.z = floorPosition.value - currentFloorPosition[group.value];
-                }).Schedule();
+            Entities.WithNone<Translation>().ForEach((ref LocalToWorld lcwMatrix, in FloorPosition floorPosition, in TimingGroup group) =>
+            {
+                lcwMatrix.Value.c3.z = floorPosition.value - currentFloorPosition[group.value];
+            }).Schedule();
         }
     }
 }

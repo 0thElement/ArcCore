@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: BeatlineMaterial
-  m_Shader: {fileID: 4800000, guid: 1d869c6fd8889a946aa2ff4f428b9ca1, type: 3}
+  m_Shader: {fileID: 4800000, guid: e439050fec8839447bc37825da39a074, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
