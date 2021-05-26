@@ -61,23 +61,6 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             arcShadowEntityPrefab = GameObjectConversionSettings.ConvertToNote(arcShadowPrefab, EntityManager);
             EntityManager.ExposeLocalToWorld(arcShadowEntityPrefab);
             
-            //Remove these component to allow direct access to localtoworld matrices
-            //idk if this is a good way to set up an entity prefab in this case but this will do for now
-            /*EntityManager.RemoveComponent<Translation>(arcNoteEntityPrefab);
-            EntityManager.RemoveComponent<Rotation>(arcNoteEntityPrefab);
-            EntityManager.AddComponent<Disabled>(arcNoteEntityPrefab);
-            EntityManager.AddChunkComponentData<ChunkAppearTime>(arcNoteEntityPrefab);
-            EntityManager.AddChunkComponentData<ChunkDisappearTime>(arcNoteEntityPrefab);
-            
-            EntityManager.RemoveComponent<Translation>(arcShadowEntityPrefab);
-            EntityManager.RemoveComponent<Rotation>(arcShadowEntityPrefab);
-
-            EntityManager.AddComponent<Disabled>(headArcNoteEntityPrefab);
-            EntityManager.AddChunkComponentData<ChunkAppearTime>(headArcNoteEntityPrefab);
-            
-            EntityManager.AddComponent<Disabled>(heightIndicatorEntityPrefab);
-            EntityManager.AddChunkComponentData<ChunkAppearTime>(heightIndicatorEntityPrefab);*/
-
             arcJudgeArchetype = EntityManager.CreateArchetype(
                 
                 //Chart time
