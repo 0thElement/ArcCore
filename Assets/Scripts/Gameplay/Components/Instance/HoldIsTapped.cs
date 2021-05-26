@@ -1,4 +1,5 @@
 ﻿using ArcCore.Gameplay.Utility;
+using ArcCore.Utilities;
 using Unity.Entities;
 
 namespace ArcCore.Gameplay.Components
@@ -16,7 +17,7 @@ namespace ArcCore.Gameplay.Components
             => value = t;
 
         public HoldIsTapped Updated() 
-            => new HoldIsTapped { value = value - utils.b2i(value > 0) };
+            => new HoldIsTapped { value = value - Misc.BoolToInt(value > 0) };
 
         public bool State => value != 0;
     }

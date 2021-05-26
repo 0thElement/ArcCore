@@ -5,7 +5,7 @@ using ArcCore.Gameplay.Behaviours;
 using UnityEngine;
 using ArcCore.Gameplay.Utility;
 
-namespace ArcCore.Structs
+namespace ArcCore.Gameplay.Data
 {
     public struct ParticleBuffer : IDisposable
     {

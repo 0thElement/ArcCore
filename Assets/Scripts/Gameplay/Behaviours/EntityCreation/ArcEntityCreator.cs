@@ -8,8 +8,8 @@ using UnityEngine;
 using ArcCore.Gameplay.Utility;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Chunk;
-using ArcCore.Gameplay.Parsing;
-using ArcCore.Structs;
+using ArcCore.Parsing.Aff;
+using ArcCore.Gameplay.Data;
 using ArcCore.Utilities.Extensions;
 
 namespace ArcCore.Gameplay.Behaviours.EntityCreation

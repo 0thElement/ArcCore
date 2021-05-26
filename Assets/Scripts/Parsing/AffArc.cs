@@ -1,8 +1,9 @@
 ﻿using ArcCore.Math;
 using ArcCore.Gameplay.Utility;
 using Unity.Mathematics;
+using ArcCore.Gameplay;
 
-namespace ArcCore.Gameplay.Parsing
+namespace ArcCore.Parsing.Aff
 {
     public struct AffArc
     {

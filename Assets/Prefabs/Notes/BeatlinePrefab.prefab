@@ -11,10 +11,9 @@ GameObject:
   - component: {fileID: 1926968061456618605}
   - component: {fileID: 2852180457717579968}
   - component: {fileID: 6242960814994536105}
-  - component: {fileID: 5049329439691517727}
-  - component: {fileID: -3366428543563404190}
-  - component: {fileID: 6780919025644053894}
-  - component: {fileID: -3214216882849377065}
+  - component: {fileID: 3996374687662173488}
+  - component: {fileID: 7720346986246519882}
+  - component: {fileID: 1286531713336364064}
   m_Layer: 0
   m_Name: BeatlinePrefab
   m_TagString: Untagged
@@ -83,7 +82,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!114 &5049329439691517727
+--- !u!114 &3996374687662173488
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -92,11 +91,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1926968061456618601}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c90d8617e11b6f444b10dd4a6f3b6e3a, type: 3}
+  m_Script: {fileID: 11500000, guid: db1afbabdc0c3bb4eb3dd13c34d2ccd2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Value: 0
---- !u!114 &-3366428543563404190
+  value: 0
+--- !u!114 &7720346986246519882
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -105,11 +104,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1926968061456618601}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 08971367d0a285d48a9071c53667ae42, type: 3}
+  m_Script: {fileID: 11500000, guid: 5507c7ab5aab54e4bb68ec1e20ae959e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Value: 0
---- !u!114 &6780919025644053894
+  value: 0
+--- !u!114 &1286531713336364064
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -118,20 +117,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1926968061456618601}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4b33f04a1d753094ebbcae5b653401fd, type: 3}
+  m_Script: {fileID: 11500000, guid: 5fcc3ca50480ad747bde0bfe962eac8d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Value: 0
---- !u!114 &-3214216882849377065
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1926968061456618601}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1c1d593ab77722f4bae8ae95c8c12cdf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Value: 0
+  value: 0

@@ -17,6 +17,12 @@ namespace ArcCore.Gameplay.Systems
         {
             NativeArray<float> currentFloorPosition = Conductor.Instance.currentFloorPosition;
 
+            //Beatlines
+            Entities.WithNone<TimingGroup>().ForEach((ref Translation translation, in FloorPosition floorPosition) =>
+            {
+                translation.Value.z = floorPosition.value - currentFloorPosition[0];
+            }).Schedule();
+
             //All note except arcs
             Entities.ForEach((ref Translation translation, in FloorPosition floorPosition, in TimingGroup group) =>
             {

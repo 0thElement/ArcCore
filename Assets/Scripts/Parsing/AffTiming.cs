@@ -1,4 +1,4 @@
-﻿namespace ArcCore.Gameplay.Parsing
+﻿namespace ArcCore.Parsing.Aff
 {
     public struct AffTiming
     {

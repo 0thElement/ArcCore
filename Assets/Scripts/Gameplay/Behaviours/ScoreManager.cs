@@ -1,4 +1,4 @@
-﻿using ArcCore.Structs;
+﻿using ArcCore.Gameplay.Data;
 using ArcCore.Gameplay.Utility;
 using System.Collections;
 using UnityEngine;

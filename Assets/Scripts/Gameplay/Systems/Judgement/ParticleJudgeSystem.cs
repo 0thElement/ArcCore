@@ -5,7 +5,7 @@ using ArcCore.Gameplay.Components.Tags;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
-using ArcCore.Structs;
+using ArcCore.Gameplay.Data;
 using Unity.Mathematics;
 using ArcCore.Gameplay.Utility;
 using ArcCore.Math;

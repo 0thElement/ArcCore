@@ -5,8 +5,9 @@ using Unity.Mathematics;
 using ArcCore.Gameplay.Utility;
 using ArcCore.Gameplay.Behaviours.EntityCreation;
 using ArcCore.Gameplay.Behaviours;
-using ArcCore.Gameplay.Parsing;
+using ArcCore.Parsing.Aff;
 using System.Text.RegularExpressions;
+using ArcCore.Utilities;
 
 namespace ArcCore.Gameplay.Behaviours
 {
@@ -176,7 +177,7 @@ namespace ArcCore.Gameplay.Behaviours
             }
 
             Conductor.Instance.SetupTiming(affTimingList);
-            //BeatlineEntityCreator.Instance.CreateEntities(affTimingList[0]);
+            BeatlineEntityCreator.Instance.CreateEntities(affTimingList[0]);
             TapEntityCreator.Instance.CreateEntities(affTapList);
             HoldEntityCreator.Instance.CreateEntities(affHoldList);
             ArcEntityCreator.Instance.CreateEntities(affArcList);

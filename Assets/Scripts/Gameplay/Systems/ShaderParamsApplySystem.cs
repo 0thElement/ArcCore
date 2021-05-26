@@ -7,7 +7,7 @@ using Unity.Transforms;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Behaviours;
 using Unity.Rendering;
-using ArcCore.Structs;
+using ArcCore.Gameplay.Data;
 using ArcCore.Gameplay.Systems.Judgement;
 
 namespace ArcCore.Gameplay.Systems

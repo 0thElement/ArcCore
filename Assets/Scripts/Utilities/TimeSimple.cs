@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace ArcCore.Gameplay.Utility
+namespace ArcCore.Utilities
 {
-    public class TimeThreadless
+    public static class TimeSimple
     {
         public static long Ticks => DateTime.Now.Ticks;
         public static float Seconds => TicksToSec(Ticks);
@@ -12,6 +12,6 @@ namespace ArcCore.Gameplay.Utility
         public static float TimeSince(float sec) => Seconds - sec;
         public static long TimeSince(long ticks) => Ticks - ticks;
 
-        public static float TimeSince_T2S(long ticks) => TicksToSec(TimeSince(ticks));
+        public static float TimeSinceTicksToSec(long ticks) => TicksToSec(TimeSince(ticks));
     }
 }

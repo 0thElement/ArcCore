@@ -7,7 +7,7 @@ using Unity.Rendering;
 using UnityEngine;
 using ArcCore.Gameplay.Behaviours;
 
-namespace ArcCore.Structs
+namespace ArcCore.Gameplay.Data
 {
     public struct ArcCompleteState
     {

@@ -7,7 +7,7 @@ using UnityEngine;
 using ArcCore.Gameplay.Utility;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Chunk;
-using ArcCore.Gameplay.Parsing;
+using ArcCore.Parsing.Aff;
 using ArcCore.Utilities.Extensions;
 
 namespace ArcCore.Gameplay.Behaviours.EntityCreation
@@ -115,9 +115,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
         public void CreateConnections(AffArcTap arctap, AffTap tap, int appearTime)
         {
-            EntityManager entityManager = EntityManagement.EManager;
-
-            Entity lineEntity = entityManager.Instantiate(connectionLineEntityPrefab);
+            Entity lineEntity = EntityManager.Instantiate(connectionLineEntityPrefab);
 
             float x = Conversion.GetWorldX(arctap.position.x);
             float y = Conversion.GetWorldY(arctap.position.y) - 0.5f;
@@ -129,27 +127,27 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             float3 direction = new float3(dx, dy, 0);
             float length = math.sqrt(dx*dx + dy*dy);
 
-            entityManager.SetComponentData<Translation>(lineEntity, new Translation(){
+            EntityManager.SetComponentData<Translation>(lineEntity, new Translation(){
                 Value = new float3(x, y, z)
             });
 
-            entityManager.AddComponentData<NonUniformScale>(lineEntity, new NonUniformScale(){
+            EntityManager.AddComponentData<NonUniformScale>(lineEntity, new NonUniformScale(){
                 Value = new float3(1f, 1f, length)
             });
             
-            entityManager.SetComponentData<Rotation>(lineEntity, new Rotation(){
+            EntityManager.SetComponentData<Rotation>(lineEntity, new Rotation(){
                 Value = quaternion.LookRotationSafe(direction, new Vector3(0,0,1))
             });
 
             float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup);
-            entityManager.AddComponentData<FloorPosition>(lineEntity, new FloorPosition(){
+            EntityManager.AddComponentData<FloorPosition>(lineEntity, new FloorPosition(){
                 value = floorpos
             });
-            entityManager.SetComponentData<TimingGroup>(lineEntity, new TimingGroup()
+            EntityManager.SetComponentData<TimingGroup>(lineEntity, new TimingGroup()
             {
                 value = arctap.timingGroup
             });
-            entityManager.SetComponentData<AppearTime>(lineEntity, new AppearTime(){
+            EntityManager.SetComponentData<AppearTime>(lineEntity, new AppearTime(){
                 value = appearTime
             });
         }

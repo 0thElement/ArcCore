@@ -3,7 +3,8 @@ using UnityEngine;
 using Unity.Collections;
 using System;
 using ArcCore.Gameplay.Utility;
-using ArcCore.Gameplay.Parsing;
+using ArcCore.Parsing.Aff;
+using ArcCore.Utilities;
 
 namespace ArcCore.Gameplay.Behaviours
 {
@@ -31,7 +32,7 @@ namespace ArcCore.Gameplay.Behaviours
         {
             Instance = this;
             audioSource = GetComponent<AudioSource>();
-            timeOfLastMix = TimeThreadless.Ticks;
+            timeOfLastMix = TimeSimple.Ticks;
             songLength = (int)Mathf.Round(audioSource.clip.length*1000);
         }
         
@@ -44,7 +45,7 @@ namespace ArcCore.Gameplay.Behaviours
         public void Update()
         {
             receptorTime = Mathf.RoundToInt(
-                (float)(AudioSettings.dspTime - dspStartPlayingTime + TimeThreadless.TimeSince_T2S(timeOfLastMix)) * 1000)
+                (float)(AudioSettings.dspTime - dspStartPlayingTime + TimeSimple.TimeSinceTicksToSec(timeOfLastMix)) * 1000)
                 - offset;
             UpdateCurrentFloorPosition();
 
@@ -56,7 +57,7 @@ namespace ArcCore.Gameplay.Behaviours
         }
         public void OnAudioFilterRead(float[] data, int channels)
         {
-            timeOfLastMix = TimeThreadless.Ticks;
+            timeOfLastMix = TimeSimple.Ticks;
         }
         public void OnDestroy()
         {

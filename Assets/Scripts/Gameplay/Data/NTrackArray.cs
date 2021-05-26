@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace ArcCore.Structs
+namespace ArcCore.Gameplay.Data
 {
     public struct NTrackArray<T> : IEnumerable<T> where T : struct
     {

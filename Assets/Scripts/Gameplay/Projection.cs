@@ -1,10 +1,12 @@
-﻿using ArcCore.Gameplay.Behaviours;
+﻿using ArcCore.Gameplay;
+using ArcCore.Gameplay.Behaviours;
 using ArcCore.Gameplay.Utility;
+using ArcCore.Math;
 using Unity.Burst;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace ArcCore.Math
+namespace ArcCore.Gameplay
 {
     public static class Projection
     {

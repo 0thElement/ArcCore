@@ -1,4 +1,4 @@
-﻿using ArcCore.Gameplay.Parsing;
+﻿using ArcCore.Parsing.Aff;
 using Unity.Entities;
 using Unity.Mathematics;
 

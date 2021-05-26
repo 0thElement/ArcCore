@@ -1,10 +1,10 @@
 using ArcCore.Gameplay.Behaviours;
-using ArcCore.Gameplay.Parsing;
+using ArcCore.Parsing.Aff;
 using System;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace ArcCore.Gameplay.Utility
+namespace ArcCore.Gameplay
 {
     public class Conversion
     {

@@ -3,14 +3,14 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Gameplay.Components;
-using ArcCore.Gameplay.Parsing;
+using ArcCore.Parsing.Aff;
 using ArcCore.Gameplay.Components.Chunk;
-using static ArcCore.Utilities.EntityManagement;
+using ArcCore.Utilities.Extensions;
 
 namespace ArcCore.Gameplay.Behaviours.EntityCreation
 {
 
-    public class BeatlineEntityCreator : MonoBehaviour
+    public class BeatlineEntityCreator : ECSMonoBehaviour
     {
         public static BeatlineEntityCreator Instance { get; private set; }
         [SerializeField] private GameObject beatlinePrefab;
@@ -19,7 +19,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         {
             Instance = this;
 
-            beatlineEntityPrefab = GameObjectToNote(beatlinePrefab);
+            beatlineEntityPrefab = GameObjectConversionSettings.ConvertToNote(beatlinePrefab, EntityManager);
         }
 
         public void CreateEntities(List<AffTiming> affTimingList)
@@ -80,11 +80,11 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         {
             int timing = (int)Mathf.Round(timingf);
 
-            Entity lineEntity = EManager.Instantiate(beatlineEntityPrefab);
+            Entity lineEntity = EntityManager.Instantiate(beatlineEntityPrefab);
 
             float floorpos = Conductor.Instance.GetFloorPositionFromTiming(timing, 0);
 
-            EManager.SetComponentData<FloorPosition>(lineEntity, new FloorPosition(){
+            EntityManager.SetComponentData<FloorPosition>(lineEntity, new FloorPosition(){
                 value = floorpos
             });
 
@@ -93,8 +93,8 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             int appearTime = (t1 < t2) ? t1 : t2;
             int disappearTime = (t1 < t2) ? t2 : t1;
 
-            EManager.SetComponentData<AppearTime>(lineEntity, new AppearTime(){ value = appearTime });
-            EManager.SetComponentData<DisappearTime>(lineEntity, new DisappearTime(){ value = disappearTime });
+            EntityManager.SetComponentData<AppearTime>(lineEntity, new AppearTime(){ value = appearTime });
+            EntityManager.SetComponentData<DisappearTime>(lineEntity, new DisappearTime(){ value = disappearTime });
         }
     }
 

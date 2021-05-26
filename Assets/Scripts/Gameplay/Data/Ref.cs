@@ -1,4 +1,4 @@
-﻿namespace ArcCore.Structs
+﻿namespace ArcCore.Gameplay.Data
 {
     public readonly unsafe struct Ref<T> where T: unmanaged
     {

@@ -6,7 +6,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Math;
-using ArcCore.Structs;
+using ArcCore.Gameplay.Data;
 using System.Collections.Generic;
 using System.Collections;
 

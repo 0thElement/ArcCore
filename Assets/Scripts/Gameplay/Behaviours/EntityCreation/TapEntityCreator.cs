@@ -7,7 +7,7 @@ using ArcCore.Gameplay.Utility;
 using ArcCore.Gameplay.Components;
 using Unity.Collections;
 using ArcCore.Gameplay.Components.Chunk;
-using ArcCore.Gameplay.Parsing;
+using ArcCore.Parsing.Aff;
 using ArcCore.Utilities.Extensions;
 
 namespace ArcCore.Gameplay.Behaviours.EntityCreation

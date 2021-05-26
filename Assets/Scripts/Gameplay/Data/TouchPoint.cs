@@ -3,7 +3,7 @@ using Unity.Mathematics;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace ArcCore.Structs
+namespace ArcCore.Gameplay.Data
 {
     public struct TouchPoint
     {
