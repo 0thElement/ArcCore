@@ -39,6 +39,7 @@ namespace ArcCore.Gameplay.Behaviours
         public void HighlightLane(int track)
         {
             laneHighlights[track].color = new Color(1, 1, 1, highlightAlpha);
+            laneHighlights[track].enabled = true; //unity you can't just fucking go on and disable alpha = 0 sprites without telling anybody anything ESPECIALLY SINCE YOU DON"T EVEN FUCKING DO IT IN THE EDITOR WHY DO YOU DO THIS AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa
         }
         public void HorizontalLineAt(float height, int fingerid)
         {
