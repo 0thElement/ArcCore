@@ -76,23 +76,17 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         chartIncrTime.UpdateJudgePointCache(currentTime, out int count);
                         lostCount += count;
                         currentCombo = 0;
-                    // particleBuffer.PlayHoldParticle(cl.lane - 1, false);
-
-                    particleBuffer.PlayTapParticle(
-                            new float2(Conversion.TrackToX(cl.lane), 1),
-                            ParticleCreator.JudgeType.Lost,
-                            ParticleCreator.JudgeDetail.None
-                        );
+                        particleBuffer.PlayHoldParticle(cl.lane - 1, false);
                     }
                 }
             ).Run();
 
-            Entities.WithAll<ChartTime>().ForEach(
+            Entities.WithAll<WithinJudgeRange, ChartTime>().ForEach(
                 (Entity en, in ChartIncrTime chartIncrTime, in ChartLane cl) =>
                 {
                     if (currentTime - Constants.FarWindow > chartIncrTime.endTime)
                     {
-                        commandBuffer.AddComponent<Disabled>(en);
+                        commandBuffer.DisableEntity(en);
                         commandBuffer.AddComponent<PastJudgeRange>(en);
                         particleBuffer.DisableLaneParticle(cl.lane - 1);
                     }

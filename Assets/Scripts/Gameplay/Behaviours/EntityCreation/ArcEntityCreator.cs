@@ -234,13 +234,9 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, timingGroup);
             int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, timingGroup);
             int appearTime = (t1 < t2) ? t1 : t2;
-            int disappearTime = (t1 < t2) ? t2 : t1;
 
             EntityManager.SetComponentData(arcInstEntity, new AppearTime(appearTime));
             EntityManager.SetComponentData(arcShadowEntity, new AppearTime(appearTime));
-
-            EntityManager.SetComponentData(arcInstEntity, new DisappearTime(disappearTime));
-            EntityManager.SetComponentData(arcShadowEntity, new DisappearTime(disappearTime));
         }
 
         private void CreateHeightIndicator(AffArc arc, Material material)

@@ -104,7 +104,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         EntityManager.DisableEntity(minEntity);
                         EntityManager.AddComponent<PastJudgeRange>(minEntity);
                         ScoreManager.Instance.AddJudge(minJType);
-                        particleBuffer.PlayTapParticle(/*fuck i forgot what goes here*/
+                        particleBuffer.PlayTapParticle(
                             Conversion.TrackToXYParticle(EntityManager.GetComponentData<ChartLane>(minEntity).lane),
                             minJType
                         );
@@ -115,8 +115,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         EntityManager.DisableEntity(minEntity);
                         EntityManager.AddComponent<PastJudgeRange>(minEntity);
                         ScoreManager.Instance.AddJudge(minJType);
-                        particleBuffer.PlayTapParticle(/*fuck i forgot what goes here*/
-                            Conversion.GetWorldPos(EntityManager.GetComponentData<ChartPosition>(minEntity).xy),
+                        particleBuffer.PlayTapParticle(
+                            EntityManager.GetComponentData<ChartPosition>(minEntity).xy,
                             minJType
                         );
                         break;
@@ -127,9 +127,9 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         EntityManager.SetComponentData(minEntity, chartIncrTime);
                         EntityManager.RemoveComponent<HoldLocked>(minEntity);
                         ScoreManager.Instance.AddJudge(minJType, count);
-                        particleBuffer.PlayTapParticle(/*fuck i forgot what goes here*/
-                            Conversion.TrackToXYParticle(EntityManager.GetComponentData<ChartLane>(minEntity).lane),
-                            minJType
+                        particleBuffer.PlayHoldParticle(
+                            EntityManager.GetComponentData<ChartLane>(minEntity).lane - 1,
+                            true
                         );
                         break;
                 }

@@ -59,10 +59,8 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(startFloorPosition + Constants.RenderFloorPositionRange, 0);
                 int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(endFloorPosition - Constants.RenderFloorPositionRange, 0);
                 int appearTime = (t1 < t2) ? t1 : t2;
-                int disappearTime = (t1 < t2) ? t2 : t1;
 
                 EntityManager.SetComponentData<AppearTime>(holdEntity, new AppearTime(appearTime));
-                EntityManager.SetComponentData<DisappearTime>(holdEntity, new DisappearTime(disappearTime));
 
                 //Judge entities
                 float startBpm = Conductor.Instance.GetTimingEventFromTiming(hold.timing, hold.timingGroup).bpm;

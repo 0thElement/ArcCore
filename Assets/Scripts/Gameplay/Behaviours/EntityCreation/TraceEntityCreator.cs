@@ -41,6 +41,12 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.RemoveComponent<ColorID>(traceNoteEntityPrefab);
             EntityManager.AddComponent(traceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
 
+            //TEMPORARY. DISAPPEARTIME IS DEPRECATED AND WILL BE DELETED
+            EntityManager.AddComponent(traceNoteEntityPrefab, ComponentType.ReadOnly<DisappearTime>());
+            EntityManager.AddComponent(traceShadowEntityPrefab, ComponentType.ReadOnly<DisappearTime>());
+            EntityManager.AddChunkComponentData<ChunkDisappearTime>(traceNoteEntityPrefab);
+            EntityManager.AddChunkComponentData<ChunkDisappearTime>(traceShadowEntityPrefab);
+
             headTraceNoteEntityPrefab = GameObjectConversionSettings.ConvertToNote(headTraceNotePrefab, EntityManager);
             EntityManager.AddComponent(headTraceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
         }

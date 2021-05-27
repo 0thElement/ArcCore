@@ -36,7 +36,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         chartIncrTime.UpdateJudgePointCachePure(currentTime, out int count);
                         maxPureCount += count;
                         currentCombo += count;
-                        particleBuffer.PlayTapParticle(Conversion.TrackToXYParticle(lane.lane), ParticleCreator.JudgeType.Pure, ParticleCreator.JudgeDetail.None);
+                        particleBuffer.PlayHoldParticle(lane.lane - 1, true);
                     }
                 }
             ).Run();
