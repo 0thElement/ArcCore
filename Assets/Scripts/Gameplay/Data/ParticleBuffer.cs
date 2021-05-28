@@ -12,8 +12,8 @@ namespace ArcCore.Gameplay.Data
         private struct TapParticleDesc
         {
             public float2 position;
-            public ParticleCreator.JudgeType type;
-            public ParticleCreator.JudgeDetail detail;
+            public ParticlePool.JudgeType type;
+            public ParticlePool.JudgeDetail detail;
         }
 
         private struct HoldParticleDesc
@@ -34,45 +34,45 @@ namespace ArcCore.Gameplay.Data
             // arcQueue = new NativeQueue<TapParticleDesc>(allocator);
         }
 
-        public void PlayTapParticle(float2 position, ParticleCreator.JudgeType type, ParticleCreator.JudgeDetail detail)
+        public void PlayTapParticle(float2 position, ParticlePool.JudgeType type, ParticlePool.JudgeDetail detail)
         {
             tapQueue.Enqueue(new TapParticleDesc{position = position, type = type, detail = detail});
         }
 
         public void PlayTapParticle(float2 position, JudgeType type)
         {
-            ParticleCreator.JudgeType jt = (ParticleCreator.JudgeType)(-1);
+            ParticlePool.JudgeType jt = (ParticlePool.JudgeType)(-1);
             switch(type)
             {
                 case JudgeType.Lost:
-                    jt = ParticleCreator.JudgeType.Lost;
+                    jt = ParticlePool.JudgeType.Lost;
                     break;
                 case JudgeType.LateFar:
                 case JudgeType.EarlyFar:
-                    jt = ParticleCreator.JudgeType.Far;
+                    jt = ParticlePool.JudgeType.Far;
                     break;
                 case JudgeType.EarlyPure:
                 case JudgeType.LatePure:
                 case JudgeType.MaxPure:
-                    jt = ParticleCreator.JudgeType.Pure;
+                    jt = ParticlePool.JudgeType.Pure;
                     break;
             }
 
             //I WANT TO USE SWITCH EXPRESSIONS BUT FUCKING UNITY IS AWFUL AND I WANT TO DIE FUCK
-            ParticleCreator.JudgeDetail jd = (ParticleCreator.JudgeDetail)(-1);
+            ParticlePool.JudgeDetail jd = (ParticlePool.JudgeDetail)(-1);
             switch(type)
             {
                 case JudgeType.Lost:
                 case JudgeType.MaxPure:
-                    jd = ParticleCreator.JudgeDetail.None;
+                    jd = ParticlePool.JudgeDetail.None;
                     break;
                 case JudgeType.EarlyFar:
                 case JudgeType.EarlyPure:
-                    jd = ParticleCreator.JudgeDetail.Early;
+                    jd = ParticlePool.JudgeDetail.Early;
                     break;
                 case JudgeType.LateFar:
                 case JudgeType.LatePure:
-                    jd = ParticleCreator.JudgeDetail.Late;
+                    jd = ParticlePool.JudgeDetail.Late;
                     break;
             }
 
@@ -93,7 +93,7 @@ namespace ArcCore.Gameplay.Data
             while (tapQueue.Count > 0)
             {
                 TapParticleDesc particleDesc = tapQueue.Dequeue();
-                ParticleCreator.Instance.TapAt(particleDesc.position, particleDesc.type, particleDesc.detail);
+                ParticlePool.Instance.TapAt(particleDesc.position, particleDesc.type, particleDesc.detail);
             }
 
             bool[] toDisable = new bool[] {false, false, false, false};
@@ -106,12 +106,12 @@ namespace ArcCore.Gameplay.Data
                 }
                 else
                 {
-                    ParticleCreator.Instance.HoldAt(particleDesc.lane, particleDesc.isHit);
+                    ParticlePool.Instance.HoldAt(particleDesc.lane, particleDesc.isHit);
                 }
             }
             for (int i=0; i<4; i++)
                 if (toDisable[i])
-                    ParticleCreator.Instance.DisableLane(i);
+                    ParticlePool.Instance.DisableLane(i);
         }
 
         public bool IsCreated => tapQueue.IsCreated;

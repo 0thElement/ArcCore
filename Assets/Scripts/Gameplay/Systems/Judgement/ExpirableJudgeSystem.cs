@@ -39,8 +39,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
 
                         particleBuffer.PlayTapParticle(
                             new float2(Conversion.TrackToX(cl.lane), 1),
-                            ParticleCreator.JudgeType.Lost,
-                            ParticleCreator.JudgeDetail.None
+                            ParticlePool.JudgeType.Lost,
+                            ParticlePool.JudgeDetail.None
                         );
                     }
                 }
@@ -60,8 +60,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
 
                         particleBuffer.PlayTapParticle(
                             cp.xy,
-                            ParticleCreator.JudgeType.Lost,
-                            ParticleCreator.JudgeDetail.None
+                            ParticlePool.JudgeType.Lost,
+                            ParticlePool.JudgeDetail.None
                         );
                     }
                 }

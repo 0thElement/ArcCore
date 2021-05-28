@@ -5,7 +5,7 @@ using ArcCore.Gameplay.Utility;
 
 namespace ArcCore.Gameplay.Behaviours
 {
-    public class ParticleCreator : MonoBehaviour
+    public class ParticlePool : MonoBehaviour
     {
         public enum JudgeType
         {
@@ -20,7 +20,7 @@ namespace ArcCore.Gameplay.Behaviours
             Late
         }
 
-        public static ParticleCreator Instance { get; private set; }
+        public static ParticlePool Instance { get; private set; }
 
         [SerializeField] private int textParticlePoolSize;
         [SerializeField] private int tapParticlePoolSize;
