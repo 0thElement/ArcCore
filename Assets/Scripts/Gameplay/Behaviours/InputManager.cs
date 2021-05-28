@@ -9,11 +9,12 @@ using ArcCore.Math;
 using ArcCore.Gameplay.Data;
 using System.Collections.Generic;
 using System.Collections;
+using UnityEngine.InputSystem.EnhancedTouch;
+using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
+using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 namespace ArcCore.Gameplay.Behaviours
 {
-    //ORDERING IS IMPORTANT HERE; POLL_INPUT MUST OCCUR BEFORE ALL JUDGING.
-    //UNSURE HOW TO DO THIS
     public class InputManager : MonoBehaviour, IEnumerable<TouchPoint>
     {
         public static InputManager Instance { get; private set; }
@@ -83,6 +84,7 @@ namespace ArcCore.Gameplay.Behaviours
             Instance = this;
             touchPoints = new NativeArray<TouchPoint>(MaxTouches, Allocator.Persistent);
             tracksHeld = default;
+            EnhancedTouchSupport.Enable();
 
             for(int i = 0; i < MaxTouches; i++)
             {
@@ -143,52 +145,14 @@ namespace ArcCore.Gameplay.Behaviours
                     return safeIndex = i;
             return safeIndex = MaxTouches;
         }
-
-        public void PollMouseInput()
+        private static int GetChartTime(double realTime)
         {
-            if(Input.GetMouseButtonDown(0))
-            {
-                (float2? exact, Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(Input.mousePosition));
-                touchPoints[0] = new TouchPoint(exact, ipt, track, TouchPoint.Status.Tapped, 1);
-
-                if (track != -1)
-                {
-                    tracksHeld[track]++;
-                    tracksTapped[track] = true;
-                }
-            } 
-            else if(Input.GetMouseButtonUp(0))
-            {
-                TouchPoint tp = touchPoints[0];
-
-                tp.status = TouchPoint.Status.Released;
-
-                touchPoints[0] = tp;
-
-                if (tp.track != -1) tracksHeld[tp.track]--;
-            }
-            else if(Input.GetMouseButton(0))
-            {
-                TouchPoint tp = touchPoints[0];
-                int oTrack = tp.track;
-
-                (tp.inputPosition, tp.inputPlane, tp.track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(Input.mousePosition));
-                tp.status = TouchPoint.Status.Sustained;
-
-                touchPoints[0] = tp;
-
-                if (oTrack != tp.track)
-                {
-                    if (oTrack != -1) tracksHeld[oTrack]--;
-                    if (tp.track != -1) tracksHeld[tp.track]++;
-                }
-            }
+            Debug.Log(realTime + " -- " + Time.realtimeSinceStartup);
+            return Conductor.Instance.receptorTime - (int)System.Math.Round((Time.realtimeSinceStartup - realTime) * 1000);
         }
 
         public void PollInput()
         {
-            //Debug.Log(safeIndex);
-
             for (int ti = 0; ti < touchPoints.Length; ti++)
             {
                 if(touchPoints[ti].status == TouchPoint.Status.Released)
@@ -203,19 +167,16 @@ namespace ArcCore.Gameplay.Behaviours
                 }
             }
 
-#if TestOnComputer
-            PollMouseInput();
-#else
-
-            for (int i = 0; i < Input.touchCount; i++)
+            for (int i=0; i < Touch.activeFingers.Count; i++)
             {
-                Touch t = Input.touches[i];
+                Finger f = Touch.activeFingers[i];
+                Touch t = f.currentTouch;
                 int index;
 
                 if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled)
                 {
 
-                    index = IdIndex(t.fingerId);
+                    index = IdIndex(f.index);
                     if (index != -1)
                     {
                         TouchPoint tp = touchPoints[index];
@@ -235,10 +196,10 @@ namespace ArcCore.Gameplay.Behaviours
 
                 if (t.phase == TouchPhase.Began)
                 {
-                    if (FreeId(t.fingerId))
+                    if (FreeId(f.index))
                     {
-                        (float2? exact, Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.position));
-                        touchPoints[safeIndex] = new TouchPoint(exact, ipt, track, TouchPoint.Status.Tapped, t.fingerId);
+                        (float2? exact, Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.screenPosition));
+                        touchPoints[safeIndex] = new TouchPoint(exact, ipt, track, GetChartTime(t.startTime), TouchPoint.Status.Tapped, f.index, t.touchId);
 
                         if(track != -1)
                         {
@@ -249,7 +210,7 @@ namespace ArcCore.Gameplay.Behaviours
                     continue;
                 }
 
-                index = IdIndex(t.fingerId);
+                index = IdIndex(f.index);
                 if (index == -1) continue;
 
                 if (t.phase == TouchPhase.Moved)
@@ -257,7 +218,7 @@ namespace ArcCore.Gameplay.Behaviours
                     TouchPoint tp = touchPoints[index];
                     int oTrack = tp.track;
 
-                    (tp.inputPosition, tp.inputPlane, tp.track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.position));
+                    (tp.inputPosition, tp.inputPlane, tp.track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.screenPosition));
                     tp.status = TouchPoint.Status.Sustained;
 
                     touchPoints[index] = tp;
@@ -278,7 +239,6 @@ namespace ArcCore.Gameplay.Behaviours
                     touchPoints[index] = tp;
                 }
             }
-#endif
         }
     }
 }

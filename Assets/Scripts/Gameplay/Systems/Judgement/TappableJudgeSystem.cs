@@ -29,8 +29,6 @@ namespace ArcCore.Gameplay.Systems.Judgement
         {
             if (!GameState.isChartMode) return;
 
-            int currentTime = Conductor.Instance.receptorTime;
-
             var particleBuffer = ParticleJudgeSystem.particleBuffer;
 
             Entity minEntity = Entity.Null;
@@ -45,6 +43,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 minType = MinType.Void;
 
                 TouchPoint touch = touchPoints.Current;
+                int tapTime = touch.tapTime;
                 if (touch.status != TouchPoint.Status.Tapped) continue;
 
                 if (touch.TrackValid)
@@ -58,7 +57,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                                 minTime = chartTime.value;
                                 minEntity = en;
                                 minType = MinType.Tap;
-                                minJType = JudgeManage.GetType(currentTime - chartTime.value);
+                                minJType = JudgeManage.GetType(tapTime - chartTime.value);
                             }
                         }
                     ).Run();
@@ -89,7 +88,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                                 minTime = chartTime.value;
                                 minEntity = en;
                                 minType = MinType.Arctap;
-                                minJType = JudgeManage.GetType(currentTime - chartTime.value);
+                                minJType = JudgeManage.GetType(tapTime - chartTime.value);
                             }
                         }
                     ).Run();
@@ -123,7 +122,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
 
                     case MinType.Hold:
                         ChartIncrTime chartIncrTime = EntityManager.GetComponentData<ChartIncrTime>(minEntity);
-                        chartIncrTime.UpdateJudgePointCache(currentTime, out int count);
+                        chartIncrTime.UpdateJudgePointCache(tapTime, out int count);
                         EntityManager.SetComponentData(minEntity, chartIncrTime);
                         EntityManager.RemoveComponent<HoldLocked>(minEntity);
                         ScoreManager.Instance.AddJudge(minJType, count);
