@@ -17,6 +17,7 @@ namespace ArcCore.Gameplay.Data
         public float2? inputPosition;
         public Rect2D? inputPlane;
         public int track;
+        public int tapTime;
 
         public Rect2D InputPlane => inputPlane.GetValueOrDefault();
         public bool InputPlaneValid => inputPlane.HasValue;
@@ -25,15 +26,17 @@ namespace ArcCore.Gameplay.Data
         //public int time;
         public Status status;
         public int fingerId;
+        public int touchId;
 
-        public TouchPoint(float2? inputPosition, Rect2D? inputPlane, int track, /*int time,*/ Status status, int fingerId)
+        public TouchPoint(float2? inputPosition, Rect2D? inputPlane, int track, int tapTime, Status status, int fingerId, int touchId)
         {
             this.inputPosition = inputPosition;
             this.inputPlane = inputPlane;
             this.track = track;
-            //this.time = time;
+            this.tapTime = tapTime;
             this.status = status;
             this.fingerId = fingerId;
+            this.touchId = touchId;
         }
     }
 }
