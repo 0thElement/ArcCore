@@ -4,11 +4,13 @@
     {
         _MainTex ("Texture", 2D) = "white" {}
         _HighlightTex ("Highlight Texture", 2D) = "white" {}
+        _OverlayTex ("Overlay Texture", 2D) = "white" {}
         _GrayCol ("Gray", Color) = (1,1,1,1)
 
         _Direction("Direction", Float) = 1
         _Cutoff("Cutoff", Float) = 0
         _Highlight("Highlight", Float) = 0
+
     }
     SubShader
     {
@@ -39,7 +41,7 @@
                 float4 worldpos : TEXCOORD1;
             };
 
-            sampler2D _MainTex,_HighlightTex;
+            sampler2D _MainTex,_HighlightTex,_OverlayTex;
             float4 _MainTex_ST;
             float4 _GrayCol;
             float _Cutoff,_Highlight,_Direction;
@@ -55,8 +57,16 @@
 
             fixed4 frag (v2f i) : SV_Target
             {
-				if(_Cutoff == 1 && i.worldpos.z * _Direction > 0) return 0;
-				if(i.worldpos.z < -124.25 || i.worldpos.z > 124.25) return 0;
+                float zcoord = i.worldpos.z;
+                float4 cutoffBorder = (0,0,0,0);
+
+				if(_Cutoff == 1) 
+                {
+                    if (zcoord * _Direction > 0) return 0;
+                    if (zcoord > -0.1 && zcoord < 0.1) cutoffBorder = (0.3, 0.5, 1, 0.25);
+                }
+
+				if(zcoord < -124.25 || zcoord > 124.25) return 0;
 
                 fixed4 col = (_Highlight > 0) ? tex2D(_HighlightTex, i.uv) : tex2D(_MainTex, i.uv);
 
@@ -65,6 +75,11 @@
                     col.a *= 0.5;
                 }
                 col.a *= 0.86;
+
+                float2 overlayUV = float2(i.uv.x, -(zcoord) /15 + _Time.x * 10);
+                float4 overlay = tex2D(_OverlayTex, overlayUV) * 0.015;
+
+                col += overlay + cutoffBorder;
 
                 return col;
             }
