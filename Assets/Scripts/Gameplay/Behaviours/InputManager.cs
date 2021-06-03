@@ -1,5 +1,4 @@
 // #define UPD
-#define TestOnComputer
 
 using System.Linq;
 using Unity.Collections;
@@ -99,6 +98,7 @@ namespace ArcCore.Gameplay.Behaviours
             InputVisualFeedback.Instance.DisableLines();
             foreach (var t in this)
             {
+                // Debug.Log($"{t.fingerId} is at phase {t.status}");
                 if (t.InputPlaneValid && t.inputPosition.Value.y > 2f)
                 {
                     InputVisualFeedback.Instance.HorizontalLineAt(t.inputPosition.Value.y, t.fingerId);
@@ -147,7 +147,6 @@ namespace ArcCore.Gameplay.Behaviours
         }
         private static int GetChartTime(double realTime)
         {
-            Debug.Log(realTime + " -- " + Time.realtimeSinceStartup);
             return Conductor.Instance.receptorTime - (int)System.Math.Round((Time.realtimeSinceStartup - realTime) * 1000);
         }
 
@@ -172,6 +171,7 @@ namespace ArcCore.Gameplay.Behaviours
                 Finger f = Touch.activeFingers[i];
                 Touch t = f.currentTouch;
                 int index;
+                Debug.Log(t.phase);
 
                 if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled)
                 {
@@ -194,7 +194,10 @@ namespace ArcCore.Gameplay.Behaviours
 
                 if (SafeIndex() == MaxTouches) continue;
 
-                if (t.phase == TouchPhase.Began)
+                index = IdIndex(f.index);
+                bool isNewTouchPoint = index == -1;
+
+                if (isNewTouchPoint && t.phase == TouchPhase.Began)
                 {
                     if (FreeId(f.index))
                     {
@@ -209,11 +212,7 @@ namespace ArcCore.Gameplay.Behaviours
 
                     continue;
                 }
-
-                index = IdIndex(f.index);
-                if (index == -1) continue;
-
-                if (t.phase == TouchPhase.Moved)
+                else
                 {
                     TouchPoint tp = touchPoints[index];
                     int oTrack = tp.track;
@@ -230,14 +229,15 @@ namespace ArcCore.Gameplay.Behaviours
                     }
 
                 }
-                else if (t.phase == TouchPhase.Stationary)
-                {
-                    TouchPoint tp = touchPoints[index];
+                // TouchPhase in new input system is never stationary for some god awful reason
+                // else if (t.phase == TouchPhase.Stationary)
+                // {
+                //     TouchPoint tp = touchPoints[index];
 
-                    tp.status = TouchPoint.Status.Sustained;
+                //     tp.status = TouchPoint.Status.Sustained;
 
-                    touchPoints[index] = tp;
-                }
+                //     touchPoints[index] = tp;
+                // }
             }
         }
     }
