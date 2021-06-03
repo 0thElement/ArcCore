@@ -14,6 +14,7 @@ namespace ArcCore.Gameplay.Data
             public float2 position;
             public ParticlePool.JudgeType type;
             public ParticlePool.JudgeDetail detail;
+            public float textYOffset;
         }
 
         private struct HoldParticleDesc
@@ -39,7 +40,7 @@ namespace ArcCore.Gameplay.Data
             tapQueue.Enqueue(new TapParticleDesc{position = position, type = type, detail = detail});
         }
 
-        public void PlayTapParticle(float2 position, JudgeType type)
+        public void PlayTapParticle(float2 position, JudgeType type, float textYOffset)
         {
             ParticlePool.JudgeType jt = (ParticlePool.JudgeType)(-1);
             switch(type)
@@ -53,8 +54,10 @@ namespace ArcCore.Gameplay.Data
                     break;
                 case JudgeType.EarlyPure:
                 case JudgeType.LatePure:
-                case JudgeType.MaxPure:
                     jt = ParticlePool.JudgeType.Pure;
+                    break;
+                case JudgeType.MaxPure:
+                    jt = ParticlePool.JudgeType.MaxPure;
                     break;
             }
 
@@ -76,7 +79,7 @@ namespace ArcCore.Gameplay.Data
                     break;
             }
 
-            tapQueue.Enqueue(new TapParticleDesc { position = position, type = jt, detail = jd });
+            tapQueue.Enqueue(new TapParticleDesc { position = position, type = jt, detail = jd , textYOffset = textYOffset});
         }
 
         public void PlayHoldParticle(int lane, bool isHit)
@@ -93,7 +96,7 @@ namespace ArcCore.Gameplay.Data
             while (tapQueue.Count > 0)
             {
                 TapParticleDesc particleDesc = tapQueue.Dequeue();
-                ParticlePool.Instance.TapAt(particleDesc.position, particleDesc.type, particleDesc.detail);
+                ParticlePool.Instance.TapAt(particleDesc.position, particleDesc.type, particleDesc.detail, particleDesc.textYOffset);
             }
 
             bool[] toDisable = new bool[] {false, false, false, false};

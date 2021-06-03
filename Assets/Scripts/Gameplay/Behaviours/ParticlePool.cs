@@ -11,7 +11,8 @@ namespace ArcCore.Gameplay.Behaviours
         {
             Lost,
             Far,
-            Pure
+            Pure,
+            MaxPure
         }
         public enum JudgeDetail
         {
@@ -113,9 +114,10 @@ namespace ArcCore.Gameplay.Behaviours
             }
         }
 
-        public void TapAt(float2 position, JudgeType judgeType, JudgeDetail judgeDetail)
+        public void TapAt(float2 position, JudgeType judgeType, JudgeDetail judgeDetail, float textYOffset)
         {
             if (judgeType != JudgeType.Lost) TapParticleAt(position);
+            position.y += textYOffset;
             TextParticleAt(position, judgeType, judgeDetail);
         }
 
@@ -123,15 +125,16 @@ namespace ArcCore.Gameplay.Behaviours
         {
             //probably will break if holds overlap on one lane
             //fuck whoever does that
+            float2 position = new float2(Conversion.TrackToX(lane+1), 1.5f);
             if (isHit)
             {
                 laneParticles[lane].Play();
-                TextParticleAt(new float2(Conversion.TrackToX(lane+1), Conversion.GetWorldY(0)), JudgeType.Pure, JudgeDetail.None);
+                TextParticleAt(position, JudgeType.MaxPure, JudgeDetail.None);
             }
             else
             {
                 DisableLane(lane);
-                TextParticleAt(new float2(Conversion.TrackToX(lane+1), Conversion.GetWorldY(0)), JudgeType.Lost, JudgeDetail.None);
+                TextParticleAt(position, JudgeType.Lost, JudgeDetail.None);
             }
         }
 

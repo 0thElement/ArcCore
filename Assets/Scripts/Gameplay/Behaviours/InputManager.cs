@@ -211,7 +211,7 @@ namespace ArcCore.Gameplay.Behaviours
 
                     continue;
                 }
-                else
+                else if (!isNewTouchPoint)
                 {
                     TouchPoint tp = touchPoints[index];
                     int oTrack = tp.track;

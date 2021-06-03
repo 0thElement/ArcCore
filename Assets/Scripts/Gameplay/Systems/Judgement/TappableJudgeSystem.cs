@@ -105,7 +105,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         ScoreManager.Instance.AddJudge(minJType);
                         particleBuffer.PlayTapParticle(
                             Conversion.TrackToXYParticle(EntityManager.GetComponentData<ChartLane>(minEntity).lane),
-                            minJType
+                            minJType,
+                            1
                         );
                         break;
 
@@ -116,7 +117,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         ScoreManager.Instance.AddJudge(minJType);
                         particleBuffer.PlayTapParticle(
                             EntityManager.GetComponentData<ChartPosition>(minEntity).xy,
-                            minJType
+                            minJType,
+                            0.5f
                         );
                         break;
 
