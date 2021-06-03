@@ -10,7 +10,7 @@ using ArcCore.Gameplay.Systems.Judgement;
 
 namespace ArcCore.Gameplay.Systems
 {
-    [UpdateAfter(typeof(FinalJudgeSystem))]
+    [UpdateBefore(typeof(TransformSystemGroup))]
     public class MovingNotesSystem : SystemBase
     {
         protected override void OnUpdate()
@@ -21,21 +21,19 @@ namespace ArcCore.Gameplay.Systems
             Entities.WithNone<TimingGroup>().ForEach((ref Translation translation, in FloorPosition floorPosition) =>
             {
                 translation.Value.z = floorPosition.value - currentFloorPosition[0];
-            }).Schedule();
+            }).ScheduleParallel();
 
             //All note except arcs
             Entities.ForEach((ref Translation translation, in FloorPosition floorPosition, in TimingGroup group) =>
             {
                 translation.Value.z = floorPosition.value - currentFloorPosition[group.value];
-            }).Schedule();
+            }).ScheduleParallel();
 
             //Arc segments
             Entities.WithNone<Translation>().ForEach((ref LocalToWorld lcwMatrix, in FloorPosition floorPosition, in TimingGroup group) =>
             {
-                lcwMatrix.Value.c3.z = floorPosition.value - currentFloorPosition[group.value] - 0.8f;
-                //do not ask me why there's a 0.8f there. i don't know. it used to work, but then EVERY other note type just have their LCW z translation component
-                //offsetted by 0.8f from translation z component
-            }).Schedule();
+                lcwMatrix.Value.c3.z = floorPosition.value - currentFloorPosition[group.value];
+            }).ScheduleParallel();
         }
     }
 }

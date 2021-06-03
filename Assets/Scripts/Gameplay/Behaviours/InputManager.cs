@@ -171,7 +171,6 @@ namespace ArcCore.Gameplay.Behaviours
                 Finger f = Touch.activeFingers[i];
                 Touch t = f.currentTouch;
                 int index;
-                Debug.Log(t.phase);
 
                 if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled)
                 {
