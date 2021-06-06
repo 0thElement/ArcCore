@@ -14,6 +14,9 @@ GameObject:
   - component: {fileID: 3208676114895942268}
   - component: {fileID: 8684378539622194505}
   - component: {fileID: 985373435326257392}
+  - component: {fileID: -4630974262816916071}
+  - component: {fileID: -2656295475075461812}
+  - component: {fileID: 4050177493290054474}
   m_Layer: 0
   m_Name: ArcShadowPrefab
   m_TagString: Untagged
@@ -118,6 +121,53 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5507c7ab5aab54e4bb68ec1e20ae959e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  value: 0
+--- !u!114 &-4630974262816916071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 345932005286596484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47f6afd7e09df7a41be5d27c68fc0a3c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  value:
+    x: 0
+    y: 0
+    z: 0
+    w: 0
+--- !u!114 &-2656295475075461812
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 345932005286596484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19f30643407fbb44386b186ce5da5041, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  value:
+    x: 0
+    y: 0
+    z: 0
+    w: 0
+--- !u!114 &4050177493290054474
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 345932005286596484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03190815d52d0fd4eb1289424b6bd9fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   value: 0

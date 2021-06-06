@@ -17,7 +17,7 @@ namespace ArcCore.Gameplay.Behaviours
         private AudioSource audioSource;
 
         [SerializeField] public int offset;
-        [SerializeField, Range(1f,6.5f)] public float chartSpeed;
+        [SerializeField, Range(-6.5f,6.5f)] public float chartSpeed;
         [HideInInspector] private float dspStartPlayingTime;
         [HideInInspector] public List<float> groupFloorPosition;
         private List<List<TimingEvent>> timingEventGroups;

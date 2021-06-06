@@ -197,7 +197,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   offset: 0
-  chartSpeed: 4
+  chartSpeed: 4.5
   groupFloorPosition: []
   receptorTime: 0
   timeOfLastMix: 0
@@ -5643,8 +5643,8 @@ RectTransform:
   - {fileID: 518063973}
   - {fileID: 1399822501834664265}
   - {fileID: 1146195278}
-  m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_Father: {fileID: 1527301108}
+  m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -16021,8 +16021,9 @@ Transform:
   - {fileID: 5205166}
   - {fileID: 360237166}
   - {fileID: 1008731700}
+  - {fileID: 560663235}
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1595804374
 GameObject:

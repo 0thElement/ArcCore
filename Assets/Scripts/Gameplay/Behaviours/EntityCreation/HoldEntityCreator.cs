@@ -48,6 +48,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 EntityManager.AddComponentData<NonUniformScale>(holdEntity, new NonUniformScale(){
                     Value = new float3(scalex, scaley, scalez)
                 });
+                EntityManager.SetComponentData<BaseLength>(holdEntity, new BaseLength(scalez));
 
                 EntityManager.SetComponentData<FloorPosition>(holdEntity, new FloorPosition(startFloorPosition));
                 EntityManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(hold.timingGroup));
