@@ -26,6 +26,7 @@ namespace ArcCore.Gameplay.Systems
         protected override void OnUpdate()
         {
             NativeArray<float> currentFloorPosition = Conductor.Instance.currentFloorPosition;
+            int currentTime = Conductor.Instance.receptorTime;
 
             //Beatlines
             Entities.WithNone<TimingGroup>().ForEach((ref Translation translation, in FloorPosition floorPosition) =>
@@ -46,6 +47,10 @@ namespace ArcCore.Gameplay.Systems
                 translation.Value.z = 0;
                 float newlength = length.value - floorposition.value + currentFloorPosition[group.value];
                 scale.Value.z = (newlength * length.value > 0) ? newlength : 0;
+            }).ScheduleParallel();
+
+            Entities.ForEach((ref Cutoff cutoff, in ChartTime chartTime) => {
+                if (chartTime.value <= currentTime) cutoff.value = true;
             }).ScheduleParallel();
 
             //Arc and trace segments

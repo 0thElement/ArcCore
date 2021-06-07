@@ -17,6 +17,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         public static TraceEntityCreator Instance { get; private set; }
         [SerializeField] private GameObject traceNotePrefab;
         [SerializeField] private GameObject headTraceNotePrefab;
+        [SerializeField] private GameObject traceShadowPrefab;
         [SerializeField] private Material traceMaterial;
         [SerializeField] private Material traceShadowMaterial;
         [SerializeField] private Mesh traceMesh;
@@ -35,20 +36,13 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             traceNoteEntityPrefab = GameObjectConversionSettings.ConvertToNote(traceNotePrefab, EntityManager);
             EntityManager.ExposeLocalToWorld(traceNoteEntityPrefab);
 
-            traceShadowEntityPrefab = GameObjectConversionSettings.ConvertToNote(traceNotePrefab, EntityManager);
+            traceShadowEntityPrefab = GameObjectConversionSettings.ConvertToNote(traceShadowPrefab, EntityManager);
             EntityManager.ExposeLocalToWorld(traceShadowEntityPrefab);
 
-            EntityManager.RemoveComponent<ColorID>(traceNoteEntityPrefab);
-            EntityManager.AddComponent(traceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
-
-            //TEMPORARY. DISAPPEARTIME IS DEPRECATED AND WILL BE DELETED
-            EntityManager.AddComponent(traceNoteEntityPrefab, ComponentType.ReadOnly<DisappearTime>());
-            EntityManager.AddComponent(traceShadowEntityPrefab, ComponentType.ReadOnly<DisappearTime>());
-            EntityManager.AddChunkComponentData<ChunkDisappearTime>(traceNoteEntityPrefab);
-            EntityManager.AddChunkComponentData<ChunkDisappearTime>(traceShadowEntityPrefab);
+            // EntityManager.AddChunkComponentData<ChunkDisappearTime>(traceNoteEntityPrefab);
+            // EntityManager.AddChunkComponentData<ChunkDisappearTime>(traceShadowEntityPrefab);
 
             headTraceNoteEntityPrefab = GameObjectConversionSettings.ConvertToNote(headTraceNotePrefab, EntityManager);
-            EntityManager.AddComponent(headTraceNoteEntityPrefab, ComponentType.ReadOnly<ChartTime>());
         }
         //Similar to arc creation
         public void CreateEntities(List<AffTrace> affTraceList)
@@ -160,8 +154,13 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             });
 
             EntityManager.SetComponentData<BaseOffset>(traceEntity, new BaseOffset(new float4(start.x, start.y, 0, 0)));
+            EntityManager.SetComponentData<BaseOffset>(traceShadowEntity, new BaseOffset(new float4(start.x, 0, 0, 0)));
+
             EntityManager.SetComponentData<BaseShear>(traceEntity, new BaseShear(new float4(dx, dy, dz, 0)));
-            EntityManager.SetComponentData<Cutoff>(traceEntity, new Cutoff(true));
+            EntityManager.SetComponentData<BaseShear>(traceShadowEntity, new BaseShear(new float4(dx, 0, dz, 0)));
+
+            EntityManager.SetComponentData<Cutoff>(traceEntity, new Cutoff(false));
+            EntityManager.SetComponentData<Cutoff>(traceShadowEntity, new Cutoff(false));
 
             EntityManager.SetComponentData<TimingGroup>(traceEntity, new TimingGroup() { value = timingGroup });
             EntityManager.SetComponentData<TimingGroup>(traceShadowEntity, new TimingGroup() { value = timingGroup });
@@ -178,6 +177,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData<DisappearTime>(traceShadowEntity, new DisappearTime() { value = disappearTime });
 
             EntityManager.SetComponentData<ChartTime>(traceEntity, new ChartTime() { value = time });
+            EntityManager.SetComponentData<ChartTime>(traceShadowEntity, new ChartTime() { value = time });
         }
 
         private void CreateHeadSegment(AffTrace trace)
