@@ -277,6 +277,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             int appearTime = (t1 < t2) ? t1 : t2;
 
             EntityManager.SetComponentData(heightEntity, new AppearTime(appearTime));
+            EntityManager.SetComponentData(heightEntity, new ChartTime(arc.timing));
         }
 
         private void CreateHeadSegment(AffArc arc, Material material)
@@ -303,6 +304,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             int appearTime = (t1 < t2) ? t1 : t2;
 
             EntityManager.SetComponentData(headEntity, new AppearTime(appearTime));
+            EntityManager.SetComponentData(headEntity, new ChartTime(arc.timing));
         }
 
         private void CreateJudgeEntity(AffArc arc, int colorId, int startGroupTime, float startBpm)

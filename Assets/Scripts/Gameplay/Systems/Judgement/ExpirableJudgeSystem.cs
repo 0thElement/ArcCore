@@ -96,6 +96,19 @@ namespace ArcCore.Gameplay.Systems.Judgement
             //- ARCS -//
             //...
 
+            //- DESTROY ON TIMING -//
+            //WARNING: TEMPORARY SOLUTION
+            Entities.WithAll<DestroyOnTiming>().ForEach(
+                (Entity en, in ChartTime charttime) =>
+                {
+                    if (currentTime >= charttime.value)
+                    {
+                        commandBuffer.DisableEntity(en);
+                        commandBuffer.AddComponent<PastJudgeRange>(en);
+                    }
+                }
+            ).Run();
+
             commandBuffer.Playback(EntityManager);
             commandBuffer.Dispose();
 
