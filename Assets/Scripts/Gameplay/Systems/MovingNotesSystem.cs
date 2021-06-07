@@ -49,11 +49,11 @@ namespace ArcCore.Gameplay.Systems
                 scale.Value.z = (newlength * length.value > 0) ? newlength : 0;
             }).ScheduleParallel();
 
+            //Arc and trace segments
             Entities.ForEach((ref Cutoff cutoff, in ChartTime chartTime) => {
                 if (chartTime.value <= currentTime) cutoff.value = true;
             }).ScheduleParallel();
 
-            //Arc and trace segments
             Entities.WithNone<Translation>().
             ForEach((ref LocalToWorld lcwMatrix, in FloorPosition floorPosition, in TimingGroup group, in BaseShear baseshear, in BaseOffset baseoffset, in Cutoff cutoff) =>
             {

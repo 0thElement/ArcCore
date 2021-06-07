@@ -7,9 +7,6 @@
 		_RedCol ("Red Color", Color) = (1,1,1,1)
 		_GrayCol ("Gray Color", Color) = (1,1,1,1)
 		_Color ("Color", Color) = (1,1,1,1)
-		
-		_Direction ("Direction", Float) = 1
-		_Cutoff ("Cutoff", Float) = 0
 
 		//Highlight = 0 -> normal, 1 -> highlight, -1 -> gray	
 		_Highlight ("Highlight", Float) = 0
@@ -48,7 +45,7 @@
 				float3 worldpos : TEXCOORD1;
 			};
 			 
-			float _Direction,_Cutoff,_RedMix,_Highlight;
+			float _RedMix,_Highlight;
 			float4 _Color,_RedCol,_GrayCol;
             float4 _MainTex_ST;
 			sampler2D _MainTex, _HighlightTex;
@@ -65,8 +62,6 @@
 
 			half4 frag (v2f i) : SV_Target
 			{
-				if(_Cutoff == 1 && i.worldpos.z * _Direction > 0) return 0;
-
 				float4 c = (_Highlight > 0) ? tex2D(_HighlightTex, i.uv) : tex2D(_MainTex,i.uv);
 				float4 inColor = i.color;
 
