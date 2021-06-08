@@ -197,7 +197,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   offset: 0
-  chartSpeed: 4.5
+  chartSpeed: -1.02
   groupFloorPosition: []
   receptorTime: 0
   timeOfLastMix: 0
@@ -436,9 +436,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48ec871529ce1244388119157fb8e6a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  traceNotePrefab: {fileID: 9045023917371828371, guid: 4b34afa0455f74444afc52de081d35b2,
+  traceNotePrefab: {fileID: 3551100467126968062, guid: c43598f4d61754a4db9a149e30d6c50d,
     type: 3}
   headTraceNotePrefab: {fileID: 4008384927795449545, guid: 9b24d1c1972c41248a79cdcf8945cede,
+    type: 3}
+  traceShadowPrefab: {fileID: 2857874093601128869, guid: 32fb81c32838fc345b0d528f30592ec4,
     type: 3}
   traceMaterial: {fileID: 2100000, guid: 34c3ab2db1945b848a3df9cf1ea5c654, type: 2}
   traceShadowMaterial: {fileID: 2100000, guid: 8d2d9654992ee9c49bf0298ecc30e19a, type: 2}

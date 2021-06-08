@@ -150,6 +150,9 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData<AppearTime>(lineEntity, new AppearTime(){
                 value = appearTime
             });
+            EntityManager.SetComponentData<ChartTime>(lineEntity, new ChartTime(){
+                value = arctap.timing
+            });
         }
     }
 }

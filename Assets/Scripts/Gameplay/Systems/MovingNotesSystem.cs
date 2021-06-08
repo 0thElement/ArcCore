@@ -50,7 +50,7 @@ namespace ArcCore.Gameplay.Systems
             }).ScheduleParallel();
 
             //Arc and trace segments
-            Entities.ForEach((ref Cutoff cutoff, in ChartTime chartTime) => {
+            Entities.WithAll<DisappearTime>().ForEach((ref Cutoff cutoff, in ChartTime chartTime) => {
                 if (chartTime.value <= currentTime) cutoff.value = true;
             }).ScheduleParallel();
 
@@ -60,8 +60,9 @@ namespace ArcCore.Gameplay.Systems
                 float newfp = floorPosition.value - currentFloorPosition[group.value];
                 float percentage = newfp / baseshear.value.z;
 
-                if (percentage > 0 && percentage < 1 && cutoff.value)
+                if (percentage > 0 && cutoff.value)
                 {
+                    if (percentage > 1) percentage = 1;
                     float4 shear = baseshear.value * (1 - percentage);
                     float4 offset = baseoffset.value - baseshear.value * percentage;
 
