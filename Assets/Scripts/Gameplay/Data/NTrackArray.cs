@@ -52,40 +52,11 @@ namespace ArcCore.Gameplay.Data
 
         public IEnumerator<T> GetEnumerator()
         {
-            return new Enumerator(this);
+            yield return v1;
+            yield return v2;
+            yield return v3;
+            yield return v4;
         }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return new Enumerator(this);
-        }
-
-        public struct Enumerator : IEnumerator<T>
-        {
-            private int n;
-            private readonly NTrackArray<T> v;
-
-            internal Enumerator(NTrackArray<T> arr)
-            {
-                v = arr;
-                n = 0;
-            }
-
-            public T Current => v[n];
-            object IEnumerator.Current => Current;
-
-            public void Dispose()
-            {}
-
-            public bool MoveNext()
-            {
-                return ++n <= 4;
-            }
-
-            public void Reset()
-            {
-                n = 0;
-            }
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

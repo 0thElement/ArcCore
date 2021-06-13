@@ -19,8 +19,23 @@ namespace ArcCore.Gameplay.Behaviours
         public static InputManager Instance { get; private set; }
         public static TouchPoint Get(int index) => Instance.touchPoints[index];
 
-        public IEnumerator<TouchPoint> GetEnumerator() => new Enumerator(this);
-        IEnumerator IEnumerable.GetEnumerator() => new Enumerator(this);
+        public IEnumerator<TouchPoint> GetEnumerator()
+        {
+            int idx = 0;
+
+            while (true) //yes i know. im awful.
+            {
+                do
+                {
+                    idx++;
+                    if (idx >= MaxTouches) yield break;
+                }
+                while (touchPoints[idx].fingerId == FreeTouch);
+
+                yield return touchPoints[idx];
+            }
+        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public const int MaxTouches = 10;
         public const int FreeTouch = -69;
@@ -35,48 +50,6 @@ namespace ArcCore.Gameplay.Behaviours
         public NTrackArray<bool> tracksTapped;
 
         public Camera cameraCast;
-
-        public struct Enumerator : IEnumerator<TouchPoint>
-        {
-            private readonly NativeArray<TouchPoint> touchPoints;
-            private int index;
-
-            public Enumerator(InputManager inputManager)
-            {
-                touchPoints = inputManager.touchPoints;
-                index = -1;
-            }
-
-            public TouchPoint Current
-            {
-                get => touchPoints[index];
-            }
-
-            object IEnumerator.Current
-            {
-                get => touchPoints[index];
-            }
-
-            public void Dispose()
-            {}
-
-            public bool MoveNext()
-            {
-                do
-                {
-                    index++;
-                    if (index >= MaxTouches) return false;
-                } 
-                while (Current.fingerId == FreeTouch);
-
-                return true;
-            }
-
-            public void Reset()
-            {
-                index = -1;
-            }
-        }
 
         void Awake()
         {
