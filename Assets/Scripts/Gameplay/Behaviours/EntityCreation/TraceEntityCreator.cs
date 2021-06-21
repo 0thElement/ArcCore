@@ -96,7 +96,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                         Conductor.Instance.GetFloorPositionFromTiming(trace.timing + t, trace.timingGroup)
                     );
 
-                    CreateSegment(start, end, trace.timingGroup, trace.timing + (int)(i * segmentLength));
+                    CreateSegment(start, end, trace.timingGroup, trace.timing + (int)(i * segmentLength), trace.timing + (int)((i+1) * segmentLength));
                 }
 
                 start = end;
@@ -106,11 +106,11 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     Conductor.Instance.GetFloorPositionFromTiming(trace.endTiming, trace.timingGroup)
                 );
 
-                CreateSegment(start, end, trace.timingGroup, (int)(trace.endTiming - segmentLength));
+                CreateSegment(start, end, trace.timingGroup, (int)(trace.endTiming - segmentLength), trace.endTiming);
             }
         }
 
-        private void CreateSegment(float3 start, float3 end, int timingGroup, int time)
+        private void CreateSegment(float3 start, float3 end, int timingGroup, int time, int endTime)
         {
             Entity traceEntity = EntityManager.Instantiate(traceNoteEntityPrefab);
             Entity traceShadowEntity = EntityManager.Instantiate(traceShadowEntityPrefab);
@@ -168,7 +168,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, timingGroup);
             int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, timingGroup);
             int appearTime = (t1 < t2) ? t1 : t2;
-            int disappearTime = (t1 < t2) ? t2 : t1;
+            int disappearTime = endTime;
 
             EntityManager.SetComponentData<AppearTime>(traceEntity, new AppearTime() { value = appearTime });
             EntityManager.SetComponentData<AppearTime>(traceShadowEntity, new AppearTime() { value = appearTime });

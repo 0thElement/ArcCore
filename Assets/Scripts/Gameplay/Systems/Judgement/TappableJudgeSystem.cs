@@ -16,7 +16,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
     [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(ExpirableJudgeSystem))]
     public class TappableJudgeSystem : SystemBase
     {
-        public static readonly float2 arctapBoxExtents = new float2(4f, 1f);
+        public static readonly float2 arctapBoxExtents = new float2(2f, 1.75f);
         private enum MinType
         {
             Arctap,
@@ -112,7 +112,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         particleBuffer.PlayTapParticle(
                             Conversion.TrackToXYParticle(EntityManager.GetComponentData<ChartLane>(minEntity).lane),
                             minJType,
-                            1
+                            1.5f
                         );
                         break;
 

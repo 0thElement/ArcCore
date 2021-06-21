@@ -197,7 +197,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   offset: 0
-  chartSpeed: -1.02
+  chartSpeed: 4.2
   groupFloorPosition: []
   receptorTime: 0
   timeOfLastMix: 0
@@ -5416,9 +5416,9 @@ RectTransform:
   m_Father: {fileID: 560663235}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 259, y: 141}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -150, y: -50}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &518063974
@@ -5442,18 +5442,18 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 30
+    m_FontSize: 90
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 0
-    m_MaxSize: 40
-    m_Alignment: 0
+    m_MaxSize: 100
+    m_Alignment: 2
     m_AlignByGeometry: 0
     m_RichText: 0
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: New Text
+  m_Text: 00000000
 --- !u!222 &518063975
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -6059,6 +6059,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   holdNotePrefab: {fileID: 1128270376758739520, guid: a1e2e728e75223c488b75baf1d36daa0,
     type: 3}
+  HighlightRenderMesh:
+    mesh: {fileID: 0}
+    material: {fileID: 0}
+    subMesh: 0
+    layer: 0
+    castShadows: 0
+    receiveShadows: 0
+    needMotionVectorPass: 0
+  GrayoutRenderMesh:
+    mesh: {fileID: 0}
+    material: {fileID: 0}
+    subMesh: 0
+    layer: 0
+    castShadows: 0
+    receiveShadows: 0
+    needMotionVectorPass: 0
 --- !u!1 &939880829
 GameObject:
   m_ObjectHideFlags: 0
@@ -16215,18 +16231,18 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_FontSize: 60
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
-    m_MaxSize: 40
+    m_MinSize: 5
+    m_MaxSize: 60
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: New Text
+  m_Text: 0
 --- !u!222 &1719732241
 CanvasRenderer:
   m_ObjectHideFlags: 0

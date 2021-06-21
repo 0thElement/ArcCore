@@ -29,6 +29,7 @@ namespace ArcCore.Gameplay.Behaviours
         private void Awake()
         {
             Instance = this;
+            Application.targetFrameRate = 200;
         }
         private void Start()
         {
@@ -327,7 +328,8 @@ namespace ArcCore.Gameplay.Behaviours
                     affArcTapList.Add(new AffArcTap()
                     {
                         timing = t,
-                        position = new float2(x, y)
+                        position = new float2(x, y),
+                        timingGroup = currentTimingGroup
                     });
 //wwwwww
                 } while (lineParser.Current == ",");
