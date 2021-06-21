@@ -8,6 +8,7 @@ using ArcCore.Gameplay.Components;
 using ArcCore.Parsing.Aff;
 using ArcCore.Gameplay.Components.Chunk;
 using ArcCore.Utilities.Extensions;
+using Unity.Rendering;
 
 namespace ArcCore.Gameplay.Behaviours.EntityCreation
 {
@@ -16,10 +17,33 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         public static HoldEntityCreator Instance { get; private set; }
         [SerializeField] private GameObject holdNotePrefab;
         private Entity holdNoteEntityPrefab;
+
+        //Temporary solution, will be refactored when proper skinning is implemented
+        [HideInInspector] public RenderMesh HighlightRenderMesh, GrayoutRenderMesh;
         private void Awake()
         {
             Instance = this;
             holdNoteEntityPrefab = GameObjectConversionSettings.ConvertToNote(holdNotePrefab, EntityManager);
+
+            RenderMesh holdRenderMesh = EntityManager.GetSharedComponentData<RenderMesh>(holdNoteEntityPrefab);
+
+            Material highlightMaterial = Instantiate(holdRenderMesh.material);
+            Material grayoutMaterial = Instantiate(holdRenderMesh.material);
+
+            var highlightShaderID = Shader.PropertyToID("_Highlight");
+            highlightMaterial.SetFloat(highlightShaderID, 1);
+            grayoutMaterial.SetFloat(highlightShaderID, -1);
+
+            
+            HighlightRenderMesh = new RenderMesh {
+                mesh = holdRenderMesh.mesh,
+                material = highlightMaterial
+            };
+
+            GrayoutRenderMesh = new RenderMesh {
+                mesh = holdRenderMesh.mesh,
+                material = grayoutMaterial
+            };
         }
 
         public unsafe void CreateEntities(List<AffHold> affHoldList)

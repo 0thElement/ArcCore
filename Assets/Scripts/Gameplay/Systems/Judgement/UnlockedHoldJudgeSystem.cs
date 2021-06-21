@@ -24,8 +24,6 @@ namespace ArcCore.Gameplay.Systems.Judgement
             currentCombo = ScoreManager.Instance.currentCombo;
             NTrackArray<int> tracksHeld = InputManager.Instance.tracksHeld;
 
-            EntityCommandBuffer commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
-
             var particleBuffer = ParticleJudgeSystem.particleBuffer;
 
             Entities.WithNone<HoldLocked, PastJudgeRange>().ForEach(
@@ -41,8 +39,6 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 }
             ).Run();
 
-            commandBuffer.Playback(EntityManager);
-            commandBuffer.Dispose();
             ScoreManager.Instance.maxPureCount = maxPureCount;
             ScoreManager.Instance.currentCombo = currentCombo;
         }
