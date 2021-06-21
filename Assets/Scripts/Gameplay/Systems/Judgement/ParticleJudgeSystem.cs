@@ -12,7 +12,7 @@ using ArcCore.Math;
 
 namespace ArcCore.Gameplay.Systems.Judgement
 {
-    [UpdateInGroup(typeof(SimulationSystemGroup))]
+    [UpdateInGroup(typeof(JudgementSystemGroup))]
     public class ParticleJudgeSystem : SystemBase
     {
         public static ParticleBuffer particleBuffer;

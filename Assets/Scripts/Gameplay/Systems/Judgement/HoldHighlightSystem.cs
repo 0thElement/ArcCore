@@ -10,18 +10,24 @@ using ArcCore.Gameplay.Data;
 
 namespace ArcCore.Gameplay.Systems.Judgement
 {
-    [UpdateInGroup(typeof(SimulationSystemGroup)), UpdateAfter(typeof(TappableJudgeSystem))]
+    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(TappableJudgeSystem))]
 
     public class HoldHighlightSystem : SystemBase
     {
+        private EndInitializationEntityCommandBufferSystem entityCommandBufferSystem;
+        protected override void OnCreate()
+        {
+            entityCommandBufferSystem = World.GetOrCreateSystem<EndInitializationEntityCommandBufferSystem>();
+        }
         protected override void OnUpdate()
         {
             NTrackArray<int> tracksHeld = InputManager.Instance.tracksHeld;
-            EntityCommandBuffer commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
             int currentTime = Conductor.Instance.receptorTime;
 
             RenderMesh highlightRenderMesh = HoldEntityCreator.Instance.HighlightRenderMesh;
             RenderMesh grayoutRenderMesh = HoldEntityCreator.Instance.GrayoutRenderMesh;
+
+            var commandBuffer = entityCommandBufferSystem.CreateCommandBuffer();
 
             Entities.WithAll<Translation, ChartIncrTime>().WithNone<PastJudgeRange, HoldLocked>().ForEach( 
                 (Entity en, in ChartLane lane) =>
@@ -31,20 +37,17 @@ namespace ArcCore.Gameplay.Systems.Judgement
                     else
                         commandBuffer.SetSharedComponent<RenderMesh>(en, grayoutRenderMesh);
                 }
-            ).Run();
+            ).WithoutBurst().Run();
             
             Entities.WithAll<Translation, HoldLocked>().WithNone<PastJudgeRange>().ForEach( 
                 (Entity en, in ChartTime time) =>
                 {
-                    if (time.value <= currentTime + Constants.FarWindow)
+                    if (time.value <= currentTime - Constants.FarWindow)
                     {
                         commandBuffer.SetSharedComponent<RenderMesh>(en, grayoutRenderMesh);
                     }
                 }
-            ).Run();
-
-            commandBuffer.Playback(EntityManager);
-            commandBuffer.Dispose();
+            ).WithoutBurst().Run();
         }
     }
 }

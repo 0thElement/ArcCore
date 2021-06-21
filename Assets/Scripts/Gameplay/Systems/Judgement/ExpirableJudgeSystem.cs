@@ -12,9 +12,14 @@ using ArcCore.Utilities.Extensions;
 
 namespace ArcCore.Gameplay.Systems.Judgement
 {
-    [UpdateInGroup(typeof(SimulationSystemGroup)), UpdateAfter(typeof(ParticleJudgeSystem))]
+    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(ParticleJudgeSystem))]
     public class ExpirableJudgeSystem : SystemBase
     {
+        private EndInitializationEntityCommandBufferSystem entityCommandBufferSystem;
+        protected override void OnCreate()
+        {
+            entityCommandBufferSystem = World.GetOrCreateSystem<EndInitializationEntityCommandBufferSystem>();
+        }
         protected override void OnUpdate()
         {
             if (!GameState.isChartMode) return;
@@ -23,7 +28,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
             currentCombo = ScoreManager.Instance.currentCombo,
             currentTime = Conductor.Instance.receptorTime;
 
-            var commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
+            var commandBuffer = entityCommandBufferSystem.CreateCommandBuffer();
             var particleBuffer = ParticleJudgeSystem.particleBuffer;
 
             //- TAPS -//
@@ -108,9 +113,6 @@ namespace ArcCore.Gameplay.Systems.Judgement
                     }
                 }
             ).Run();
-
-            commandBuffer.Playback(EntityManager);
-            commandBuffer.Dispose();
 
             ScoreManager.Instance.lostCount = lostCount;
             ScoreManager.Instance.currentCombo = currentCombo;
