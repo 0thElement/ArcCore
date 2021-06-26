@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace ArcCore.Serialization
 {
@@ -47,8 +48,8 @@ namespace ArcCore.Serialization
 
             sortOrder = 0f,
 
-            textColor = Color.FromHexcode("#FFFFFF"),
-            baseColor = Color.FromHexcode("#B0FFA0")
+            textColor = ColorExtensions.FromHexcode("#FFFFFF"),
+            baseColor = ColorExtensions.FromHexcode("#B0FFA0")
         };
         public static DifficultyType Present => new DifficultyType
         {
@@ -57,8 +58,8 @@ namespace ArcCore.Serialization
 
             sortOrder = 1f,
 
-            textColor = Color.FromHexcode("#FFFFFF"),
-            baseColor = Color.FromHexcode("#0020FF")
+            textColor = ColorExtensions.FromHexcode("#FFFFFF"),
+            baseColor = ColorExtensions.FromHexcode("#0020FF")
         };
         public static DifficultyType Future => new DifficultyType
         {
@@ -67,8 +68,8 @@ namespace ArcCore.Serialization
 
             sortOrder = 1f,
 
-            textColor = Color.FromHexcode("#FFFFFF"),
-            baseColor = Color.FromHexcode("#FF2000")
+            textColor = ColorExtensions.FromHexcode("#FFFFFF"),
+            baseColor = ColorExtensions.FromHexcode("#FF2000")
         };
         public static DifficultyType beyond = new DifficultyType
         {
@@ -77,8 +78,8 @@ namespace ArcCore.Serialization
 
             sortOrder = 1f,
 
-            textColor = Color.FromHexcode("#FFFFFF"),
-            baseColor = Color.FromHexcode("#D00000")
+            textColor = ColorExtensions.FromHexcode("#FFFFFF"),
+            baseColor = ColorExtensions.FromHexcode("#D00000")
         };
         #endregion
         public static Dictionary<string, DifficultyType> Presets

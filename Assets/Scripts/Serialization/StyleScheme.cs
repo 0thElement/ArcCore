@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace ArcCore.Serialization
 {
@@ -37,19 +38,19 @@ namespace ArcCore.Serialization
 
         public static StyleScheme Light => new StyleScheme
         {
-            trackColor = Color.FromHexcode("#D0D0D0"),
-            tapColor = Color.FromHexcode("#A0FFA0"),
-            holdColor = Color.FromHexcode("#A0FFA0"),
-            arctapColor = Color.FromHexcode("#70FF70"),
-            particleColor = Color.FromHexcode("#00FF00")
+            trackColor = ColorExtensions.FromHexcode("#D0D0D0"),
+            tapColor = ColorExtensions.FromHexcode("#A0FFA0"),
+            holdColor = ColorExtensions.FromHexcode("#A0FFA0"),
+            arctapColor = ColorExtensions.FromHexcode("#70FF70"),
+            particleColor = ColorExtensions.FromHexcode("#00FF00")
         };
         public static StyleScheme Conflict => new StyleScheme
         {
-            trackColor = Color.FromHexcode("#D0D0D0"),
-            tapColor = Color.FromHexcode("#A0FFA0"),
-            holdColor = Color.FromHexcode("#A0FFA0"),
-            arctapColor = Color.FromHexcode("#70FF70"),
-            particleColor = Color.FromHexcode("#00FF00")
+            trackColor = ColorExtensions.FromHexcode("#D0D0D0"),
+            tapColor = ColorExtensions.FromHexcode("#A0FFA0"),
+            holdColor = ColorExtensions.FromHexcode("#A0FFA0"),
+            arctapColor = ColorExtensions.FromHexcode("#70FF70"),
+            particleColor = ColorExtensions.FromHexcode("#00FF00")
         };
 
         public static Dictionary<string, StyleScheme> Presets
