@@ -26,9 +26,8 @@ namespace ArcCore.Gameplay.Data
         //public int time;
         public Status status;
         public int fingerId;
-        public int touchId;
 
-        public TouchPoint(float2? inputPosition, Rect2D? inputPlane, int track, int tapTime, Status status, int fingerId, int touchId)
+        public TouchPoint(float2? inputPosition, Rect2D? inputPlane, int track, int tapTime, Status status, int fingerId)
         {
             this.inputPosition = inputPosition;
             this.inputPlane = inputPlane;
@@ -36,7 +35,6 @@ namespace ArcCore.Gameplay.Data
             this.tapTime = tapTime;
             this.status = status;
             this.fingerId = fingerId;
-            this.touchId = touchId;
         }
     }
 }
