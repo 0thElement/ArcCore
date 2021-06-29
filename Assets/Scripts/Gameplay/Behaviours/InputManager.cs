@@ -68,12 +68,16 @@ namespace ArcCore.Gameplay.Behaviours
         void Update()
         {
             InputVisualFeedback.Instance.DisableLines();
-            foreach (var t in this)
+            for (int i = 0; i < MaxTouches; i++)
             {
+                var t = touchPoints[i];
+                if (t.fingerId == FreeTouch)
+                    continue;
+
                 // Debug.Log($"{t.fingerId} is at phase {t.status}");
                 if (t.InputPlaneValid && t.inputPosition.Value.y > 2f)
                 {
-                    InputVisualFeedback.Instance.HorizontalLineAt(t.inputPosition.Value.y, t.fingerId);
+                    InputVisualFeedback.Instance.HorizontalLineAt(t.inputPosition.Value.y, i);
                 }
                 if (t.TrackValid)
                 {
