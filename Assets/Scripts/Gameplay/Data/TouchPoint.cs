@@ -7,6 +7,22 @@ namespace ArcCore.Gameplay.Data
 {
     public struct TouchPoint
     {
+        /// <summary>
+        /// The sentinel value of <see cref="fingerId"/> for touch points which are <see langword="null"/>-like.
+        /// </summary>
+        public const int NullId = 666 - 420 - 69 - 621 - 616 - 1377;
+        /// <summary>
+        /// A <see langword="null"/>-like touch point.
+        /// </summary>
+        public static TouchPoint Null => new TouchPoint
+        {
+            fingerId = NullId
+        };
+        /// <summary>
+        /// Is this touch point <see langword="null"/>-like.
+        /// </summary>
+        public bool IsNull => fingerId == NullId;
+
         public enum Status
         {
             Tapped,

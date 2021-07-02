@@ -17,7 +17,6 @@ namespace ArcCore.Gameplay.Behaviours
     public class InputManager : MonoBehaviour, IEnumerable<TouchPoint>
     {
         public static InputManager Instance { get; private set; }
-        public static TouchPoint Get(int index) => Instance.touchPoints[index];
 
         public IEnumerator<TouchPoint> GetEnumerator()
         {
@@ -30,18 +29,26 @@ namespace ArcCore.Gameplay.Behaviours
                     idx++;
                     if (idx >= MaxTouches) yield break;
                 }
-                while (touchPoints[idx].fingerId == FreeTouch);
+                while (touchPoints[idx].fingerId == TouchPoint.NullId);
 
                 yield return touchPoints[idx];
             }
         }
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
+        /// <summary>
+        /// The maximum number of touches which will be registered during gameplay.
+        /// </summary>
         public const int MaxTouches = 10;
-        public const int FreeTouch = -69;
 
+        /// <summary>
+        /// The current touch points.
+        /// </summary>
         [HideInInspector]
         public NativeArray<TouchPoint> touchPoints;
+        /// <summary>
+        /// The current minimum index which is not occupied by a meaningful touch point.
+        /// </summary>
         [HideInInspector]
         public int safeIndex = 0;
 
@@ -61,7 +68,7 @@ namespace ArcCore.Gameplay.Behaviours
             for(int i = 0; i < MaxTouches; i++)
             {
                 var t = touchPoints[i];
-                t.fingerId = FreeTouch;
+                t.fingerId = TouchPoint.NullId;
                 touchPoints[i] = t;
             }
         }
@@ -114,7 +121,7 @@ namespace ArcCore.Gameplay.Behaviours
         private int SafeIndex()
         {
             for (int i = safeIndex; i < MaxTouches; i++)
-                if (touchPoints[i].fingerId == FreeTouch)
+                if (touchPoints[i].IsNull)
                     return safeIndex = i;
             return safeIndex = MaxTouches;
         }
@@ -129,12 +136,7 @@ namespace ArcCore.Gameplay.Behaviours
             {
                 if(touchPoints[ti].status == TouchPoint.Status.Released)
                 {
-                    TouchPoint touchPoint = touchPoints[ti];
-
-                    touchPoint.fingerId = FreeTouch;
-
-                    touchPoints[ti] = touchPoint;
-
+                    touchPoints[ti] = TouchPoint.Null;
                     if (ti < safeIndex) safeIndex = ti;
                 }
             }
