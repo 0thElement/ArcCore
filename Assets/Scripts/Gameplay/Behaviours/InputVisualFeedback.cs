@@ -31,7 +31,7 @@ namespace ArcCore.Gameplay.Behaviours
 
         private void Awake()
         {
-            horizontalLines = new GameObject[10];
+            horizontalLines = new GameObject[InputManager.MaxTouches];
             for (int i=0; i<10; i++)
             {
                 horizontalLines[i] = Instantiate(horizontalLinePrefab, transform);
