@@ -15,7 +15,6 @@ namespace ArcCore.Gameplay.Behaviours
     public class InputManager : MonoBehaviour, IEnumerable<TouchPoint>
     {
         public static InputManager Instance { get; private set; }
-        public static TouchPoint Get(int index) => Instance.touchPoints[index];
 
         public IEnumerator<TouchPoint> GetEnumerator()
         {
@@ -28,26 +27,44 @@ namespace ArcCore.Gameplay.Behaviours
                     idx++;
                     if (idx >= MaxTouches) yield break;
                 }
-                while (touchPoints[idx].fingerId == FreeTouch);
+                while (touchPoints[idx].fingerId == TouchPoint.NullId);
 
                 yield return touchPoints[idx];
             }
         }
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
+        /// <summary>
+        /// The maximum number of touches which will be registered during gameplay.
+        /// </summary>
         public const int MaxTouches = 10;
-        public const int FreeTouch = -69;
-        public const float TouchEps = 0.01f;
+        
+        /// <summary>
+        /// The minimum distance which a touch has to move in order to recalculate its position.
+        /// </summary>
+        public const float TouchEps = 0.002f;
 
+        /// <summary>
+        /// The current touch points.
+        /// </summary>
         [HideInInspector]
         public NativeArray<TouchPoint> touchPoints;
+        /// <summary>
+        /// The current minimum index which is not occupied by a meaningful touch point.
+        /// </summary>
         [HideInInspector]
         public int safeIndex = 0;
 
+        /// <summary>
+        /// A track array which tracks which tracks are currently held.
+        /// </summary>
         [HideInInspector]
-        public NTrackArray<int> tracksHeld;
+        public NTrackArray<MulticountBool> tracksHeld;
         public NTrackArray<bool> tracksTapped;
 
+        /// <summary>
+        /// The camera to be used in casting raw inputs.
+        /// </summary>
         public Camera cameraCast;
 
         void Awake()
@@ -60,7 +77,7 @@ namespace ArcCore.Gameplay.Behaviours
             for(int i = 0; i < MaxTouches; i++)
             {
                 var t = touchPoints[i];
-                t.fingerId = FreeTouch;
+                t.fingerId = TouchPoint.NullId;
                 touchPoints[i] = t;
             }
         }
@@ -105,7 +122,11 @@ namespace ArcCore.Gameplay.Behaviours
         {
             touchPoints.Dispose();
         }
-
+        
+        /// <summary>
+        /// Get the index of the first (and, if code executes correctly, only) touch point with an id of a given value.
+        /// If no point is found, this returns -1.
+        /// </summary>
         private int IdIndex(int id)
         {
             for (int i = 0; i < MaxTouches; i++)
@@ -113,30 +134,36 @@ namespace ArcCore.Gameplay.Behaviours
                     return i;
             return -1;
         }
+        
+        /// <summary>
+        /// Get the first index for which no valid touch point exists.
+        /// </summary>
         private int SafeIndex()
         {
             for (int i = safeIndex; i < MaxTouches; i++)
-                if (touchPoints[i].fingerId == FreeTouch)
+                if (touchPoints[i].IsNull)
                     return safeIndex = i;
             return safeIndex = MaxTouches;
         }
-        private static int GetChartTime(float age)
+
+        /// <summary>
+        /// Get the precise touch time of sus.
+        /// </summary>
+        private static int GetChartTime(double realTime)
         {
-            return Conductor.Instance.receptorTime - (int)System.Math.Round(age * 1000.0);
+            return Conductor.Instance.receptorTime - (int)System.Math.Round(realTime * 1000.0);
         }
 
+        /// <summary>
+        /// Update current input.
+        /// </summary>
         public void PollInput()
         {
             for (int ti = 0; ti < touchPoints.Length; ti++)
             {
                 if(touchPoints[ti].status == TouchPoint.Status.Released)
                 {
-                    TouchPoint touchPoint = touchPoints[ti];
-
-                    touchPoint.fingerId = FreeTouch;
-
-                    touchPoints[ti] = touchPoint;
-
+                    touchPoints[ti] = TouchPoint.Null;
                     if (ti < safeIndex) safeIndex = ti;
                 }
             }

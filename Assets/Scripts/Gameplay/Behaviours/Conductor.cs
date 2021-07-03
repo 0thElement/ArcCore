@@ -13,100 +13,207 @@ namespace ArcCore.Gameplay.Behaviours
         //Simple implementation with dspTime, might switch out to a deltaTime based solution if this is too unreliable
         //Conductor is responsible for playing the audio and making sure gameplay syncs. Most systems will refer to this class to get the current timing
 
+        /// <summary>
+        /// The offset which is applied when first playing a song.
+        /// </summary>
+        public const double StartPlayOffset = 2.0;
+        /// <summary>
+        /// The amount which speed values are scaled at chart initialization.
+        /// </summary>
+        private const float SpeedCalculationFactor = 1 / 25f;
+
         public static Conductor Instance { get; private set; }
+
+        /// <summary>
+        /// The source which audio will be played from.
+        /// This must be a component of this game object.
+        /// </summary>
         private AudioSource audioSource;
 
-        [SerializeField] public int offset;
-        [SerializeField, Range(1f,6.5f)] public float chartSpeed;
-        [HideInInspector] private float dspStartPlayingTime;
-        [HideInInspector] public List<float> groupFloorPosition;
-        private List<List<TimingEvent>> timingEventGroups;
-        private List<int> groupIndexCache;
+        /// <summary>
+        /// The offset of the current charts, in milliseconds.
+        /// </summary>
+        public int offset;
+        /// <summary>
+        /// The current speed which the chart will be played at.
+        /// This is treated as a direct multiplier of the original speed.
+        /// </summary>
+        [Range(1f,6.5f)] public float chartSpeed;
+
+        /// <summary>
+        /// The value of <see cref="AudioSettings.dspTime"/> at which the current song started playing.
+        /// </summary>
+        [HideInInspector] private double dspStartPlayingTime;
+
+        /// <summary>
+        /// The jagged array of timing events, indexed first by group, and then by order.
+        /// It should always hold true that the first timing event of every group has a floor position
+        /// of 0, and a timing value of 0.
+        /// </summary>
+        private TimingEvent[][] timingEventGroups;
+        /// <summary>
+        /// An array which stores the indices of the last accessed timing event for each group.
+        /// This is used to speed up calculations which require the current-most timing event.
+        /// </summary>
+        private int[] groupIndexCache;
+
+        /// <summary>
+        /// The value, in milliseconds, of time passed since the start of this chart.
+        /// </summary>
         public int receptorTime;
+        /// <summary>
+        /// The time of the last audio mix, accessed through <see cref="TimeSimple.Ticks"/>
+        /// </summary>
         public long timeOfLastMix;
-        public int songLength;
+
+        /// <summary>
+        /// The length of the current song in milliseconds.
+        /// <para>
+        /// Note that the 32-bit integer limit forces all songs to be less than approximately 0.27 years long.
+        /// </para>
+        /// </summary>
+        public uint songLength;
+
+        /// <summary>
+        /// The current floor positions of all timing-groups.
+        /// </summary>
         public NativeArray<float> currentFloorPosition;
+        /// <summary>
+        /// The actual speed used in calculating the positions of notes.
+        /// </summary>
         private float scrollSpeed;
+
+        /// <summary>
+        /// Whether or not time values are currently being updated on this instance.
+        /// </summary>
+        public bool isUpdating;
         
         public void Awake()
         {
+            //Set the static instance to this object
             Instance = this;
-            audioSource = GetComponent<AudioSource>();
-            timeOfLastMix = TimeSimple.Ticks;
-            songLength = (int)Mathf.Round(audioSource.clip.length*1000);
         }
         
+        /// <summary>
+        /// Perform all needed actions to play a song after a delay of <see cref="StartPlayOffset"/> seconds.
+        /// </summary>
         public void PlayMusic()
         {
-            dspStartPlayingTime = (float)AudioSettings.dspTime + 1f;
+            //Find the audio source
+            audioSource = GetComponent<AudioSource>();
+
+            //Get song length
+            songLength = (uint)Mathf.Round(audioSource.clip.length * 1000);
+
+            //Set timing information
+            dspStartPlayingTime = AudioSettings.dspTime + StartPlayOffset;
+            timeOfLastMix = TimeSimple.Ticks;
+
+            //Schedule playing of song
             audioSource.PlayScheduled(dspStartPlayingTime);
+
+            //Set updating
+            isUpdating = true;
         }
 
         public void Update()
         {
-            receptorTime = Mathf.RoundToInt(
-                (float)(AudioSettings.dspTime - dspStartPlayingTime + TimeSimple.TimeSinceTicksToSec(timeOfLastMix)) * 1000)
-                - offset;
+            //Calculate the current time
+            receptorTime = 
+                Mathf.RoundToInt( 
+                    (float)(
+                        AudioSettings.dspTime - dspStartPlayingTime + 
+                        TimeSimple.TimeSinceTicksToSec(timeOfLastMix)
+                    ) * 1000
+                ) - offset;
+
+            //Update floor positions
             UpdateCurrentFloorPosition();
 
+            //Poll for input
             InputManager.Instance.PollInput();
         }
-        public void SetOffset(int value)
+
+        public void OnAudioFilterRead(float[] _data, int _channels)
         {
-            offset = value; 
-        }
-        public void OnAudioFilterRead(float[] data, int channels)
-        {
+            //Get time of last mix using audio filter hook
             timeOfLastMix = TimeSimple.Ticks;
         }
+
         public void OnDestroy()
         {
+            //Responsably dispose things :D
             currentFloorPosition.Dispose();
         }
-        public void SetupTiming(List<List<AffTiming>> timingGroups) {
-            //precalculate floorposition value for timing events
 
-            scrollSpeed = -chartSpeed / timingGroups[0][0].bpm / 25f;
-            timingEventGroups = new List<List<TimingEvent>>(timingGroups.Count); 
+        /// <summary>
+        /// (Re)Calculate the scroll speed to be used.
+        /// </summary>
+        public void CalculateScrollSpeed()
+        {
+            scrollSpeed = -chartSpeed / timingEventGroups[0][0].bpm * SpeedCalculationFactor;
+        }
 
-            currentFloorPosition = new NativeArray<float>(new float[timingGroups.Count], Allocator.Persistent);
+        /// <summary>
+        /// Create timing event groups to track timing events given raw aff timing components.
+        /// </summary>
+        /// <param name="timingGroups">The raw aff timing components.</param>
+        public void SetupTimingGroups(List<List<AffTiming>> timingGroups) 
+        {
+            CalculateScrollSpeed();
+
+            timingEventGroups = new TimingEvent[timingGroups.Count][]; 
+            currentFloorPosition = new NativeArray<float>(timingGroups.Count, Allocator.Persistent);
 
             for (int i=0; i<timingGroups.Count; i++)
             {
                 SetupTimingGroup(timingGroups, i);
             }
-            groupIndexCache = new List<int>(new int[timingEventGroups.Count]);
 
+            groupIndexCache = new int[timingEventGroups.Length];
         }
+
+        /// <summary>
+        /// Create necessary information for a given timing event group, including correct base floor positions.
+        /// </summary>
+        /// <param name="timingGroups">The raw aff timing components.</param>
+        /// <param name="i">The index of the timing group to set up.</param>
         private void SetupTimingGroup(List<List<AffTiming>> timingGroups, int i)
         {
-            timingGroups[i].Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+            timingGroups[i].Sort((item1, item2) => item1.timing.CompareTo(item2.timing));
 
-            timingEventGroups.Add(new List<TimingEvent>(timingGroups[i].Count));
+            timingEventGroups[i] = new TimingEvent[timingGroups[i].Count];
 
-            timingEventGroups[i].Add(new TimingEvent()
+            timingEventGroups[i][0] = new TimingEvent
             {
                 timing = timingGroups[i][0].timing,
-                floorPosition = 0,
+                baseFloorPosition = 0,
                 bpm = timingGroups[i][0].bpm
-            });
+            };
 
             for (int j = 1; j < timingGroups[i].Count; j++)
             {
-                timingEventGroups[i].Add(new TimingEvent()
+                timingEventGroups[i][j] = new TimingEvent
                 {
                     timing = timingGroups[i][j].timing,
-                    floorPosition = timingGroups[i][j - 1].bpm
+                    //Calculate the base floor position
+                    baseFloorPosition = timingGroups[i][j - 1].bpm
                                 * (timingGroups[i][j].timing - timingGroups[i][j - 1].timing)
-                                + timingEventGroups[i][j - 1].floorPosition,
+                                + timingEventGroups[i][j - 1].baseFloorPosition,
                     bpm = timingGroups[i][j].bpm
-                });
+                };
             }
         }
 
+        /// <summary>
+        /// Get the floor position for a given time in the chart.
+        /// </summary>
+        /// <param name="timing">The time, in milliseconds, to get the floorpos of.</param>
+        /// <param name="timingGroup">The timing group to look into when calculating the floorpos.</param>
+        /// <returns>The real floorpos, with <see cref="scrollSpeed"/> accounted for.</returns>
         public float GetFloorPositionFromTiming(int timing, int timingGroup)
         {
-            List<TimingEvent> group = timingEventGroups[timingGroup];
+            TimingEvent[] group = timingEventGroups[timingGroup];
 
             if (timing<group[0].timing) return group[0].bpm*(timing - group[0].timing) * scrollSpeed;
 
@@ -118,19 +225,25 @@ namespace ArcCore.Gameplay.Behaviours
             {
                 i--;
             }
-            while (i < group.Count - 1 && group[i + 1].timing < timing)
+            while (i < group.Length - 1 && group[i + 1].timing < timing)
             {
                 i++;
             }
 
             groupIndexCache[timingGroup] = i;
 
-            return (group[i].floorPosition + (timing - group[i].timing) * group[i].bpm) * scrollSpeed;
+            return (group[i].baseFloorPosition + (timing - group[i].timing) * group[i].bpm) * scrollSpeed;
         }
 
+        /// <summary>
+        /// Get the index into <see cref="timingEventGroups"/> of the timing event in effect for a given time.
+        /// </summary>
+        /// <param name="timing">The time to check against, in milliseconds.</param>
+        /// <param name="timingGroup">The timing group to look into.</param>
+        /// <returns>The index of the timing event which is in effect at <paramref name="timing"/> in group <paramref name="timingGroup"/></returns>
         public int GetTimingEventIndexFromTiming(int timing, int timingGroup)
         {
-            int maxIdx = timingEventGroups[timingGroup].Count;
+            int maxIdx = timingEventGroups[timingGroup].Length;
 
             for (int i = 1; i < maxIdx; i++)
             {
@@ -143,48 +256,65 @@ namespace ArcCore.Gameplay.Behaviours
             return maxIdx - 1;
         }
 
+        /// <summary>
+        /// Get the timing event in effect for a given time.
+        /// </summary>
+        /// <param name="timing">The time to check against, in milliseconds.</param>
+        /// <param name="timingGroup">The timing group to look into.</param>
+        /// <returns>The timing event which is in effect at <paramref name="timing"/> in group <paramref name="timingGroup"/></returns>
         public TimingEvent GetTimingEventFromTiming(int timing, int timingGroup)
             => timingEventGroups[timingGroup][GetTimingEventIndexFromTiming(timing, timingGroup)];
 
-        public TimingEvent GetTimingEvent(int timing, int timingGroup)
-            => timingEventGroups[timingGroup][timing];
-
+        /// <summary>
+        /// Get the next timing event in the given timing group if it exists, otherwise get <see langword="null"/>.
+        /// </summary>
+        /// <param name="index">The index to start from.</param>
+        /// <param name="timingGroup">The timing group.</param>
+        /// <returns>The next timing event after <paramref name="index"/> in the given timing group, or <see langword="null"/> if it does not exist.</returns>
         public TimingEvent? GetNextTimingEventOrNull(int index, int timingGroup)
-            => index + 1 >= timingEventGroups[timingGroup].Count ? (TimingEvent?)null : timingEventGroups[timingGroup][index + 1];
+            => index + 1 >= timingEventGroups[timingGroup].Length ? 
+                (TimingEvent?)null : 
+                timingEventGroups[timingGroup][index + 1];
 
-        public int TimingEventListLength(int timingGroup)
-            => timingEventGroups[timingGroup].Count;
+        /// <summary>
+        /// Get the first time at which the floor position of a given timing group is equal to a given value.
+        /// </summary>
+        /// <param name="floorposition">The target value of the timing group's floor position.</param>
+        /// <param name="timingGroup">The timing group to search in.</param>
+        /// <returns>The first time at which the floor postion of group <paramref name="timingGroup"/> is equal to <paramref name="floorposition"/></returns>
         public int GetFirstTimingFromFloorPosition(float floorposition, int timingGroup)
         {
-            int maxIndex = timingEventGroups[timingGroup].Count;
+            int maxIndex = timingEventGroups[timingGroup].Length;
             floorposition /= scrollSpeed;
 
             TimingEvent first = timingEventGroups[timingGroup][0];
-            if (first.bpm * (floorposition - first.floorPosition) < 0) return Mathf.RoundToInt((floorposition - first.floorPosition)/ first.bpm);
+            if (first.bpm * (floorposition - first.baseFloorPosition) < 0) return Mathf.RoundToInt((floorposition - first.baseFloorPosition)/ first.bpm);
 
             for (int i = 0; i < maxIndex - 1; i++)
             {
                 TimingEvent curr = timingEventGroups[timingGroup][i];
                 TimingEvent next = timingEventGroups[timingGroup][i+1];
 
-                if ((curr.floorPosition < floorposition && next.floorPosition > floorposition)
-                ||  (curr.floorPosition > floorposition && next.floorPosition < floorposition))
+                if ((curr.baseFloorPosition < floorposition && next.baseFloorPosition > floorposition)
+                ||  (curr.baseFloorPosition > floorposition && next.baseFloorPosition < floorposition))
                 {
-                    float result = (floorposition - curr.floorPosition) / curr.bpm + curr.timing;
+                    float result = (floorposition - curr.baseFloorPosition) / curr.bpm + curr.timing;
                     return Mathf.RoundToInt(result);
                 }
             }
 
             TimingEvent last = timingEventGroups[timingGroup][maxIndex-1];
-            float lastresult =  (floorposition - last.floorPosition) / last.bpm + last.timing;
+            float lastresult =  (floorposition - last.baseFloorPosition) / last.bpm + last.timing;
             return Mathf.RoundToInt(lastresult);
         }
 
+        /// <summary>
+        /// Update the current floor postion values.
+        /// </summary>
         public void UpdateCurrentFloorPosition()
         {
-            if (timingEventGroups == null) return;
             //Might separate the output array into its own singleton class or entity
-            for (int group=0; group < timingEventGroups.Count; group++)
+            for (int group = 0; group < timingEventGroups.Length; group++)
             {
                 currentFloorPosition[group] = GetFloorPositionFromTiming(receptorTime, group);
             }
