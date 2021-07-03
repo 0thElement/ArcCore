@@ -13,11 +13,10 @@
         public static MulticountBool operator ++(MulticountBool a) => a + 1;
         public static MulticountBool operator --(MulticountBool a) => a - 1;
 
-        public static bool operator &(MulticountBool a, MulticountBool b) => a.BoolValue && b.BoolValue;
-        public static bool operator |(MulticountBool a, MulticountBool b) => a.BoolValue || b.BoolValue;
         public static bool operator !(MulticountBool a) => !a.BoolValue;
-
         public static bool operator true(MulticountBool a) => a.BoolValue;
         public static bool operator false(MulticountBool a) => !a.BoolValue;
+
+        public static explicit operator bool(MulticountBool a) => a.BoolValue;
     }
 }

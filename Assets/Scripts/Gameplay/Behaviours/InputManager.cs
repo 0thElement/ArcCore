@@ -88,7 +88,7 @@ namespace ArcCore.Gameplay.Behaviours
             for (int i = 0; i < MaxTouches; i++)
             {
                 var t = touchPoints[i];
-                if (t.fingerId == FreeTouch)
+                if (t.fingerId == TouchPoint.NullId)
                     continue;
 
                 // Debug.Log($"{t.fingerId} is at phase {t.status}");

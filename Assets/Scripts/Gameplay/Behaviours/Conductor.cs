@@ -160,10 +160,10 @@ namespace ArcCore.Gameplay.Behaviours
         /// <param name="timingGroups">The raw aff timing components.</param>
         public void SetupTimingGroups(List<List<AffTiming>> timingGroups) 
         {
-            CalculateScrollSpeed();
-
             timingEventGroups = new TimingEvent[timingGroups.Count][]; 
-            currentFloorPosition = new NativeArray<float>(timingGroups.Count, Allocator.Persistent);
+            currentFloorPosition = new NativeArray<float>(new float[timingGroups.Count], Allocator.Persistent);
+
+            Debug.Log(timingGroups.Count);
 
             for (int i=0; i<timingGroups.Count; i++)
             {
@@ -171,6 +171,7 @@ namespace ArcCore.Gameplay.Behaviours
             }
 
             groupIndexCache = new int[timingEventGroups.Length];
+            CalculateScrollSpeed();
         }
 
         /// <summary>
@@ -180,27 +181,30 @@ namespace ArcCore.Gameplay.Behaviours
         /// <param name="i">The index of the timing group to set up.</param>
         private void SetupTimingGroup(List<List<AffTiming>> timingGroups, int i)
         {
-            timingGroups[i].Sort((item1, item2) => item1.timing.CompareTo(item2.timing));
+            var tg = timingGroups[i];
 
-            timingEventGroups[i] = new TimingEvent[timingGroups[i].Count];
+            tg.Sort((item1, item2) => item1.timing.CompareTo(item2.timing));
+
+            timingEventGroups[i] = new TimingEvent[tg.Count];
 
             timingEventGroups[i][0] = new TimingEvent
             {
-                timing = timingGroups[i][0].timing,
+                timing = tg[0].timing,
                 baseFloorPosition = 0,
-                bpm = timingGroups[i][0].bpm
+                bpm = tg[0].bpm
             };
 
-            for (int j = 1; j < timingGroups[i].Count; j++)
+            int count = tg.Count;
+            for (int j = 1; j < count; j++)
             {
                 timingEventGroups[i][j] = new TimingEvent
                 {
-                    timing = timingGroups[i][j].timing,
+                    timing = tg[j].timing,
                     //Calculate the base floor position
-                    baseFloorPosition = timingGroups[i][j - 1].bpm
-                                * (timingGroups[i][j].timing - timingGroups[i][j - 1].timing)
+                    baseFloorPosition = tg[j - 1].bpm
+                                * (tg[j].timing - tg[j - 1].timing)
                                 + timingEventGroups[i][j - 1].baseFloorPosition,
-                    bpm = timingGroups[i][j].bpm
+                    bpm = tg[j].bpm
                 };
             }
         }

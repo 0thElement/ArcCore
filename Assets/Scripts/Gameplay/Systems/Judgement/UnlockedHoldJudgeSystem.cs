@@ -22,7 +22,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
             int currentTime = Conductor.Instance.receptorTime;
             int maxPureCount = ScoreManager.Instance.maxPureCount,
             currentCombo = ScoreManager.Instance.currentCombo;
-            NTrackArray<int> tracksHeld = InputManager.Instance.tracksHeld;
+            var tracksHeld = InputManager.Instance.tracksHeld;
 
             EntityCommandBuffer commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
 
@@ -31,7 +31,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
             Entities.WithNone<HoldLocked, PastJudgeRange>().ForEach(
                 (Entity en, ref ChartIncrTime chartIncrTime, in ChartLane lane) =>
                 {
-                    if (chartIncrTime.time > currentTime - Constants.FarWindow && tracksHeld[lane.lane] > 0)
+                    if (chartIncrTime.time > currentTime - Constants.FarWindow && (bool)tracksHeld[lane.lane])
                     {
                         chartIncrTime.UpdateJudgePointCachePure(currentTime, out int count);
                         maxPureCount += count;

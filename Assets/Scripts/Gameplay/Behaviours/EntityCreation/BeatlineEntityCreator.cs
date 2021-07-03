@@ -62,7 +62,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             //Last timing event
             {
                 AffTiming lastTiming = affTimingList[affTimingList.Count-1];
-                int limit = Conductor.Instance.songLength;
+                uint limit = Conductor.Instance.songLength;
 
                 float distanceBetweenTwoLine = lastTiming.bpm == 0 ? float.MaxValue : 
                                                                     60000f / math.abs(lastTiming.bpm) * lastTiming.divisor;
