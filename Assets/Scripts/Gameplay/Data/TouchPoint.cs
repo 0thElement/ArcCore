@@ -23,6 +23,14 @@ namespace ArcCore.Gameplay.Data
         /// </summary>
         public bool IsNull => fingerId == NullId;
 
+        /// <summary>
+        /// The status of the touch point. 
+        /// <list type="table">
+        /// <item><term><see cref="Status.Tapped"/></term> The touch point has just begun</item>
+        /// <item><term><see cref="Status.Sustained"/></term> The touch point has remained tapped since the last frame</item>
+        /// <item><term><see cref="Status.Released"/></term> The touch point has just ended</item>
+        /// </list>
+        /// </summary>
         public enum Status
         {
             Tapped,
@@ -30,16 +38,46 @@ namespace ArcCore.Gameplay.Data
             Released
         }
 
+        /// <summary>
+        /// The position of the touch point on the input plane.
+        /// If <see langword="null"/>, there is no valid point on the input plane.
+        /// </summary>
         public float2? inputPosition;
+        /// <summary>
+        /// The hitbox of the touch point on the input plane.
+        /// If <see langword="null"/>, there is no valid hitbox on the input plane.
+        /// </summary>
         public Rect2D? inputPlane;
+
+        /// <summary>
+        /// The sentinel value of <see cref="track"/> which represents <see langword="abstract"/>tap which does not validly
+        /// overlap a track.
+        /// </summary>
+        public const int NullTrack = -1;
+
+        /// <summary>
+        /// The track which this touch overlaps.
+        /// </summary>
         public int track;
         public int tapTime;
 
+        /// <summary>
+        /// The real value of <see cref="inputPlane"/>, default if not <see cref="InputPlaneValid"/>
+        /// </summary>
         public Rect2D InputPlane => inputPlane.GetValueOrDefault();
+        /// <summary>
+        /// Whether or not this touch point has a valid input plane area.
+        /// </summary>
         public bool InputPlaneValid => inputPlane.HasValue;
-        public bool TrackValid => track != -1;
+        /// <summary>
+        /// Whether or not this touch point overlaps a valid track.
+        /// </summary>
+        public bool TrackValid => track != NullTrack;
 
         //public int time;
+        /// <summary>
+        /// The status of this tap. See <see cref="Status"/> for details.
+        /// </summary>
         public Status status;
         public int fingerId;
         public int touchId;

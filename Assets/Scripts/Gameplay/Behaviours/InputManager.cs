@@ -52,10 +52,16 @@ namespace ArcCore.Gameplay.Behaviours
         [HideInInspector]
         public int safeIndex = 0;
 
+        /// <summary>
+        /// A track array which tracks which tracks are currently held.
+        /// </summary>
         [HideInInspector]
-        public NTrackArray<int> tracksHeld;
+        public NTrackArray<MulticountBool> tracksHeld;
         public NTrackArray<bool> tracksTapped;
 
+        /// <summary>
+        /// The camera to be used in casting raw inputs.
+        /// </summary>
         public Camera cameraCast;
 
         void Awake()
@@ -110,7 +116,14 @@ namespace ArcCore.Gameplay.Behaviours
             touchPoints.Dispose();
         }
 
+        /// <summary>
+        /// Check if a given finger id already exists in the touch point collection.
+        /// </summary>
         private bool FreeId(int id) => !touchPoints.Any(t => t.fingerId == id);
+        /// <summary>
+        /// Get the index of the first (and, if code executes correctly, only) touch point with an id of a given value.
+        /// If no point is found, this returns -1.
+        /// </summary>
         private int IdIndex(int id)
         {
             for (int i = 0; i < MaxTouches; i++)
@@ -118,6 +131,9 @@ namespace ArcCore.Gameplay.Behaviours
                     return i;
             return -1;
         }
+        /// <summary>
+        /// Get the first index for which no valid touch point exists.
+        /// </summary>
         private int SafeIndex()
         {
             for (int i = safeIndex; i < MaxTouches; i++)
@@ -125,11 +141,18 @@ namespace ArcCore.Gameplay.Behaviours
                     return safeIndex = i;
             return safeIndex = MaxTouches;
         }
+
+        /// <summary>
+        /// Get the precise touch time of sus.
+        /// </summary>
         private static int GetChartTime(double realTime)
         {
             return Conductor.Instance.receptorTime - (int)System.Math.Round((Time.realtimeSinceStartup - realTime) * 1000);
         }
 
+        /// <summary>
+        /// Update current input.
+        /// </summary>
         public void PollInput()
         {
             for (int ti = 0; ti < touchPoints.Length; ti++)
