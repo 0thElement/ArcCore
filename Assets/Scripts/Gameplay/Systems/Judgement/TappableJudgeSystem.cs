@@ -24,10 +24,10 @@ namespace ArcCore.Gameplay.Systems.Judgement
             Hold,
             Void
         }
-        private EndInitializationEntityCommandBufferSystem entityCommandBufferSystem;
+        private EndSimulationEntityCommandBufferSystem entityCommandBufferSystem;
         protected override void OnCreate()
         {
-            entityCommandBufferSystem = World.GetOrCreateSystem<EndInitializationEntityCommandBufferSystem>();
+            entityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
         }
 
         protected override void OnUpdate()

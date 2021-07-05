@@ -15,10 +15,10 @@ namespace ArcCore.Gameplay.Systems.Judgement
     [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(ParticleJudgeSystem))]
     public class ExpirableJudgeSystem : SystemBase
     {
-        private EndInitializationEntityCommandBufferSystem entityCommandBufferSystem;
+        private EndSimulationEntityCommandBufferSystem entityCommandBufferSystem;
         protected override void OnCreate()
         {
-            entityCommandBufferSystem = World.GetOrCreateSystem<EndInitializationEntityCommandBufferSystem>();
+            entityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
         }
         protected override void OnUpdate()
         {

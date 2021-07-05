@@ -3,7 +3,7 @@ using Unity.Transforms;
 
 namespace ArcCore.Gameplay.Systems.Judgement
 {
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateInGroup(typeof(SimulationSystemGroup))]
     public class JudgementSystemGroup : ComponentSystemGroup
     {
     }
