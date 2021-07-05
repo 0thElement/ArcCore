@@ -74,10 +74,28 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 }
 
                 int duration = trace.endTiming - trace.timing;
+
+                if (duration == 0)
+                {
+                    float3 tstart = new float3(
+                        Conversion.GetWorldX(trace.startX),
+                        Conversion.GetWorldY(trace.startY),
+                        Conductor.Instance.GetFloorPositionFromTiming(trace.timing, trace.timingGroup)
+                    );
+                    float3 tend = new float3(
+                        Conversion.GetWorldX(trace.endX),
+                        Conversion.GetWorldY(trace.endY),
+                        Conductor.Instance.GetFloorPositionFromTiming(trace.endTiming, trace.timingGroup)
+                    );
+                    CreateSegment(tstart, tend, trace.timingGroup, trace.timing, trace.endTiming);
+                    continue;
+                }
+
                 int v1 = duration < 1000 ? 14 : 7;
                 float v2 = 1f / (v1 * duration / 1000f);
                 float segmentLength = duration * v2;
-                int segmentCount = (int)(segmentLength == 0 ? 0 : duration / segmentLength) + 1;
+                int segmentCount = (int)(duration / segmentLength) + 1;
+
 
                 float3 start;
                 float3 end = new float3(

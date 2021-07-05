@@ -141,10 +141,27 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
                     //Generate arc segments and shadow segment(each segment is its own entity)
                     int duration = arc.endTiming - arc.timing;
+
+                    if (duration == 0)
+                    {
+                        float3 tstart = new float3(
+                            Conversion.GetWorldX(arc.startX),
+                            Conversion.GetWorldY(arc.startY),
+                            Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
+                        );
+                        float3 tend = new float3(
+                            Conversion.GetWorldX(arc.endX),
+                            Conversion.GetWorldY(arc.endY),
+                            Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
+                        );
+                        CreateSegment(arcColorMaterialInstance, tstart, tend, arc.timingGroup);
+                        continue;
+                    }
+
                     int v1 = duration < 1000 ? 14 : 7;
                     float v2 = 1000f / (v1 * duration);
                     float segmentLength = duration * v2;
-                    int segmentCount = (int)(segmentLength == 0 ? 0 : duration / segmentLength) + 1;
+                    int segmentCount = (int)(duration / segmentLength) + 1;
 
                     float3 start;
                     float3 end = new float3(

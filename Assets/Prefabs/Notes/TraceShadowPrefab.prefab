@@ -18,7 +18,7 @@ GameObject:
   - component: {fileID: 8666961278780998509}
   - component: {fileID: 1968307179160943979}
   - component: {fileID: 2857874093601128795}
-  - component: {fileID: 2857874093601128794}
+  - component: {fileID: 6238810245785734155}
   m_Layer: 0
   m_Name: TraceShadowPrefab
   m_TagString: Untagged
@@ -186,7 +186,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   value: 0
---- !u!114 &2857874093601128794
+--- !u!114 &6238810245785734155
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
