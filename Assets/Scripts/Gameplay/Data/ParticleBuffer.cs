@@ -35,12 +35,12 @@ namespace ArcCore.Gameplay.Data
             // arcQueue = new NativeQueue<TapParticleDesc>(allocator);
         }
 
-        public void PlayTapParticle(float2 position, ParticlePool.JudgeType type, ParticlePool.JudgeDetail detail)
+        public void PlayTapParticle(float2 position, ParticlePool.JudgeType type, ParticlePool.JudgeDetail detail, float textYOffset = 0)
         {
-            tapQueue.Enqueue(new TapParticleDesc{position = position, type = type, detail = detail});
+            tapQueue.Enqueue(new TapParticleDesc{position = position, type = type, detail = detail, textYOffset = textYOffset});
         }
 
-        public void PlayTapParticle(float2 position, JudgeType type, float textYOffset)
+        public void PlayTapParticle(float2 position, JudgeType type, float textYOffset = 0)
         {
             ParticlePool.JudgeType jt = (ParticlePool.JudgeType)(-1);
             switch(type)
