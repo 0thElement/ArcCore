@@ -1,4 +1,6 @@
-﻿namespace ArcCore.Gameplay.Data
+﻿using Unity.Mathematics;
+
+namespace ArcCore.Gameplay.Data
 {
     public readonly struct ArcJudge
     {

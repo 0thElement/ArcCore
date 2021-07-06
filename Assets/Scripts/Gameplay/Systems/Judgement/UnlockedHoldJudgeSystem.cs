@@ -20,8 +20,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
             if (!GameState.isChartMode) return;
 
             int currentTime = Conductor.Instance.receptorTime;
-            int maxPureCount = ScoreManager.Instance.maxPureCount,
-            currentCombo = ScoreManager.Instance.currentCombo;
+            var tracker = ScoreManager.Instance.tracker;
             var tracksHeld = InputManager.Instance.tracksHeld;
 
             EntityCommandBuffer commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
@@ -34,8 +33,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                     if (chartIncrTime.time > currentTime - Constants.FarWindow && (bool)tracksHeld[lane.lane])
                     {
                         chartIncrTime.UpdateJudgePointCachePure(currentTime, out int count);
-                        maxPureCount += count;
-                        currentCombo += count;
+                        tracker.AddJudge(JudgeType.MaxPure, count);
                         particleBuffer.PlayHoldParticle(lane.lane - 1, true);
                     }
                 }
@@ -43,8 +41,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
 
             commandBuffer.Playback(EntityManager);
             commandBuffer.Dispose();
-            ScoreManager.Instance.maxPureCount = maxPureCount;
-            ScoreManager.Instance.currentCombo = currentCombo;
+
+            ScoreManager.Instance.tracker = tracker;
         }
     }
 }

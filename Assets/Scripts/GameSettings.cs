@@ -2,7 +2,7 @@
 {
     public static class GameSettings
     {
-        private static float _songSpeed = 2f;
+        private static float _songSpeed = 1f;
 
         /// <summary>
         /// The modifier which will be placed on song and chart speeds.

@@ -61,7 +61,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 EntityManager.SetComponentData(tapEntity, new ChartTime(tap.Timing));
                 EntityManager.SetComponentData(tapEntity, new ChartLane(tap.track));
 
-                ScoreManager.Instance.maxCombo++;
+                ScoreManager.Instance.tracker.noteCount++;
             }
         }
     }

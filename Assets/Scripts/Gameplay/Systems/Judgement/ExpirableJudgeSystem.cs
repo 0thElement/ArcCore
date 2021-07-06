@@ -19,9 +19,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
         {
             if (!GameState.isChartMode) return;
 
-            int lostCount = ScoreManager.Instance.lostCount,
-            currentCombo = ScoreManager.Instance.currentCombo,
-            currentTime = Conductor.Instance.receptorTime;
+            var tracker = ScoreManager.Instance.tracker;
+            int currentTime = Conductor.Instance.receptorTime;
 
             var commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
             var particleBuffer = ParticleJudgeSystem.particleBuffer;
@@ -34,8 +33,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                     {
                         commandBuffer.DisableEntity(en);
                         commandBuffer.AddComponent<PastJudgeRange>(en);
-                        lostCount++;
-                        currentCombo = 0;
+                        tracker.AddJudge(JudgeType.Lost);
 
                         particleBuffer.PlayTapParticle(
                             new float2(Conversion.TrackToX(cl.lane), 1),
@@ -55,8 +53,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         commandBuffer.DisableEntity(enRef.value);
                         commandBuffer.DisableEntity(en);
                         commandBuffer.AddComponent<PastJudgeRange>(en);
-                        lostCount++;
-                        currentCombo = 0;
+                        tracker.AddJudge(JudgeType.Lost);
 
                         particleBuffer.PlayTapParticle(
                             cp.xy,
@@ -74,8 +71,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                     if (currentTime - Constants.FarWindow > chartIncrTime.time)
                     {
                         chartIncrTime.UpdateJudgePointCache(currentTime, out int count);
-                        lostCount += count;
-                        currentCombo = 0;
+                        tracker.AddJudge(JudgeType.Lost, count);
                         particleBuffer.PlayHoldParticle(cl.lane - 1, false);
                     }
                 }
@@ -99,8 +95,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
             commandBuffer.Playback(EntityManager);
             commandBuffer.Dispose();
 
-            ScoreManager.Instance.lostCount = lostCount;
-            ScoreManager.Instance.currentCombo = currentCombo;
+            ScoreManager.Instance.tracker = tracker;
         }
     }
 }

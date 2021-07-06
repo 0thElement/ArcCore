@@ -313,7 +313,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData(en, new ChartTime(arc.Timing));
             EntityManager.SetComponentData(en, ChartIncrTime.FromBpm(arc.Timing, arc.EndTiming, startBpm, out int comboCount));
 
-            ScoreManager.Instance.maxCombo += comboCount;
+            ScoreManager.Instance.tracker.noteCount += comboCount;
 
             EntityManager.SetComponentData(en, new ColorID(colorId));
             EntityManager.SetComponentData(en,

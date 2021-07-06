@@ -67,7 +67,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 EntityManager.SetComponentData(holdEntity, ChartIncrTime.FromBpm(hold.Timing, hold.EndTiming, startBpm, out int comboCount));
 
                 //Add combo
-                ScoreManager.Instance.maxCombo += comboCount;
+                ScoreManager.Instance.tracker.noteCount += comboCount;
             }
         }
     }
