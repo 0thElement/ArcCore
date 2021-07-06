@@ -21,7 +21,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
         }
         protected override void OnUpdate()
         {
-            NTrackArray<int> tracksHeld = InputManager.Instance.tracksHeld;
+            NTrackArray<ArcCore.Gameplay.Data.MulticountBool> tracksHeld = InputManager.Instance.tracksHeld;
             int currentTime = Conductor.Instance.receptorTime;
 
             RenderMesh highlightRenderMesh = HoldEntityCreator.Instance.HighlightRenderMesh;

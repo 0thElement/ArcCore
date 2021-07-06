@@ -3,14 +3,14 @@
     public struct AffHold
     {
         private int _timing;
-        public int Timing
+        public int timing
         {
             get => _timing;
             set => _timing = GameSettings.GetSpeedModifiedTime(value);
         }
 
         private int _endTiming;
-        public int EndTiming
+        public int endTiming
         {
             get => _endTiming;
             set => _endTiming = GameSettings.GetSpeedModifiedTime(value);
