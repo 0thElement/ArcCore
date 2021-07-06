@@ -8,87 +8,76 @@ using ArcCore.Math;
 using ArcCore.Gameplay.Data;
 using System.Collections.Generic;
 using System.Collections;
-using UnityEngine.InputSystem.EnhancedTouch;
-using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
-using TouchPhase = UnityEngine.InputSystem.TouchPhase;
+using Lean.Touch;
 
 namespace ArcCore.Gameplay.Behaviours
 {
     public class InputManager : MonoBehaviour, IEnumerable<TouchPoint>
     {
         public static InputManager Instance { get; private set; }
-        public static TouchPoint Get(int index) => Instance.touchPoints[index];
 
-        public IEnumerator<TouchPoint> GetEnumerator() => new Enumerator(this);
-        IEnumerator IEnumerable.GetEnumerator() => new Enumerator(this);
-
-        public const int MaxTouches = 10;
-        public const int FreeTouch = -69;
-
-        [HideInInspector]
-        public NativeArray<TouchPoint> touchPoints;
-        [HideInInspector]
-        public int safeIndex = 0;
-
-        [HideInInspector]
-        public NTrackArray<int> tracksHeld;
-        public NTrackArray<bool> tracksTapped;
-
-        public Camera cameraCast;
-
-        public struct Enumerator : IEnumerator<TouchPoint>
+        public IEnumerator<TouchPoint> GetEnumerator()
         {
-            private readonly NativeArray<TouchPoint> touchPoints;
-            private int index;
+            int idx = 0;
 
-            public Enumerator(InputManager inputManager)
-            {
-                touchPoints = inputManager.touchPoints;
-                index = -1;
-            }
-
-            public TouchPoint Current
-            {
-                get => touchPoints[index];
-            }
-
-            object IEnumerator.Current
-            {
-                get => touchPoints[index];
-            }
-
-            public void Dispose()
-            {}
-
-            public bool MoveNext()
+            while (true) //yes i know. im awful.
             {
                 do
                 {
-                    index++;
-                    if (index >= MaxTouches) return false;
-                } 
-                while (Current.fingerId == FreeTouch);
+                    idx++;
+                    if (idx >= MaxTouches) yield break;
+                }
+                while (touchPoints[idx].fingerId == TouchPoint.NullId);
 
-                return true;
-            }
-
-            public void Reset()
-            {
-                index = -1;
+                yield return touchPoints[idx];
             }
         }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        /// <summary>
+        /// The maximum number of touches which will be registered during gameplay.
+        /// </summary>
+        public const int MaxTouches = 10;
+        
+        /// <summary>
+        /// The minimum distance which a touch has to move in order to recalculate its position.
+        /// </summary>
+        public const float TouchEps = 0.002f;
+
+        /// <summary>
+        /// The current touch points.
+        /// </summary>
+        [HideInInspector]
+        public NativeArray<TouchPoint> touchPoints;
+        /// <summary>
+        /// The current minimum index which is not occupied by a meaningful touch point.
+        /// </summary>
+        [HideInInspector]
+        public int safeIndex = 0;
+
+        /// <summary>
+        /// A track array which tracks which tracks are currently held.
+        /// </summary>
+        [HideInInspector]
+        public NTrackArray<MulticountBool> tracksHeld;
+        public NTrackArray<bool> tracksTapped;
+
+        /// <summary>
+        /// The camera to be used in casting raw inputs.
+        /// </summary>
+        public Camera cameraCast;
 
         void Awake()
         {
             Instance = this;
             touchPoints = new NativeArray<TouchPoint>(MaxTouches, Allocator.Persistent);
             tracksHeld = default;
-            EnhancedTouchSupport.Enable();
+            //EnhancedTouchSupport.Enable();
 
             for(int i = 0; i < MaxTouches; i++)
             {
                 var t = touchPoints[i];
-                t.fingerId = FreeTouch;
+                t.fingerId = TouchPoint.NullId;
                 touchPoints[i] = t;
             }
         }
@@ -96,12 +85,16 @@ namespace ArcCore.Gameplay.Behaviours
         void Update()
         {
             InputVisualFeedback.Instance.DisableLines();
-            foreach (var t in this)
+            for (int i = 0; i < MaxTouches; i++)
             {
+                var t = touchPoints[i];
+                if (t.fingerId == TouchPoint.NullId)
+                    continue;
+
                 // Debug.Log($"{t.fingerId} is at phase {t.status}");
                 if (t.InputPlaneValid && t.inputPosition.Value.y > 2f)
                 {
-                    InputVisualFeedback.Instance.HorizontalLineAt(t.inputPosition.Value.y, t.fingerId);
+                    InputVisualFeedback.Instance.HorizontalLineAt(t.inputPosition.Value.y, i);
                 }
                 if (t.TrackValid)
                 {
@@ -129,8 +122,11 @@ namespace ArcCore.Gameplay.Behaviours
         {
             touchPoints.Dispose();
         }
-
-        private bool FreeId(int id) => !touchPoints.Any(t => t.fingerId == id);
+        
+        /// <summary>
+        /// Get the index of the first (and, if code executes correctly, only) touch point with an id of a given value.
+        /// If no point is found, this returns -1.
+        /// </summary>
         private int IdIndex(int id)
         {
             for (int i = 0; i < MaxTouches; i++)
@@ -138,44 +134,50 @@ namespace ArcCore.Gameplay.Behaviours
                     return i;
             return -1;
         }
+        
+        /// <summary>
+        /// Get the first index for which no valid touch point exists.
+        /// </summary>
         private int SafeIndex()
         {
             for (int i = safeIndex; i < MaxTouches; i++)
-                if (touchPoints[i].fingerId == FreeTouch)
+                if (touchPoints[i].IsNull)
                     return safeIndex = i;
             return safeIndex = MaxTouches;
         }
+
+        /// <summary>
+        /// Get the precise touch time of sus.
+        /// </summary>
         private static int GetChartTime(double realTime)
         {
-            return Conductor.Instance.receptorTime - (int)System.Math.Round((Time.realtimeSinceStartup - realTime) * 1000);
+            return Conductor.Instance.receptorTime - (int)System.Math.Round(realTime * 1000.0);
         }
 
+        /// <summary>
+        /// Update current input.
+        /// </summary>
         public void PollInput()
         {
             for (int ti = 0; ti < touchPoints.Length; ti++)
             {
                 if(touchPoints[ti].status == TouchPoint.Status.Released)
                 {
-                    TouchPoint touchPoint = touchPoints[ti];
-
-                    touchPoint.fingerId = FreeTouch;
-
-                    touchPoints[ti] = touchPoint;
-
+                    touchPoints[ti] = TouchPoint.Null;
                     if (ti < safeIndex) safeIndex = ti;
                 }
             }
 
-            for (int i=0; i < Touch.activeFingers.Count; i++)
+            var touches = LeanTouch.GetFingers(false, false);
+            for (int i=0; i < touches.Count; i++)
             {
-                Finger f = Touch.activeFingers[i];
-                Touch t = f.currentTouch;
+                LeanFinger f = touches[i];
                 int index;
 
-                if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled)
+                //released
+                if (f.Up)
                 {
-
-                    index = IdIndex(f.index);
+                    index = IdIndex(f.Index);
                     if (index != -1)
                     {
                         TouchPoint tp = touchPoints[index];
@@ -188,20 +190,20 @@ namespace ArcCore.Gameplay.Behaviours
                     }
 
                     continue;
-
                 }
 
+                //no more space
                 if (SafeIndex() == MaxTouches) continue;
+                index = IdIndex(f.Index);
 
-                index = IdIndex(f.index);
-                bool isNewTouchPoint = index == -1;
-
-                if (isNewTouchPoint && t.phase == TouchPhase.Began)
+                //tapped
+                if (f.Down)
                 {
-                    if (FreeId(f.index))
+                    //hardware index does not exist
+                    if (index == -1)
                     {
-                        (float2? exact, Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.screenPosition));
-                        touchPoints[safeIndex] = new TouchPoint(exact, ipt, track, GetChartTime(t.startTime), TouchPoint.Status.Tapped, f.index, t.touchId);
+                        (float2? exact, Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(f.ScreenPosition));
+                        touchPoints[safeIndex] = new TouchPoint(exact, ipt, track, GetChartTime(f.Age), TouchPoint.Status.Tapped, f.Index);
 
                         if(track != -1)
                         {
@@ -211,12 +213,23 @@ namespace ArcCore.Gameplay.Behaviours
 
                     continue;
                 }
-                else if (!isNewTouchPoint)
+
+                //has not moved significantly
+                if (math.lengthsq(f.ScaledDelta) < TouchEps)
+                {
+                    TouchPoint tp = touchPoints[index];
+
+                    tp.status = TouchPoint.Status.Sustained;
+
+                    touchPoints[index] = tp;
+                }
+                //has moved
+                else
                 {
                     TouchPoint tp = touchPoints[index];
                     int oTrack = tp.track;
 
-                    (tp.inputPosition, tp.inputPlane, tp.track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(t.screenPosition));
+                    (tp.inputPosition, tp.inputPlane, tp.track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(f.ScreenPosition));
                     tp.status = TouchPoint.Status.Sustained;
 
                     touchPoints[index] = tp;
@@ -228,15 +241,6 @@ namespace ArcCore.Gameplay.Behaviours
                     }
 
                 }
-                // TouchPhase in new input system is never stationary for some god awful reason
-                // else if (t.phase == TouchPhase.Stationary)
-                // {
-                //     TouchPoint tp = touchPoints[index];
-
-                //     tp.status = TouchPoint.Status.Sustained;
-
-                //     touchPoints[index] = tp;
-                // }
             }
         }
     }

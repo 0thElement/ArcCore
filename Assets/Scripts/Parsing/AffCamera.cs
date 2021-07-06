@@ -4,19 +4,16 @@ namespace ArcCore.Parsing.Aff
 {
     public struct AffCamera
     {
-        public int timing;
+        private int _timing;
+        public int Timing
+        {
+            get => _timing;
+            set => _timing = GameSettings.GetSpeedModifiedTime(value);
+        }
+
         public float3 position;
         public float3 rotate;
         public CameraEasing easing;
         public int duration;
-
-        public AffCamera(int timing, float3 position, float3 rotate, CameraEasing easing, int duration)
-        {
-            this.timing = timing;
-            this.position = position;
-            this.rotate = rotate;
-            this.easing = easing;
-            this.duration = duration;
-        }
     }
 }

@@ -4,15 +4,14 @@ namespace ArcCore.Parsing.Aff
 {
     public struct AffArcTap
     {
-        public int timing;
+        private int _timing;
+        public int Timing
+        {
+            get => _timing;
+            set => _timing = GameSettings.GetSpeedModifiedTime(value);
+        }
+
         public float2 position;
         public int timingGroup;
-
-        public AffArcTap(int timing, float2 position, int timingGroup)
-        {
-            this.timing = timing;
-            this.position = position;
-            this.timingGroup = timingGroup;
-        }
     }
 }

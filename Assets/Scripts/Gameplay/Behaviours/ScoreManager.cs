@@ -5,91 +5,62 @@ using UnityEngine;
 using UnityEngine.UI;
 using Unity.Mathematics;
 
-//- Header for unity files -//
-    using hidden = UnityEngine.HideInInspector;
-    using serialized = UnityEngine.SerializeField;
-
 namespace ArcCore.Gameplay.Behaviours
 {
     public class ScoreManager : MonoBehaviour
     {
         public static ScoreManager Instance { get; private set; }
 
-        public const float MaxScore = 10_000_000f;
-        public float MaxScoreDyn => MaxScore + maxCombo;
+        /// <summary>
+        /// The tracker responsible for tracking judgement.
+        /// </summary>
+        [HideInInspector]
+        public JudgeTracker tracker = default;
 
-        [hidden] public int
-            maxPureCount,
-            latePureCount,
-            earlyPureCount,
-            lateFarCount,
-            earlyFarCount,
-            lostCount,
-            currentCombo;
+        /// <summary>
+        /// The current score, calculated every frame.
+        /// </summary>
+        [HideInInspector] 
+        public float currentScore;
+        /// <summary>
+        /// The current value of the score to be displayed, eased by an exponential algorithm.
+        /// </summary>
+        [HideInInspector] 
+        public float currentScoreDisplay;
 
-        [hidden] public float currentScore, currentScoreDisplay;
-        [hidden] public int maxCombo;
-
-        public Text comboTextUI, scoreTextUI;
+        /// <summary>
+        /// The text ui element responsible for displaying the combo.
+        /// </summary>
+        public Text comboTextUI;
+        /// <summary>
+        /// The text ui element responsible for displaying the score.
+        /// </summary>
+        public Text scoreTextUI;
 
         void Awake()
         {
             Instance = this;
         }
 
+        /// <summary>
+        /// Reset all the score values.
+        /// </summary>
         public void ResetScores()
         {
             currentScore = 0;
             currentScoreDisplay = 0;
         }
 
-        //call later
+        /// <summary>
+        /// Update the score information.
+        /// </summary>
         public void UpdateScore()
         {
-            currentScore =
-                (maxPureCount + latePureCount + earlyPureCount) * MaxScore / maxCombo +
-                (lateFarCount + earlyFarCount) * MaxScore / maxCombo / 2 +
-                 maxPureCount;
+            currentScore = tracker.Score;
             currentScoreDisplay += math.ceil((currentScore - currentScoreDisplay) / 1.8f);
 
-            comboTextUI.text = $"{currentCombo}";
+            comboTextUI.text = $"{tracker.combo}";
             scoreTextUI.text = $"{(int)currentScoreDisplay:D8}";
-        }
-
-        public void AddJudge(JudgeType type, int cnt = 1)
-        {
-            switch(type)
-            {
-                case JudgeType.EarlyFar:
-                    earlyFarCount += cnt;
-                    currentCombo += cnt;
-                    break;
-
-                case JudgeType.EarlyPure:
-                    earlyPureCount += cnt;
-                    currentCombo += cnt;
-                    break;
-
-                case JudgeType.MaxPure:
-                    maxPureCount += cnt;
-                    currentCombo += cnt;
-                    break;
-
-                case JudgeType.LateFar:
-                    lateFarCount += cnt;
-                    currentCombo += cnt;
-                    break;
-
-                case JudgeType.LatePure:
-                    latePureCount += cnt;
-                    currentCombo += cnt;
-                    break;
-
-                case JudgeType.Lost:
-                    lostCount += cnt;
-                    currentCombo = 0;
-                    break;
-            }
         }
     }
 }

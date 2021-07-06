@@ -33,8 +33,8 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
         public void CreateEntities(List<AffArcTap> affArcTapList, List<AffTap> affTapList)
         {
-            affArcTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
-            affTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+            affArcTapList.Sort((item1, item2) => { return item1.Timing.CompareTo(item2.Timing); });
+            affTapList.Sort((item1, item2) => { return item1.Timing.CompareTo(item2.Timing); });
             int lowBound=0;
 
             foreach (AffArcTap arctap in affArcTapList)
@@ -56,7 +56,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     Value = new float3(x, 0, z)
                 });
 
-                float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup);
+                float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arctap.Timing, arctap.timingGroup);
                 FloorPosition floorPositionF = new FloorPosition()
                 {
                     value = floorpos
@@ -80,11 +80,11 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 EntityManager.SetComponentData<AppearTime>(tapEntity, new AppearTime(){ value = appearTime });
 
                 //Judge entities
-                EntityManager.SetComponentData(tapEntity, new ChartTime(arctap.timing));
+                EntityManager.SetComponentData(tapEntity, new ChartTime(arctap.Timing));
                 EntityManager.SetComponentData(tapEntity, new ChartPosition(Conversion.GetWorldPos(arctap.position)));
 
                 //Connection line
-                while (lowBound < affTapList.Count && arctap.timing > affTapList[lowBound].timing)
+                while (lowBound < affTapList.Count && arctap.Timing > affTapList[lowBound].Timing)
                 {
                     lowBound++;
                 }
@@ -92,7 +92,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 if (lowBound >= affTapList.Count) continue;
 
                 int highBound = lowBound;
-                while (highBound < affTapList.Count && arctap.timing == affTapList[highBound].timing)
+                while (highBound < affTapList.Count && arctap.Timing == affTapList[highBound].Timing)
                 {
                     highBound++;
                 }
@@ -139,7 +139,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 Value = quaternion.LookRotationSafe(direction, new Vector3(0,0,1))
             });
 
-            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup);
+            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arctap.Timing, arctap.timingGroup);
             EntityManager.AddComponentData<FloorPosition>(lineEntity, new FloorPosition(){
                 value = floorpos
             });

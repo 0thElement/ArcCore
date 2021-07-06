@@ -177,7 +177,7 @@ namespace ArcCore.Gameplay.Behaviours
                 i++;
             }
 
-            Conductor.Instance.SetupTiming(affTimingList);
+            Conductor.Instance.SetupTimingGroups(affTimingList);
             BeatlineEntityCreator.Instance.CreateEntities(affTimingList[0]);
             TapEntityCreator.Instance.CreateEntities(affTapList);
             HoldEntityCreator.Instance.CreateEntities(affHoldList);
@@ -195,7 +195,7 @@ namespace ArcCore.Gameplay.Behaviours
 
         private void SetAudioOffset(int offset)
         {
-            Conductor.Instance.SetOffset(offset);
+            Conductor.Instance.offset = offset;
         }
 
         private AffErrorType NoFoundOr(StringParser.Status status, AffErrorType t)
@@ -212,7 +212,7 @@ namespace ArcCore.Gameplay.Behaviours
             if (!lineParser.ParseFloat(out float divisor, ")"))
                 return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_float);
 
-            affTimingList[currentTimingGroup].Add(new AffTiming() { timing = timing, bpm = bpm, divisor = divisor });
+            affTimingList[currentTimingGroup].Add(new AffTiming() { Timing = timing, bpm = bpm, divisor = divisor });
             return AffErrorType.none;
         }
 
@@ -227,7 +227,7 @@ namespace ArcCore.Gameplay.Behaviours
             if (track < 1 || track > 4)
                 return AffErrorType.invalid_lane;
 
-            affTapList.Add(new AffTap() { timing = timing, track = track, timingGroup = currentTimingGroup });
+            affTapList.Add(new AffTap() { Timing = timing, track = track, timingGroup = currentTimingGroup });
             return AffErrorType.none;
         }
 
@@ -245,7 +245,7 @@ namespace ArcCore.Gameplay.Behaviours
             if (track < 1 || track > 4)
                 return AffErrorType.invalid_lane;
 
-            affHoldList.Add(new AffHold() { timing = timing, endTiming = endTiming, track = track, timingGroup = currentTimingGroup });
+            affHoldList.Add(new AffHold() { Timing = timing, EndTiming = endTiming, track = track, timingGroup = currentTimingGroup });
             return AffErrorType.none;
         }
 
@@ -288,8 +288,8 @@ namespace ArcCore.Gameplay.Behaviours
                 while (affArcList.Count < color + 1) affArcList.Add(new List<AffArc>());
                 affArcList[color].Add(new AffArc()
                 {
-                    timing = timing,
-                    endTiming = endTiming,
+                    Timing = timing,
+                    EndTiming = endTiming,
                     startX = startX,
                     endX = endX,
                     easing = easing,
@@ -327,7 +327,7 @@ namespace ArcCore.Gameplay.Behaviours
 
                     affArcTapList.Add(new AffArcTap()
                     {
-                        timing = t,
+                        Timing = t,
                         position = new float2(x, y),
                         timingGroup = currentTimingGroup
                     });
@@ -410,7 +410,7 @@ namespace ArcCore.Gameplay.Behaviours
 
             affCameraList.Add(new AffCamera()
             {
-                timing = timing,
+                Timing = timing,
                 position = new float3(-xpos, ypos, zpos),
                 rotate = new float3(-xrot, -yrot, zrot),
                 easing = easing,

@@ -2,15 +2,14 @@
 {
     public struct AffTap
     {
-        public int timing;
+        private int _timing;
+        public int Timing
+        {
+            get => _timing;
+            set => _timing = GameSettings.GetSpeedModifiedTime(value);
+        }
+
         public int track;
         public int timingGroup;
-
-        public AffTap(int timing, int track, int timingGroup)
-        {
-            this.timing = timing;
-            this.track = track;
-            this.timingGroup = timingGroup;
-        }
     }
 }
