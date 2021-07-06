@@ -47,11 +47,11 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 float y = Conversion.GetWorldY(arctap.position.y);
                 const float z = 0;
 
-                EntityManager.SetComponentData<Translation>(tapEntity, new Translation()
+                EntityManager.SetComponentData(tapEntity, new Translation()
                 {
                     Value = new float3(x, y, z)
                 });
-                EntityManager.SetComponentData<Translation>(shadowEntity, new Translation()
+                EntityManager.SetComponentData(shadowEntity, new Translation()
                 {
                     Value = new float3(x, 0, z)
                 });
@@ -62,22 +62,22 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     value = floorpos
                 };
 
-                EntityManager.SetComponentData<FloorPosition>(tapEntity, floorPositionF);
-                EntityManager.SetComponentData<FloorPosition>(shadowEntity, floorPositionF);
+                EntityManager.SetComponentData(tapEntity, floorPositionF);
+                EntityManager.SetComponentData(shadowEntity, floorPositionF);
 
                 TimingGroup group = new TimingGroup()
                 {
                     value = arctap.timingGroup
                 };
 
-                EntityManager.SetComponentData<TimingGroup>(tapEntity, group);
-                EntityManager.SetComponentData<TimingGroup>(shadowEntity, group);
+                EntityManager.SetComponentData(tapEntity, group);
+                EntityManager.SetComponentData(shadowEntity, group);
 
                 int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, arctap.timingGroup);
                 int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arctap.timingGroup);
                 int appearTime = (t1 < t2) ? t1 : t2;
 
-                EntityManager.SetComponentData<AppearTime>(tapEntity, new AppearTime(){ value = appearTime });
+                EntityManager.SetComponentData(tapEntity, new AppearTime(){ value = appearTime });
 
                 //Judge entities
                 EntityManager.SetComponentData(tapEntity, new ChartTime(arctap.timing));
@@ -105,7 +105,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                         CreateConnections(arctap, affTapList[j], appearTime);
                 }
 
-                EntityManager.SetComponentData<EntityReference>(tapEntity, new EntityReference()
+                EntityManager.SetComponentData(tapEntity, new EntityReference()
                 {
                     value = shadowEntity
                 });
@@ -127,30 +127,30 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             float3 direction = new float3(dx, dy, 0);
             float length = math.sqrt(dx*dx + dy*dy);
 
-            EntityManager.SetComponentData<Translation>(lineEntity, new Translation(){
+            EntityManager.SetComponentData(lineEntity, new Translation(){
                 Value = new float3(x, y, z)
             });
 
-            EntityManager.AddComponentData<NonUniformScale>(lineEntity, new NonUniformScale(){
+            EntityManager.AddComponentData(lineEntity, new NonUniformScale(){
                 Value = new float3(1f, 1f, length)
             });
             
-            EntityManager.SetComponentData<Rotation>(lineEntity, new Rotation(){
+            EntityManager.SetComponentData(lineEntity, new Rotation(){
                 Value = quaternion.LookRotationSafe(direction, new Vector3(0,0,1))
             });
 
             float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup);
-            EntityManager.AddComponentData<FloorPosition>(lineEntity, new FloorPosition(){
+            EntityManager.AddComponentData(lineEntity, new FloorPosition(){
                 value = floorpos
             });
-            EntityManager.SetComponentData<TimingGroup>(lineEntity, new TimingGroup()
+            EntityManager.SetComponentData(lineEntity, new TimingGroup()
             {
                 value = arctap.timingGroup
             });
-            EntityManager.SetComponentData<AppearTime>(lineEntity, new AppearTime(){
+            EntityManager.SetComponentData(lineEntity, new AppearTime(){
                 value = appearTime
             });
-            EntityManager.SetComponentData<ChartTime>(lineEntity, new ChartTime(){
+            EntityManager.SetComponentData(lineEntity, new ChartTime(){
                 value = arctap.timing
             });
         }

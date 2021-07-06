@@ -77,21 +77,12 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 {
                     if (currentTime - Constants.FarWindow > chartIncrTime.time)
                     {
-                        chartIncrTime.UpdateJudgePointCache(currentTime, out int count);
-                        tracker.AddJudge(JudgeType.Lost, count);
-                        particleBuffer.PlayHoldParticle(cl.lane - 1, false);
-                    }
-                }
-            ).Run();
-
-            Entities.WithAll<WithinJudgeRange, ChartTime>().ForEach(
-                (Entity en, in ChartIncrTime chartIncrTime, in ChartLane cl) =>
-                {
-                    if (currentTime - Constants.FarWindow > chartIncrTime.endTime)
-                    {
-                        commandBuffer.DisableEntity(en);
-                        commandBuffer.AddComponent<PastJudgeRange>(en);
-                        particleBuffer.DisableLaneParticle(cl.lane - 1);
+                        int count = chartIncrTime.UpdateJudgePointCache(currentTime - Constants.FarWindow);
+                        if (count > 0)
+                        {
+                            tracker.AddJudge(JudgeType.Lost, count);
+                            particleBuffer.PlayHoldParticle(cl.lane - 1, false);
+                        }
                     }
                 }
             ).Run();
@@ -100,11 +91,10 @@ namespace ArcCore.Gameplay.Systems.Judgement
             //...
 
             //- DESTROY ON TIMING -//
-            //WARNING: TEMPORARY SOLUTION
-            Entities.WithAll<DestroyOnTiming>().ForEach(
-                (Entity en, in ChartTime charttime) =>
+            Entities.ForEach(
+                (Entity en, in DestroyOnTiming destroyTime) =>
                 {
-                    if (currentTime >= charttime.value)
+                    if (currentTime >= destroyTime.value)
                     {
                         commandBuffer.DisableEntity(en);
                         commandBuffer.AddComponent<PastJudgeRange>(en);

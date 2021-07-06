@@ -45,10 +45,6 @@ namespace ArcCore.Utilities.Extensions
             {
                 entityManager.AddChunkComponentData<ChunkAppearTime>(en);
             }
-            if (entityManager.HasComponent<DisappearTime>(en))
-            {
-                entityManager.AddChunkComponentData<ChunkDisappearTime>(en);
-            }
             entityManager.AddComponent<Disabled>(en);
             return en;
         }

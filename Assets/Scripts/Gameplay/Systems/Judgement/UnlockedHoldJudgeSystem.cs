@@ -28,11 +28,14 @@ namespace ArcCore.Gameplay.Systems.Judgement
             Entities.WithNone<HoldLocked, PastJudgeRange>().ForEach(
                 (Entity en, ref ChartIncrTime chartIncrTime, in ChartLane lane) =>
                 {
-                    if (chartIncrTime.time > currentTime - Constants.FarWindow && (bool)tracksHeld[lane.lane])
+                    if (chartIncrTime.time < currentTime + Constants.FarWindow && (bool)tracksHeld[lane.lane])
                     {
-                        chartIncrTime.UpdateJudgePointCachePure(currentTime, out int count);
-                        tracker.AddJudge(JudgeType.MaxPure, count);
-                        particleBuffer.PlayHoldParticle(lane.lane - 1, true);
+                        int count = chartIncrTime.UpdateJudgePointCache(currentTime + Constants.FarWindow);
+                        if (count > 0)
+                        {
+                            tracker.AddJudge(JudgeType.MaxPure, count);
+                            particleBuffer.PlayHoldParticle(lane.lane - 1, true);
+                        }
                     }
                 }
             ).Run();

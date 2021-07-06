@@ -154,7 +154,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                             Conversion.GetWorldY(arc.endY),
                             Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                         );
-                        CreateSegment(arcColorMaterialInstance, tstart, tend, arc.timingGroup);
+                        CreateSegment(arcColorMaterialInstance, tstart, tend, arc.timingGroup, arc.endTiming);
                         continue;
                     }
 
@@ -180,7 +180,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                             Conductor.Instance.GetFloorPositionFromTiming((int)(arc.timing + t), arc.timingGroup)
                         );
 
-                        CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup);
+                        CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup, arc.endTiming);
                     }
 
                     start = end;
@@ -190,7 +190,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                         Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                     );
 
-                    CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup);
+                    CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup, arc.endTiming);
                     CreateJudgeEntity(arc, colorId, startGroupTime, startBpm);
 
                 }
@@ -199,7 +199,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             }
         }
 
-        private void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end, int timingGroup)
+        private void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end, int timingGroup, int endTiming)
         {
             Entity arcInstEntity = EntityManager.Instantiate(arcNoteEntityPrefab);
             Entity arcShadowEntity = EntityManager.Instantiate(arcShadowEntityPrefab);
@@ -245,15 +245,14 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData(arcInstEntity, ltwArc);
             EntityManager.SetComponentData(arcShadowEntity, ltwShadow);
 
-            //FIX THIS SHIT, WHAT IS HAPPENINGGGGGG
-            //entityManager.SetComponentData(arcInstEntity, new ShaderRedmix() { Value = 0f });
-
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, timingGroup);
             int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, timingGroup);
             int appearTime = (t1 < t2) ? t1 : t2;
 
             EntityManager.SetComponentData(arcInstEntity, new AppearTime(appearTime));
             EntityManager.SetComponentData(arcShadowEntity, new AppearTime(appearTime));
+            EntityManager.SetComponentData(arcInstEntity, new DestroyOnTiming(endTiming + Constants.FarWindow));
+            EntityManager.SetComponentData(arcShadowEntity, new DestroyOnTiming(endTiming + Constants.FarWindow));
         }
 
         private void CreateHeightIndicator(AffArc arc, Material material)
@@ -271,7 +270,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             const float scaleZ = 1;
 
             Mesh mesh = EntityManager.GetSharedComponentData<RenderMesh>(heightEntity).mesh; 
-            EntityManager.SetSharedComponentData<RenderMesh>(heightEntity, new RenderMesh()
+            EntityManager.SetSharedComponentData(heightEntity, new RenderMesh()
             {
                 mesh = mesh,
                 material = material 
@@ -281,12 +280,12 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             {
                 Value = new float3(x, y, z)
             });
-            EntityManager.AddComponentData<NonUniformScale>(heightEntity, new NonUniformScale()
+            EntityManager.AddComponentData(heightEntity, new NonUniformScale()
             {
                 Value = new float3(scaleX, scaleY, scaleZ)
             });
             float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup);
-            EntityManager.AddComponentData<FloorPosition>(heightEntity, new FloorPosition(floorpos));
+            EntityManager.AddComponentData(heightEntity, new FloorPosition(floorpos));
             EntityManager.SetComponentData(heightEntity, new TimingGroup(arc.timingGroup));
 
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arc.timingGroup);
@@ -295,13 +294,14 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
             EntityManager.SetComponentData(heightEntity, new AppearTime(appearTime));
             EntityManager.SetComponentData(heightEntity, new ChartTime(arc.timing));
+            EntityManager.SetComponentData(heightEntity, new DestroyOnTiming(arc.timing));
         }
 
         private void CreateHeadSegment(AffArc arc, Material material)
         {
             Entity headEntity = EntityManager.Instantiate(headArcNoteEntityPrefab);
 
-            EntityManager.SetSharedComponentData<RenderMesh>(headEntity, new RenderMesh(){
+            EntityManager.SetSharedComponentData(headEntity, new RenderMesh(){
                 mesh = headMesh,
                 material = material
             });
@@ -322,6 +322,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
             EntityManager.SetComponentData(headEntity, new AppearTime(appearTime));
             EntityManager.SetComponentData(headEntity, new ChartTime(arc.timing));
+            EntityManager.SetComponentData(headEntity, new DestroyOnTiming(arc.timing));
         }
 
         private void CreateJudgeEntity(AffArc arc, int colorId, int startGroupTime, float startBpm)

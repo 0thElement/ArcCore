@@ -16,7 +16,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
     [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(ExpirableJudgeSystem))]
     public class TappableJudgeSystem : SystemBase
     {
-        public static readonly float2 arctapBoxExtents = new float2(2f, 1.75f);
+        public static readonly float2 arctapBoxExtents = new float2(2.975f, 2.25f);
         private enum MinType
         {
             Arctap,
@@ -130,7 +130,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
 
                     case MinType.Hold:
                         ChartIncrTime chartIncrTime = EntityManager.GetComponentData<ChartIncrTime>(minEntity);
-                        chartIncrTime.UpdateJudgePointCache(tapTime, out int count);
+                        int count = chartIncrTime.UpdateJudgePointCache(tapTime + Constants.FarWindow);
                         commandBuffer.SetComponent<ChartIncrTime>(minEntity, chartIncrTime);
                         commandBuffer.RemoveComponent<HoldLocked>(minEntity);
                         ScoreManager.Instance.tracker.AddJudge(minJType, count);

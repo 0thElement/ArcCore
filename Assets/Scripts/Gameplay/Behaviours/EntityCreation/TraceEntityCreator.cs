@@ -171,31 +171,30 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 )
             });
 
-            EntityManager.SetComponentData<BaseOffset>(traceEntity, new BaseOffset(new float4(start.x, start.y, 0, 0)));
-            EntityManager.SetComponentData<BaseOffset>(traceShadowEntity, new BaseOffset(new float4(start.x, 0, 0, 0)));
+            EntityManager.SetComponentData(traceEntity, new BaseOffset(new float4(start.x, start.y, 0, 0)));
+            EntityManager.SetComponentData(traceShadowEntity, new BaseOffset(new float4(start.x, 0, 0, 0)));
 
-            EntityManager.SetComponentData<BaseShear>(traceEntity, new BaseShear(new float4(dx, dy, dz, 0)));
-            EntityManager.SetComponentData<BaseShear>(traceShadowEntity, new BaseShear(new float4(dx, 0, dz, 0)));
+            EntityManager.SetComponentData(traceEntity, new BaseShear(new float4(dx, dy, dz, 0)));
+            EntityManager.SetComponentData(traceShadowEntity, new BaseShear(new float4(dx, 0, dz, 0)));
 
-            EntityManager.SetComponentData<Cutoff>(traceEntity, new Cutoff(false));
-            EntityManager.SetComponentData<Cutoff>(traceShadowEntity, new Cutoff(false));
+            EntityManager.SetComponentData(traceEntity, new Cutoff(false));
+            EntityManager.SetComponentData(traceShadowEntity, new Cutoff(false));
 
-            EntityManager.SetComponentData<TimingGroup>(traceEntity, new TimingGroup() { value = timingGroup });
-            EntityManager.SetComponentData<TimingGroup>(traceShadowEntity, new TimingGroup() { value = timingGroup });
+            EntityManager.SetComponentData(traceEntity, new TimingGroup() { value = timingGroup });
+            EntityManager.SetComponentData(traceShadowEntity, new TimingGroup() { value = timingGroup });
 
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, timingGroup);
             int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, timingGroup);
             int appearTime = (t1 < t2) ? t1 : t2;
-            int disappearTime = endTime;
 
-            EntityManager.SetComponentData<AppearTime>(traceEntity, new AppearTime() { value = appearTime });
-            EntityManager.SetComponentData<AppearTime>(traceShadowEntity, new AppearTime() { value = appearTime });
+            EntityManager.SetComponentData(traceEntity, new AppearTime() { value = appearTime });
+            EntityManager.SetComponentData(traceShadowEntity, new AppearTime() { value = appearTime });
 
-            EntityManager.SetComponentData<DisappearTime>(traceEntity, new DisappearTime() { value = disappearTime });
-            EntityManager.SetComponentData<DisappearTime>(traceShadowEntity, new DisappearTime() { value = disappearTime });
+            EntityManager.SetComponentData(traceEntity, new DestroyOnTiming(endTime));
+            EntityManager.SetComponentData(traceShadowEntity, new DestroyOnTiming(endTime));
 
-            EntityManager.SetComponentData<ChartTime>(traceEntity, new ChartTime() { value = time });
-            EntityManager.SetComponentData<ChartTime>(traceShadowEntity, new ChartTime() { value = time });
+            EntityManager.SetComponentData(traceEntity, new ChartTime() { value = time });
+            EntityManager.SetComponentData(traceShadowEntity, new ChartTime() { value = time });
         }
 
         private void CreateHeadSegment(AffTrace trace)
@@ -206,7 +205,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 material = traceMaterial
             });
             float floorpos = Conductor.Instance.GetFloorPositionFromTiming(trace.timing, trace.timingGroup);
-            EntityManager.SetComponentData<FloorPosition>(headEntity, new FloorPosition()
+            EntityManager.SetComponentData(headEntity, new FloorPosition()
             {
                 value = floorpos
             });
@@ -214,11 +213,11 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             float x = Conversion.GetWorldX(trace.startX); 
             float y = Conversion.GetWorldY(trace.startY); 
             const float z = 0;
-            EntityManager.SetComponentData<Translation>(headEntity, new Translation()
+            EntityManager.SetComponentData(headEntity, new Translation()
             {
                 Value = new float3(x, y, z)
             });
-            EntityManager.SetComponentData<TimingGroup>(headEntity, new TimingGroup()
+            EntityManager.SetComponentData(headEntity, new TimingGroup()
             {
                 value = trace.timingGroup
             });
@@ -227,12 +226,12 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, 0);
             int appearTime = (t1 < t2) ? t1 : t2;
 
-            EntityManager.SetComponentData<AppearTime>(headEntity, new AppearTime()
+            EntityManager.SetComponentData(headEntity, new AppearTime()
             {
                 value = appearTime
             });
 
-            EntityManager.SetComponentData<ChartTime>(headEntity, new ChartTime()
+            EntityManager.SetComponentData(headEntity, new ChartTime()
             {
                 value = trace.timing
             });

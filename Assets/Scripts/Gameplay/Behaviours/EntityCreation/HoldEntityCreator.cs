@@ -66,17 +66,17 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 float startFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.timing, hold.timingGroup);
                 float scalez = - endFloorPosition + startFloorPosition;
 
-                EntityManager.SetComponentData<Translation>(holdEntity, new Translation(){
+                EntityManager.SetComponentData(holdEntity, new Translation(){
                     Value = new float3(x, y, z)
                 });
-                EntityManager.AddComponentData<NonUniformScale>(holdEntity, new NonUniformScale(){
+                EntityManager.AddComponentData(holdEntity, new NonUniformScale(){
                     Value = new float3(scalex, scaley, scalez)
                 });
-                EntityManager.SetComponentData<BaseLength>(holdEntity, new BaseLength(scalez));
+                EntityManager.SetComponentData(holdEntity, new BaseLength(scalez));
 
-                EntityManager.SetComponentData<FloorPosition>(holdEntity, new FloorPosition(startFloorPosition));
-                EntityManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(hold.timingGroup));
-                EntityManager.SetComponentData<ChartTime >(holdEntity, new ChartTime{value = hold.timing});
+                EntityManager.SetComponentData(holdEntity, new FloorPosition(startFloorPosition));
+                EntityManager.SetComponentData(holdEntity, new TimingGroup(hold.timingGroup));
+                EntityManager.SetComponentData(holdEntity, new ChartTime{value = hold.timing});
 
                 EntityManager.SetComponentData(holdEntity, new ChartLane(hold.track));
 
@@ -85,10 +85,12 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(endFloorPosition - Constants.RenderFloorPositionRange, 0);
                 int appearTime = (t1 < t2) ? t1 : t2;
 
-                EntityManager.SetComponentData<AppearTime>(holdEntity, new AppearTime(appearTime));
+                EntityManager.SetComponentData(holdEntity, new AppearTime(appearTime));
+                EntityManager.SetComponentData(holdEntity, new DestroyOnTiming(hold.endTiming + Constants.FarWindow));
 
                 //Judge entities
                 float startBpm = Conductor.Instance.GetTimingEventFromTiming(hold.timing, hold.timingGroup).bpm;
+
                 EntityManager.SetComponentData(holdEntity, ChartIncrTime.FromBpm(hold.timing, hold.endTiming, startBpm, out int comboCount));
 
                 //Add combo

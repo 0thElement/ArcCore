@@ -84,7 +84,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
             float floorpos = Conductor.Instance.GetFloorPositionFromTiming(timing, 0);
 
-            EntityManager.SetComponentData<FloorPosition>(lineEntity, new FloorPosition(){
+            EntityManager.SetComponentData(lineEntity, new FloorPosition(){
                 value = floorpos
             });
 
@@ -93,8 +93,8 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             int appearTime = (t1 < t2) ? t1 : t2;
             int disappearTime = (t1 < t2) ? t2 : t1;
 
-            EntityManager.SetComponentData<AppearTime>(lineEntity, new AppearTime(){ value = appearTime });
-            EntityManager.SetComponentData<DisappearTime>(lineEntity, new DisappearTime(){ value = disappearTime });
+            EntityManager.SetComponentData(lineEntity, new AppearTime(){ value = appearTime });
+            EntityManager.SetComponentData(lineEntity, new DestroyOnTiming(disappearTime));
         }
     }
 

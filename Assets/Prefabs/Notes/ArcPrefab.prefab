@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: 6398744089893735001}
   - component: {fileID: -2081278002400947964}
   - component: {fileID: -480528723635339000}
+  - component: {fileID: -3996865347379926368}
   m_Layer: 0
   m_Name: ArcPrefab
   m_TagString: Untagged
@@ -196,6 +197,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: eb03a893d7396ec4c9fdd9f9e5cb42a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  value: 0
+--- !u!114 &-3996865347379926368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9045023917371828371}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c903ecb8ffd9d74f91e227defd0b63f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   value: 0
