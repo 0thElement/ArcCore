@@ -24,7 +24,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
         public void CreateEntities(List<AffTiming> affTimingList)
         {
-            affTimingList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+            affTimingList.Sort((item1, item2) => { return item1.Timing.CompareTo(item2.Timing); });
 
             //Extending the first event to before the song's starting point
             {
@@ -46,14 +46,14 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             for (int i=0; i < affTimingList.Count - 1; i++)
             {
                 AffTiming currentTiming = affTimingList[i];
-                int limit = affTimingList[i+1].timing;
+                int limit = affTimingList[i+1].Timing;
 
                 float distanceBetweenTwoLine = currentTiming.bpm == 0 ? float.MaxValue : 
                                                                         60000f / math.abs(currentTiming.bpm) * currentTiming.divisor;
 
                 if (distanceBetweenTwoLine == 0) continue;
                 
-                for (float timing = currentTiming.timing; timing < limit; timing+=distanceBetweenTwoLine)
+                for (float timing = currentTiming.Timing; timing < limit; timing+=distanceBetweenTwoLine)
                 {
                     CreateLineAt(currentTiming, timing);
                 }
@@ -69,7 +69,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
                 if (distanceBetweenTwoLine == 0) return;
                 
-                for (float timing = lastTiming.timing; timing < limit; timing+=distanceBetweenTwoLine)
+                for (float timing = lastTiming.Timing; timing < limit; timing+=distanceBetweenTwoLine)
                 {
                     CreateLineAt(lastTiming, timing);
                 }

@@ -198,10 +198,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   offset: 0
   chartSpeed: 4
-  groupFloorPosition: []
   receptorTime: 0
   timeOfLastMix: 0
   songLength: 0
+  isUpdating: 0
 --- !u!82 &72529308
 AudioSource:
   m_ObjectHideFlags: 0
@@ -211,7 +211,8 @@ AudioSource:
   m_GameObject: {fileID: 72529306}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 24300002, guid: c0893ca8f89ae564a84bb1a02dc66b6b,
+    type: 2}
   m_audioClip: {fileID: 8300000, guid: 98ab1b8ba99b5e14cb2082fbfca35bb4, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 0.235

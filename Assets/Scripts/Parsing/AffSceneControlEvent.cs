@@ -2,11 +2,11 @@
 {
     public struct AffSceneControlEvent
     {
-        public int timing;
-
-        public AffSceneControlEvent(int timing)
+        private int _timing;
+        public int Timing
         {
-            this.timing = timing;
+            get => _timing;
+            set => _timing = GameSettings.GetSpeedModifiedTime(value);
         }
     }
 }

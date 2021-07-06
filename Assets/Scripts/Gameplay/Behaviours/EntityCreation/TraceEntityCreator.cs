@@ -53,13 +53,13 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         //Similar to arc creation
         public void CreateEntities(List<AffTrace> affTraceList)
         {
-            affTraceList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+            affTraceList.Sort((item1, item2) => { return item1.Timing.CompareTo(item2.Timing); });
             List<float4> connectedTracesIdEndpoint = new List<float4>();
 
             foreach (AffTrace trace in affTraceList)
             {
-                float4 traceStartPoint = new float4((float)trace.timingGroup, (float)trace.timing, trace.startX, trace.startY);
-                float4 traceEndPoint = new float4((float)trace.timingGroup, (float)trace.endTiming, trace.endX, trace.endY);
+                float4 traceStartPoint = new float4((float)trace.timingGroup, (float)trace.Timing, trace.startX, trace.startY);
+                float4 traceEndPoint = new float4((float)trace.timingGroup, (float)trace.EndTiming, trace.endX, trace.endY);
                 int traceId = -1;
                 bool isHeadTrace = true;
                 for (int id = 0; id < connectedTracesIdEndpoint.Count; id++)
@@ -79,7 +79,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     CreateHeadSegment(trace);
                 }
 
-                int duration = trace.endTiming - trace.timing;
+                int duration = trace.EndTiming - trace.Timing;
                 int v1 = duration < 1000 ? 14 : 7;
                 float v2 = 1f / (v1 * duration / 1000f);
                 float segmentLength = duration * v2;
@@ -89,7 +89,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 float3 end = new float3(
                     Conversion.GetWorldX(trace.startX),
                     Conversion.GetWorldY(trace.startY),
-                    Conductor.Instance.GetFloorPositionFromTiming(trace.timing, trace.timingGroup)
+                    Conductor.Instance.GetFloorPositionFromTiming(trace.Timing, trace.timingGroup)
                 );
 
                 for (int i=0; i<segmentCount - 1; i++)
@@ -99,20 +99,20 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     end = new float3(
                         Conversion.GetWorldX(Conversion.GetXAt((float)t / duration, trace.startX, trace.endX, trace.easing)),
                         Conversion.GetWorldY(Conversion.GetYAt((float)t / duration, trace.startY, trace.endY, trace.easing)),
-                        Conductor.Instance.GetFloorPositionFromTiming(trace.timing + t, trace.timingGroup)
+                        Conductor.Instance.GetFloorPositionFromTiming(trace.Timing + t, trace.timingGroup)
                     );
 
-                    CreateSegment(start, end, trace.timingGroup, trace.timing + (int)(i * segmentLength));
+                    CreateSegment(start, end, trace.timingGroup, trace.Timing + (int)(i * segmentLength));
                 }
 
                 start = end;
                 end = new float3(
                     Conversion.GetWorldX(trace.endX),
                     Conversion.GetWorldY(trace.endY),
-                    Conductor.Instance.GetFloorPositionFromTiming(trace.endTiming, trace.timingGroup)
+                    Conductor.Instance.GetFloorPositionFromTiming(trace.EndTiming, trace.timingGroup)
                 );
 
-                CreateSegment(start, end, trace.timingGroup, (int)(trace.endTiming - segmentLength));
+                CreateSegment(start, end, trace.timingGroup, (int)(trace.EndTiming - segmentLength));
             }
         }
 
@@ -183,7 +183,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 mesh = headMesh,
                 material = traceMaterial
             });
-            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(trace.timing, trace.timingGroup);
+            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(trace.Timing, trace.timingGroup);
             EntityManager.SetComponentData<FloorPosition>(headEntity, new FloorPosition()
             {
                 value = floorpos
@@ -212,7 +212,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
             EntityManager.SetComponentData<ChartTime>(headEntity, new ChartTime()
             {
-                value = trace.timing
+                value = trace.Timing
             });
         }
     }

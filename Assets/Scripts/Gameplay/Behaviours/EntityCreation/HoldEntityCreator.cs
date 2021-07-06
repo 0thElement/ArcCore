@@ -24,7 +24,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
         public unsafe void CreateEntities(List<AffHold> affHoldList)
         {
-            affHoldList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+            affHoldList.Sort((item1, item2) => { return item1.Timing.CompareTo(item2.Timing); });
 
             foreach (AffHold hold in affHoldList)
             {
@@ -38,8 +38,8 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 const float scalex = 1;
                 const float scaley = 1;
 
-                float endFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.endTiming, hold.timingGroup);
-                float startFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.timing, hold.timingGroup);
+                float endFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.EndTiming, hold.timingGroup);
+                float startFloorPosition = Conductor.Instance.GetFloorPositionFromTiming(hold.Timing, hold.timingGroup);
                 float scalez = - endFloorPosition + startFloorPosition;
 
                 EntityManager.SetComponentData<Translation>(holdEntity, new Translation(){
@@ -51,7 +51,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
                 EntityManager.SetComponentData<FloorPosition>(holdEntity, new FloorPosition(startFloorPosition));
                 EntityManager.SetComponentData<TimingGroup>(holdEntity, new TimingGroup(hold.timingGroup));
-                EntityManager.SetComponentData<ChartTime >(holdEntity, new ChartTime{value = hold.timing});
+                EntityManager.SetComponentData<ChartTime >(holdEntity, new ChartTime{value = hold.Timing});
 
                 EntityManager.SetComponentData(holdEntity, new ChartLane(hold.track));
 
@@ -63,8 +63,8 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 EntityManager.SetComponentData<AppearTime>(holdEntity, new AppearTime(appearTime));
 
                 //Judge entities
-                float startBpm = Conductor.Instance.GetTimingEventFromTiming(hold.timing, hold.timingGroup).bpm;
-                EntityManager.SetComponentData(holdEntity, ChartIncrTime.FromBpm(hold.timing, hold.endTiming, startBpm, out int comboCount));
+                float startBpm = Conductor.Instance.GetTimingEventFromTiming(hold.Timing, hold.timingGroup).bpm;
+                EntityManager.SetComponentData(holdEntity, ChartIncrTime.FromBpm(hold.Timing, hold.EndTiming, startBpm, out int comboCount));
 
                 //Add combo
                 ScoreManager.Instance.maxCombo += comboCount;

@@ -2,15 +2,14 @@
 {
     public struct AffTiming
     {
-        public int timing;
+        private int _timing;
+        public int Timing
+        {
+            get => _timing;
+            set => _timing = GameSettings.GetSpeedModifiedTime(value);
+        }
+
         public float bpm;
         public float divisor;
-
-        public AffTiming(int timing, float bpm, float divisor)
-        {
-            this.timing = timing;
-            this.bpm = bpm;
-            this.divisor = divisor;
-        }
     }
 }

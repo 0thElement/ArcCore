@@ -28,7 +28,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
         public void CreateEntities(List<AffTap> affTapList)
         {
-            affTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+            affTapList.Sort((item1, item2) => { return item1.Timing.CompareTo(item2.Timing); });
 
             foreach (AffTap tap in affTapList)
             {
@@ -43,7 +43,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     Value = new float3(x, y, z)
                 });
 
-                float floorpos = Conductor.Instance.GetFloorPositionFromTiming(tap.timing, tap.timingGroup);
+                float floorpos = Conductor.Instance.GetFloorPositionFromTiming(tap.Timing, tap.timingGroup);
                 EntityManager.SetComponentData(tapEntity, new FloorPosition(){
                     value = floorpos 
                 });
@@ -58,7 +58,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
                 EntityManager.SetComponentData(tapEntity, new AppearTime(){ value = appearTime });
                 
-                EntityManager.SetComponentData(tapEntity, new ChartTime(tap.timing));
+                EntityManager.SetComponentData(tapEntity, new ChartTime(tap.Timing));
                 EntityManager.SetComponentData(tapEntity, new ChartLane(tap.track));
 
                 ScoreManager.Instance.maxCombo++;

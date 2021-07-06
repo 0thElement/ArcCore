@@ -102,8 +102,13 @@ namespace ArcCore.Gameplay.Behaviours
             //Find the audio source
             audioSource = GetComponent<AudioSource>();
 
+            //Setup song speed: http://answers.unity.com/answers/1677904/view.html
+            audioSource.pitch = GameSettings.SongSpeed;
+            Debug.Log(audioSource.outputAudioMixerGroup.audioMixer);
+            audioSource.outputAudioMixerGroup.audioMixer.SetFloat("Pitch", 1 / GameSettings.SongSpeed);
+            
             //Get song length
-            songLength = (uint)Mathf.Round(audioSource.clip.length * 1000);
+            songLength = (uint)Mathf.Round(audioSource.clip.length / GameSettings.SongSpeed * 1000);
 
             //Set timing information
             dspStartPlayingTime = AudioSettings.dspTime + StartPlayOffset;
@@ -183,13 +188,13 @@ namespace ArcCore.Gameplay.Behaviours
         {
             var tg = timingGroups[i];
 
-            tg.Sort((item1, item2) => item1.timing.CompareTo(item2.timing));
+            tg.Sort((item1, item2) => item1.Timing.CompareTo(item2.Timing));
 
             timingEventGroups[i] = new TimingEvent[tg.Count];
 
             timingEventGroups[i][0] = new TimingEvent
             {
-                timing = tg[0].timing,
+                timing = tg[0].Timing,
                 baseFloorPosition = 0,
                 bpm = tg[0].bpm
             };
@@ -199,10 +204,10 @@ namespace ArcCore.Gameplay.Behaviours
             {
                 timingEventGroups[i][j] = new TimingEvent
                 {
-                    timing = tg[j].timing,
+                    timing = tg[j].Timing,
                     //Calculate the base floor position
                     baseFloorPosition = tg[j - 1].bpm
-                                * (tg[j].timing - tg[j - 1].timing)
+                                * (tg[j].Timing - tg[j - 1].Timing)
                                 + timingEventGroups[i][j - 1].baseFloorPosition,
                     bpm = tg[j].bpm
                 };

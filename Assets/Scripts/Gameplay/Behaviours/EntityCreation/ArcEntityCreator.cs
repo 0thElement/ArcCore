@@ -87,7 +87,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
             foreach (List<AffArc> listByColor in affArcList)
             {
-                listByColor.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+                listByColor.Sort((item1, item2) => { return item1.Timing.CompareTo(item2.Timing); });
 
                 Material arcColorMaterialInstance = Instantiate(arcMaterial);
                 Material heightIndicatorColorMaterialInstance = Instantiate(heightMaterial);
@@ -105,11 +105,11 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     //Precalc and assign a connected arc id to avoid having to figure out connection during gameplay
                     //placed into a new block to prevent data from being used later on
                     {
-                        ArcEndpointData arcStartPoint = (arc.timingGroup, arc.timing, arc.startX, arc.startY);
-                        ArcEndpointData arcEndPoint = (arc.timingGroup, arc.endTiming, arc.endX, arc.endY);
+                        ArcEndpointData arcStartPoint = (arc.timingGroup, arc.Timing, arc.startX, arc.startY);
+                        ArcEndpointData arcEndPoint = (arc.timingGroup, arc.EndTiming, arc.endX, arc.endY);
 
                         int arcId = connectedArcsIdEndpoint.Count;
-                        startGroupTime = arc.timing;
+                        startGroupTime = arc.Timing;
                         bool isHeadArc = true;
 
                         for (int id = connectedArcsIdEndpoint.Count - 1; id >= 0; id--)
@@ -137,10 +137,10 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                         }
                     }
 
-                    float startBpm = Conductor.Instance.GetTimingEventFromTiming(arc.timing, arc.timingGroup).bpm;
+                    float startBpm = Conductor.Instance.GetTimingEventFromTiming(arc.Timing, arc.timingGroup).bpm;
 
                     //Generate arc segments and shadow segment(each segment is its own entity)
-                    int duration = arc.endTiming - arc.timing;
+                    int duration = arc.EndTiming - arc.Timing;
                     int v1 = duration < 1000 ? 14 : 7;
                     float v2 = 1000f / (v1 * duration);
                     float segmentLength = duration * v2;
@@ -150,7 +150,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     float3 end = new float3(
                         Conversion.GetWorldX(arc.startX),
                         Conversion.GetWorldY(arc.startY),
-                        Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
+                        Conductor.Instance.GetFloorPositionFromTiming(arc.Timing, arc.timingGroup)
                     );
 
                     for (int i = 0; i < segmentCount - 1; i++)
@@ -160,7 +160,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                         end = new float3(
                             Conversion.GetWorldX(Conversion.GetXAt(t / duration, arc.startX, arc.endX, arc.easing)),
                             Conversion.GetWorldY(Conversion.GetYAt(t / duration, arc.startY, arc.endY, arc.easing)),
-                            Conductor.Instance.GetFloorPositionFromTiming((int)(arc.timing + t), arc.timingGroup)
+                            Conductor.Instance.GetFloorPositionFromTiming((int)(arc.Timing + t), arc.timingGroup)
                         );
 
                         CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup);
@@ -170,7 +170,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     end = new float3(
                         Conversion.GetWorldX(arc.endX),
                         Conversion.GetWorldY(arc.endY),
-                        Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
+                        Conductor.Instance.GetFloorPositionFromTiming(arc.EndTiming, arc.timingGroup)
                     );
 
                     CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup);
@@ -268,7 +268,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             {
                 Value = new float3(scaleX, scaleY, scaleZ)
             });
-            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup);
+            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.Timing, arc.timingGroup);
             EntityManager.AddComponentData<FloorPosition>(heightEntity, new FloorPosition(floorpos));
             EntityManager.SetComponentData(heightEntity, new TimingGroup(arc.timingGroup));
 
@@ -288,7 +288,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 material = material
             });
 
-            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup);
+            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.Timing, arc.timingGroup);
             EntityManager.SetComponentData(headEntity, new FloorPosition(floorpos));
 
             float x = Conversion.GetWorldX(arc.startX); 
@@ -310,8 +310,8 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
             Entity en = EntityManager.CreateEntity(arcJudgeArchetype);
 
-            EntityManager.SetComponentData(en, new ChartTime(arc.timing));
-            EntityManager.SetComponentData(en, ChartIncrTime.FromBpm(arc.timing, arc.endTiming, startBpm, out int comboCount));
+            EntityManager.SetComponentData(en, new ChartTime(arc.Timing));
+            EntityManager.SetComponentData(en, ChartIncrTime.FromBpm(arc.Timing, arc.EndTiming, startBpm, out int comboCount));
 
             ScoreManager.Instance.maxCombo += comboCount;
 
