@@ -4,9 +4,6 @@
 	{
 		_MainTex ("Texture", 2D) = "white" {}
 		_Color ("Color", Color) = (1,1,1,1)
-		
-		_Direction ("Direction", Float) = 1
-		_Cutoff ("Cutoff", Float) = 0
 	}
 	SubShader
 	{
@@ -41,7 +38,6 @@
 				float3 worldpos : TEXCOORD1;
 			};
 			 
-			float _Direction,_Cutoff;
 			float4 _Color;
             float4 _MainTex_ST;
 			sampler2D _MainTex;
@@ -58,7 +54,6 @@
 
 			half4 frag (v2f i) : SV_Target
 			{
-				if(_Cutoff == 1 && i.worldpos.z * _Direction > 0) return 0;
 				float4 c = i.color * _Color;
 				c.a *= alpha_from_pos(i.worldpos.z) * 0.86;
 

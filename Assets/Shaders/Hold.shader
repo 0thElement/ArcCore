@@ -7,8 +7,6 @@
         _OverlayTex ("Overlay Texture", 2D) = "white" {}
         _GrayCol ("Gray", Color) = (1,1,1,1)
 
-        _Direction("Direction", Float) = 1
-        _Cutoff("Cutoff", Float) = 0
         _Highlight("Highlight", Float) = 0
 
     }
@@ -44,7 +42,7 @@
             sampler2D _MainTex,_HighlightTex,_OverlayTex;
             float4 _MainTex_ST;
             float4 _GrayCol;
-            float _Cutoff,_Highlight,_Direction;
+            float _Highlight;
 
             v2f vert (appdata v)
             {
@@ -60,11 +58,7 @@
                 float zcoord = i.worldpos.z;
                 float4 cutoffBorder = (0,0,0,0);
 
-				if(_Cutoff == 1) 
-                {
-                    if (zcoord * _Direction > 0) return 0;
-                    if (zcoord > -0.1 && zcoord < 0.1) cutoffBorder = (0.3, 0.5, 1, 0.25);
-                }
+                if (_Highlight >= 0 && zcoord > -0.1 && zcoord < 0.1) cutoffBorder = (0.3, 0.5, 1, 0.25);
 
 				if(zcoord < -124.25 || zcoord > 124.25) return 0;
 

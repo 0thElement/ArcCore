@@ -12,9 +12,14 @@ using ArcCore.Utilities.Extensions;
 
 namespace ArcCore.Gameplay.Systems.Judgement
 {
-    [UpdateInGroup(typeof(SimulationSystemGroup)), UpdateAfter(typeof(ParticleJudgeSystem))]
+    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(ParticleJudgeSystem))]
     public class ExpirableJudgeSystem : SystemBase
     {
+        private EndSimulationEntityCommandBufferSystem entityCommandBufferSystem;
+        protected override void OnCreate()
+        {
+            entityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
+        }
         protected override void OnUpdate()
         {
             if (!GameState.isChartMode) return;
@@ -22,7 +27,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
             var tracker = ScoreManager.Instance.tracker;
             int currentTime = Conductor.Instance.receptorTime;
 
-            var commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
+            var commandBuffer = entityCommandBufferSystem.CreateCommandBuffer();
             var particleBuffer = ParticleJudgeSystem.particleBuffer;
 
             //- TAPS -//
@@ -36,9 +41,10 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         tracker.AddJudge(JudgeType.Lost);
 
                         particleBuffer.PlayTapParticle(
-                            new float2(Conversion.TrackToX(cl.lane), 1),
+                            new float2(Conversion.TrackToX(cl.lane), 0.5f),
                             ParticlePool.JudgeType.Lost,
-                            ParticlePool.JudgeDetail.None
+                            ParticlePool.JudgeDetail.None,
+                            1f
                         );
                     }
                 }
@@ -58,7 +64,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         particleBuffer.PlayTapParticle(
                             cp.xy,
                             ParticlePool.JudgeType.Lost,
-                            ParticlePool.JudgeDetail.None
+                            ParticlePool.JudgeDetail.None,
+                            1f 
                         );
                     }
                 }
@@ -92,8 +99,18 @@ namespace ArcCore.Gameplay.Systems.Judgement
             //- ARCS -//
             //...
 
-            commandBuffer.Playback(EntityManager);
-            commandBuffer.Dispose();
+            //- DESTROY ON TIMING -//
+            //WARNING: TEMPORARY SOLUTION
+            Entities.WithAll<DestroyOnTiming>().ForEach(
+                (Entity en, in ChartTime charttime) =>
+                {
+                    if (currentTime >= charttime.value)
+                    {
+                        commandBuffer.DisableEntity(en);
+                        commandBuffer.AddComponent<PastJudgeRange>(en);
+                    }
+                }
+            ).Run();
 
             ScoreManager.Instance.tracker = tracker;
         }

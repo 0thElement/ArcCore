@@ -188,13 +188,13 @@ namespace ArcCore.Gameplay.Behaviours
         {
             var tg = timingGroups[i];
 
-            tg.Sort((item1, item2) => item1.Timing.CompareTo(item2.Timing));
+            tg.Sort((item1, item2) => item1.timing.CompareTo(item2.timing));
 
             timingEventGroups[i] = new TimingEvent[tg.Count];
 
             timingEventGroups[i][0] = new TimingEvent
             {
-                timing = tg[0].Timing,
+                timing = tg[0].timing,
                 baseFloorPosition = 0,
                 bpm = tg[0].bpm
             };
@@ -204,10 +204,10 @@ namespace ArcCore.Gameplay.Behaviours
             {
                 timingEventGroups[i][j] = new TimingEvent
                 {
-                    timing = tg[j].Timing,
+                    timing = tg[j].timing,
                     //Calculate the base floor position
                     baseFloorPosition = tg[j - 1].bpm
-                                * (tg[j].Timing - tg[j - 1].Timing)
+                                * (tg[j].timing - tg[j - 1].timing)
                                 + timingEventGroups[i][j - 1].baseFloorPosition,
                     bpm = tg[j].bpm
                 };

@@ -12,7 +12,7 @@ using ArcCore.Math;
 
 namespace ArcCore.Gameplay.Systems.Judgement
 {
-    [UpdateInGroup(typeof(SimulationSystemGroup)), UpdateAfter(typeof(TappableJudgeSystem))]
+    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(TappableJudgeSystem))]
     public class UnlockedHoldJudgeSystem : SystemBase
     {
         protected override void OnUpdate()
@@ -22,8 +22,6 @@ namespace ArcCore.Gameplay.Systems.Judgement
             int currentTime = Conductor.Instance.receptorTime;
             var tracker = ScoreManager.Instance.tracker;
             var tracksHeld = InputManager.Instance.tracksHeld;
-
-            EntityCommandBuffer commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
 
             var particleBuffer = ParticleJudgeSystem.particleBuffer;
 
@@ -38,9 +36,6 @@ namespace ArcCore.Gameplay.Systems.Judgement
                     }
                 }
             ).Run();
-
-            commandBuffer.Playback(EntityManager);
-            commandBuffer.Dispose();
 
             ScoreManager.Instance.tracker = tracker;
         }

@@ -3,10 +3,6 @@
 	Properties
 	{
 		_Color ("Color", Color) = (1,1,1,1)
-		
-		_Direction ("Direction", Float) = 1
-		_Cutoff ("Cutoff", Float) = 0
-
 		//Highlight = 0 -> normal, 1 -> highlight, -1 -> gray	
 		_Highlight ("Highlight", Float) = 0
 	}
@@ -14,6 +10,7 @@
 	{
 		Tags { "Queue" = "Transparent"  "RenderType" = "Transparent" "CanUseSpriteAtlas"="true"  }
         Cull Off
+		ZTest Off
 		Blend SrcAlpha OneMinusSrcAlpha
   
 		Pass
@@ -41,7 +38,7 @@
 				float3 worldpos : TEXCOORD1;
 			};
 			 
-			float _Direction,_Cutoff,_Highlight;
+			float _Highlight;
 			float4 _Color;
             float4 _MainTex_ST;
 
@@ -56,8 +53,6 @@
 
 			half4 frag (v2f i) : SV_Target
 			{
-				if(_Cutoff == 1 && i.worldpos.z * _Direction > 0) return 0;
-
 				float4 c = _Color;
 
 				c.a *= alpha_from_pos(i.worldpos.z) * 0.5;

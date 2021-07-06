@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace ArcCore.Gameplay.Systems.Judgement
 {
-    [UpdateInGroup(typeof(SimulationSystemGroup)), UpdateAfter(typeof(UnlockedHoldJudgeSystem))]
+    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(UnlockedHoldJudgeSystem))]
     public class FinalJudgeSystem : SystemBase
     {
         protected override void OnUpdate()
