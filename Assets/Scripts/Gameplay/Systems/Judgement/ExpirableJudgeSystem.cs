@@ -91,13 +91,25 @@ namespace ArcCore.Gameplay.Systems.Judgement
             //...
 
             //- DESTROY ON TIMING -//
-            Entities.ForEach(
+            Entities.WithNone<ChartIncrTime>().ForEach(
                 (Entity en, in DestroyOnTiming destroyTime) =>
                 {
                     if (currentTime >= destroyTime.value)
                     {
                         commandBuffer.DisableEntity(en);
                         commandBuffer.AddComponent<PastJudgeRange>(en);
+                    }
+                }
+            ).Run();
+
+            Entities.WithAll<ChartIncrTime>().ForEach(
+                (Entity en, in DestroyOnTiming destroyTime, in ChartLane cl) =>
+                {
+                    if (currentTime >= destroyTime.value)
+                    {
+                        commandBuffer.DisableEntity(en);
+                        commandBuffer.AddComponent<PastJudgeRange>(en);
+                        particleBuffer.DisableLaneParticle(cl.lane - 1);
                     }
                 }
             ).Run();

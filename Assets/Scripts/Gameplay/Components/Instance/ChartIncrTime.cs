@@ -62,6 +62,7 @@ namespace ArcCore.Gameplay.Components
         [BurstCompile(FloatMode = FloatMode.Fast)]
         public int UpdateJudgePointCache(int ctime)
         {
+            if (time > endTime) return 0;
             int count = (ctime - time) / timeIncrement;
             if (count > 0)
                 time += timeIncrement * (count + 1);
