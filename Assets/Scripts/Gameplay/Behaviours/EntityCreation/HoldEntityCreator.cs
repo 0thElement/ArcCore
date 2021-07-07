@@ -88,7 +88,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 EntityManager.SetComponentData(holdEntity, new AppearTime(appearTime));
                 EntityManager.SetComponentData(holdEntity, new DestroyOnTiming(hold.endTiming + Constants.FarWindow));
 
-                //Judge entities
+                //Judge
                 float startBpm = Conductor.Instance.GetTimingEventFromTiming(hold.timing, hold.timingGroup).bpm;
 
                 EntityManager.SetComponentData(holdEntity, ChartIncrTime.FromBpm(hold.timing, hold.endTiming, startBpm, out int comboCount));

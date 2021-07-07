@@ -68,22 +68,19 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 //Judge time
                 ComponentType.ReadWrite<ChartIncrTime>(),
                 //Color
-                ComponentType.ReadOnly<ColorID>(),
+                ComponentType.ReadOnly<ArcColorID>(),
                 //Arc data
                 ComponentType.ReadOnly<ArcData>(),
-                ComponentType.ReadOnly<ArcGroupStartTime>()
+                ComponentType.ReadOnly<ArcGroupID>()
                 
             );
-
-            colorShaderId = Shader.PropertyToID("_Color");
-            redColorShaderId = Shader.PropertyToID("_RedCol");
         }
 
         public void CreateEntities(List<List<AffArc>> affArcList)
         {
             int colorId=0;
-
-            //SET UP NEW JUDGES HEREEEEE
+            var connectedArcsIdEndpoint = new List<ArcEndpointData>();
+            var startTimesById = new List<int>();
 
             foreach (List<AffArc> listByColor in affArcList)
             {
@@ -95,46 +92,38 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 arcColorMaterialInstance.SetColor(redColorShaderId, redColor);
                 heightIndicatorColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
 
-                var connectedArcsIdEndpoint = new List<ArcEndpointData>();
-                var startTimesById = new List<int>();
 
                 foreach (AffArc arc in listByColor)
                 {
-                    int startGroupTime = default;
 
                     //Precalc and assign a connected arc id to avoid having to figure out connection during gameplay
                     //placed into a new block to prevent data from being used later on
+                    ArcEndpointData arcStartPoint = (arc.timingGroup, arc.timing, arc.startX, arc.startY);
+                    ArcEndpointData arcEndPoint = (arc.timingGroup, arc.endTiming, arc.endX, arc.endY);
+
+                    int groupId = connectedArcsIdEndpoint.Count;
+                    bool isHeadArc = true;
+
+                    for (int id = connectedArcsIdEndpoint.Count - 1; id >= 0; id--)
                     {
-                        ArcEndpointData arcStartPoint = (arc.timingGroup, arc.timing, arc.startX, arc.startY);
-                        ArcEndpointData arcEndPoint = (arc.timingGroup, arc.endTiming, arc.endX, arc.endY);
-
-                        int arcId = connectedArcsIdEndpoint.Count;
-                        startGroupTime = arc.timing;
-                        bool isHeadArc = true;
-
-                        for (int id = connectedArcsIdEndpoint.Count - 1; id >= 0; id--)
+                        if (connectedArcsIdEndpoint[id] == arcStartPoint)
                         {
-                            if (connectedArcsIdEndpoint[id] == arcStartPoint)
-                            {
-                                arcId = id;
-                                startGroupTime = startTimesById[id];
+                            groupId = id;
 
-                                isHeadArc = false;
-                                connectedArcsIdEndpoint[id] = arcEndPoint;
-                            }
+                            isHeadArc = false;
+                            connectedArcsIdEndpoint[id] = arcEndPoint;
                         }
+                    }
 
-                        if (isHeadArc)
-                        {
-                            connectedArcsIdEndpoint.Add(arcEndPoint);
-                            startTimesById.Add(startGroupTime);
-                            CreateHeadSegment(arc, arcColorMaterialInstance);
-                        }
+                    if (isHeadArc)
+                    {
+                        connectedArcsIdEndpoint.Add(arcEndPoint);
+                        CreateHeadSegment(arc, arcColorMaterialInstance);
+                    }
 
-                        if (isHeadArc || arc.startY != arc.endY)
-                        {
-                            CreateHeightIndicator(arc, heightIndicatorColorMaterialInstance);
-                        }
+                    if (isHeadArc || arc.startY != arc.endY)
+                    {
+                        CreateHeightIndicator(arc, heightIndicatorColorMaterialInstance);
                     }
 
                     float startBpm = Conductor.Instance.GetTimingEventFromTiming(arc.timing, arc.timingGroup).bpm;
@@ -191,8 +180,8 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     );
 
                     CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup, arc.endTiming);
-                    CreateJudgeEntity(arc, colorId, startGroupTime, startBpm);
 
+                    CreateJudgeEntity(arc, colorId, groupId, startBpm);
                 }
 
                 colorId++;
@@ -325,7 +314,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData(headEntity, new DestroyOnTiming(arc.timing));
         }
 
-        private void CreateJudgeEntity(AffArc arc, int colorId, int startGroupTime, float startBpm)
+        private void CreateJudgeEntity(AffArc arc, int colorId, int groupId, float startBpm)
         {
 
             Entity en = EntityManager.CreateEntity(arcJudgeArchetype);
@@ -335,7 +324,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
             ScoreManager.Instance.tracker.noteCount += comboCount;
 
-            EntityManager.SetComponentData(en, new ColorID(colorId));
+            EntityManager.SetSharedComponentData(en, new ArcColorID(colorId));
             EntityManager.SetComponentData(en,
                 new ArcData(
                     math.float2(arc.startX, arc.startY),
@@ -343,8 +332,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     arc.easing
                 ));
 
-            EntityManager.SetComponentData(en, new ArcGroupStartTime(startGroupTime));
-            
+            EntityManager.SetComponentData(en, new ArcGroupID(groupId));
         }
 
         /// <summary>

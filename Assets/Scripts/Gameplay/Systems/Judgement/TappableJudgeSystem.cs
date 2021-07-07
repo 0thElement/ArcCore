@@ -16,7 +16,6 @@ namespace ArcCore.Gameplay.Systems.Judgement
     [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(ExpirableJudgeSystem))]
     public class TappableJudgeSystem : SystemBase
     {
-        public static readonly float2 arctapBoxExtents = new float2(2.975f, 2.25f);
         private enum MinType
         {
             Arctap,
@@ -89,7 +88,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
                     Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime>().WithoutBurst().ForEach(
                         (Entity en, in ChartTime chartTime, in ChartPosition cp) =>
                         {
-                            if (chartTime.value < minTime && touch.inputPlane.Value.CollidesWith(new Rect2D(cp.xy - arctapBoxExtents, cp.xy + arctapBoxExtents)))
+                            if (chartTime.value < minTime && 
+                                touch.inputPlane.Value.CollidesWith(new Rect2D(cp.xy - Constants.ArctapBoxExtents, cp.xy + Constants.ArctapBoxExtents)))
                             {
                                 minTime = chartTime.value;
                                 minEntity = en;

@@ -15,8 +15,6 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
     public class TapEntityCreator : ECSMonoBehaviour
     {
-        //TODO: MODIFY PREFAB (sorry 0th, i didnt have the editor open while combining the entities lol
-
         public static TapEntityCreator Instance { get; private set; }
         [SerializeField] private GameObject tapNotePrefab;
         private Entity tapNoteEntityPrefab;
@@ -32,7 +30,6 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
             foreach (AffTap tap in affTapList)
             {
-                //Main Entity
                 Entity tapEntity = EntityManager.Instantiate(tapNoteEntityPrefab);
 
                 float x = Conversion.TrackToX(tap.track);

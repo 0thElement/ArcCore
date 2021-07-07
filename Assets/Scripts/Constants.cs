@@ -1,4 +1,6 @@
-﻿namespace ArcCore
+﻿using Unity.Mathematics;
+
+namespace ArcCore
 {
     public static class Constants
     {
@@ -23,6 +25,8 @@
 
         public const int HoldLenienceTime = 6; //0.100 seconds
         public const int ArcRedMaxTime = 20;   //0.333 seconds
+        public static readonly float2 ArctapBoxExtents = new float2(2.975f, 2.25f);
+        public static readonly float2 ArcBoxExtents = new float2(1.955f, 1.8f);
 
         public static string GetDebugChart() =>
 @"

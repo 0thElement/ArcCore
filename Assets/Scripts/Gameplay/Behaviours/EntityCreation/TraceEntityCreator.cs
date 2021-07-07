@@ -27,7 +27,6 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         private Entity traceNoteEntityPrefab;
         private Entity traceShadowEntityPrefab;
         private Entity headTraceNoteEntityPrefab;
-        //private int colorShaderId;
 
         private void Awake()
         {
@@ -38,9 +37,6 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
             traceShadowEntityPrefab = GameObjectConversionSettings.ConvertToNote(traceShadowPrefab, EntityManager);
             EntityManager.ExposeLocalToWorld(traceShadowEntityPrefab);
-
-            // EntityManager.AddChunkComponentData<ChunkDisappearTime>(traceNoteEntityPrefab);
-            // EntityManager.AddChunkComponentData<ChunkDisappearTime>(traceShadowEntityPrefab);
 
             headTraceNoteEntityPrefab = GameObjectConversionSettings.ConvertToNote(headTraceNotePrefab, EntityManager);
         }
