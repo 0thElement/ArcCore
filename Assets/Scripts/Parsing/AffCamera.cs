@@ -14,7 +14,7 @@ namespace ArcCore.Parsing.Aff
             set => _timing = GameSettings.GetSpeedModifiedTime(value);
         }
 
-        public PosRot target;
+        public PosRot targetChange;
         public CameraEasing easing;
 
         private int _duration;
@@ -32,45 +32,32 @@ namespace ArcCore.Parsing.Aff
         public static float3 TransformPos(float3 p) => new float3(-p.x, p.y, p.z) / 100;
         public static float3 TransformRot(float3 r) => new float3(-r.y, -r.x, r.z);
 
-        public float3 PosFromParam
+        public float3 PosChangeFromParam
         {
-            set => target = new PosRot(TransformPos(value), target.rotation);
+            set => targetChange = new PosRot(TransformPos(value), targetChange.rotation);
         }
-        public float3 RotFromParam
+        public float3 RotChangeFromParam
         {
-            set => target = new PosRot(target.position, TransformRot(value));
-        }
-
-        public void SetStart(PosRot start)
-        {
-            this.start = start;
-            current = start;
+            set => targetChange = new PosRot(targetChange.position, TransformRot(value));
         }
 
-        public PosRot start;
-        public PosRot last;
         public PosRot delta;
-        public PosRot totalDelta;
-        public PosRot current;
+        private PosRot last;
+        private PosRot current;
 
-        public PosRot Distance => target - start;
-        public PosRot Remaining => target - (start + totalDelta);
+        public PosRot Remaining => targetChange - current;
 
         public PosRot GetAt(int time)
         {
             float t = Conversion.TransformCamPercent(LerpValue(time), easing);
-            return PosRot.lerp(start, target, t);
+            return targetChange * t;
         }
-        public PosRot RemainingAt(int time)
-            => target - GetAt(time);
 
         public void Update(int time)
         {
             last = current;
             current = GetAt(time);
-
             delta = current - last;
-            totalDelta += delta;
         }
     }
 }

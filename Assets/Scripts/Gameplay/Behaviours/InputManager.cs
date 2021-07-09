@@ -65,7 +65,7 @@ namespace ArcCore.Gameplay.Behaviours
         /// <summary>
         /// The camera to be used in casting raw inputs.
         /// </summary>
-        public Camera cameraCast;
+        public Camera CameraCast => GameplayCamera.Instance.innerCam;
 
         void Awake()
         {
@@ -202,7 +202,7 @@ namespace ArcCore.Gameplay.Behaviours
                     //hardware index does not exist
                     if (index == -1)
                     {
-                        (float2? exact, Rect2D? ipt, int track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(f.ScreenPosition));
+                        (float2? exact, Rect2D? ipt, int track) = Projection.PerformInputRaycast(CameraCast.ScreenPointToRay(f.ScreenPosition));
                         touchPoints[safeIndex] = new TouchPoint(exact, ipt, track, GetChartTime(f.Age), TouchPoint.Status.Tapped, f.Index);
 
                         if(track != -1)
@@ -229,7 +229,7 @@ namespace ArcCore.Gameplay.Behaviours
                     TouchPoint tp = touchPoints[index];
                     int oTrack = tp.track;
 
-                    (tp.inputPosition, tp.inputPlane, tp.track) = Projection.PerformInputRaycast(cameraCast.ScreenPointToRay(f.ScreenPosition));
+                    (tp.inputPosition, tp.inputPlane, tp.track) = Projection.PerformInputRaycast(CameraCast.ScreenPointToRay(f.ScreenPosition));
                     tp.status = TouchPoint.Status.Sustained;
 
                     touchPoints[index] = tp;

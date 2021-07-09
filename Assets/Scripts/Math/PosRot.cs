@@ -24,6 +24,14 @@ namespace ArcCore.Math
             => new PosRot(a.position + b.position, a.rotation + b.rotation);
         public static PosRot operator -(PosRot a, PosRot b)
             => new PosRot(a.position - b.position, a.rotation - b.rotation);
+        public static PosRot operator *(PosRot a, PosRot b)
+            => new PosRot(a.position * b.position, a.rotation * b.rotation);
+        public static PosRot operator *(PosRot a, float b)
+            => new PosRot(a.position * b, a.rotation * b);
+        public static PosRot operator /(PosRot a, PosRot b)
+            => new PosRot(a.position / b.position, a.rotation - b.rotation);
+        public static PosRot operator /(PosRot a, float b)
+            => new PosRot(a.position / b, a.rotation / b);
 
         [SuppressMessage("Style", "IDE1006:Naming Styles")]
         public static PosRot lerp(PosRot a, PosRot b, float t)

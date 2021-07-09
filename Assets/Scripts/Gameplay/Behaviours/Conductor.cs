@@ -62,10 +62,12 @@ namespace ArcCore.Gameplay.Behaviours
         /// <summary>
         /// The value, in milliseconds, of time passed since the start of this chart.
         /// </summary>
+        [HideInInspector]
         public int receptorTime;
         /// <summary>
         /// The time of the last audio mix, accessed through <see cref="TimeSimple.Ticks"/>
         /// </summary>
+        [HideInInspector]
         public long timeOfLastMix;
 
         /// <summary>
@@ -74,11 +76,13 @@ namespace ArcCore.Gameplay.Behaviours
         /// Note that the 32-bit integer limit forces all songs to be less than approximately 0.27 years long.
         /// </para>
         /// </summary>
+        [HideInInspector]
         public uint songLength;
 
         /// <summary>
         /// The current floor positions of all timing-groups.
         /// </summary>
+        [HideInInspector]
         public NativeArray<float> currentFloorPosition;
         /// <summary>
         /// The actual speed used in calculating the positions of notes.
@@ -89,6 +93,7 @@ namespace ArcCore.Gameplay.Behaviours
         /// <summary>
         /// Whether or not time values are currently being updated on this instance.
         /// </summary>
+        [HideInInspector]
         public bool IsUpdating
         {
             get => _isUpdating;
@@ -101,6 +106,14 @@ namespace ArcCore.Gameplay.Behaviours
                 }
             }
         }
+
+        // REQUIRED THINGS //
+        [SerializeField]
+        private GameplayCamera gameplayCamera;
+        [SerializeField]
+        private InputVisualFeedback inputVisualFeedback;
+        [SerializeField]
+        private InputManager inputManager;
         
         public void SetSystemUpdates()
         {
@@ -115,6 +128,9 @@ namespace ArcCore.Gameplay.Behaviours
             JudgeEntitiesScopingSystem.Instance.Enabled = IsUpdating;
             MovingNotesSystem.Instance.Enabled = IsUpdating;
             ScaleAlongTrackSystem.Instance.Enabled = IsUpdating;
+
+            gameplayCamera.isUpdating = IsUpdating;
+            inputVisualFeedback.isUpdating = IsUpdating;
         }
 
         public void Awake()
@@ -169,7 +185,7 @@ namespace ArcCore.Gameplay.Behaviours
             UpdateCurrentFloorPosition();
 
             //Poll for input
-            InputManager.Instance.PollInput();
+            inputManager.PollInput();
         }
 
         public void OnAudioFilterRead(float[] _data, int _channels)

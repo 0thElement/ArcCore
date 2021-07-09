@@ -15,6 +15,8 @@ namespace ArcCore.Gameplay.Behaviours
     {
         public static GameplayCamera Instance { get; private set; }
 
+        public bool isUpdating;
+
         /// <summary>
         /// All movements attached to this camera, assumed to be sorted by time.
         /// </summary>
@@ -88,13 +90,12 @@ namespace ArcCore.Gameplay.Behaviours
 
         public void Update()
         {
-            if (Conductor.Instance != null && Conductor.Instance.IsUpdating)
-            {
-                if (cameraMovements.Length > 0) UpdateMove();
-                if (isReset) UpdateTilt();
+            if (!isUpdating) return;
 
-                transform.SetPositionAndRotation(accumulate);
-            }
+            if (cameraMovements.Length > 0) UpdateMove();
+            if (isReset) UpdateTilt();
+
+            transform.SetPositionAndRotation(accumulate);
         }
 
         public void UpdateMove()
@@ -103,20 +104,19 @@ namespace ArcCore.Gameplay.Behaviours
 
             //handle resets.
             bool needsReset = false;
-            while(currentResetTiming < resetTimings.Length && resetTimings[currentResetTiming] < time)
+            while (currentResetTiming < resetTimings.Length && resetTimings[currentResetTiming] < time)
             {
                 needsReset = true;
                 currentResetTiming++;
             }
-            if (needsReset) Reset();
+            if (needsReset)
+            {
+                Reset();
+            }
 
             //update active indices
             while (firstInactiveIndex < cameraMovements.Length && time > cameraMovements[firstInactiveIndex].Timing)
             {
-                //movement started:
-                //set movement start to accumulate data for this frame.
-                cameraMovements[firstInactiveIndex].SetStart(accumulate);
-
                 activeIndices.Add(firstInactiveIndex);
 
                 //move on to the next movement.
@@ -130,8 +130,11 @@ namespace ArcCore.Gameplay.Behaviours
                 //check if index has ended.
                 if (cameraMovements[i].EndTiming < time)
                 {
-                    //add remaining
-                    accumulate += cameraMovements[i].Remaining;
+                    //add remaining if reset not encountered (to prevent bugginess)
+                    if (!needsReset)
+                    {
+                        accumulate += cameraMovements[i].Remaining;
+                    }
 
                     //mark for removal
                     toRemove.Add(i);
@@ -143,15 +146,17 @@ namespace ArcCore.Gameplay.Behaviours
 
                     //add delta to accumulate
                     accumulate += cameraMovements[i].delta;
-
-                    isReset = false;
                 }
+
+                isReset = false;
             }
 
+            /*
             if (activeIndices.Count > 0)
             {
-                print($"{{{cameraMovements[activeIndices[0]].target}, {transform.position}, {transform.eulerAngles}}}");
+                print($"{{{cameraMovements[activeIndices[0]].targetDelta}, {transform.position}, {transform.eulerAngles}}}");
             }
+            */
 
             //remove dead indices.
             foreach (int i in toRemove)

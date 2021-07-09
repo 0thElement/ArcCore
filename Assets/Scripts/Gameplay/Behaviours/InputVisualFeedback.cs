@@ -6,6 +6,7 @@ namespace ArcCore.Gameplay.Behaviours
     public class InputVisualFeedback : MonoBehaviour
     {
         public static InputVisualFeedback Instance { get; private set; }
+        public bool isUpdating;
 
         /// <summary>
         /// The lane highlight renderers.
@@ -42,6 +43,8 @@ namespace ArcCore.Gameplay.Behaviours
 
         private void Update()
         {
+            if (!isUpdating) return;
+
             //this is probably faster than using dotween
             for (int i=0; i<4; i++)
             {

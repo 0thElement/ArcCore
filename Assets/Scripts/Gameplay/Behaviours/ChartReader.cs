@@ -427,8 +427,8 @@ namespace ArcCore.Gameplay.Behaviours
                 affCameraList.Add(new AffCamera
                 {
                     Timing = timing,
-                    PosFromParam = new float3(xpos, ypos, zpos),
-                    RotFromParam = new float3(xrot, yrot, zrot),
+                    PosChangeFromParam = new float3(xpos, ypos, zpos),
+                    RotChangeFromParam = new float3(xrot, yrot, zrot),
                     easing = easing,
                     Duration = duration
                 });
