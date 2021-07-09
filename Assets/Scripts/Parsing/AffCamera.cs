@@ -8,7 +8,7 @@ namespace ArcCore.Parsing.Aff
     public struct AffCamera
     {
         private int _timing;
-        public int timing
+        public int Timing
         {
             get => _timing;
             set => _timing = GameSettings.GetSpeedModifiedTime(value);
