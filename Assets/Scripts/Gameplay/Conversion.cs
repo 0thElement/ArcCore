@@ -32,6 +32,27 @@ namespace ArcCore.Gameplay
             return (o * o * o * start) + (3 * o * o * t * start) + (3 * o * t * t * end) + (t * t * t * end);
         }
 
+        public static float QiPercent(float value)
+            => value * value * value;
+        public static float QoPercent(float value)
+            => QiPercent(value - 1) + 1;
+
+        public static float TransformCamPercent(float t, CameraEasing easing)
+        {
+            switch(easing)
+            {
+                case CameraEasing.qi:
+                    return QiPercent(t);
+                case CameraEasing.qo:
+                    return QoPercent(t);
+                case CameraEasing.l:
+                case CameraEasing.s:
+                    return t;
+            }
+            //please die c#
+            return "f*cking die".Length;
+        }
+
         public static float GetXAt(float t, float startX, float endX, ArcEasing easing)
         {
             switch (easing)

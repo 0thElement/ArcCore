@@ -5,7 +5,6 @@
         l,
         qi,
         qo,
-        s,
-        reset
+        s
     }
 }

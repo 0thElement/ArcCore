@@ -25,6 +25,7 @@ namespace ArcCore.Gameplay.Behaviours
         private List<AffArcTap> affArcTapList = new List<AffArcTap>();
         private List<AffCamera> affCameraList = new List<AffCamera>();
         private List<AffSceneControlEvent> affSceneControlEventList = new List<AffSceneControlEvent>();
+        private List<int> affResetTimingsList = new List<int>();
 
         private void Awake()
         {
@@ -35,7 +36,7 @@ namespace ArcCore.Gameplay.Behaviours
         {
             // Temporary
             AffError err;
-            if ((err = ReadChart(Constants.GetDebugChart())) != null)
+            if ((err = ReadChart(Constants.GetCamDebugChart())) != null)
                 Debug.LogError(err);
         }
 
@@ -184,6 +185,10 @@ namespace ArcCore.Gameplay.Behaviours
             ArcEntityCreator.Instance.CreateEntities(affArcList);
             TraceEntityCreator.Instance.CreateEntities(affTraceList);
             ArcTapEntityCreator.Instance.CreateEntities(affArcTapList, affTapList);
+
+            affCameraList.Sort((c1, c2) => c1.Timing.CompareTo(c2.Timing));
+            GameplayCamera.Instance.cameraMovements = affCameraList.ToArray();
+            GameplayCamera.Instance.resetTimings = affResetTimingsList.ToArray();
 
             Debug.Log("Finished loading entities");
             Conductor.Instance.PlayMusic();
@@ -388,12 +393,10 @@ namespace ArcCore.Gameplay.Behaviours
             if (!lineParser.ParseFloat(out float zpos, ","))
                 return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_float);
 
-            //Arcade's coordinate system seems to be different to arcaea's
-
-            if (!lineParser.ParseFloat(out float yrot, ","))
+            if (!lineParser.ParseFloat(out float xrot, ","))
                 return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_float);
 
-            if (!lineParser.ParseFloat(out float xrot, ","))
+            if (!lineParser.ParseFloat(out float yrot, ","))
                 return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_float);
 
             if (!lineParser.ParseFloat(out float zrot, ","))
@@ -402,26 +405,34 @@ namespace ArcCore.Gameplay.Behaviours
             if (!lineParser.ReadString(out string ce, ","))
                 return AffErrorType.no_found_item;
 
-            if (!GetCameraEasing(out CameraEasing easing, ce))
+            if (!GetCameraEasing(out CameraEasing easing, out var isReset, ce))
                 return AffErrorType.improper_camtype;
 
             if (!lineParser.ParseInt(out int duration, ")"))
                 return NoFoundOr(lineParser.LastStatus, AffErrorType.improper_int);
 
-            affCameraList.Add(new AffCamera()
+            if (isReset)
             {
-                timing = timing,
-                position = new float3(-xpos, ypos, zpos),
-                rotate = new float3(-xrot, -yrot, zrot),
-                easing = easing,
-                duration = duration
-            });
+                affResetTimingsList.Add(timing);
+            }
+            else
+            {
+                affCameraList.Add(new AffCamera
+                {
+                    Timing = timing,
+                    PosFromParam = new float3(xpos, ypos, zpos),
+                    RotFromParam = new float3(xrot, yrot, zrot),
+                    easing = easing,
+                    Duration = duration
+                });
+            }
 
             return AffErrorType.none;
         }
 
-        private static bool GetCameraEasing(out CameraEasing easing, string easingString)
+        private static bool GetCameraEasing(out CameraEasing easing, out bool isReset, string easingString)
         {
+            isReset = false;
             switch (easingString)
             {
                 case "l":
@@ -437,10 +448,11 @@ namespace ArcCore.Gameplay.Behaviours
                     easing = CameraEasing.s;
                     break;
                 case "reset":
-                    easing = CameraEasing.reset;
+                    easing = CameraEasing.l;
+                    isReset = true;
                     break;
                 default:
-                    easing = CameraEasing.reset;
+                    easing = CameraEasing.l;
                     return false;
             }
 
