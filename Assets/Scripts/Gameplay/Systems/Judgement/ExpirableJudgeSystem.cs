@@ -15,15 +15,16 @@ namespace ArcCore.Gameplay.Systems.Judgement
     [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(ParticleJudgeSystem))]
     public class ExpirableJudgeSystem : SystemBase
     {
+        public static ExpirableJudgeSystem Instance { get; private set; }
+
         private EndSimulationEntityCommandBufferSystem entityCommandBufferSystem;
         protected override void OnCreate()
         {
+            Instance = this;
             entityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
         }
         protected override void OnUpdate()
         {
-            if (!GameState.isChartMode) return;
-
             var tracker = ScoreManager.Instance.tracker;
             int currentTime = Conductor.Instance.receptorTime;
 

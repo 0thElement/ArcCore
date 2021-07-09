@@ -5,6 +5,8 @@ using System;
 using ArcCore.Gameplay.Utility;
 using ArcCore.Parsing.Aff;
 using ArcCore.Utilities;
+using ArcCore.Gameplay.Systems;
+using ArcCore.Gameplay.Systems.Judgement;
 
 namespace ArcCore.Gameplay.Behaviours
 {
@@ -83,15 +85,44 @@ namespace ArcCore.Gameplay.Behaviours
         /// </summary>
         private float scrollSpeed;
 
+        private bool _isUpdating;
         /// <summary>
         /// Whether or not time values are currently being updated on this instance.
         /// </summary>
-        public bool isUpdating;
+        public bool IsUpdating
+        {
+            get => _isUpdating;
+            set
+            {
+                if(value != _isUpdating)
+                {
+                    _isUpdating = value;
+                    SetSystemUpdates();
+                }
+            }
+        }
         
+        public void SetSystemUpdates()
+        {
+            ExpirableJudgeSystem.Instance.Enabled = IsUpdating;
+            FinalJudgeSystem.Instance.Enabled = IsUpdating;
+            HoldHighlightSystem.Instance.Enabled = IsUpdating;
+            ParticleJudgeSystem.Instance.Enabled = IsUpdating;
+            TappableJudgeSystem.Instance.Enabled = IsUpdating;
+            UnlockedHoldJudgeSystem.Instance.Enabled = IsUpdating;
+
+            ChunkScopingSystem.Instance.Enabled = IsUpdating;
+            JudgeEntitiesScopingSystem.Instance.Enabled = IsUpdating;
+            MovingNotesSystem.Instance.Enabled = IsUpdating;
+            ScaleAlongTrackSystem.Instance.Enabled = IsUpdating;
+        }
+
         public void Awake()
         {
             //Set the static instance to this object
             Instance = this;
+            _isUpdating = false;
+            SetSystemUpdates();
         }
         
         /// <summary>
@@ -118,11 +149,13 @@ namespace ArcCore.Gameplay.Behaviours
             audioSource.PlayScheduled(dspStartPlayingTime);
 
             //Set updating
-            isUpdating = true;
+            IsUpdating = true;
         }
 
         public void Update()
         {
+            if (!IsUpdating) return;
+
             //Calculate the current time
             receptorTime = 
                 Mathf.RoundToInt( 

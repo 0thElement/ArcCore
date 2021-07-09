@@ -88,7 +88,7 @@ namespace ArcCore.Gameplay.Behaviours
 
         public void Update()
         {
-            if (Conductor.Instance != null && Conductor.Instance.isUpdating)
+            if (Conductor.Instance != null && Conductor.Instance.IsUpdating)
             {
                 if (cameraMovements.Length > 0) UpdateMove();
                 if (isReset) UpdateTilt();

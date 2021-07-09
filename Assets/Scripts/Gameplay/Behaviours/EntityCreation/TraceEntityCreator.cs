@@ -47,7 +47,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         //Similar to arc creation
         public void CreateEntities(List<AffTrace> affTraceList)
         {
-            affTraceList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+            affTraceList.Sort((item1, item2) => item1.timing.CompareTo(item2.timing));
             List<float4> connectedTracesIdEndpoint = new List<float4>();
 
             foreach (AffTrace trace in affTraceList)

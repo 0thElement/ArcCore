@@ -15,6 +15,11 @@ namespace ArcCore.Gameplay.Systems.Judgement
     [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(TappableJudgeSystem))]
     public class UnlockedHoldJudgeSystem : SystemBase
     {
+        public static UnlockedHoldJudgeSystem Instance { get; set; }
+        protected override void OnCreate()
+        {
+            Instance = this;
+        }
         protected override void OnUpdate()
         {
             if (!GameState.isChartMode) return;

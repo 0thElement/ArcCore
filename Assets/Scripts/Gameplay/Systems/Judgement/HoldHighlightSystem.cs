@@ -14,9 +14,12 @@ namespace ArcCore.Gameplay.Systems.Judgement
 
     public class HoldHighlightSystem : SystemBase
     {
+        public static HoldHighlightSystem Instance { get; private set; }
+
         private EndSimulationEntityCommandBufferSystem entityCommandBufferSystem;
         protected override void OnCreate()
         {
+            Instance = this;
             entityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
         }
         protected override void OnUpdate()

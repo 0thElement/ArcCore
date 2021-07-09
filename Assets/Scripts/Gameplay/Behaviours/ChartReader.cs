@@ -1,4 +1,5 @@
 using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Mathematics;
@@ -32,12 +33,18 @@ namespace ArcCore.Gameplay.Behaviours
             Instance = this;
             Application.targetFrameRate = 200;
         }
-        private void Start()
+
+        private IEnumerator DebugCoroutine()
         {
-            // Temporary
+            yield return null;
             AffError err;
             if ((err = ReadChart(Constants.GetCamDebugChart())) != null)
                 Debug.LogError(err);
+        }
+
+        private void Start()
+        {
+            StartCoroutine(DebugCoroutine());
         }
 
         private void ReadChartNew(string path)

@@ -16,9 +16,13 @@ namespace ArcCore.Gameplay.Systems
     [UpdateBefore(typeof(TransformSystemGroup))]
     public class MovingNotesSystem : SystemBase
     {
+        public static MovingNotesSystem Instance { get; private set; }
+
         EntityQuery ExcludeUnlockedHoldQuery;
         protected override void OnCreate()
         {
+            Instance = this;
+
             var NotHoldQuery = new EntityQueryDesc { None = new ComponentType[] {typeof(ChartIncrTime)} };
             var LockedHoldQuery = new EntityQueryDesc { All = new ComponentType[] {typeof(HoldLocked)} };
             ExcludeUnlockedHoldQuery = GetEntityQuery(new EntityQueryDesc[] {NotHoldQuery, LockedHoldQuery});

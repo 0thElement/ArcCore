@@ -13,6 +13,11 @@ namespace ArcCore.Gameplay.Systems
     [UpdateAfter(typeof(ChunkScopingSystem))]
     public class JudgeEntitiesScopingSystem : SystemBase
     {
+        public static JudgeEntitiesScopingSystem Instance { get; private set; }
+        protected override void OnCreate()
+        {
+            Instance = this;
+        }
         protected override void OnUpdate()
         {
             int currentTime = Conductor.Instance.receptorTime;

@@ -16,6 +16,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
     [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(ExpirableJudgeSystem))]
     public class TappableJudgeSystem : SystemBase
     {
+        public static TappableJudgeSystem Instance { get; private set; }
+
         public static readonly float2 arctapBoxExtents = new float2(2f, 1.75f);
         private enum MinType
         {
@@ -27,6 +29,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
         private EndSimulationEntityCommandBufferSystem entityCommandBufferSystem;
         protected override void OnCreate()
         {
+            Instance = this;
             entityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
         }
 

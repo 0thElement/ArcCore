@@ -9,6 +9,11 @@ namespace ArcCore.Gameplay.Systems
 {
     public class ScaleAlongTrackSystem : SystemBase
     {
+        public static ScaleAlongTrackSystem Instance { get; private set; }
+        protected override void OnCreate()
+        {
+            Instance = this;
+        }
         protected override void OnUpdate()
         {
             Entities.ForEach(

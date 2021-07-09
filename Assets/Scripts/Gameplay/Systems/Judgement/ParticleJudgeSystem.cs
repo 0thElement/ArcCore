@@ -15,6 +15,13 @@ namespace ArcCore.Gameplay.Systems.Judgement
     [UpdateInGroup(typeof(JudgementSystemGroup))]
     public class ParticleJudgeSystem : SystemBase
     {
+        public static ParticleJudgeSystem Instance { get; private set; }
+
+        protected override void OnCreate()
+        {
+            Instance = this;
+        }
+
         public static ParticleBuffer particleBuffer;
         protected override void OnUpdate()
         {

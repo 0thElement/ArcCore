@@ -12,6 +12,8 @@ namespace ArcCore.Gameplay.Systems
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public class ChunkScopingSystem : SystemBase
     {
+        public static ChunkScopingSystem Instance { get; private set; }
+
         private int currentTime;
         private int nextMakeAppearUpdateTime = int.MinValue;
         private int nextMakeDisappearUpdateTime = int.MinValue;
@@ -25,6 +27,7 @@ namespace ArcCore.Gameplay.Systems
 
         protected override void OnCreate()
         {
+            Instance = this;
             makeAppearQueryDesc = new EntityQueryDesc
             {
                 None = new ComponentType[] { typeof(Disappeared), typeof(Prefab) },

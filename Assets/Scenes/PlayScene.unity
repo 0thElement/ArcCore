@@ -6207,19 +6207,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 532e00458c4d1d04fb30d11266b03fda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  curMoveOldestIndex: 0
-  curMoveNewestIndex: 0
+  firstInactiveIndex: 0
+  activeIndices: 
   isReset: 0
   resetTimings: 
   currentResetTiming: 0
-  accumulatePos:
-    x: 0
-    y: 0
-    z: 0
-  accumulateRot:
-    x: 0
-    y: 0
-    z: 0
   innerCam: {fileID: 0}
 --- !u!1 &1008731699
 GameObject:
