@@ -50,7 +50,7 @@ namespace ArcCore.Gameplay.Systems
             }).ScheduleParallel();
 
             //Arc and trace segments
-            Entities.WithNone<ChartIncrTime>().ForEach((ref Cutoff cutoff, in ChartTime chartTime) => {
+            Entities.WithNone<ChartIncrTime, ArcGroupID>().ForEach((ref Cutoff cutoff, in ChartTime chartTime) => {
                 if (chartTime.value <= currentTime) cutoff.value = true;
             }).ScheduleParallel();
 

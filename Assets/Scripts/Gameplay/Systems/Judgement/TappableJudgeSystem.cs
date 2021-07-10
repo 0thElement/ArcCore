@@ -68,12 +68,12 @@ namespace ArcCore.Gameplay.Systems.Judgement
                     ).Run();
 
                     //- LOCKED HOLDS -//
-                    Entities.WithAll<WithinJudgeRange, ChartTime, HoldLocked>().ForEach(
-                        (Entity en, ref ChartIncrTime chartIncrTime, in ChartLane cl) =>
+                    Entities.WithAll<WithinJudgeRange, ChartIncrTime, HoldLocked>().ForEach(
+                        (Entity en, ref ChartTime chartTime, in ChartLane cl) =>
                         {
-                            if (chartIncrTime.time < minTime && touch.track == cl.lane)
+                            if (chartTime.value < minTime && touch.track == cl.lane)
                             {
-                                minTime = chartIncrTime.time;
+                                minTime = chartTime.value;
                                 minEntity = en;
                                 minType = MinType.Hold;
                                 minJType = JudgeType.MaxPure;

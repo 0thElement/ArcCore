@@ -75,9 +75,9 @@ namespace ArcCore.Gameplay.Systems.Judgement
             Entities.WithAll<WithinJudgeRange, ChartTime>().ForEach(
                 (Entity en, ref ChartIncrTime chartIncrTime, in ChartLane cl) =>
                 {
-                    if (currentTime - Constants.FarWindow > chartIncrTime.time)
+                    if (currentTime - Constants.HoldLostWindow > chartIncrTime.time)
                     {
-                        int count = chartIncrTime.UpdateJudgePointCache(currentTime - Constants.FarWindow);
+                        int count = chartIncrTime.UpdateJudgePointCache(currentTime - Constants.HoldLostWindow);
                         if (count > 0)
                         {
                             tracker.AddJudge(JudgeType.Lost, count);
@@ -110,6 +110,18 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         commandBuffer.DisableEntity(en);
                         commandBuffer.AddComponent<PastJudgeRange>(en);
                         particleBuffer.DisableLaneParticle(cl.lane - 1);
+                    }
+                }
+            ).Run();
+
+            Entities.WithAll<ChartIncrTime, ArcGroupID>().WithNone<ChartLane>().ForEach(
+                (Entity en, in DestroyOnTiming destroyTime) =>
+                {
+                    if (currentTime >= destroyTime.value)
+                    {
+                        commandBuffer.DisableEntity(en);
+                        commandBuffer.AddComponent<PastJudgeRange>(en);
+                        //disable arc particle
                     }
                 }
             ).Run();

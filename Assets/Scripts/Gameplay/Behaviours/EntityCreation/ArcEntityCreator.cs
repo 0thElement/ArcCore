@@ -36,7 +36,8 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
         private EntityArchetype arcJudgeArchetype; //CONTINUE HERE DUMBFUCK
 
-        public static int ColorCount => Instance.arcColors.Length;
+        public static int ColorCount = 2;
+        public static int GroupCount = 0;
 
         /// <summary>
         /// Time between two judge points of a similar area and differing colorIDs in which both points will be set as unscrict
@@ -65,6 +66,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 
                 //Chart time
                 ComponentType.ReadOnly<ChartTime>(),
+                ComponentType.ReadOnly<DestroyOnTiming>(),
                 //Judge time
                 ComponentType.ReadWrite<ChartIncrTime>(),
                 //Color
@@ -72,15 +74,16 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 //Arc data
                 ComponentType.ReadOnly<ArcData>(),
                 ComponentType.ReadOnly<ArcGroupID>()
-                
             );
+            
+            colorShaderId = Shader.PropertyToID("_Color");
         }
 
         public void CreateEntities(List<List<AffArc>> affArcList)
         {
             int colorId=0;
             var connectedArcsIdEndpoint = new List<ArcEndpointData>();
-            var startTimesById = new List<int>();
+            //SET UP NEW JUDGES HEREEEEE
 
             foreach (List<AffArc> listByColor in affArcList)
             {
@@ -95,20 +98,22 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
                 foreach (AffArc arc in listByColor)
                 {
+                    int startGroupTime = default;
 
                     //Precalc and assign a connected arc id to avoid having to figure out connection during gameplay
                     //placed into a new block to prevent data from being used later on
-                    ArcEndpointData arcStartPoint = (arc.timingGroup, arc.timing, arc.startX, arc.startY);
-                    ArcEndpointData arcEndPoint = (arc.timingGroup, arc.endTiming, arc.endX, arc.endY);
+                    ArcEndpointData arcStartPoint = (arc.timingGroup, arc.timing, arc.startX, arc.startY, colorId);
+                    ArcEndpointData arcEndPoint = (arc.timingGroup, arc.endTiming, arc.endX, arc.endY, colorId);
 
-                    int groupId = connectedArcsIdEndpoint.Count;
+                    int arcId = connectedArcsIdEndpoint.Count;
+                    startGroupTime = arc.timing;
                     bool isHeadArc = true;
 
                     for (int id = connectedArcsIdEndpoint.Count - 1; id >= 0; id--)
                     {
                         if (connectedArcsIdEndpoint[id] == arcStartPoint)
                         {
-                            groupId = id;
+                            arcId = id;
 
                             isHeadArc = false;
                             connectedArcsIdEndpoint[id] = arcEndPoint;
@@ -143,7 +148,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                             Conversion.GetWorldY(arc.endY),
                             Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                         );
-                        CreateSegment(arcColorMaterialInstance, tstart, tend, arc.timingGroup, arc.endTiming);
+                        CreateSegment(arcColorMaterialInstance, tstart, tend, arc.timingGroup, arc.timing, arc.endTiming, arcId);
                         continue;
                     }
 
@@ -151,6 +156,9 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     float v2 = 1000f / (v1 * duration);
                     float segmentLength = duration * v2;
                     int segmentCount = (int)(duration / segmentLength) + 1;
+
+                    int fromTiming;
+                    int toTiming = arc.timing;
 
                     float3 start;
                     float3 end = new float3(
@@ -161,17 +169,24 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
                     for (int i = 0; i < segmentCount - 1; i++)
                     {
-                        float t = (i + 1) * segmentLength;
+                        int t = (int)((i + 1) * segmentLength);
+
+                        fromTiming = toTiming;
+                        toTiming = arc.timing + t;
+
                         start = end;
                         end = new float3(
                             Conversion.GetWorldX(Conversion.GetXAt(t / duration, arc.startX, arc.endX, arc.easing)),
                             Conversion.GetWorldY(Conversion.GetYAt(t / duration, arc.startY, arc.endY, arc.easing)),
-                            Conductor.Instance.GetFloorPositionFromTiming((int)(arc.timing + t), arc.timingGroup)
+                            Conductor.Instance.GetFloorPositionFromTiming(toTiming, arc.timingGroup)
                         );
 
-                        CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup, arc.endTiming);
+                        CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup, fromTiming, toTiming, arcId);
                     }
 
+                    fromTiming = toTiming;
+                    toTiming = arc.endTiming;
+                    
                     start = end;
                     end = new float3(
                         Conversion.GetWorldX(arc.endX),
@@ -179,19 +194,20 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                         Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                     );
 
-                    CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup, arc.endTiming);
+                    CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup, fromTiming, toTiming, arcId);
+                    CreateJudgeEntity(arc, colorId, arcId, startGroupTime, startBpm);
 
-                    CreateJudgeEntity(arc, colorId, groupId, startBpm);
                 }
 
                 colorId++;
             }
+            ColorCount = colorId;
+            GroupCount = connectedArcsIdEndpoint.Count;
         }
 
-        private void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end, int timingGroup, int endTiming)
+        private void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end, int timingGroup, int timing, int endTiming, int groupId)
         {
             Entity arcInstEntity = EntityManager.Instantiate(arcNoteEntityPrefab);
-            Entity arcShadowEntity = EntityManager.Instantiate(arcShadowEntityPrefab);
             EntityManager.SetSharedComponentData<RenderMesh>(arcInstEntity, new RenderMesh()
             {
                 mesh = arcMesh,
@@ -199,17 +215,14 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             });
 
             EntityManager.SetComponentData(arcInstEntity, new FloorPosition(start.z));
-            EntityManager.SetComponentData(arcShadowEntity, new FloorPosition(start.z));
 
             EntityManager.SetComponentData(arcInstEntity, new TimingGroup(timingGroup));
-            EntityManager.SetComponentData(arcShadowEntity, new TimingGroup(timingGroup));
-
-            EntityManager.SetComponentData(arcInstEntity, new EntityReference(arcShadowEntity));
 
             float dx = start.x - end.x;
             float dy = start.y - end.y;
             float dz = start.z - end.z;
 
+            //Shear along xy + scale along z matrix
             LocalToWorld ltwArc = new LocalToWorld()
             {
                 Value = new float4x4(
@@ -219,29 +232,46 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     0, 0, 0, 1
                 )
             };
-
-            LocalToWorld ltwShadow = new LocalToWorld()
-            {
-                Value = new float4x4(
-                    1, 0, dx, start.x,
-                    0, 1, 0, 0,
-                    0, 0, dz, 0,
-                    0, 0, 0, 1
-                )
-            };
-
-            //Shear along xy + scale along z matrix
             EntityManager.SetComponentData(arcInstEntity, ltwArc);
-            EntityManager.SetComponentData(arcShadowEntity, ltwShadow);
+
+            EntityManager.SetComponentData(arcInstEntity, new BaseOffset(new float4(start.x, start.y, 0, 0)));
+            EntityManager.SetComponentData(arcInstEntity, new BaseShear(new float4(dx, dy, dz, 0)));
+
+            EntityManager.SetComponentData(arcInstEntity, new Cutoff(false));
+
 
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, timingGroup);
             int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, timingGroup);
             int appearTime = (t1 < t2) ? t1 : t2;
 
             EntityManager.SetComponentData(arcInstEntity, new AppearTime(appearTime));
-            EntityManager.SetComponentData(arcShadowEntity, new AppearTime(appearTime));
-            EntityManager.SetComponentData(arcInstEntity, new DestroyOnTiming(endTiming + Constants.FarWindow));
-            EntityManager.SetComponentData(arcShadowEntity, new DestroyOnTiming(endTiming + Constants.FarWindow));
+            EntityManager.SetComponentData(arcInstEntity, new DestroyOnTiming(endTiming + Constants.HoldLostWindow));
+            EntityManager.SetComponentData(arcInstEntity, new ArcGroupID(groupId));
+            //this is terrible. arc do not start judging early so i had to "cheat" judgeentitiesscopingsystem here
+            EntityManager.SetComponentData(arcInstEntity, new ChartTime(timing + Constants.LostWindow));
+
+            if (timing < endTiming)
+            {
+                Entity arcShadowEntity = EntityManager.Instantiate(arcShadowEntityPrefab);
+                EntityManager.SetComponentData(arcShadowEntity, new FloorPosition(start.z));
+                EntityManager.SetComponentData(arcShadowEntity, new TimingGroup(timingGroup));
+                LocalToWorld ltwShadow = new LocalToWorld()
+                {
+                    Value = new float4x4(
+                        1, 0, dx, start.x,
+                        0, 1, 0, 0,
+                        0, 0, dz, 0,
+                        0, 0, 0, 1
+                    )
+                };
+                EntityManager.SetComponentData(arcShadowEntity, new BaseOffset(new float4(start.x, 0, 0, 0)));
+                EntityManager.SetComponentData(arcShadowEntity, new BaseShear(new float4(dx, 0, dz, 0)));
+                EntityManager.SetComponentData(arcShadowEntity, new Cutoff(false));
+                EntityManager.SetComponentData(arcShadowEntity, ltwShadow);
+                EntityManager.SetComponentData(arcShadowEntity, new AppearTime(appearTime));
+                EntityManager.SetComponentData(arcShadowEntity, new DestroyOnTiming(endTiming + Constants.HoldLostWindow));
+                EntityManager.SetComponentData(arcShadowEntity, new ArcGroupID(groupId));
+            }
         }
 
         private void CreateHeightIndicator(AffArc arc, Material material)
@@ -314,7 +344,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData(headEntity, new DestroyOnTiming(arc.timing));
         }
 
-        private void CreateJudgeEntity(AffArc arc, int colorId, int groupId, float startBpm)
+        private void CreateJudgeEntity(AffArc arc, int colorId, int groupId, int startGroupTime, float startBpm)
         {
 
             Entity en = EntityManager.CreateEntity(arcJudgeArchetype);
@@ -327,12 +357,16 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetSharedComponentData(en, new ArcColorID(colorId));
             EntityManager.SetComponentData(en,
                 new ArcData(
-                    math.float2(arc.startX, arc.startY),
-                    math.float2(arc.endX, arc.endY),
+                    Conversion.GetWorldPos(math.float2(arc.startX, arc.startY)),
+                    Conversion.GetWorldPos(math.float2(arc.endX, arc.endY)),
+                    arc.timing,
+                    arc.endTiming,
                     arc.easing
                 ));
 
             EntityManager.SetComponentData(en, new ArcGroupID(groupId));
+            EntityManager.SetComponentData(en, new DestroyOnTiming(arc.endTiming + Constants.HoldLostWindow));
+            
         }
 
         /// <summary>
@@ -344,13 +378,15 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             public int time;
             public float Item3;
             public float Item4;
+            public int Item5;
 
-            public ArcEndpointData(int item1, int time, float item3, float item4)
+            public ArcEndpointData(int item1, int time, float item3, float item4, int item5)
             {
                 Item1 = item1;
                 this.time = time;
                 Item3 = item3;
                 Item4 = item4;
+                Item5 = item5; 
             }
 
             public override bool Equals(object obj)
@@ -359,7 +395,8 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                        Item1 == other.Item1 &&
                        time == other.time &&
                        Item3 == other.Item3 &&
-                       Item4 == other.Item4;
+                       Item4 == other.Item4 &&
+                       Item5 == other.Item5;
             }
 
             public static bool operator ==(ArcEndpointData l, ArcEndpointData r) => l.Equals(r);
@@ -372,25 +409,27 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 hashCode = hashCode * -1521134295 + time.GetHashCode();
                 hashCode = hashCode * -1521134295 + Item3.GetHashCode();
                 hashCode = hashCode * -1521134295 + Item4.GetHashCode();
+                hashCode = hashCode * -1521134295 + Item5.GetHashCode();
                 return hashCode;
             }
 
-            public void Deconstruct(out int item1, out int time, out float item3, out float item4)
+            public void Deconstruct(out int item1, out int time, out float item3, out float item4, out float item5)
             {
                 item1 = Item1;
                 time = this.time;
                 item3 = Item3;
                 item4 = Item4;
+                item5 = Item5;
             }
 
-            public static implicit operator (int, int time, float, float)(ArcEndpointData value)
+            public static implicit operator (int, int time, float, float, int)(ArcEndpointData value)
             {
-                return (value.Item1, value.time, value.Item3, value.Item4);
+                return (value.Item1, value.time, value.Item3, value.Item4, value.Item5);
             }
 
-            public static implicit operator ArcEndpointData((int, int time, float, float) value)
+            public static implicit operator ArcEndpointData((int, int time, float, float, int) value)
             {
-                return new ArcEndpointData(value.Item1, value.time, value.Item3, value.Item4);
+                return new ArcEndpointData(value.Item1, value.time, value.Item3, value.Item4, value.Item5);
             }
         }
     }

@@ -20,9 +20,7 @@ namespace ArcCore.Gameplay.Systems
 
             Entities.WithNone<WithinJudgeRange, PastJudgeRange>().ForEach(
 
-                    (Entity entity, in ChartTime chartTime)
-
-                        =>
+                    (Entity entity, in ChartTime chartTime) =>
 
                     {
                         if (currentTime + Constants.LostWindow >= chartTime.value)

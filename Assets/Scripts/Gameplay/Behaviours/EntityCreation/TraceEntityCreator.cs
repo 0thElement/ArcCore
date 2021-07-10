@@ -127,21 +127,15 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         private void CreateSegment(float3 start, float3 end, int timingGroup, int time, int endTime)
         {
             Entity traceEntity = EntityManager.Instantiate(traceNoteEntityPrefab);
-            Entity traceShadowEntity = EntityManager.Instantiate(traceShadowEntityPrefab);
 
             EntityManager.SetSharedComponentData<RenderMesh>(traceEntity, new RenderMesh()
             {
                 mesh = traceMesh,
                 material = traceMaterial
             });
-            EntityManager.SetSharedComponentData<RenderMesh>(traceShadowEntity, new RenderMesh()
-            {
-                mesh = traceShadowMesh,
-                material = traceShadowMaterial
-            });
 
             EntityManager.SetComponentData<FloorPosition>(traceEntity, new FloorPosition() { value = start.z });
-            EntityManager.SetComponentData<FloorPosition>(traceShadowEntity, new FloorPosition() { value = start.z });
+            EntityManager.SetComponentData(traceEntity, new TimingGroup() { value = timingGroup });
 
             float dx = start.x - end.x;
             float dy = start.y - end.y;
@@ -157,40 +151,48 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     0, 0, 0,  1
                 )
             });
-            EntityManager.SetComponentData<LocalToWorld>(traceShadowEntity, new LocalToWorld()
-            {
-                Value = new float4x4(
-                    1, 0, dx, start.x,
-                    0, 1, 0,  0,
-                    0, 0, dz, 0,
-                    0, 0, 0,  1
-                )
-            });
 
             EntityManager.SetComponentData(traceEntity, new BaseOffset(new float4(start.x, start.y, 0, 0)));
-            EntityManager.SetComponentData(traceShadowEntity, new BaseOffset(new float4(start.x, 0, 0, 0)));
-
             EntityManager.SetComponentData(traceEntity, new BaseShear(new float4(dx, dy, dz, 0)));
-            EntityManager.SetComponentData(traceShadowEntity, new BaseShear(new float4(dx, 0, dz, 0)));
 
             EntityManager.SetComponentData(traceEntity, new Cutoff(false));
-            EntityManager.SetComponentData(traceShadowEntity, new Cutoff(false));
 
-            EntityManager.SetComponentData(traceEntity, new TimingGroup() { value = timingGroup });
-            EntityManager.SetComponentData(traceShadowEntity, new TimingGroup() { value = timingGroup });
 
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, timingGroup);
             int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, timingGroup);
             int appearTime = (t1 < t2) ? t1 : t2;
 
             EntityManager.SetComponentData(traceEntity, new AppearTime() { value = appearTime });
-            EntityManager.SetComponentData(traceShadowEntity, new AppearTime() { value = appearTime });
-
             EntityManager.SetComponentData(traceEntity, new DestroyOnTiming(endTime));
-            EntityManager.SetComponentData(traceShadowEntity, new DestroyOnTiming(endTime));
-
             EntityManager.SetComponentData(traceEntity, new ChartTime() { value = time });
-            EntityManager.SetComponentData(traceShadowEntity, new ChartTime() { value = time });
+
+            if (time < endTime)
+            {
+                Entity traceShadowEntity = EntityManager.Instantiate(traceShadowEntityPrefab);
+                EntityManager.SetSharedComponentData<RenderMesh>(traceShadowEntity, new RenderMesh()
+                {
+                    mesh = traceShadowMesh,
+                    material = traceShadowMaterial
+                });
+                EntityManager.SetComponentData<FloorPosition>(traceShadowEntity, new FloorPosition() { value = start.z });
+
+                EntityManager.SetComponentData<LocalToWorld>(traceShadowEntity, new LocalToWorld()
+                {
+                    Value = new float4x4(
+                        1, 0, dx, start.x,
+                        0, 1, 0,  0,
+                        0, 0, dz, 0,
+                        0, 0, 0,  1
+                    )
+                });
+                EntityManager.SetComponentData(traceShadowEntity, new BaseOffset(new float4(start.x, 0, 0, 0)));
+                EntityManager.SetComponentData(traceShadowEntity, new BaseShear(new float4(dx, 0, dz, 0)));
+                EntityManager.SetComponentData(traceShadowEntity, new Cutoff(false));
+                EntityManager.SetComponentData(traceShadowEntity, new TimingGroup() { value = timingGroup });
+                EntityManager.SetComponentData(traceShadowEntity, new AppearTime() { value = appearTime });
+                EntityManager.SetComponentData(traceShadowEntity, new DestroyOnTiming(endTime));
+                EntityManager.SetComponentData(traceShadowEntity, new ChartTime() { value = time });
+            }
         }
 
         private void CreateHeadSegment(AffTrace trace)
