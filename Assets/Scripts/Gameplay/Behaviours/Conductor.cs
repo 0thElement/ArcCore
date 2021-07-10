@@ -33,16 +33,6 @@ namespace ArcCore.Gameplay.Behaviours
         private AudioSource audioSource;
 
         /// <summary>
-        /// The offset of the current charts, in milliseconds.
-        /// </summary>
-        public int offset;
-        /// <summary>
-        /// The current speed which the chart will be played at.
-        /// This is treated as a direct multiplier of the original speed.
-        /// </summary>
-        [Range(1f,6.5f)] public float chartSpeed;
-
-        /// <summary>
         /// The value of <see cref="AudioSettings.dspTime"/> at which the current song started playing.
         /// </summary>
         [HideInInspector] private double dspStartPlayingTime;
@@ -150,12 +140,12 @@ namespace ArcCore.Gameplay.Behaviours
             audioSource = GetComponent<AudioSource>();
 
             //Setup song speed: http://answers.unity.com/answers/1677904/view.html
-            audioSource.pitch = GameSettings.SongSpeed;
+            audioSource.pitch = GameSettings.Instance.SongSpeed;
             Debug.Log(audioSource.outputAudioMixerGroup.audioMixer);
-            audioSource.outputAudioMixerGroup.audioMixer.SetFloat("Pitch", 1 / GameSettings.SongSpeed);
+            audioSource.outputAudioMixerGroup.audioMixer.SetFloat("Pitch", 1 / GameSettings.Instance.SongSpeed);
             
             //Get song length
-            songLength = (uint)Mathf.Round(audioSource.clip.length / GameSettings.SongSpeed * 1000);
+            songLength = (uint)Mathf.Round(audioSource.clip.length / GameSettings.Instance.SongSpeed * 1000);
 
             //Set timing information
             dspStartPlayingTime = AudioSettings.dspTime + StartPlayOffset;
@@ -179,7 +169,7 @@ namespace ArcCore.Gameplay.Behaviours
                         AudioSettings.dspTime - dspStartPlayingTime + 
                         TimeSimple.TimeSinceTicksToSec(timeOfLastMix)
                     ) * 1000
-                ) - offset;
+                ) - GameSettings.Instance.audioOffset;
 
             //Update floor positions
             UpdateCurrentFloorPosition();
@@ -205,7 +195,7 @@ namespace ArcCore.Gameplay.Behaviours
         /// </summary>
         public void CalculateScrollSpeed()
         {
-            scrollSpeed = -chartSpeed / timingEventGroups[0][0].bpm * SpeedCalculationFactor;
+            scrollSpeed = -GameSettings.Instance.chartSpeed / timingEventGroups[0][0].bpm * SpeedCalculationFactor;
         }
 
         /// <summary>

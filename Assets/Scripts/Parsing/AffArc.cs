@@ -11,14 +11,14 @@ namespace ArcCore.Parsing.Aff
         public int timing
         {
             get => _timing;
-            set => _timing = GameSettings.GetSpeedModifiedTime(value);
+            set => _timing = GameSettings.Instance.GetSpeedModifiedTime(value);
         }
 
         private int _endTiming;
         public int endTiming
         {
             get => _endTiming;
-            set => _endTiming = GameSettings.GetSpeedModifiedTime(value);
+            set => _endTiming = GameSettings.Instance.GetSpeedModifiedTime(value);
         }
 
         public float startX;

@@ -6,7 +6,7 @@
         public int timing
         {
             get => _timing;
-            set => _timing = GameSettings.GetSpeedModifiedTime(value);
+            set => _timing = GameSettings.Instance.GetSpeedModifiedTime(value);
         }
 
         public int track;
