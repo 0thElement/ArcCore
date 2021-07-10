@@ -207,7 +207,7 @@ namespace ArcCore.Gameplay.Behaviours
 
         private void SetAudioOffset(int offset)
         {
-            Conductor.Instance.offset = offset;
+            Conductor.Instance.chartOffset = offset;
         }
 
         private AffErrorType NoFoundOr(StringParser.Status status, AffErrorType t)

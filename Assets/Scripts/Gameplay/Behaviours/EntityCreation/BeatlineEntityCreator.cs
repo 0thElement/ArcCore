@@ -29,7 +29,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             //Extending the first event to before the song's starting point
             {
                 AffTiming firstTiming = affTimingList[0];
-                float start = -3000 - Conductor.Instance.offset;
+                float start = -3000 - Conductor.Instance.FullOffset;
 
                 float distanceBetweenTwoLine = firstTiming.bpm == 0 ? float.MaxValue :
                                                                     60000f / math.abs(firstTiming.bpm) * firstTiming.divisor;

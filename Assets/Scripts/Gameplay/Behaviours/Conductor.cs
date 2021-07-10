@@ -79,6 +79,18 @@ namespace ArcCore.Gameplay.Behaviours
         /// </summary>
         private float scrollSpeed;
 
+        /// <summary>
+        /// The audio offset of the current chart.
+        /// </summary>
+        [HideInInspector]
+        public int chartOffset;
+
+        /// <summary>
+        /// The full offset of the current chart, including user settings.
+        /// </summary>
+        [HideInInspector]
+        public int FullOffset => chartOffset + GameSettings.Instance.audioOffset;
+
         private bool _isUpdating;
         /// <summary>
         /// Whether or not time values are currently being updated on this instance.
@@ -169,7 +181,7 @@ namespace ArcCore.Gameplay.Behaviours
                         AudioSettings.dspTime - dspStartPlayingTime + 
                         TimeSimple.TimeSinceTicksToSec(timeOfLastMix)
                     ) * 1000
-                ) - GameSettings.Instance.audioOffset;
+                ) - FullOffset;
 
             //Update floor positions
             UpdateCurrentFloorPosition();
