@@ -7,7 +7,7 @@ using UnityEngine;
 using ArcCore.Gameplay.Utility;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Chunk;
-using ArcCore.Parsing.Aff;
+using ArcCore.Parsing.Data;
 using ArcCore.Utilities.Extensions;
 
 namespace ArcCore.Gameplay.Behaviours.EntityCreation
@@ -31,13 +31,13 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             shadowEntityPrefab = GameObjectConversionSettings.ConvertToNote(shadowPrefab, EntityManager);
         }
 
-        public void CreateEntities(List<AffArcTap> affArcTapList, List<AffTap> affTapList)
+        public void CreateEntities(List<ArctapRaw> affChartTapList, List<TapRaw> affTapList)
         {
-            affArcTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+            affChartTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
             affTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
             int lowBound=0;
 
-            foreach (AffArcTap arctap in affArcTapList)
+            foreach (ArctapRaw arctap in affChartTapList)
             {
                 //Main entity
                 Entity tapEntity = EntityManager.Instantiate(arcTapNoteEntityPrefab);
@@ -113,7 +113,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
         }
 
-        public void CreateConnections(AffArcTap arctap, AffTap tap, int appearTime)
+        public void CreateConnections(ArctapRaw arctap, TapRaw tap, int appearTime)
         {
             Entity lineEntity = EntityManager.Instantiate(connectionLineEntityPrefab);
 

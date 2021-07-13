@@ -8,7 +8,7 @@ using UnityEngine;
 using ArcCore.Gameplay.Utility;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Chunk;
-using ArcCore.Parsing.Aff;
+using ArcCore.Parsing.Data;
 using ArcCore.Gameplay.Data;
 using ArcCore.Utilities.Extensions;
 
@@ -79,13 +79,13 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             redColorShaderId = Shader.PropertyToID("_RedCol");
         }
 
-        public void CreateEntities(List<List<AffArc>> affArcList)
+        public void CreateEntities(List<List<ArcRaw>> affArcList)
         {
             int colorId=0;
 
             //SET UP NEW JUDGES HEREEEEE
 
-            foreach (List<AffArc> listByColor in affArcList)
+            foreach (List<ArcRaw> listByColor in affArcList)
             {
                 listByColor.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
 
@@ -98,7 +98,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 var connectedArcsIdEndpoint = new List<ArcEndpointData>();
                 var startTimesById = new List<int>();
 
-                foreach (AffArc arc in listByColor)
+                foreach (ArcRaw arc in listByColor)
                 {
                     int startGroupTime = default;
 
@@ -256,7 +256,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData(arcShadowEntity, new AppearTime(appearTime));
         }
 
-        private void CreateHeightIndicator(AffArc arc, Material material)
+        private void CreateHeightIndicator(ArcRaw arc, Material material)
         {
             Entity heightEntity = EntityManager.Instantiate(heightIndicatorEntityPrefab);
 
@@ -297,7 +297,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData(heightEntity, new ChartTime(arc.timing));
         }
 
-        private void CreateHeadSegment(AffArc arc, Material material)
+        private void CreateHeadSegment(ArcRaw arc, Material material)
         {
             Entity headEntity = EntityManager.Instantiate(headArcNoteEntityPrefab);
 
@@ -324,7 +324,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData(headEntity, new ChartTime(arc.timing));
         }
 
-        private void CreateJudgeEntity(AffArc arc, int colorId, int startGroupTime, float startBpm)
+        private void CreateJudgeEntity(ArcRaw arc, int colorId, int startGroupTime, float startBpm)
         {
 
             Entity en = EntityManager.CreateEntity(arcJudgeArchetype);

@@ -3,7 +3,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Gameplay.Components;
-using ArcCore.Parsing.Aff;
+using ArcCore.Parsing.Data;
 using ArcCore.Gameplay.Components.Chunk;
 using ArcCore.Utilities.Extensions;
 
@@ -22,13 +22,13 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             beatlineEntityPrefab = GameObjectConversionSettings.ConvertToNote(beatlinePrefab, EntityManager);
         }
 
-        public void CreateEntities(List<AffTiming> affTimingList)
+        public void CreateEntities(List<TimingRaw> affTimingList)
         {
             affTimingList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
 
             //Extending the first event to before the song's starting point
             {
-                AffTiming firstTiming = affTimingList[0];
+                TimingRaw firstTiming = affTimingList[0];
                 float start = -3000 - Conductor.Instance.FullOffset;
 
                 float distanceBetweenTwoLine = firstTiming.bpm == 0 ? float.MaxValue :
@@ -45,7 +45,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
             for (int i=0; i < affTimingList.Count - 1; i++)
             {
-                AffTiming currentTiming = affTimingList[i];
+                TimingRaw currentTiming = affTimingList[i];
                 int limit = affTimingList[i+1].timing;
 
                 float distanceBetweenTwoLine = currentTiming.bpm == 0 ? float.MaxValue : 
@@ -61,7 +61,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
             //Last timing event
             {
-                AffTiming lastTiming = affTimingList[affTimingList.Count-1];
+                TimingRaw lastTiming = affTimingList[affTimingList.Count-1];
                 uint limit = Conductor.Instance.songLength;
 
                 float distanceBetweenTwoLine = lastTiming.bpm == 0 ? float.MaxValue : 
@@ -76,7 +76,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             }
         }
 
-        private void CreateLineAt(AffTiming timingEvent, float timingf)
+        private void CreateLineAt(TimingRaw timingEvent, float timingf)
         {
             int timing = (int)Mathf.Round(timingf);
 

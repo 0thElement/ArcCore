@@ -7,7 +7,7 @@ using UnityEngine;
 using ArcCore.Gameplay.Utility;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Chunk;
-using ArcCore.Parsing.Aff;
+using ArcCore.Parsing.Data;
 using ArcCore.Utilities.Extensions;
 
 namespace ArcCore.Gameplay.Behaviours.EntityCreation
@@ -45,12 +45,12 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             headTraceNoteEntityPrefab = GameObjectConversionSettings.ConvertToNote(headTraceNotePrefab, EntityManager);
         }
         //Similar to arc creation
-        public void CreateEntities(List<AffTrace> affTraceList)
+        public void CreateEntities(List<TraceRaw> affTraceList)
         {
             affTraceList.Sort((item1, item2) => item1.timing.CompareTo(item2.timing));
             List<float4> connectedTracesIdEndpoint = new List<float4>();
 
-            foreach (AffTrace trace in affTraceList)
+            foreach (TraceRaw trace in affTraceList)
             {
                 float4 traceStartPoint = new float4((float)trace.timingGroup, (float)trace.timing, trace.startX, trace.startY);
                 float4 traceEndPoint = new float4((float)trace.timingGroup, (float)trace.endTiming, trace.endX, trace.endY);
@@ -198,7 +198,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData<ChartTime>(traceShadowEntity, new ChartTime() { value = time });
         }
 
-        private void CreateHeadSegment(AffTrace trace)
+        private void CreateHeadSegment(TraceRaw trace)
         {
             Entity headEntity = EntityManager.Instantiate(headTraceNoteEntityPrefab);
             EntityManager.SetSharedComponentData<RenderMesh>(headEntity, new RenderMesh(){

@@ -37,8 +37,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 {
                     if (currentTime - Constants.FarWindow > chartTime.value)
                     {
-                        commandBuffer.DisableEntity(en);
                         commandBuffer.AddComponent<PastJudgeRange>(en);
+                        commandBuffer.DisableEntity(en);
                         tracker.AddJudge(JudgeType.Lost);
 
                         particleBuffer.PlayTapParticle(
@@ -57,9 +57,9 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 {
                     if (currentTime - Constants.FarWindow > chartTime.value)
                     {
+                        commandBuffer.AddComponent<PastJudgeRange>(en);
                         commandBuffer.DisableEntity(enRef.value);
                         commandBuffer.DisableEntity(en);
-                        commandBuffer.AddComponent<PastJudgeRange>(en);
                         tracker.AddJudge(JudgeType.Lost);
 
                         particleBuffer.PlayTapParticle(
@@ -90,8 +90,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 {
                     if (currentTime - Constants.FarWindow > chartIncrTime.endTime)
                     {
-                        commandBuffer.DisableEntity(en);
                         commandBuffer.AddComponent<PastJudgeRange>(en);
+                        commandBuffer.DisableEntity(en);
                         particleBuffer.DisableLaneParticle(cl.lane - 1);
                     }
                 }
@@ -100,6 +100,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
             //- ARCS -//
             //...
 
+            /*
             //- DESTROY ON TIMING -//
             //WARNING: TEMPORARY SOLUTION
             Entities.WithAll<DestroyOnTiming>().ForEach(
@@ -111,7 +112,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         commandBuffer.AddComponent<PastJudgeRange>(en);
                     }
                 }
-            ).Run();
+            ).Run();*/
 
             ScoreManager.Instance.tracker = tracker;
         }

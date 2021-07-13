@@ -3,7 +3,7 @@ using UnityEngine;
 using Unity.Collections;
 using System;
 using ArcCore.Gameplay.Utility;
-using ArcCore.Parsing.Aff;
+using ArcCore.Parsing.Data;
 using ArcCore.Utilities;
 using ArcCore.Gameplay.Systems;
 using ArcCore.Gameplay.Systems.Judgement;
@@ -214,7 +214,7 @@ namespace ArcCore.Gameplay.Behaviours
         /// Create timing event groups to track timing events given raw aff timing components.
         /// </summary>
         /// <param name="timingGroups">The raw aff timing components.</param>
-        public void SetupTimingGroups(List<List<AffTiming>> timingGroups) 
+        public void SetupTimingGroups(List<List<TimingRaw>> timingGroups) 
         {
             timingEventGroups = new TimingEvent[timingGroups.Count][]; 
             currentFloorPosition = new NativeArray<float>(new float[timingGroups.Count], Allocator.Persistent);
@@ -235,7 +235,7 @@ namespace ArcCore.Gameplay.Behaviours
         /// </summary>
         /// <param name="timingGroups">The raw aff timing components.</param>
         /// <param name="i">The index of the timing group to set up.</param>
-        private void SetupTimingGroup(List<List<AffTiming>> timingGroups, int i)
+        private void SetupTimingGroup(List<List<TimingRaw>> timingGroups, int i)
         {
             var tg = timingGroups[i];
 

@@ -3,8 +3,7 @@ using UnityEngine;
 using Unity.Collections;
 using System;
 using ArcCore.Gameplay.Utility;
-using ArcCore.Parsing.Aff;
-using ArcCore.Utilities;
+using ArcCore.Parsing.Data;
 using Unity.Mathematics;
 using ArcCore.Math;
 using ArcCore.Utilities.Extensions;
@@ -20,7 +19,7 @@ namespace ArcCore.Gameplay.Behaviours
         /// <summary>
         /// All movements attached to this camera, assumed to be sorted by time.
         /// </summary>
-        public AffCamera[] cameraMovements;
+        public CameraEvent[] cameraMovements;
         public int firstInactiveIndex;
         public List<int> activeIndices;
         /// <summary>

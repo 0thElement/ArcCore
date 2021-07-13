@@ -5,7 +5,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Gameplay.Utility;
 using ArcCore.Gameplay.Components;
-using ArcCore.Parsing.Aff;
+using ArcCore.Parsing.Data;
 using ArcCore.Gameplay.Components.Chunk;
 using ArcCore.Utilities.Extensions;
 using Unity.Rendering;
@@ -46,11 +46,11 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             };
         }
 
-        public unsafe void CreateEntities(List<AffHold> affHoldList)
+        public unsafe void CreateEntities(List<HoldRaw> affHoldList)
         {
             affHoldList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
 
-            foreach (AffHold hold in affHoldList)
+            foreach (HoldRaw hold in affHoldList)
             {
                 //Main entity
                 Entity holdEntity = EntityManager.Instantiate(holdNoteEntityPrefab);

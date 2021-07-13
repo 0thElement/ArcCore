@@ -7,7 +7,7 @@ using ArcCore.Gameplay.Utility;
 using ArcCore.Gameplay.Components;
 using Unity.Collections;
 using ArcCore.Gameplay.Components.Chunk;
-using ArcCore.Parsing.Aff;
+using ArcCore.Parsing.Data;
 using ArcCore.Utilities.Extensions;
 
 namespace ArcCore.Gameplay.Behaviours.EntityCreation
@@ -26,11 +26,11 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             tapNoteEntityPrefab = GameObjectConversionSettings.ConvertToNote(tapNotePrefab, EntityManager);
         }
 
-        public void CreateEntities(List<AffTap> affTapList)
+        public void CreateEntities(List<TapRaw> affTapList)
         {
             affTapList.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
 
-            foreach (AffTap tap in affTapList)
+            foreach (TapRaw tap in affTapList)
             {
                 //Main Entity
                 Entity tapEntity = EntityManager.Instantiate(tapNoteEntityPrefab);

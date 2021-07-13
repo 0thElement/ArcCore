@@ -22,7 +22,7 @@ namespace ArcCore.Serialization
         public static readonly string ChartsPath = GetPersistentSubdir(Charts);
         public static readonly string PacksPath = GetPersistentSubdir(Packs);
         public static readonly string TempPath = GetPersistentSubdir(Temp);
-        public static readonly string SettingsJsonPath = GetPersistentSubdir(SettingsJsonPath);
+        public static readonly string SettingsJsonPath = GetPersistentSubdir(SettingsJson);
 
         public static readonly string GlobalsMapPath = Path.Combine(GlobalsPath, MapJson);
         public static readonly string ChartsMapPath = Path.Combine(ChartsPath, MapJson);
