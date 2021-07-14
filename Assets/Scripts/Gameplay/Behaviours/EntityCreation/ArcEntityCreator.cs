@@ -1,15 +1,11 @@
 ﻿using System.Collections.Generic;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
 using Unity.Rendering;
 using UnityEngine;
-using ArcCore.Gameplay.Utility;
 using ArcCore.Gameplay.Components;
-using ArcCore.Gameplay.Components.Chunk;
 using ArcCore.Parsing.Aff;
-using ArcCore.Gameplay.Data;
 using ArcCore.Utilities.Extensions;
 
 namespace ArcCore.Gameplay.Behaviours.EntityCreation
@@ -38,6 +34,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
         public static int ColorCount = 2;
         public static int GroupCount = 0;
+        public List<RenderMesh> colorRenderMeshList;
 
         /// <summary>
         /// Time between two judge points of a similar area and differing colorIDs in which both points will be set as unscrict
@@ -83,6 +80,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         {
             int colorId=0;
             var connectedArcsIdEndpoint = new List<ArcEndpointData>();
+            colorRenderMeshList = new List<RenderMesh>();
             //SET UP NEW JUDGES HEREEEEE
 
             foreach (List<AffArc> listByColor in affArcList)
@@ -95,6 +93,12 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 arcColorMaterialInstance.SetColor(redColorShaderId, redColor);
                 heightIndicatorColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
 
+                RenderMesh renderMesh = new RenderMesh()
+                {
+                    mesh = arcMesh,
+                    material = arcColorMaterialInstance
+                };
+                colorRenderMeshList.Add(renderMesh);
 
                 foreach (AffArc arc in listByColor)
                 {
@@ -148,7 +152,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                             Conversion.GetWorldY(arc.endY),
                             Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                         );
-                        CreateSegment(arcColorMaterialInstance, tstart, tend, arc.timingGroup, arc.timing, arc.endTiming, arcId);
+                        CreateSegment(renderMesh, tstart, tend, arc.timingGroup, arc.timing, arc.endTiming, arcId);
                         continue;
                     }
 
@@ -181,7 +185,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                             Conductor.Instance.GetFloorPositionFromTiming(toTiming, arc.timingGroup)
                         );
 
-                        CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup, fromTiming, toTiming, arcId);
+                        CreateSegment(renderMesh, start, end, arc.timingGroup, fromTiming, toTiming, arcId);
                     }
 
                     fromTiming = toTiming;
@@ -194,7 +198,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                         Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                     );
 
-                    CreateSegment(arcColorMaterialInstance, start, end, arc.timingGroup, fromTiming, toTiming, arcId);
+                    CreateSegment(renderMesh, start, end, arc.timingGroup, fromTiming, toTiming, arcId);
                     CreateJudgeEntity(arc, colorId, arcId, startGroupTime, startBpm);
 
                 }
@@ -205,14 +209,10 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             GroupCount = connectedArcsIdEndpoint.Count;
         }
 
-        private void CreateSegment(Material arcColorMaterialInstance, float3 start, float3 end, int timingGroup, int timing, int endTiming, int groupId)
+        private void CreateSegment(RenderMesh renderMesh, float3 start, float3 end, int timingGroup, int timing, int endTiming, int groupId)
         {
             Entity arcInstEntity = EntityManager.Instantiate(arcNoteEntityPrefab);
-            EntityManager.SetSharedComponentData<RenderMesh>(arcInstEntity, new RenderMesh()
-            {
-                mesh = arcMesh,
-                material = arcColorMaterialInstance
-            });
+            EntityManager.SetSharedComponentData<RenderMesh>(arcInstEntity, renderMesh); 
 
             EntityManager.SetComponentData(arcInstEntity, new FloorPosition(start.z));
 
@@ -247,8 +247,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData(arcInstEntity, new AppearTime(appearTime));
             EntityManager.SetComponentData(arcInstEntity, new DestroyOnTiming(endTiming + Constants.HoldLostWindow));
             EntityManager.SetComponentData(arcInstEntity, new ArcGroupID(groupId));
-            //this is terrible. arc do not start judging early so i had to "cheat" judgeentitiesscopingsystem here
-            EntityManager.SetComponentData(arcInstEntity, new ChartTime(timing + Constants.LostWindow));
+            EntityManager.SetComponentData(arcInstEntity, new ChartTime(timing));
 
             if (timing < endTiming)
             {
@@ -271,6 +270,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 EntityManager.SetComponentData(arcShadowEntity, new AppearTime(appearTime));
                 EntityManager.SetComponentData(arcShadowEntity, new DestroyOnTiming(endTiming + Constants.HoldLostWindow));
                 EntityManager.SetComponentData(arcShadowEntity, new ArcGroupID(groupId));
+                EntityManager.SetComponentData(arcShadowEntity, new ChartTime(timing));
             }
         }
 
@@ -312,7 +312,6 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             int appearTime = (t1 < t2) ? t1 : t2;
 
             EntityManager.SetComponentData(heightEntity, new AppearTime(appearTime));
-            EntityManager.SetComponentData(heightEntity, new ChartTime(arc.timing));
             EntityManager.SetComponentData(heightEntity, new DestroyOnTiming(arc.timing));
         }
 
@@ -340,7 +339,6 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             int appearTime = (t1 < t2) ? t1 : t2;
 
             EntityManager.SetComponentData(headEntity, new AppearTime(appearTime));
-            EntityManager.SetComponentData(headEntity, new ChartTime(arc.timing));
             EntityManager.SetComponentData(headEntity, new DestroyOnTiming(arc.timing));
         }
 

@@ -18,7 +18,7 @@ namespace ArcCore.Gameplay.Systems
             int currentTime = Conductor.Instance.receptorTime;
             var commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
 
-            Entities.WithNone<WithinJudgeRange, PastJudgeRange>().ForEach(
+            Entities.WithNone<WithinJudgeRange, PastJudgeRange, BypassJudgeScoping>().ForEach(
 
                     (Entity entity, in ChartTime chartTime) =>
 

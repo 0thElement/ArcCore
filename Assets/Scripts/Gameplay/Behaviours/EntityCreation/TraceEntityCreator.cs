@@ -155,7 +155,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData(traceEntity, new BaseOffset(new float4(start.x, start.y, 0, 0)));
             EntityManager.SetComponentData(traceEntity, new BaseShear(new float4(dx, dy, dz, 0)));
 
-            EntityManager.SetComponentData(traceEntity, new Cutoff(false));
+            EntityManager.SetComponentData(traceEntity, new Cutoff(true));
 
 
             int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, timingGroup);
@@ -187,7 +187,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 });
                 EntityManager.SetComponentData(traceShadowEntity, new BaseOffset(new float4(start.x, 0, 0, 0)));
                 EntityManager.SetComponentData(traceShadowEntity, new BaseShear(new float4(dx, 0, dz, 0)));
-                EntityManager.SetComponentData(traceShadowEntity, new Cutoff(false));
+                EntityManager.SetComponentData(traceShadowEntity, new Cutoff(true));
                 EntityManager.SetComponentData(traceShadowEntity, new TimingGroup() { value = timingGroup });
                 EntityManager.SetComponentData(traceShadowEntity, new AppearTime() { value = appearTime });
                 EntityManager.SetComponentData(traceShadowEntity, new DestroyOnTiming(endTime));
@@ -227,11 +227,6 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData(headEntity, new AppearTime()
             {
                 value = appearTime
-            });
-
-            EntityManager.SetComponentData(headEntity, new ChartTime()
-            {
-                value = trace.timing
             });
         }
     }
