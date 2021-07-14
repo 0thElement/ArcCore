@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 6767152816892613200}
   - component: {fileID: 9049747518178383543}
   - component: {fileID: 5980156913905255465}
+  - component: {fileID: 8624676004376514443}
   m_Layer: 0
   m_Name: TapPrefab
   m_TagString: Untagged
@@ -163,3 +164,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   value: 5
+--- !u!114 &8624676004376514443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2994907523628847089}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ccd910b39ba23e4abff7afa1ec49a1c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  value: {fileID: 0}

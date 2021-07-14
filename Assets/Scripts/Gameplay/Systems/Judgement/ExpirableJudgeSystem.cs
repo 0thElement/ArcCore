@@ -31,7 +31,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
             var particleBuffer = ParticleJudgeSystem.particleBuffer;
 
             //- TAPS -//
-            Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime, EntityReference>().ForEach(
+            Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime, ArcTapShadowReference>().ForEach(
                 (Entity en, in ChartTime chartTime, in ChartLane cl) =>
                 {
                     if (currentTime - Constants.FarWindow > chartTime.value)
@@ -52,11 +52,12 @@ namespace ArcCore.Gameplay.Systems.Judgement
 
             //- ARCTAPS -//
             Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime>().ForEach(
-                (Entity en, in ChartTime chartTime, in EntityReference enRef, in ChartPosition cp) =>
+                (Entity en, in ChartTime chartTime, in ArcTapShadowReference sdRef, in ChartPosition cp) =>
                 {
                     if (currentTime - Constants.FarWindow > chartTime.value)
                     {
-                        commandBuffer.DisableEntity(enRef.value);
+                        commandBuffer.DisableEntity(sdRef.value);
+                        commandBuffer.AddComponent<PastJudgeRange>(sdRef.value);
                         commandBuffer.DisableEntity(en);
                         commandBuffer.AddComponent<PastJudgeRange>(en);
                         tracker.AddJudge(JudgeType.Lost);

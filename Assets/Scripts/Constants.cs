@@ -32,7 +32,7 @@ namespace ArcCore
 AudioOffset:0
 -
 timing(0,100.00,4.00);
-arc(4200,7200,0.00,0.00,b,1.00,1.00,0,none,false);
+arc(4200,7200,0.00,0.00,b,1.00,1.00,0,none,true)[arctap(4200)];
 hold(7800,10800,4);
 arc(9000,9300,0.50,0.50,b,1.00,1.00,0,none,false);
 arc(10800,12600,0.00,1.00,si,1.00,1.00,0,none,false);

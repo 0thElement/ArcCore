@@ -179,11 +179,10 @@ namespace ArcCore.Gameplay.Behaviours
 
             Conductor.Instance.SetupTimingGroups(affTimingList);
             BeatlineEntityCreator.Instance.CreateEntities(affTimingList[0]);
-            TapEntityCreator.Instance.CreateEntities(affTapList);
+            TapEntityCreator.Instance.CreateEntities(affTapList, affArcTapList);
             HoldEntityCreator.Instance.CreateEntities(affHoldList);
             ArcEntityCreator.Instance.CreateEntities(affArcList);
             TraceEntityCreator.Instance.CreateEntities(affTraceList);
-            ArcTapEntityCreator.Instance.CreateEntities(affArcTapList, affTapList);
 
             Debug.Log("Finished loading entities");
             Conductor.Instance.PlayMusic();

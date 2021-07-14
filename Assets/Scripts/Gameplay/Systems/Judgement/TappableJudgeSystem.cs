@@ -54,7 +54,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 if (touch.TrackValid)
                 {
                     //- TAPS -//
-                    Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime, EntityReference>().ForEach(
+                    Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime, ArcTapShadowReference>().ForEach(
                         (Entity en, in ChartTime chartTime, in ChartLane cl) =>
                         {
                             if (chartTime.value < minTime && touch.track == cl.lane)
@@ -117,7 +117,9 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         break;
 
                     case MinType.Arctap:
-                        commandBuffer.DisableEntity(EntityManager.GetComponentData<EntityReference>(minEntity).value);
+                        Entity shadow = EntityManager.GetComponentData<ArcTapShadowReference>(minEntity).value;
+                        commandBuffer.DisableEntity(shadow);
+                        commandBuffer.AddComponent<PastJudgeRange>(shadow);
                         commandBuffer.DisableEntity(minEntity);
                         commandBuffer.AddComponent<PastJudgeRange>(minEntity);
                         ScoreManager.Instance.tracker.AddJudge(minJType);
