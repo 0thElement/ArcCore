@@ -19,7 +19,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         private Entity holdNoteEntityPrefab;
 
         //Temporary solution, will be refactored when proper skinning is implemented
-        [HideInInspector] public RenderMesh HighlightRenderMesh, GrayoutRenderMesh;
+        [HideInInspector] public RenderMesh HighlightRenderMesh, GrayoutRenderMesh, InitialRenderMesh;
         private void Awake()
         {
             Instance = this;
@@ -33,7 +33,6 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             var highlightShaderID = Shader.PropertyToID("_Highlight");
             highlightMaterial.SetFloat(highlightShaderID, 1);
             grayoutMaterial.SetFloat(highlightShaderID, -1);
-
             
             HighlightRenderMesh = new RenderMesh {
                 mesh = holdRenderMesh.mesh,
@@ -44,6 +43,8 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 mesh = holdRenderMesh.mesh,
                 material = grayoutMaterial
             };
+
+            InitialRenderMesh = holdRenderMesh;
         }
 
         public unsafe void CreateEntities(List<AffHold> affHoldList)

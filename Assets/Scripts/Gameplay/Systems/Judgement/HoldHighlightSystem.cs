@@ -6,6 +6,7 @@ using Unity.Entities;
 using Unity.Rendering;
 using Unity.Transforms;
 using ArcCore.Gameplay.Data;
+using UnityEngine;
 
 namespace ArcCore.Gameplay.Systems.Judgement
 {
@@ -14,55 +15,60 @@ namespace ArcCore.Gameplay.Systems.Judgement
     public class HoldHighlightSystem : SystemBase
     {
         private EndSimulationEntityCommandBufferSystem entityCommandBufferSystem;
-        private RenderMesh highlightRenderMesh;
-        private RenderMesh grayoutRenderMesh;
-        private EntityQuery renderMeshQuery;
         protected override void OnCreate()
         {
             entityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
-            highlightRenderMesh = HoldEntityCreator.Instance.HighlightRenderMesh;
-            grayoutRenderMesh = HoldEntityCreator.Instance.GrayoutRenderMesh;
-            renderMeshQuery = GetEntityQuery(typeof(RenderMesh));
         }
         protected override void OnUpdate()
         {
             NTrackArray<ArcCore.Gameplay.Data.MulticountBool> tracksHeld = InputManager.Instance.tracksHeld;
+            RenderMesh initialRenderMesh = HoldEntityCreator.Instance.InitialRenderMesh;
+            RenderMesh highlightRenderMesh = HoldEntityCreator.Instance.HighlightRenderMesh;
+            RenderMesh grayoutRenderMesh = HoldEntityCreator.Instance.GrayoutRenderMesh;
             int currentTime = Conductor.Instance.receptorTime;
 
             var commandBuffer = entityCommandBufferSystem.CreateCommandBuffer();
 
-            renderMeshQuery.SetSharedComponentFilter<RenderMesh>(grayoutRenderMesh);
             Entities
-                .WithStoreEntityQueryInField(ref renderMeshQuery)
+                .WithSharedComponentFilter<RenderMesh>(grayoutRenderMesh)
                 .WithAll<Translation, ChartIncrTime>()
                 .WithNone<PastJudgeRange, HoldLocked>()
                 .ForEach( 
                     (Entity en, in ChartLane lane) =>
                     {
                         if (tracksHeld[lane.lane] > 0)
+                        {
                             commandBuffer.SetSharedComponent<RenderMesh>(en, highlightRenderMesh);
+                        }
                     }
                 ).WithoutBurst().Run();
                 
-            renderMeshQuery.SetSharedComponentFilter<RenderMesh>(highlightRenderMesh);
             Entities
-                .WithStoreEntityQueryInField(ref renderMeshQuery)
+                .WithSharedComponentFilter<RenderMesh>(highlightRenderMesh)
                 .WithAll<Translation, ChartIncrTime>()
                 .WithNone<PastJudgeRange, HoldLocked>()
                 .ForEach( 
                     (Entity en, in ChartLane lane) =>
                     {
                         if (tracksHeld[lane.lane] <= 0)
+                        {
                             commandBuffer.SetSharedComponent<RenderMesh>(en, grayoutRenderMesh);
+                        }
                     }
                 ).WithoutBurst().Run();
             
-            Entities.WithAll<Translation, HoldLocked>().WithNone<PastJudgeRange>().ForEach( 
-                (Entity en, in ChartTime time) =>
+            Entities
+                .WithSharedComponentFilter<RenderMesh>(initialRenderMesh)
+                .WithAll<Translation, ChartIncrTime>().WithNone<PastJudgeRange>().ForEach( 
+                (Entity en, in ChartLane lane, in ChartTime time) =>
                 {
-                    if (time.value <= currentTime - Constants.FarWindow)
+                    if (tracksHeld[lane.lane] <= 0 && time.value <= currentTime - Constants.FarWindow)
                     {
                         commandBuffer.SetSharedComponent<RenderMesh>(en, grayoutRenderMesh);
+                    }
+                    else if (tracksHeld[lane.lane])
+                    {
+                        commandBuffer.SetSharedComponent<RenderMesh>(en, highlightRenderMesh);
                     }
                 }
             ).WithoutBurst().Run();

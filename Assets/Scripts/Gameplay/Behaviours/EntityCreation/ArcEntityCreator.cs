@@ -7,6 +7,8 @@ using UnityEngine;
 using ArcCore.Gameplay.Components;
 using ArcCore.Parsing.Aff;
 using ArcCore.Utilities.Extensions;
+using ArcCore.Gameplay.Systems.Judgement;
+using Unity.Collections;
 
 namespace ArcCore.Gameplay.Behaviours.EntityCreation
 {
@@ -17,24 +19,29 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         [SerializeField] private GameObject headArcNotePrefab;
         [SerializeField] private GameObject heightIndicatorPrefab;
         [SerializeField] private GameObject arcShadowPrefab;
-        [SerializeField] private Material arcMaterial;
-        [SerializeField] private Material heightMaterial;
         [SerializeField] public Color[] arcColors;
         [SerializeField] private Color redColor;
-        [SerializeField] private Mesh arcMesh;
-        [SerializeField] private Mesh headMesh;
         private Entity arcNoteEntityPrefab;
         private Entity headArcNoteEntityPrefab;
         private Entity heightIndicatorEntityPrefab;
         private Entity arcShadowEntityPrefab;
         private int colorShaderId;
+        private int highlightShaderId;
         private int redColorShaderId;
 
         private EntityArchetype arcJudgeArchetype; //CONTINUE HERE DUMBFUCK
+        [HideInInspector] private Material arcMaterial;
+        [HideInInspector] private Material heightMaterial;
+        [HideInInspector] private Mesh arcMesh;
+        [HideInInspector] private Mesh headMesh;
 
-        public static int ColorCount = 2;
-        public static int GroupCount = 0;
-        public List<RenderMesh> colorRenderMeshList;
+        [HideInInspector] public static int ColorCount = 2;
+        [HideInInspector] public static int GroupCount = 0;
+        [HideInInspector] private List<RenderMesh> initialRenderMeshes;
+        [HideInInspector] private List<RenderMesh> highlightRenderMeshes;
+        [HideInInspector] private List<RenderMesh> grayoutRenderMeshes;
+        [HideInInspector] public RenderMesh ArcShadowRenderMesh;
+        [HideInInspector] public RenderMesh ArcShadowGrayoutRenderMesh;
 
         /// <summary>
         /// Time between two judge points of a similar area and differing colorIDs in which both points will be set as unscrict
@@ -74,13 +81,37 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             );
             
             colorShaderId = Shader.PropertyToID("_Color");
+            highlightShaderId = Shader.PropertyToID("_Highlight");
+
+            arcMaterial = arcNotePrefab.GetComponent<Renderer>().sharedMaterial;
+            heightMaterial = heightIndicatorPrefab.GetComponent<Renderer>().sharedMaterial;
+            arcMesh = arcNotePrefab.GetComponent<MeshFilter>().sharedMesh;
+            headMesh = headArcNotePrefab.GetComponent<MeshFilter>().sharedMesh;
+
+            RenderMesh shadowRenderMesh = EntityManager.GetSharedComponentData<RenderMesh>(arcShadowEntityPrefab);
+            Material shadowMaterial = shadowRenderMesh.material;
+            Material shadowGrayoutMaterial = Instantiate(shadowMaterial);
+
+            shadowGrayoutMaterial.SetFloat(highlightShaderId, -1);
+
+            ArcShadowRenderMesh = new RenderMesh()
+            {
+                mesh = shadowRenderMesh.mesh,
+                material = shadowMaterial
+            };
+            ArcShadowGrayoutRenderMesh = new RenderMesh()
+            {
+                mesh = shadowRenderMesh.mesh,
+                material = shadowGrayoutMaterial
+            };
         }
 
         public void CreateEntities(List<List<AffArc>> affArcList)
         {
             int colorId=0;
             var connectedArcsIdEndpoint = new List<ArcEndpointData>();
-            colorRenderMeshList = new List<RenderMesh>();
+            ClearRenderMeshList();
+
             //SET UP NEW JUDGES HEREEEEE
 
             foreach (List<AffArc> listByColor in affArcList)
@@ -98,7 +129,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     mesh = arcMesh,
                     material = arcColorMaterialInstance
                 };
-                colorRenderMeshList.Add(renderMesh);
+                RegisterRenderMeshVariants(renderMesh);
 
                 foreach (AffArc arc in listByColor)
                 {
@@ -207,6 +238,14 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             }
             ColorCount = colorId;
             GroupCount = connectedArcsIdEndpoint.Count;
+
+            Debug.Log(GroupCount);
+
+            //TEMPORARY
+            if (ArcCollisionCheckSystem.arcGroupHeldState.IsCreated) ArcCollisionCheckSystem.arcGroupHeldState.Dispose();
+            ArcCollisionCheckSystem.arcGroupHeldState = new NativeArray<int>(GroupCount, Allocator.Persistent);
+            if (ArcCollisionCheckSystem.arcColorTouchDataArray.IsCreated) ArcCollisionCheckSystem.arcColorTouchDataArray.Dispose();
+            ArcCollisionCheckSystem.arcColorTouchDataArray = new NativeArray<ArcColorTouchData>(ColorCount, Allocator.Persistent);
         }
 
         private void CreateSegment(RenderMesh renderMesh, float3 start, float3 end, int timingGroup, int timing, int endTiming, int groupId)
@@ -254,6 +293,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 Entity arcShadowEntity = EntityManager.Instantiate(arcShadowEntityPrefab);
                 EntityManager.SetComponentData(arcShadowEntity, new FloorPosition(start.z));
                 EntityManager.SetComponentData(arcShadowEntity, new TimingGroup(timingGroup));
+                EntityManager.SetSharedComponentData<RenderMesh>(arcShadowEntity, ArcShadowRenderMesh);
                 LocalToWorld ltwShadow = new LocalToWorld()
                 {
                     Value = new float4x4(
@@ -367,6 +407,40 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             
         }
 
+        private void ClearRenderMeshList()
+        {
+            initialRenderMeshes = new List<RenderMesh>();
+            highlightRenderMeshes = new List<RenderMesh>();
+            grayoutRenderMeshes = new List<RenderMesh>();
+        }
+        private void RegisterRenderMeshVariants(RenderMesh initial)
+        {
+            initialRenderMeshes.Add(initial);
+            
+            Material highlightMat = Instantiate(initial.material);
+            highlightMat.SetFloat(highlightShaderId, 1);
+            Material grayoutMat = Instantiate(initial.material);
+            grayoutMat.SetFloat(highlightShaderId,-1);
+
+            highlightRenderMeshes.Add(new RenderMesh{
+                mesh = initial.mesh,
+                material = highlightMat
+            });
+            grayoutRenderMeshes.Add(new RenderMesh{
+                mesh = initial.mesh,
+                material = grayoutMat
+            });
+        }
+        public (RenderMesh, RenderMesh, RenderMesh) GetRenderMeshVariants(int color)
+        {
+            return (initialRenderMeshes[color], highlightRenderMeshes[color], grayoutRenderMeshes[color]);
+        }
+        public void UpdateRenderMeshVariants(int color, RenderMesh newinitial, RenderMesh newhighlight, RenderMesh newgrayout)
+        {
+            initialRenderMeshes[color] = newinitial;
+            highlightRenderMeshes[color] = newhighlight;
+            grayoutRenderMeshes[color] = newgrayout;
+        }
         /// <summary>
         /// Stores data requried to handle arc endpoints.
         /// </summary>

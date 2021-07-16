@@ -8,6 +8,7 @@ using UnityEngine;
 using ArcCore.Gameplay.Data;
 using Unity.Mathematics;
 using ArcCore.Gameplay.Utility;
+using Unity.Rendering;
 using ArcCore.Math;
 using ArcCore.Utilities.Extensions;
 
