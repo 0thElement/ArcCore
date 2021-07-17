@@ -40,6 +40,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         [HideInInspector] private List<RenderMesh> initialRenderMeshes;
         [HideInInspector] private List<RenderMesh> highlightRenderMeshes;
         [HideInInspector] private List<RenderMesh> grayoutRenderMeshes;
+        [HideInInspector] private List<RenderMesh> headRenderMeshes;
         [HideInInspector] public RenderMesh ArcShadowRenderMesh;
         [HideInInspector] public RenderMesh ArcShadowGrayoutRenderMesh;
 
@@ -412,6 +413,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             initialRenderMeshes = new List<RenderMesh>();
             highlightRenderMeshes = new List<RenderMesh>();
             grayoutRenderMeshes = new List<RenderMesh>();
+            headRenderMeshes = new List<RenderMesh>();
         }
         private void RegisterRenderMeshVariants(RenderMesh initial)
         {
@@ -430,10 +432,14 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 mesh = initial.mesh,
                 material = grayoutMat
             });
+            headRenderMeshes.Add(new RenderMesh{
+                mesh = headMesh,
+                material = initial.material
+            });
         }
-        public (RenderMesh, RenderMesh, RenderMesh) GetRenderMeshVariants(int color)
+        public (RenderMesh, RenderMesh, RenderMesh, RenderMesh) GetRenderMeshVariants(int color)
         {
-            return (initialRenderMeshes[color], highlightRenderMeshes[color], grayoutRenderMeshes[color]);
+            return (initialRenderMeshes[color], highlightRenderMeshes[color], grayoutRenderMeshes[color], headRenderMeshes[color]);
         }
         public void UpdateRenderMeshVariants(int color, RenderMesh newinitial, RenderMesh newhighlight, RenderMesh newgrayout)
         {

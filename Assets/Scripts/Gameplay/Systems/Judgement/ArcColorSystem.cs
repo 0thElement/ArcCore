@@ -14,7 +14,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
     public class ArcColorSystem : SystemBase
     {
         private EndSimulationEntityCommandBufferSystem entityCommandBufferSystem;
-        private RenderMesh initial, highlight, grayout;
+        private RenderMesh initial, highlight, grayout, head;
         private RenderMesh shadowInitial, shadowGrayout;
         private int redmixShaderId;
 
@@ -34,15 +34,16 @@ namespace ArcCore.Gameplay.Systems.Judgement
             //Arc segments
             for (int color=0; color < ArcEntityCreator.ColorCount; color++)
             {
-                (initial, highlight, grayout) = ArcEntityCreator.Instance.GetRenderMeshVariants(color);
+                (initial, highlight, grayout, head) = ArcEntityCreator.Instance.GetRenderMeshVariants(color);
 
                 float redmix = (currentTime - arcColorTouchDataArray[color].endRedArcSchedule) / Constants.ArcRedArcWindow;
                 redmix = Mathf.Clamp(redmix, 0, 0.5f);
-                redmix = Mathf.Sin(currentTime / 1000); 
+                redmix = Mathf.Sin(currentTime / 1000f); 
 
                 initial.material.SetFloat(redmixShaderId, redmix);
                 highlight.material.SetFloat(redmixShaderId, redmix);
                 grayout.material.SetFloat(redmixShaderId, redmix);
+                head.material.SetFloat(redmixShaderId, redmix);
                 
                 Entities.WithSharedComponentFilter<RenderMesh>(initial).ForEach(
                     (Entity en, ref Cutoff cutoff, in ArcGroupID groupID) =>
