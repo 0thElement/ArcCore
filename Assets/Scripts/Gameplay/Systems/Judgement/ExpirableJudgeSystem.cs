@@ -92,6 +92,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
             //...
 
             //- DESTROY ON TIMING -//
+            //Common
             Entities.WithNone<ChartIncrTime>().ForEach(
                 (Entity en, in DestroyOnTiming destroyTime) =>
                 {
@@ -103,6 +104,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 }
             ).Run();
 
+            //Hold
             Entities.WithAll<ChartIncrTime>().ForEach(
                 (Entity en, in DestroyOnTiming destroyTime, in ChartLane cl) =>
                 {
@@ -115,6 +117,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 }
             ).Run();
 
+            //Arc
             Entities.WithAll<ChartIncrTime, ArcGroupID>().WithNone<ChartLane>().ForEach(
                 (Entity en, in DestroyOnTiming destroyTime) =>
                 {

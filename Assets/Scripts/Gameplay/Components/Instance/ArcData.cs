@@ -2,6 +2,7 @@
 using Unity.Entities;
 using Unity.Mathematics;
 using ArcCore.Math;
+using UnityEngine;
 
 namespace ArcCore.Gameplay.Components
 {
@@ -21,11 +22,13 @@ namespace ArcCore.Gameplay.Components
             this.easing = easing;
             this.startTiming = startTiming;
             this.endTiming = endTiming;
+            Debug.Log(start + " " + end);
         }
 
         public bool CollideWith(int currentTiming, Rect2D rect)
         {
             float t = (float)(currentTiming - startTiming) / (endTiming - startTiming);
+            t = Mathf.Clamp(t, 0, 1);
             float2 currentPos = Conversion.GetPosAt(t, start, end, easing);
 
             //i might be a bit stupid

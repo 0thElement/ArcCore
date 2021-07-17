@@ -212,8 +212,8 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
                         start = end;
                         end = new float3(
-                            Conversion.GetWorldX(Conversion.GetXAt(t / duration, arc.startX, arc.endX, arc.easing)),
-                            Conversion.GetWorldY(Conversion.GetYAt(t / duration, arc.startY, arc.endY, arc.easing)),
+                            Conversion.GetWorldX(Conversion.GetXAt((float)t / duration, arc.startX, arc.endX, arc.easing)),
+                            Conversion.GetWorldY(Conversion.GetYAt((float)t / duration, arc.startY, arc.endY, arc.easing)),
                             Conductor.Instance.GetFloorPositionFromTiming(toTiming, arc.timingGroup)
                         );
 
@@ -231,7 +231,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     );
 
                     CreateSegment(renderMesh, start, end, arc.timingGroup, fromTiming, toTiming, arcId);
-                    CreateJudgeEntity(arc, colorId, arcId, startGroupTime, startBpm);
+                    CreateJudgeEntity(arc, colorId, arcId, startBpm);
 
                 }
 
@@ -243,10 +243,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             Debug.Log(GroupCount);
 
             //TEMPORARY
-            if (ArcCollisionCheckSystem.arcGroupHeldState.IsCreated) ArcCollisionCheckSystem.arcGroupHeldState.Dispose();
-            ArcCollisionCheckSystem.arcGroupHeldState = new NativeArray<int>(GroupCount, Allocator.Persistent);
-            if (ArcCollisionCheckSystem.arcColorTouchDataArray.IsCreated) ArcCollisionCheckSystem.arcColorTouchDataArray.Dispose();
-            ArcCollisionCheckSystem.arcColorTouchDataArray = new NativeArray<ArcColorTouchData>(ColorCount, Allocator.Persistent);
+            ArcCollisionCheckSystem.SetUpArray(GroupCount, ColorCount);
         }
 
         private void CreateSegment(RenderMesh renderMesh, float3 start, float3 end, int timingGroup, int timing, int endTiming, int groupId)
@@ -383,16 +380,17 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData(headEntity, new DestroyOnTiming(arc.timing));
         }
 
-        private void CreateJudgeEntity(AffArc arc, int colorId, int groupId, int startGroupTime, float startBpm)
+        private void CreateJudgeEntity(AffArc arc, int colorId, int groupId, float startBpm)
         {
 
             Entity en = EntityManager.CreateEntity(arcJudgeArchetype);
 
-            EntityManager.SetComponentData(en, new ChartTime(arc.timing));
             EntityManager.SetComponentData(en, ChartIncrTime.FromBpm(arc.timing, arc.endTiming, startBpm, out int comboCount));
 
             ScoreManager.Instance.tracker.noteCount += comboCount;
 
+            //very stupid
+            EntityManager.SetComponentData(en, new ChartTime(arc.timing + Constants.LostWindow));
             EntityManager.SetSharedComponentData(en, new ArcColorID(colorId));
             EntityManager.SetComponentData(en,
                 new ArcData(

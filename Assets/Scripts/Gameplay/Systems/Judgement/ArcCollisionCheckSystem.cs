@@ -4,43 +4,12 @@ using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Tags;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Rendering;
-using Unity.Transforms;
 using ArcCore.Gameplay.Data;
-using ArcCore.Math;
 using UnityEngine;
 using System.Collections.Generic;
 
 namespace ArcCore.Gameplay.Systems.Judgement
 {
-
-    public struct ArcColorTouchData
-    {
-        /// <summary>
-        /// The touchId associated with this arc. Used for judgement.
-        /// Id = TouchPoint.NullId means no touch is associated with this color and judgement system should assign a new touch as soon as one collides with an arc
-        /// of this color
-        /// </summary>
-        public int fingerId;
-
-        /// <summary>
-        /// Timing at which this arc color stop being red.
-        /// </summary>
-        public int endRedArcSchedule;
-
-        /// <summary>
-        /// Timing after which <see cref="touchId"> is allowed to be reset.
-        /// After an arc color is released (the current <see cref="touchId"> no longer exists), the color keep the same <see cref="touchId"> for an extended
-        /// period of time before a new one can be assigned.
-        /// </summary>
-        public int resetFingerIdSchedule;
-
-        public bool isFingerUnassigned => fingerId == TouchPoint.NullId;
-        public bool isRedArc(int timing) => timing < endRedArcSchedule;
-        public bool shouldResetTouchId(int timing) => timing >= resetFingerIdSchedule;
-        public void resetFingerId() => fingerId = TouchPoint.NullId;
-    }
-
     [UpdateInGroup(typeof(JudgementSystemGroup))]
 
     public class ArcCollisionCheckSystem : SystemBase
@@ -54,34 +23,114 @@ namespace ArcCore.Gameplay.Systems.Judgement
         /// <summary>
         /// Keep track of whether or not an arc color should be red.
         /// </summary>
-        public static NativeArray<ArcColorTouchData> arcColorTouchDataArray;
-
-        private EntityQuery arcColorQuery;
-
-        protected override void OnCreate()
-        {
-            arcColorQuery = GetEntityQuery(typeof(ArcColorID));
-        }
+        public static List<ArcColorFSM> arcColorFsmArray;
 
         protected override void OnUpdate()
         {
-            for (int i=0; i < arcGroupHeldState.Length; i++)
+            var touchPoints = InputManager.Instance.GetEnumerator();
+            NativeArray<TouchPoint> touchArray = new NativeArray<TouchPoint>(InputManager.MaxTouches, Allocator.Temp);
+            int touchCount=0;
+            while (touchPoints.MoveNext())
             {
-                if ((Conductor.Instance.receptorTime / 1000) % 2 == 0) 
-                {
-                    arcGroupHeldState[i] = 1;
-                }
-                else
-                {
-                    arcGroupHeldState[i] = -1;
-                }
+                touchArray[touchCount++] = touchPoints.Current;
             }
+
+            int currentTime = Conductor.Instance.receptorTime;
+
+            for (int color = 0; color < ArcEntityCreator.ColorCount; color++)
+            {
+                ArcColorFSM colorState = arcColorFsmArray[color];
+                colorState.CheckSchedule();
+
+                bool collided = false;
+                bool wrongFinger = false;
+                bool touchLifted = true;
+                bool existEntities = false;
+                for (int i=0; i < touchCount; i++)
+                {
+                    if (touchArray[i].fingerId == colorState.FingerId)
+                    {
+                        touchLifted = false;
+                        break;
+                    }
+                }
+                if (touchLifted) 
+                {
+                    colorState.Execute(ArcColorFSM.Event.Lift);
+                }
+                
+                Entities.WithSharedComponentFilter<ArcColorID>(new ArcColorID(color)).WithAll<ChartIncrTime,WithinJudgeRange>().ForEach(
+                    (in ArcData arcData, in ArcGroupID groupID) =>
+                    {
+                        existEntities = true;
+                        bool groupHeld = false;
+
+                        for (int i=0; i < touchCount; i++)
+                        {
+                            TouchPoint currentTouch = touchArray[i];
+                            if (!currentTouch.InputPlaneValid) continue;
+
+                            if (arcData.CollideWith(currentTime, currentTouch.InputPlane))
+                            {
+                                //only assign this touch if it's not already holding another color
+                                //i can't think of a better way to do this
+                                if (colorState.IsAwaiting())
+                                {
+                                    bool canAssign = true;
+                                    for (int c=0; c < ArcEntityCreator.ColorCount; c++)
+                                    {
+                                        if (c!=color && arcColorFsmArray[c].FingerId == currentTouch.fingerId)
+                                        {
+                                            canAssign = false;
+                                            break;    
+                                        }
+                                    }
+                                    if (canAssign) 
+                                    {
+                                        colorState.Execute(ArcColorFSM.Event.Collide, currentTouch.fingerId);
+                                    }
+                                }
+
+                                collided = true;
+                                if (currentTouch.fingerId == colorState.FingerId)
+                                {
+                                    groupHeld = true;
+                                }
+                                else
+                                {
+                                    wrongFinger = true;
+                                }
+                            }
+                        }
+
+                        if (groupHeld) arcGroupHeldState[groupID.value] = 1;
+                        else arcGroupHeldState[groupID.value] = -1;
+                    }
+                ).WithoutBurst().Run();
+
+                if (!existEntities) colorState.CancelSchedule();
+                if (collided)
+                    colorState.Execute(ArcColorFSM.Event.Collide);
+                if (!collided && wrongFinger)
+                    colorState.Execute(ArcColorFSM.Event.WrongFinger);
+            }
+            touchArray.Dispose();
         }
 
         protected override void OnDestroy()
         {
             arcGroupHeldState.Dispose();
-            arcColorTouchDataArray.Dispose();
+        }
+
+        public static void SetUpArray(int GroupCount, int ColorCount)
+        {
+            if (arcGroupHeldState.IsCreated) arcGroupHeldState.Dispose();
+            arcGroupHeldState = new NativeArray<int>(GroupCount, Allocator.Persistent);
+            arcColorFsmArray = new List<ArcColorFSM>(ColorCount);
+            for (int i=0; i<ColorCount; i++)
+            {
+                ArcCollisionCheckSystem.arcColorFsmArray.Add(new ArcColorFSM(i));
+            }
         }
     }
 

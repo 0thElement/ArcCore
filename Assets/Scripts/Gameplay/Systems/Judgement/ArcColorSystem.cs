@@ -7,6 +7,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Rendering;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace ArcCore.Gameplay.Systems.Judgement
 {
@@ -29,17 +30,14 @@ namespace ArcCore.Gameplay.Systems.Judgement
 
             int currentTime = Conductor.Instance.receptorTime;
             NativeArray<int> arcGroupHeldState = ArcCollisionCheckSystem.arcGroupHeldState;
-            NativeArray<ArcColorTouchData> arcColorTouchDataArray = ArcCollisionCheckSystem.arcColorTouchDataArray;
+            List<ArcColorFSM> arcColorFsmArray = ArcCollisionCheckSystem.arcColorFsmArray;
 
             //Arc segments
             for (int color=0; color < ArcEntityCreator.ColorCount; color++)
             {
                 (initial, highlight, grayout, head) = ArcEntityCreator.Instance.GetRenderMeshVariants(color);
 
-                float redmix = (currentTime - arcColorTouchDataArray[color].endRedArcSchedule) / Constants.ArcRedArcWindow;
-                redmix = Mathf.Clamp(redmix, 0, 0.5f);
-                redmix = Mathf.Sin(currentTime / 1000f); 
-
+                float redmix = arcColorFsmArray[color].redmix;
                 initial.material.SetFloat(redmixShaderId, redmix);
                 highlight.material.SetFloat(redmixShaderId, redmix);
                 grayout.material.SetFloat(redmixShaderId, redmix);
@@ -50,7 +48,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                     {
                         if (arcGroupHeldState[groupID.value] < 0)
                         {
-                            commandBuffer.SetSharedComponent<RenderMesh>(en, initial);
+                            commandBuffer.SetSharedComponent<RenderMesh>(en, grayout);
                         }
                         if (arcGroupHeldState[groupID.value] > 0)
                         {
@@ -61,7 +59,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 ).WithoutBurst().Run();
             
                 Entities.WithSharedComponentFilter<RenderMesh>(highlight).ForEach(
-                    (Entity en, in ArcGroupID groupID) =>
+                    (Entity en, ref Cutoff cutoff, in ArcGroupID groupID) =>
                     {
                         if (arcGroupHeldState[groupID.value] < 0)
                         {
