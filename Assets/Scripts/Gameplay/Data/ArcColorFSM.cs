@@ -16,14 +16,24 @@ namespace ArcCore.Gameplay.Data
             //Lifted and a finger is trying to touch this color
             LiftedRed,
             //Wrong finger held this color
-            Red
+            Red,
+            //Grace period where any finger can hold any arc
+            Grace
         }
 
         public enum Event {
+            //A finger hit this color
             Collide,
+            //The associated finger is no longer touching the screen
             Lift,
+            //Wrong finger hit this color
             WrongFinger,
-            Scheduled
+            //Global timer went past the schedule
+            Scheduled,
+            //No arcs of this color is present in the judge range
+            Rest,
+            //Grace period activated
+            Grace
         }
 
         //Acts as a timer inbetween state changes
@@ -37,8 +47,7 @@ namespace ArcCore.Gameplay.Data
             {
                 if (state != State.Red && state != State.LiftedRed) return 0;
                 float result = (float)(schedule - Conductor.Instance.receptorTime) / Constants.ArcRedArcWindow;
-                // return Mathf.Clamp(result, 0, 1);
-                return 1;
+                return Mathf.Clamp(result, 0, 1);
             }
         }
         private int color;
@@ -53,13 +62,14 @@ namespace ArcCore.Gameplay.Data
             schedule = 0;
             this.color = color;
             state = State.Await;
-            fsm = new Action<int>[5,4] {
-                             //Collide , Lift   , WrongFinger, Scheduled
-                /* Await     */{Assign , null   , null       , null   },
-                /* Listening */{null   , Lift   , Red        , null   },
-                /* Lifted    */{LiftRed, null   , null       , Reset  },
-                /* LiftedRed */{null   , null   , null       , Reset  },
-                /* Red       */{null   , LiftRed, null       , StopRed}
+            fsm = new Action<int>[6,6] {
+                             //Collide , Lift   , WrongFinger, Scheduled, Rest , Grace
+                /* Await     */{Assign , null   , null       , null     , null , Grace},
+                /* Listening */{null   , Lift   , Red        , null     , Reset, Grace},
+                /* Lifted    */{LiftRed, null   , null       , Reset    , Reset, Grace},
+                /* LiftedRed */{null   , null   , null       , Reset    , Reset, Grace},
+                /* Red       */{null   , LiftRed, null       , StopRed  , null , Grace},
+                /* Grace     */{null   , null   , null       , Reset    , null , Grace}
             };
         } 
         public void Execute(Event e, int id = TouchPoint.NullId)
@@ -77,45 +87,47 @@ namespace ArcCore.Gameplay.Data
         {
             fingerId = id;
             state = State.Listening;
-            Debug.Log(color + " Assign " + id);
         }
         private void Lift(int id)
         {
             fingerId = TouchPoint.NullId;
             schedule = Conductor.Instance.receptorTime + Constants.ArcRedArcWindow;
             state = State.Lifted;
-            Debug.Log(color + " Lifted");
         }
         private void Red(int id)
         {
             schedule = Conductor.Instance.receptorTime + Constants.ArcRedArcWindow;
             state = State.Red;
-            Debug.Log(color + " Red");
         }
         private void LiftRed(int id)
         {
             state = State.LiftedRed;
-            Debug.Log(color + " LiftRed");
         }
         private void Reset(int id)
         {
             fingerId = TouchPoint.NullId;
             state = State.Await;
-            Debug.Log(color + " Reset");
+            schedule = int.MaxValue;
+        }
+        private void Grace(int id)
+        {
+            fingerId = TouchPoint.NullId;
+            schedule = Conductor.Instance.receptorTime + Constants.ArcGraceDuration;
+            state = State.Grace;
         }
         private void StopRed(int id)
         {
             state = State.Listening;
-            Debug.Log(color + " Recovered");
+            schedule = int.MaxValue;
         }
 
         public bool IsAwaiting()
         {
             return state == State.Await;
         }
-        public void CancelSchedule()
+        public bool IsValidId(int fingerId)
         {
-            schedule = 0;
+            return state == State.Grace || fingerId == this.fingerId;
         }
     }
 }

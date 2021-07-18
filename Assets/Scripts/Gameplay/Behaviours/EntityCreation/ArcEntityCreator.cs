@@ -8,7 +8,6 @@ using ArcCore.Gameplay.Components;
 using ArcCore.Parsing.Aff;
 using ArcCore.Utilities.Extensions;
 using ArcCore.Gameplay.Systems.Judgement;
-using Unity.Collections;
 
 namespace ArcCore.Gameplay.Behaviours.EntityCreation
 {
@@ -34,6 +33,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         [HideInInspector] private Material heightMaterial;
         [HideInInspector] private Mesh arcMesh;
         [HideInInspector] private Mesh headMesh;
+        [HideInInspector] private Mesh heightMesh;
 
         [HideInInspector] public static int ColorCount = 2;
         [HideInInspector] public static int GroupCount = 0;
@@ -41,6 +41,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         [HideInInspector] private List<RenderMesh> highlightRenderMeshes;
         [HideInInspector] private List<RenderMesh> grayoutRenderMeshes;
         [HideInInspector] private List<RenderMesh> headRenderMeshes;
+        [HideInInspector] private List<RenderMesh> heightRenderMeshes;
         [HideInInspector] public RenderMesh ArcShadowRenderMesh;
         [HideInInspector] public RenderMesh ArcShadowGrayoutRenderMesh;
 
@@ -85,6 +86,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             highlightShaderId = Shader.PropertyToID("_Highlight");
 
             arcMaterial = arcNotePrefab.GetComponent<Renderer>().sharedMaterial;
+            heightMesh = heightIndicatorPrefab.GetComponent<MeshFilter>().sharedMesh;
             heightMaterial = heightIndicatorPrefab.GetComponent<Renderer>().sharedMaterial;
             arcMesh = arcNotePrefab.GetComponent<MeshFilter>().sharedMesh;
             headMesh = headArcNotePrefab.GetComponent<MeshFilter>().sharedMesh;
@@ -124,13 +126,19 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 arcColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
                 arcColorMaterialInstance.SetColor(redColorShaderId, redColor);
                 heightIndicatorColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
+                heightIndicatorColorMaterialInstance.SetColor(redColorShaderId, redColor);
 
-                RenderMesh renderMesh = new RenderMesh()
+                RenderMesh arcRenderMesh = new RenderMesh()
                 {
                     mesh = arcMesh,
                     material = arcColorMaterialInstance
                 };
-                RegisterRenderMeshVariants(renderMesh);
+                RenderMesh heightRenderMesh = new RenderMesh()
+                {
+                    mesh = heightMesh,
+                    material = heightIndicatorColorMaterialInstance
+                };
+                RegisterRenderMeshVariants(arcRenderMesh, heightRenderMesh);
 
                 foreach (AffArc arc in listByColor)
                 {
@@ -164,7 +172,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
                     if (isHeadArc || arc.startY != arc.endY)
                     {
-                        CreateHeightIndicator(arc, heightIndicatorColorMaterialInstance);
+                        CreateHeightIndicator(arc, heightRenderMesh);
                     }
 
                     float startBpm = Conductor.Instance.GetTimingEventFromTiming(arc.timing, arc.timingGroup).bpm;
@@ -184,7 +192,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                             Conversion.GetWorldY(arc.endY),
                             Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                         );
-                        CreateSegment(renderMesh, tstart, tend, arc.timingGroup, arc.timing, arc.endTiming, arcId);
+                        CreateSegment(arcRenderMesh, tstart, tend, arc.timingGroup, arc.timing, arc.endTiming, arcId);
                         continue;
                     }
 
@@ -217,7 +225,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                             Conductor.Instance.GetFloorPositionFromTiming(toTiming, arc.timingGroup)
                         );
 
-                        CreateSegment(renderMesh, start, end, arc.timingGroup, fromTiming, toTiming, arcId);
+                        CreateSegment(arcRenderMesh, start, end, arc.timingGroup, fromTiming, toTiming, arcId);
                     }
 
                     fromTiming = toTiming;
@@ -230,7 +238,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                         Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                     );
 
-                    CreateSegment(renderMesh, start, end, arc.timingGroup, fromTiming, toTiming, arcId);
+                    CreateSegment(arcRenderMesh, start, end, arc.timingGroup, fromTiming, toTiming, arcId);
                     CreateJudgeEntity(arc, colorId, arcId, startBpm);
 
                 }
@@ -312,7 +320,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             }
         }
 
-        private void CreateHeightIndicator(AffArc arc, Material material)
+        private void CreateHeightIndicator(AffArc arc, RenderMesh renderMesh)
         {
             Entity heightEntity = EntityManager.Instantiate(heightIndicatorEntityPrefab);
 
@@ -326,12 +334,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             float scaleY = height;
             const float scaleZ = 1;
 
-            Mesh mesh = EntityManager.GetSharedComponentData<RenderMesh>(heightEntity).mesh; 
-            EntityManager.SetSharedComponentData(heightEntity, new RenderMesh()
-            {
-                mesh = mesh,
-                material = material 
-            });
+            EntityManager.SetSharedComponentData(heightEntity, renderMesh);
 
             EntityManager.SetComponentData(heightEntity, new Translation()
             {
@@ -412,32 +415,34 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             highlightRenderMeshes = new List<RenderMesh>();
             grayoutRenderMeshes = new List<RenderMesh>();
             headRenderMeshes = new List<RenderMesh>();
+            heightRenderMeshes = new List<RenderMesh>();
         }
-        private void RegisterRenderMeshVariants(RenderMesh initial)
+        private void RegisterRenderMeshVariants(RenderMesh initialArc, RenderMesh height)
         {
-            initialRenderMeshes.Add(initial);
+            initialRenderMeshes.Add(initialArc);
+            heightRenderMeshes.Add(height);
             
-            Material highlightMat = Instantiate(initial.material);
+            Material highlightMat = Instantiate(initialArc.material);
             highlightMat.SetFloat(highlightShaderId, 1);
-            Material grayoutMat = Instantiate(initial.material);
+            Material grayoutMat = Instantiate(initialArc.material);
             grayoutMat.SetFloat(highlightShaderId,-1);
 
             highlightRenderMeshes.Add(new RenderMesh{
-                mesh = initial.mesh,
+                mesh = initialArc.mesh,
                 material = highlightMat
             });
             grayoutRenderMeshes.Add(new RenderMesh{
-                mesh = initial.mesh,
+                mesh = initialArc.mesh,
                 material = grayoutMat
             });
             headRenderMeshes.Add(new RenderMesh{
                 mesh = headMesh,
-                material = initial.material
+                material = initialArc.material
             });
         }
-        public (RenderMesh, RenderMesh, RenderMesh, RenderMesh) GetRenderMeshVariants(int color)
+        public (RenderMesh, RenderMesh, RenderMesh, RenderMesh, RenderMesh) GetRenderMeshVariants(int color)
         {
-            return (initialRenderMeshes[color], highlightRenderMeshes[color], grayoutRenderMeshes[color], headRenderMeshes[color]);
+            return (initialRenderMeshes[color], highlightRenderMeshes[color], grayoutRenderMeshes[color], headRenderMeshes[color], heightRenderMeshes[color]);
         }
         public void UpdateRenderMeshVariants(int color, RenderMesh newinitial, RenderMesh newhighlight, RenderMesh newgrayout)
         {

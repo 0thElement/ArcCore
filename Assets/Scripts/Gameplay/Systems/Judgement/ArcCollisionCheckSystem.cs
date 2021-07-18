@@ -5,7 +5,6 @@ using ArcCore.Gameplay.Components.Tags;
 using Unity.Collections;
 using Unity.Entities;
 using ArcCore.Gameplay.Data;
-using UnityEngine;
 using System.Collections.Generic;
 
 namespace ArcCore.Gameplay.Systems.Judgement
@@ -46,6 +45,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 bool wrongFinger = false;
                 bool touchLifted = true;
                 bool existEntities = false;
+
                 for (int i=0; i < touchCount; i++)
                 {
                     if (touchArray[i].fingerId == colorState.FingerId)
@@ -92,7 +92,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                                 }
 
                                 collided = true;
-                                if (currentTouch.fingerId == colorState.FingerId)
+                                if (colorState.IsValidId(currentTouch.fingerId))
                                 {
                                     groupHeld = true;
                                 }
@@ -108,7 +108,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                     }
                 ).WithoutBurst().Run();
 
-                if (!existEntities) colorState.CancelSchedule();
+                if (!existEntities) colorState.Execute(ArcColorFSM.Event.Rest);
                 if (collided)
                     colorState.Execute(ArcColorFSM.Event.Collide);
                 if (!collided && wrongFinger)
