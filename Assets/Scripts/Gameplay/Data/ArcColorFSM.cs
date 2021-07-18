@@ -122,12 +122,12 @@ namespace ArcCore.Gameplay.Data
         }
 
         public bool IsAwaiting()
-        {
-            return state == State.Await;
-        }
+            => state == State.Await;
+
         public bool IsValidId(int fingerId)
-        {
-            return state == State.Grace || fingerId == this.fingerId;
-        }
+            => state == State.Grace || fingerId == this.fingerId;
+
+        public bool IsRedArc()
+            => state == State.Red || state == State.LiftedRed;
     }
 }

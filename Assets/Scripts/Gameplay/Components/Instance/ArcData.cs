@@ -22,18 +22,22 @@ namespace ArcCore.Gameplay.Components
             this.easing = easing;
             this.startTiming = startTiming;
             this.endTiming = endTiming;
-            Debug.Log(start + " " + end);
         }
 
         public bool CollideWith(int currentTiming, Rect2D rect)
         {
-            float t = (float)(currentTiming - startTiming) / (endTiming - startTiming);
-            t = Mathf.Clamp(t, 0, 1);
-            float2 currentPos = Conversion.GetPosAt(t, start, end, easing);
+            float2 currentPos = GetPosAt(currentTiming);
 
             //i might be a bit stupid
             if (currentPos.y < 5.5f && rect.min.y > 5.5f) rect = new Rect2D(rect.min.x, 5.5f, rect.max.x, rect.max.y);
             return rect.CollidesWith(new Rect2D(currentPos + Constants.ArcBoxExtents, currentPos - Constants.ArcBoxExtents));
+        }
+
+        public float2 GetPosAt(int timing)
+        {
+            float t = (float)(timing - startTiming) / (endTiming - startTiming);
+            t = Mathf.Clamp(t, 0, 1);
+            return Conversion.GetPosAt(t, start, end, easing);
         }
     }
 }

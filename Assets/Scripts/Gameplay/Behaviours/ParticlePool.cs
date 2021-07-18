@@ -119,6 +119,9 @@ namespace ArcCore.Gameplay.Behaviours
         /// The current free index of the arc particle pool.
         /// </summary>
         private int currentArcParticleIndex = 0;
+        /// <summary>
+        /// Map from arc group id to index in arc particle pool.
+        /// </summary>
         private Dictionary<int, int> arcGroupToPoolIndex = new Dictionary<int, int>();
 
         /// <summary>
@@ -131,6 +134,7 @@ namespace ArcCore.Gameplay.Behaviours
             for (int i = 0; i < size; i++)
             {
                 array[i] = Instantiate(baseObject, transform);
+                array[i].SetActive(false);
             }
         }
 
@@ -164,6 +168,7 @@ namespace ArcCore.Gameplay.Behaviours
         private void TapParticleAt(float2 position)
         {
             GameObject tap = tapParticlePool[currentTapParticleIndex];
+            tap.SetActive(true);
             tap.GetComponent<Transform>().position = new float3(position, 0);
             tap.GetComponent<ParticleSystem>().Play();
 
@@ -177,6 +182,7 @@ namespace ArcCore.Gameplay.Behaviours
         private void TextParticleAt(float2 position, JudgeType judgeType, JudgeDetail judgeDetail)
         {
             GameObject text = textParticlePool[currentTextParticleIndex];
+            text.SetActive(true);
             text.GetComponent<Transform>().position = new float3(position, 0);
             text.GetComponent<Renderer>().material = textJudgeMaterials[(int)judgeType];
             text.GetComponent<ParticleSystem>().Play();
@@ -229,6 +235,7 @@ namespace ArcCore.Gameplay.Behaviours
                 TextParticleAt(position, JudgeType.Lost, JudgeDetail.None);
             }
         }
+       
 
         /// <summary>
         /// Disable lane particles for the given lane.
@@ -238,5 +245,47 @@ namespace ArcCore.Gameplay.Behaviours
             laneParticles[track].Stop();
             laneParticles[track].Clear();
         }
+
+        /// <summary>
+        /// top text
+        /// </summary>
+        public void ArcAt(float2 position, int groupID, bool isHit)
+        {
+            position.y += 1f;
+
+            if (isHit)
+            {
+                int poolIndex;
+                if (!arcGroupToPoolIndex.TryGetValue(groupID, out poolIndex))
+                {
+                    arcGroupToPoolIndex.Add(groupID, currentArcParticleIndex);
+                    poolIndex = currentArcParticleIndex;
+                    IncrementOrCycle(ref currentArcParticleIndex, arcParticlePoolSize - 1);
+                }
+
+                GameObject particle = arcParticlePool[poolIndex];
+                particle.SetActive(true);
+                particle.GetComponent<ParticleSystem>().Play();
+                TextParticleAt(position, JudgeType.MaxPure, JudgeDetail.None);
+            }
+            else
+            {
+                DisableArc(groupID);
+                TextParticleAt(position, JudgeType.Lost, JudgeDetail.None);
+            }
+        }
+
+        public void DisableArc(int groupID)
+        {
+            if (arcGroupToPoolIndex.TryGetValue(groupID, out int poolIndex))
+            {
+                var obj = arcParticlePool[poolIndex];
+                var prt = obj.GetComponent<ParticleSystem>();
+                prt.Stop();
+                prt.Clear();
+                obj.SetActive(false);
+            }
+        }
     }
+
 }

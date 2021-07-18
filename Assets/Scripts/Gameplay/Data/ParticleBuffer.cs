@@ -23,16 +23,23 @@ namespace ArcCore.Gameplay.Data
             public bool isHit;
             public bool isHoldEnd;
         }
+        private struct ArcParticleDesc
+        {
+            public float2 pos;
+            public int groupID;
+            public bool isHit;
+            public bool isArcEnd;
+        }
 
         private NativeQueue<TapParticleDesc> tapQueue;
         private NativeQueue<HoldParticleDesc> holdQueue;
-        // private NativeQueue<TapParticleDesc> arcQueue;
+        private NativeQueue<ArcParticleDesc> arcQueue;
 
         public ParticleBuffer(Allocator allocator)
         {
             tapQueue = new NativeQueue<TapParticleDesc>(allocator);
             holdQueue = new NativeQueue<HoldParticleDesc>(allocator);
-            // arcQueue = new NativeQueue<TapParticleDesc>(allocator);
+            arcQueue = new NativeQueue<ArcParticleDesc>(allocator);
         }
 
         public void PlayTapParticle(float2 position, ParticlePool.JudgeType type, ParticlePool.JudgeDetail detail, float textYOffset = 0)
@@ -83,13 +90,16 @@ namespace ArcCore.Gameplay.Data
         }
 
         public void PlayHoldParticle(int lane, bool isHit)
-        {
-            holdQueue.Enqueue(new HoldParticleDesc{lane = lane, isHit = isHit, isHoldEnd = false});
-        }
+            => holdQueue.Enqueue(new HoldParticleDesc{lane = lane, isHit = isHit, isHoldEnd = false});
+
         public void DisableLaneParticle(int lane)
-        {
-            holdQueue.Enqueue(new HoldParticleDesc{lane = lane, isHit = false, isHoldEnd = true});
-        }
+            => holdQueue.Enqueue(new HoldParticleDesc{lane = lane, isHit = false, isHoldEnd = true});
+
+        public void PlayArcParticle(int groupID, float2 position, bool isHit)
+            => arcQueue.Enqueue(new ArcParticleDesc{groupID = groupID, pos = position, isHit = isHit, isArcEnd = false});
+
+        public void DisableArcParticle(int groupID)
+            => arcQueue.Enqueue(new ArcParticleDesc{groupID = groupID, pos = float2.zero, isHit = false, isArcEnd = true});
 
         public void Playback()
         {
@@ -115,6 +125,16 @@ namespace ArcCore.Gameplay.Data
             for (int i=0; i<4; i++)
                 if (toDisable[i])
                     ParticlePool.Instance.DisableLane(i);
+            
+
+            while (arcQueue.Count > 0)
+            {
+                ArcParticleDesc particleDesc = arcQueue.Dequeue();
+                if (particleDesc.isArcEnd)
+                    ParticlePool.Instance.DisableArc(particleDesc.groupID);
+                else
+                    ParticlePool.Instance.ArcAt(particleDesc.pos, particleDesc.groupID, particleDesc.isHit);
+            }
         }
 
         public bool IsCreated => tapQueue.IsCreated;
@@ -123,7 +143,7 @@ namespace ArcCore.Gameplay.Data
         {
             tapQueue.Dispose();
             holdQueue.Dispose();
-            // arcQueue.Dispose();
+            arcQueue.Dispose();
         }
     }
 }

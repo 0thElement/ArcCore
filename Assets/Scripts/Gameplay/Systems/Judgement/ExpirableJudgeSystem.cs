@@ -89,7 +89,21 @@ namespace ArcCore.Gameplay.Systems.Judgement
             ).Run();
 
             //- ARCS -//
-            //...
+            NativeArray<GroupState> arcGroupHeldState = ArcCollisionCheckSystem.arcGroupHeldState;
+            Entities.WithAll<WithinJudgeRange>().ForEach(
+                (Entity en, ref ChartIncrTime chartIncrTime, in ArcGroupID groupID, in ArcData arcData) =>
+                {
+                    if (chartIncrTime.time < currentTime - Constants.HoldLostWindow && arcGroupHeldState[groupID.value] != GroupState.Held)
+                    {
+                        int count = chartIncrTime.UpdateJudgePointCache(currentTime - Constants.HoldLostWindow);
+                        if (count > 0)
+                        {
+                            tracker.AddJudge(JudgeType.Lost, count);
+                            particleBuffer.PlayArcParticle(groupID.value, arcData.GetPosAt(currentTime), false);
+                        }
+                    }
+                }
+            ).Run();
 
             //- DESTROY ON TIMING -//
             //Common
@@ -118,14 +132,14 @@ namespace ArcCore.Gameplay.Systems.Judgement
             ).Run();
 
             //Arc
-            Entities.WithAll<ChartIncrTime, ArcGroupID>().WithNone<ChartLane>().ForEach(
-                (Entity en, in DestroyOnTiming destroyTime) =>
+            Entities.WithAll<ChartIncrTime>().WithNone<ChartLane>().ForEach(
+                (Entity en, in DestroyOnTiming destroyTime, in ArcGroupID groupID) =>
                 {
                     if (currentTime >= destroyTime.value)
                     {
                         commandBuffer.DisableEntity(en);
                         commandBuffer.AddComponent<PastJudgeRange>(en);
-                        //disable arc particle
+                        particleBuffer.DisableArcParticle(groupID.value);
                     }
                 }
             ).Run();
