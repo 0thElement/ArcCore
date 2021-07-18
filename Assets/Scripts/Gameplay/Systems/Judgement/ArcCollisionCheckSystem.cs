@@ -9,6 +9,17 @@ using System.Collections.Generic;
 
 namespace ArcCore.Gameplay.Systems.Judgement
 {
+    public enum GroupState
+    {
+        //Default state
+        Initial,
+        //Went past judge line but missed
+        Missed,
+        //Is being held
+        Held,
+        //Was held before
+        Lifted
+    }
     [UpdateInGroup(typeof(JudgementSystemGroup))]
 
     public class ArcCollisionCheckSystem : SystemBase
@@ -17,7 +28,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
         /// <summary>
         /// Keep track of whether a group was held or not this frame.
         /// </summary>
-        public static NativeArray<int> arcGroupHeldState;
+        public static NativeArray<GroupState> arcGroupHeldState;
 
         /// <summary>
         /// Keep track of whether or not an arc color should be red.
@@ -103,8 +114,12 @@ namespace ArcCore.Gameplay.Systems.Judgement
                             }
                         }
 
-                        if (groupHeld) arcGroupHeldState[groupID.value] = 1;
-                        else arcGroupHeldState[groupID.value] = -1;
+                        if (groupHeld)
+                            arcGroupHeldState[groupID.value] = GroupState.Held;
+                        else if (arcGroupHeldState[groupID.value] == GroupState.Held)
+                            arcGroupHeldState[groupID.value] = GroupState.Lifted;
+                        else
+                            arcGroupHeldState[groupID.value] = GroupState.Missed;
                     }
                 ).WithoutBurst().Run();
 
@@ -125,7 +140,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
         public static void SetUpArray(int GroupCount, int ColorCount)
         {
             if (arcGroupHeldState.IsCreated) arcGroupHeldState.Dispose();
-            arcGroupHeldState = new NativeArray<int>(GroupCount, Allocator.Persistent);
+            arcGroupHeldState = new NativeArray<GroupState>(GroupCount, Allocator.Persistent);
             arcColorFsmArray = new List<ArcColorFSM>(ColorCount);
             for (int i=0; i<ColorCount; i++)
             {

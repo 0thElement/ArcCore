@@ -28,7 +28,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
             var commandBuffer = entityCommandBufferSystem.CreateCommandBuffer();
 
             int currentTime = Conductor.Instance.receptorTime;
-            NativeArray<int> arcGroupHeldState = ArcCollisionCheckSystem.arcGroupHeldState;
+            NativeArray<GroupState> arcGroupHeldState = ArcCollisionCheckSystem.arcGroupHeldState;
             List<ArcColorFSM> arcColorFsmArray = ArcCollisionCheckSystem.arcColorFsmArray;
 
             //Arc segments
@@ -46,22 +46,29 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 Entities.WithSharedComponentFilter<RenderMesh>(initial).ForEach(
                     (Entity en, ref Cutoff cutoff, in ArcGroupID groupID) =>
                     {
-                        if (arcGroupHeldState[groupID.value] < 0)
+                        GroupState state = arcGroupHeldState[groupID.value];
+
+                        if (state == GroupState.Missed)
                         {
                             commandBuffer.SetSharedComponent<RenderMesh>(en, grayout);
-                        }
-                        if (arcGroupHeldState[groupID.value] > 0)
+                        } 
+                        else if (state == GroupState.Lifted)
+                        {
+                            commandBuffer.SetSharedComponent<RenderMesh>(en, grayout);
+                            cutoff.value = true;
+                        } 
+                        else if (state == GroupState.Held)
                         {
                             commandBuffer.SetSharedComponent<RenderMesh>(en, highlight);
                             cutoff.value = true;
-                        }
+                        } 
                     }
                 ).WithoutBurst().Run();
             
                 Entities.WithSharedComponentFilter<RenderMesh>(highlight).ForEach(
                     (Entity en, ref Cutoff cutoff, in ArcGroupID groupID) =>
                     {
-                        if (arcGroupHeldState[groupID.value] < 0)
+                        if (arcGroupHeldState[groupID.value] == GroupState.Lifted)
                         {
                             commandBuffer.SetSharedComponent<RenderMesh>(en, grayout);
                         }
@@ -71,7 +78,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 Entities.WithSharedComponentFilter<RenderMesh>(grayout).ForEach(
                     (Entity en, ref Cutoff cutoff, in ArcGroupID groupID) =>
                     {
-                        if (arcGroupHeldState[groupID.value] > 0)
+                        if (arcGroupHeldState[groupID.value] == GroupState.Held)
                         {
                             commandBuffer.SetSharedComponent<RenderMesh>(en, highlight);
                             cutoff.value = true;
@@ -85,23 +92,31 @@ namespace ArcCore.Gameplay.Systems.Judgement
             shadowGrayout = ArcEntityCreator.Instance.ArcShadowGrayoutRenderMesh;
 
             Entities.WithSharedComponentFilter<RenderMesh>(shadowInitial).ForEach(
-                (Entity entity, ref Cutoff cutoff, in ArcGroupID groupID) =>
+                (Entity en, ref Cutoff cutoff, in ArcGroupID groupID) =>
                 {
-                    if (arcGroupHeldState[groupID.value] > 0)
-                    {
-                        cutoff.value = true;
-                    }
-                    if (arcGroupHeldState[groupID.value] < 0)
-                    {
-                        commandBuffer.SetSharedComponent<RenderMesh>(entity, shadowGrayout);
-                    }
+                        GroupState state = arcGroupHeldState[groupID.value];
+
+                        if (state == GroupState.Missed)
+                        {
+                            commandBuffer.SetSharedComponent<RenderMesh>(en, shadowGrayout);
+                        } 
+                        else if (state == GroupState.Lifted)
+                        {
+                            commandBuffer.SetSharedComponent<RenderMesh>(en, shadowGrayout);
+                            cutoff.value = true;
+                        } 
+                        else if (state == GroupState.Held)
+                        {
+                            commandBuffer.SetSharedComponent<RenderMesh>(en, shadowInitial);
+                            cutoff.value = true;
+                        } 
                 }
             ).WithoutBurst().Run();
 
             Entities.WithSharedComponentFilter<RenderMesh>(shadowGrayout).ForEach(
                 (Entity entity, in ArcGroupID groupID) =>
                 {
-                    if (arcGroupHeldState[groupID.value] > 0)
+                    if (arcGroupHeldState[groupID.value] == GroupState.Held)
                     {
                         commandBuffer.SetSharedComponent<RenderMesh>(entity, shadowInitial);
                     }
