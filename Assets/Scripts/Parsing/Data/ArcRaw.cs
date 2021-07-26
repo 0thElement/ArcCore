@@ -28,6 +28,7 @@ namespace ArcCore.Parsing.Data
         public float startY;
         public float endY;
         public int timingGroup;
+        public int color;
 
         public float2 StartPos => new float2(startX, startY);
         public float2 EndPos => new float2(endX, endY);

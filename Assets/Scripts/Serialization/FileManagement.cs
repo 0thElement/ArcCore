@@ -13,6 +13,10 @@ namespace ArcCore.Serialization
 
     public static class FileManagement
     {
+        public static string currentChartDirectory;
+        public static string GetRealPathFromUserInput(string input)
+            => Path.Combine(input[0] == FileStatics.globalMarker ? FileStatics.GlobalsPath : currentChartDirectory, input);
+
         public static Dictionary<string, int> globalsMap;
         public static Dictionary<string, LevelInfoInternal> chartsMap;
         public static Dictionary<string, PackInfo> packsMap;

@@ -1,4 +1,7 @@
-﻿namespace ArcCore.Parsing.Data
+﻿using ArcCore.Gameplay;
+using Unity.Mathematics;
+
+namespace ArcCore.Parsing.Data
 {
     public struct TraceRaw
     {
@@ -22,5 +25,8 @@
         public float startY;
         public float endY;
         public int timingGroup;
+
+        public float2 GetPosAt(int time)
+            => Conversion.GetPosAt(math.unlerp(timing, endTiming, time), new float2(startX, startY), new float2(endX, endY), easing);
     }
 }

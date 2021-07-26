@@ -8,6 +8,7 @@ namespace ArcCore.Utilities
         public static float Seconds => TicksToSec(Ticks);
 
         public static float TicksToSec(long ticks) => ticks / 10_000_000f;
+        public static long SecToTicks(float sec) => (long)(sec * 10_000_000);
 
         public static float TimeSince(float sec) => Seconds - sec;
         public static long TimeSince(long ticks) => Ticks - ticks;

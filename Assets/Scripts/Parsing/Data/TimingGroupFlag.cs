@@ -3,8 +3,9 @@
 namespace ArcCore.Parsing.Data
 {
     [Flags]
-    public enum TimingGroupFlags
+    public enum TimingGroupFlag
     {
-        NoInput = 0b0001
+        None = 0,
+        NoInput = 0b0001,
     }
 }

@@ -133,82 +133,102 @@ namespace ArcCore
         public static float InstantOut(float x) => (x == 1) ? 1 : 0;
         #endregion
 
-        public static EasingType ToEasingType(string type)
+        public static bool TryParseEasingType(string value, out EasingType result)
         {
-            switch(type.ToLower())
+            switch (value.ToLower())
             {
                 case "linear":
-                    return EasingType.Linear;
+                    result = EasingType.Linear;
+                    return true;
                 case "sine_in":
                 case "sinein":
-                    return EasingType.SineIn;
+                    result = EasingType.SineIn;
+                    return true;
                 case "sine_out":
                 case "sineout":
-                    return EasingType.SineOut;
+                    result = EasingType.SineOut;
+                    return true;
                 case "sine_in_out":
                 case "sine_inout":
                 case "sineinout":
                 case "sine_io":
                 case "sineio":
-                    return EasingType.SineInOut;
+                    result = EasingType.SineInOut;
+                    return true;
                 case "quad_in":
                 case "quadin":
-                    return EasingType.QuadIn;
+                    result = EasingType.QuadIn;
+                    return true;
                 case "quad_out":
                 case "quadout":
-                    return EasingType.QuadOut;
+                    result = EasingType.QuadOut;
+                    return true;
                 case "quad_in_out":
                 case "quad_inout":
                 case "quadinout":
                 case "quad_io":
                 case "quadio":
-                    return EasingType.QuadInOut;
+                    result = EasingType.QuadInOut;
+                    return true;
+                    break;
+                    return true;
                 case "cubic_in":
                 case "cubicin":
-                    return EasingType.CubicIn;
+                    result = EasingType.CubicIn;
+                    return true;
                 case "cubic_out":
                 case "cubicout":
-                    return EasingType.CubicOut;
+                    result = EasingType.CubicOut;
+                    return true;
                 case "cubic_in_out":
                 case "cubic_inout":
                 case "cubicinout":
                 case "cubic_io":
                 case "cubicio":
-                    return EasingType.CubicInOut;
+                    result = EasingType.CubicInOut;
+                    return true;
                 case "quartic_in":
                 case "quarticin":
-                    return EasingType.QuarticIn;
+                    result = EasingType.QuarticIn;
+                    return true;
                 case "quartic_out":
                 case "quartiout":
-                    return EasingType.QuarticOut;
+                    result = EasingType.QuarticOut;
+                    return true;
                 case "quartic_in_out":
                 case "quartic_inout":
                 case "quarticinout":
                 case "quartic_io":
                 case "quarticio":
-                    return EasingType.QuarticInOut;
+                    result = EasingType.QuarticInOut;
+                    return true;
                 case "quintic_in":
                 case "quinticin":
-                    return EasingType.QuinticIn;
+                    result = EasingType.QuinticIn;
+                    return true;
                 case "quintic_out":
                 case "quinticout":
-                    return EasingType.QuinticOut;
+                    result = EasingType.QuinticOut;
+                    return true;
                 case "quintic_in_out":
                 case "quintic_inout":
                 case "quinticinout":
                 case "quintic_io":
                 case "quinticio":
-                    return EasingType.QuinticInOut;
+                    result = EasingType.QuinticInOut;
+                    return true;
                 case "exponential_in":
                 case "exponentialin":
                 case "expo_in":
                 case "expoin":
-                    return EasingType.ExponentialIn;
+                    result = EasingType.ExponentialIn;
+                    return true;
                 case "exponential_out":
                 case "exponentialout":
                 case "expo_out":
                 case "expoout":
-                    return EasingType.ExponentialOut;
+                    result = EasingType.ExponentialOut;
+                    return true;
                 case "exponential_in_out":
                 case "exponential_inout":
                 case "exponentialinout":
@@ -219,63 +239,79 @@ namespace ArcCore
                 case "expoinout":
                 case "expo_io":
                 case "expoio":
-                    return EasingType.ExponentialInOut;
+                    result = EasingType.ExponentialInOut;
+                    return true;
                 case "circle_in":
                 case "circlein":
-                    return EasingType.CircleIn;
+                    result = EasingType.CircleIn;
+                    return true;
                 case "circle_out":
                 case "circleout":
-                    return EasingType.CircleOut;
+                    result = EasingType.CircleOut;
+                    return true;
                 case "circle_in_out":
                 case "circle_inout":
                 case "circleinout":
                 case "circle_io":
                 case "circleio":
-                    return EasingType.CircleInOut;
+                    result = EasingType.CircleInOut;
+                    return true;
                 case "back_in":
                 case "backin":
-                    return EasingType.BackIn;
+                    result = EasingType.BackIn;
+                    return true;
                 case "back_out":
                 case "backout":
-                    return EasingType.BackOut;
+                    result = EasingType.BackOut;
+                    return true;
                 case "back_in_out":
                 case "back_inout":
                 case "backinout":
                 case "back_io":
                 case "backio":
-                    return EasingType.BackInOut;
+                    result = EasingType.BackInOut;
+                    return true;
                 case "elastic_in":
                 case "elasticin":
-                    return EasingType.ElasticIn;
+                    result = EasingType.ElasticIn;
+                    return true;
                 case "elastic_out":
                 case "elasticout":
-                    return EasingType.ElasticOut;
+                    result = EasingType.ElasticOut;
+                    return true;
                 case "elastic_in_out":
                 case "elastic_inout":
                 case "elasticinout":
                 case "elastic_io":
                 case "elasticio":
-                    return EasingType.ElasticInOut;
+                    result = EasingType.ElasticInOut;
+                    return true;
                 case "bounce_in":
                 case "bouncein":
-                    return EasingType.BounceIn;
+                    result = EasingType.BounceIn;
+                    return true;
                 case "bounce_out":
                 case "bounceout":
-                    return EasingType.BounceOut;
+                    result = EasingType.BounceOut;
+                    return true;
                 case "bounce_in_out":
                 case "bounce_inout":
                 case "bounceinout":
                 case "bounce_io":
                 case "bounceio":
-                    return EasingType.BounceInOut;
+                    result = EasingType.BounceInOut;
+                    return true;
                 case "instant_in":
                 case "instantin":
-                    return EasingType.InstantIn;
+                    result = EasingType.InstantIn;
+                    return true;
                 case "instant_out":
                 case "instantout":
-                    return EasingType.InstantOut;
+                    result = EasingType.InstantOut;
+                    return true;
                 default:
-                    throw new System.ArgumentException("Argument was not a valid easing type.", nameof(type));
+                    result = EasingType.Linear;
+                    return false;
             }
         }
         public static float Do(float x, EasingType easingType)
