@@ -28,7 +28,7 @@ namespace ArcCore.Gameplay.Behaviours
                 bool nval = obj.enabled;
                 while(obj.enableKeys.Unfinished && time < obj.enableKeys.Current.timing)
                 {
-                    nval = obj.enableKeys.Current.newValue;
+                    nval = obj.enableKeys.Current.value;
                 }
                 obj.enabled = nval;
             }

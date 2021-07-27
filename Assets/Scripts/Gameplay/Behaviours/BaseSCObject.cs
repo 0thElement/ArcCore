@@ -24,7 +24,7 @@ namespace ArcCore.Gameplay.Behaviours
         public IndexedArray<ControlAxisKey> blueKeys;
         public IndexedArray<ControlAxisKey> alphaKeys;
 
-        public IndexedArray<ControlEnableKey> enableKeys;
+        public IndexedArray<ControlValueKey<bool>> enableKeys;
 
         public void Reset()
         {

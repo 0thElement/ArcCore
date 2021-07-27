@@ -11,8 +11,8 @@ namespace ArcCore.Gameplay.Behaviours
 
         public Sprite startSprite;
 
-        public IndexedArray<ControlImageKey> imageKeys;
-        public IndexedArray<ControlIntKey> sortLayerKeys;
+        public IndexedArray<ControlValueKey<Sprite>> imageKeys;
+        public IndexedArray<ControlValueKey<int>> sortLayerKeys;
 
         public new void Reset()
         {
@@ -39,7 +39,7 @@ namespace ArcCore.Gameplay.Behaviours
             Sprite sprite = null;
             while (imageKeys.Unfinished && time < imageKeys.Current.timing)
             {
-                sprite = imageKeys.Current.sprite;
+                sprite = imageKeys.Current.value;
             }
             if (sprite != null) 
                 spriteRenderer.sprite = sprite;

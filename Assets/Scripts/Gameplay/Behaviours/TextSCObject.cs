@@ -10,7 +10,7 @@ namespace ArcCore.Gameplay.Behaviours
 
         public string startValue;
 
-        public IndexedArray<ControlStringKey> stringKeys;
+        public IndexedArray<ControlValueKey<string>> stringKeys;
 
         public new void Reset()
         {
@@ -31,7 +31,7 @@ namespace ArcCore.Gameplay.Behaviours
             string value = null;
             while(stringKeys.Unfinished && time < stringKeys.Current.timing)
             {
-                value = stringKeys.Current.newValue;
+                value = stringKeys.Current.value;
             }
             if (value != null)
                 textMesh.text = value;

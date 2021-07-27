@@ -6,6 +6,8 @@ namespace ArcCore.Utilities
 {
     public class IndexedArray<T> : ICloneable, IEnumerable<T>, IList<T>
     {
+        public static implicit operator IndexedArray<T>(T[] arr) => new IndexedArray<T>(arr);
+
         public int index;
         public T[] array;
 

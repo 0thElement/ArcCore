@@ -72,7 +72,7 @@ namespace ArcCore.Parsing
 
         private protected virtual CommandData GetCommandData(string command) => null;
 
-        public bool ExecuteCommand()
+        public bool Step()
         {
             if (!StartCommand())
                 return false;
@@ -95,7 +95,10 @@ namespace ArcCore.Parsing
             }
             catch(Exception cmdE)
             {
-                e = new Exception($"An error occured while executing command \"{cmdRaw}\": {cmdE}. " +
+                if (cmdE is ParsingException)
+                    e = cmdE;
+                else 
+                    e = new Exception($"An error occured while executing command \"{cmdRaw}\": {cmdE}. " +
                     $"This may be due to an unspecified predicate failure, or faulty user code.");
             }
 
@@ -107,8 +110,13 @@ namespace ArcCore.Parsing
 
         public void Execute()
         {
-            while (ExecuteCommand()) ;
+            OnExecutionStartup();
+            while (Step()) ;
+            OnExecutionEnd();
         }
+
+        private protected virtual void OnExecutionStartup() { }
+        private protected virtual void OnExecutionEnd() { }
 
         public void NextLine()
         {
@@ -269,15 +277,19 @@ namespace ArcCore.Parsing
 
         #region Convenience Wrappers
         protected int GetInt(string expectedType = "integer", Predicate<int> predicate = null)
-            => GetTypedValue<int>(expectedType, int.TryParse, predicate);
+            => GetTypedValue(expectedType, int.TryParse, predicate);
         protected bool GetInt(out int value, string expectedType = "integer", Predicate<int> predicate = null)
-            => GetTypedValue<int>(out value, expectedType, int.TryParse, predicate);
-
+            => GetTypedValue(out value, expectedType, int.TryParse, predicate);
 
         protected float GetFloat(string expectedType = "float", Predicate<float> predicate = null)
-            => GetTypedValue<float>(expectedType, float.TryParse, predicate);
+            => GetTypedValue(expectedType, float.TryParse, predicate);
         protected bool GetFloat(out float value, string expectedType = "float", Predicate<float> predicate = null)
-            => GetTypedValue<float>(out value, expectedType, float.TryParse, predicate);
+            => GetTypedValue(out value, expectedType, float.TryParse, predicate);
+
+        protected bool GetBool(string expectedType = "float", Predicate<bool> predicate = null)
+            => GetTypedValue(expectedType, bool.TryParse, predicate);
+        protected bool GetBool(out bool value, string expectedType = "float", Predicate<bool> predicate = null)
+            => GetTypedValue(out value, expectedType, bool.TryParse, predicate);
         #endregion
     }
 }
