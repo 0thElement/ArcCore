@@ -10,30 +10,25 @@ using Unity.Mathematics;
 using ArcCore.Gameplay.Utility;
 using ArcCore.Math;
 
-namespace ArcCore.Gameplay.Systems.Judgement
+namespace ArcCore.Gameplay.Systems
 {
-    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(TappableJudgeSystem))]
+    [UpdateInGroup(typeof(JudgementSystemGroup))]
     public class UnlockedHoldJudgeSystem : SystemBase
     {
-        public static UnlockedHoldJudgeSystem Instance { get; set; }
-        protected override void OnCreate()
-        {
-            Instance = this;
-        }
         protected override void OnUpdate()
         {
-            if (!GameState.isChartMode) return;
+            if (!PlayManager.IsUpdatingAndActive) return;
 
-            int currentTime = Conductor.Instance.receptorTime;
-            var tracker = ScoreManager.Instance.tracker;
-            var tracksHeld = InputManager.Instance.tracksHeld;
+            int currentTime = PlayManager.ReceptorTime;
+            var tracker = PlayManager.ScoreHandler.tracker;
+            var tracksHeld = PlayManager.InputHandler.tracksHeld;
 
-            var particleBuffer = ParticleJudgeSystem.particleBuffer;
+            var particleBuffer = PlayManager.ParticleBuffer;
 
             Entities.WithNone<HoldLocked, PastJudgeRange>().ForEach(
                 (Entity en, ref ChartIncrTime chartIncrTime, in ChartLane lane) =>
                 {
-                    if (chartIncrTime.time > currentTime - Constants.FarWindow && (bool)tracksHeld[lane.lane])
+                    if (chartIncrTime.time > currentTime - Constants.FarWindow && tracksHeld[lane.lane] > 0)
                     {
                         chartIncrTime.UpdateJudgePointCachePure(currentTime, out int count);
                         tracker.AddJudge(JudgeType.MaxPure, count);
@@ -42,7 +37,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 }
             ).Run();
 
-            ScoreManager.Instance.tracker = tracker;
+            PlayManager.ScoreHandler.tracker = tracker;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ArcCore.Parsing
 {
@@ -13,22 +14,25 @@ namespace ArcCore.Parsing
             System.Runtime.Serialization.SerializationInfo info,
             System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
 
-        public static string GetLineEndExceptionMessage(string expectedType, string exceptTarget)
-            => $"Unexpected line ending while reading {expectedType}" + (exceptTarget == null ? "." : $" within {exceptTarget}.");
-        public static string GetDataEndExceptionMessage(string expectedType, string exceptTarget)
-            => $"Unexpected file ending while reading {expectedType}" + (exceptTarget == null ? "." : $" within {exceptTarget}.");
-        public static string GetInvalidValueExceptionMessage(string expectedType, string offendingValue, string exceptTarget)
-            => $"Invalid {expectedType}: \"{offendingValue}\"" + (exceptTarget == null ? "." : $" within {exceptTarget}.");
-        public static string GetUnexpectedContinuationExceptionMessage(string exceptTarget)
-            => $"Expected line ending but got more data while reading a(n) {exceptTarget}";
+        private static string GetMessageEnd(List<string> context)
+            => context.Count == 0 ? "." : $" while reading {string.Join(" :: ", context)}.";
 
-        public static ParsingException LineEnd(string expectedType, string exceptTarget, int line)
-            => new ParsingException(GetLineEndExceptionMessage(expectedType, exceptTarget), line);
-        public static ParsingException DataEnd(string expectedType, string exceptTarget, int line)
-            => new ParsingException(GetDataEndExceptionMessage(expectedType, exceptTarget), line);
-        public static ParsingException InvalidValue(string expectedType, string offendingValue, string exceptTarget, int line)
-            => new ParsingException(GetInvalidValueExceptionMessage(expectedType, offendingValue, exceptTarget), line);
-        public static ParsingException UnexpectedContinuation(string exceptTarget, int line)
-            => new ParsingException(GetUnexpectedContinuationExceptionMessage(exceptTarget), line);
+        public static string GetLineEndExceptionMessage(List<string> context)
+            => $"Unexpected line ending" + GetMessageEnd(context);
+        public static string GetDataEndExceptionMessage(List<string> context)
+            => $"Unexpected file ending" + GetMessageEnd(context);
+        public static string GetInvalidValueExceptionMessage(List<string> context, string offendingValue)
+            => $"Invalid value \"{offendingValue}\"" + GetMessageEnd(context);
+        public static string GetUnexpectedContinuationExceptionMessage(List<string> context)
+            => $"Expected line ending but got more data" + GetMessageEnd(context);
+
+        public static ParsingException LineEnd(List<string> context, int line)
+            => new ParsingException(GetLineEndExceptionMessage(context), line);
+        public static ParsingException DataEnd(List<string> context, int line)
+            => new ParsingException(GetDataEndExceptionMessage(context), line);
+        public static ParsingException InvalidValue(List<string> context, string offendingValue, int line)
+            => new ParsingException(GetInvalidValueExceptionMessage(context, offendingValue), line);
+        public static ParsingException UnexpectedContinuation(List<string> context, int line)
+            => new ParsingException(GetUnexpectedContinuationExceptionMessage(context), line);
     }
 }

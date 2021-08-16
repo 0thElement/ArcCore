@@ -1,18 +1,8 @@
 ﻿namespace ArcCore.Gameplay
 {
-    public enum JudgeType
-    {
-        MaxPure,
-        LatePure,
-        EarlyPure,
-        LateFar,
-        EarlyFar,
-        Lost
-    }
 
     public static class JudgeManage
     {
-
         public static JudgeType GetType(int timeDifference)
         {
             if (timeDifference > Constants.FarWindow)

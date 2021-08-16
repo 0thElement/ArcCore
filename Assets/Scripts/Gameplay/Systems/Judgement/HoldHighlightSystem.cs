@@ -1,5 +1,4 @@
 using ArcCore.Gameplay.Behaviours;
-using ArcCore.Gameplay.Behaviours.EntityCreation;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Tags;
 using Unity.Collections;
@@ -8,37 +7,30 @@ using Unity.Rendering;
 using Unity.Transforms;
 using ArcCore.Gameplay.Data;
 
-namespace ArcCore.Gameplay.Systems.Judgement
+namespace ArcCore.Gameplay.Systems
 {
-    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(TappableJudgeSystem))]
-
+    [UpdateInGroup(typeof(JudgementSystemGroup))]
     public class HoldHighlightSystem : SystemBase
     {
-        public static HoldHighlightSystem Instance { get; private set; }
-
-        private EndSimulationEntityCommandBufferSystem entityCommandBufferSystem;
-        protected override void OnCreate()
-        {
-            Instance = this;
-            entityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
-        }
         protected override void OnUpdate()
         {
-            NTrackArray<ArcCore.Gameplay.Data.MulticountBool> tracksHeld = InputManager.Instance.tracksHeld;
-            int currentTime = Conductor.Instance.receptorTime;
+            if (!PlayManager.IsUpdatingAndActive) return;
 
-            RenderMesh highlightRenderMesh = HoldEntityCreator.Instance.HighlightRenderMesh;
-            RenderMesh grayoutRenderMesh = HoldEntityCreator.Instance.GrayoutRenderMesh;
+            var tracksHeld = PlayManager.InputHandler.tracksHeld;
+            int currentTime = PlayManager.ReceptorTime;
 
-            var commandBuffer = entityCommandBufferSystem.CreateCommandBuffer();
+            RenderMesh highlightRenderMesh = PlayManager.HighlightHold;
+            RenderMesh grayoutRenderMesh = PlayManager.GrayoutHold;
+
+            var commandBuffer = PlayManager.CommandBuffer;
 
             Entities.WithAll<Translation, ChartIncrTime>().WithNone<PastJudgeRange, HoldLocked>().ForEach( 
                 (Entity en, in ChartLane lane) =>
                 {
                     if (tracksHeld[lane.lane] > 0)
-                        commandBuffer.SetSharedComponent<RenderMesh>(en, highlightRenderMesh);
+                        commandBuffer.SetSharedComponent(en, highlightRenderMesh);
                     else
-                        commandBuffer.SetSharedComponent<RenderMesh>(en, grayoutRenderMesh);
+                        commandBuffer.SetSharedComponent(en, grayoutRenderMesh);
                 }
             ).WithoutBurst().Run();
             
@@ -47,7 +39,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 {
                     if (time.value <= currentTime - Constants.FarWindow)
                     {
-                        commandBuffer.SetSharedComponent<RenderMesh>(en, grayoutRenderMesh);
+                        commandBuffer.SetSharedComponent(en, grayoutRenderMesh);
                     }
                 }
             ).WithoutBurst().Run();

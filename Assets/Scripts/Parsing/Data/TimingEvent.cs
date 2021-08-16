@@ -1,4 +1,6 @@
-﻿namespace ArcCore.Parsing.Data
+﻿using ArcCore.Gameplay.Data;
+
+namespace ArcCore.Parsing.Data
 {
     public struct TimingEvent
     {

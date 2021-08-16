@@ -8,16 +8,18 @@ namespace ArcCore.Parsing
     public interface IChartParser
     {
         void Execute();
-        List<TimingRaw> Timings { get; }
+        List<List<TimingRaw>> Timings { get; }
         List<TapRaw> Taps { get; }
         List<HoldRaw> Holds { get; }
         List<ArcRaw> Arcs { get; }
         List<TraceRaw> Traces { get; }
         List<ArctapRaw> Arctaps { get; }
         List<CameraEvent> Cameras { get; }
+        List<int> CameraResets { get; }
         int ChartOffset { get; }
         List<TimingGroupFlag> TimingGroupFlags { get; }
-        List<int> UsedArcColors { get; }
-        List<BaseSCObject> SceneControlObjects { get; }
+        HashSet<int> UsedArcColors { get; }
+        List<(ScenecontrolData, TextScenecontrolData)> TextScenecontrolData { get; }
+        List<(ScenecontrolData, SpriteScenecontrolData)> SpriteScenecontrolData { get; }
     }
 }

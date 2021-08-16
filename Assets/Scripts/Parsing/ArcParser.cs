@@ -10,6 +10,7 @@ namespace ArcCore.Parsing
     using ArcCore.Utilities;
     using Data;
     using System.IO;
+    using System.Linq;
     using System.Text;
     using Unity.Mathematics;
     using UnityEngine;
@@ -24,51 +25,35 @@ namespace ArcCore.Parsing
 
     public class ArcParser : CommandParser, IChartParser
     {
-        public List<TimingRaw> Timings { get; private set; } = new List<TimingRaw>();
+        public List<List<TimingRaw>> Timings { get; private set; } = new List<List<TimingRaw>> { new List<TimingRaw>() };
         public List<TapRaw> Taps { get; private set; } = new List<TapRaw>();
         public List<HoldRaw> Holds { get; private set; } = new List<HoldRaw>();
         public List<ArcRaw> Arcs { get; private set; } = new List<ArcRaw>();
         public List<TraceRaw> Traces { get; private set; } = new List<TraceRaw>();
         public List<ArctapRaw> Arctaps { get; private set; } = new List<ArctapRaw>();
         public List<CameraEvent> Cameras { get; private set; } = new List<CameraEvent>();
+        public List<int> CameraResets { get; private set; } = new List<int>();
         public int ChartOffset { get; private set; }
         public List<TimingGroupFlag> TimingGroupFlags { get; private set; } = new List<TimingGroupFlag>();
         public HashSet<int> UsedArcColors { get; private set; } = new HashSet<int>();
-        public List<BaseSCObject> SceneControlObjects { get; private set; } = new List<BaseSCObject>();
+        public List<(ScenecontrolData, TextScenecontrolData)> TextScenecontrolData { get; private set; } 
+            = new List<(ScenecontrolData, TextScenecontrolData)>();
+        public List<(ScenecontrolData, SpriteScenecontrolData)> SpriteScenecontrolData { get; private set; }
+            = new List<(ScenecontrolData, SpriteScenecontrolData)>();
 
         public ArcParser(string[] lines): base(lines) {}
+        public ArcParser(CommandParser parser): base(parser) {}
 
         private int timingGroup;
         private bool timingGroupHasTiming;
         private bool timingGroupHasTrace;
         private ArcParserState state;
 
+        private Dictionary<string, ScenecontrolData> masterSCDict = new Dictionary<string, ScenecontrolData>();
+        private Dictionary<string, TextScenecontrolData> textSCDict = new Dictionary<string, TextScenecontrolData>();
+        private Dictionary<string, SpriteScenecontrolData> spriteSCDict = new Dictionary<string, SpriteScenecontrolData>();
+
         private Dictionary<string, Sprite> sprites = new Dictionary<string, Sprite>();
-        private Dictionary<string, BaseSCObject> objects = new Dictionary<string, BaseSCObject>();
-
-        private Dictionary<string, List<ControlAxisKey>> xAxisKeys = new();
-        private Dictionary<string, List<ControlAxisKey>> yAxisKeys = new();
-        private Dictionary<string, List<ControlAxisKey>> zAxisKeys = new();
-
-        private Dictionary<string, List<ControlAxisKey>> xRotAxisKeys = new();
-        private Dictionary<string, List<ControlAxisKey>> yRotAxisKeys = new();
-        private Dictionary<string, List<ControlAxisKey>> zRotAxisKeys = new();
-
-        private Dictionary<string, List<ControlAxisKey>> xSclAxisKeys = new();
-        private Dictionary<string, List<ControlAxisKey>> ySclAxisKeys = new();
-        private Dictionary<string, List<ControlAxisKey>> zSclAxisKeys = new();
-
-        private Dictionary<string, List<ControlAxisKey>> redKeys = new();
-        private Dictionary<string, List<ControlAxisKey>> blueKeys = new();
-        private Dictionary<string, List<ControlAxisKey>> greenKeys = new();
-        private Dictionary<string, List<ControlAxisKey>> alphaKeys = new();
-
-        private Dictionary<string, List<ControlValueKey<bool>>> enableKeys = new();
-
-        private Dictionary<string, List<ControlValueKey<Sprite>>> imageKeys = new();
-        private Dictionary<string, List<ControlValueKey<int>>> sortLayerKeys = new();
-
-        private Dictionary<string, List<ControlValueKey<string>>> stringKeys = new();
 
         private bool TryGetTiminggroupFlag(string value, out TimingGroupFlag result)
         {
@@ -85,6 +70,24 @@ namespace ArcCore.Parsing
             return true;
         }
 
+        private bool TryGetCameraEasing(string value, out CameraEasing result)
+        {
+            switch(value)
+            {
+                case "l":
+                    result = CameraEasing.l;
+                    return true;
+                case "qi":
+                    result = CameraEasing.qi;
+                    return true;
+                case "qo":
+                    result = CameraEasing.qo;
+                    return true;
+                default:
+                    result = CameraEasing.l;
+                    return false;
+            }
+        }
         private bool TryGetArcEasing(string value, out ArcEasing result)
         {
             switch(value)
@@ -123,23 +126,10 @@ namespace ArcCore.Parsing
         private void NewTextObject()
         {
             var iden = GetValue("identifier");
+            var text = GetStrValue();
 
-            objects.Add(iden, new TextSCObject { startValue = GetStrValue() });
-
-            xAxisKeys.Add(iden, new());
-            yAxisKeys.Add(iden, new());
-            zAxisKeys.Add(iden, new());
-            xRotAxisKeys.Add(iden, new());
-            yRotAxisKeys.Add(iden, new());
-            zRotAxisKeys.Add(iden, new());
-            xSclAxisKeys.Add(iden, new());
-            ySclAxisKeys.Add(iden, new());
-            zSclAxisKeys.Add(iden, new());
-            redKeys.Add(iden, new());
-            blueKeys.Add(iden, new());
-            greenKeys.Add(iden, new());
-            alphaKeys.Add(iden, new());
-            stringKeys.Add(iden, new());
+            masterSCDict.Add(iden, new ScenecontrolData());
+            textSCDict.Add(iden, new TextScenecontrolData(text));
         }
         private void NewSpriteObject()
         {
@@ -149,90 +139,107 @@ namespace ArcCore.Parsing
             if(!sprites.ContainsKey(spr))
                 throw GetParsingException($"Undeclared sprite cannot be used: \"{spr}\".");
 
-            objects.Add(iden, new SpriteSCObject { startSprite = sprites[spr] });
-
-            xAxisKeys.Add(iden, new());
-            yAxisKeys.Add(iden, new());
-            zAxisKeys.Add(iden, new());
-            xRotAxisKeys.Add(iden, new());
-            yRotAxisKeys.Add(iden, new());
-            zRotAxisKeys.Add(iden, new());
-            xSclAxisKeys.Add(iden, new());
-            ySclAxisKeys.Add(iden, new());
-            zSclAxisKeys.Add(iden, new());
-            redKeys.Add(iden, new());
-            blueKeys.Add(iden, new());
-            greenKeys.Add(iden, new());
-            alphaKeys.Add(iden, new());
-            stringKeys.Add(iden, new());
+            masterSCDict.Add(iden, new ScenecontrolData());
+            spriteSCDict.Add(iden, new SpriteScenecontrolData(sprites[spr]));
         }
 
-        private protected override CommandData GetCommandData(string command)
+        private protected override Command ExecuteCommand(string command)
         {
             //message and predicate constants
+            bool settingsMode = (state == ArcParserState.Settings);
             const string SettingsModeMsg = "Cannot use this command unless in settings mode.";
-            bool SettingsMode() => (state == ArcParserState.Settings);
+            void RequireSettingsMode() => Require(settingsMode, SettingsModeMsg);
 
+            bool objectsMode = (state == ArcParserState.Objects);
             const string ObjectsModeMsg = "Cannot use this command unless in objects mode.";
-            bool ObjectsMode() => (state == ArcParserState.Objects);
+            void RequireObjectsMode() => Require(objectsMode, ObjectsModeMsg);
 
+            bool chartMode = (state == ArcParserState.Chart);
             const string ChartModeMsg = "Cannot use this command unless in chart mode.";
-            bool ChartMode() => (state == ArcParserState.Chart);
+            void RequireChartMode() => Require(chartMode, ChartModeMsg);
 
-            const string ChartObjMsg = "Cannot create this chart item unless in chart mode and timing group has at least one timing.";
-            bool ChartObjMode() => (state == ArcParserState.Chart && timingGroupHasTiming);
+            const string ChartObjModeMsg = "Cannot create this chart item unless in chart mode and timing group has at least one timing.";
+            bool chartObjMode = (state == ArcParserState.Chart && timingGroupHasTiming);
 
             const string ArctapMsg = "Cannot create this chart item unless in chart mode, timing group has at least one timing, and there is at least one trace in the current timinggroup.";
-            bool Arctap() => ChartObjMode() && timingGroupHasTrace;
-
-            //short methods
-            void SetOffset() => ChartOffset = GetInt();
+            bool arctap = chartObjMode && timingGroupHasTrace;
 
             //actual cases
             switch (command)
             {
                 //mode commands
                 case "settings":
-                    return ("settings header", () => state = ArcParserState.Settings, 
-                        "Cannot use a settings header more than once or after a chart or objects header.", () => state < ArcParserState.Settings);
+                    return (
+                        "settings header", 
+                        () => 
+                        {
+                            ClearContext();
+                            AddPermanentContext("settings");
+                            state = ArcParserState.Settings;
+                        }, 
+                        state < ArcParserState.Settings, 
+                        "Cannot use a settings header more than once or after a chart or objects header."
+                    );
+
                 case "objects":
-                    return ("objects header", () => state = ArcParserState.Objects,
-                        "Cannot use an objects header more than once or after a chart header.", () => state < ArcParserState.Objects);
+                    return (
+                        "objects header",
+                        () =>
+                        {
+                            ClearContext();
+                            AddPermanentContext("objects");
+                            state = ArcParserState.Objects;
+                        },
+                        state < ArcParserState.Objects,
+                        "Cannot use an objects header more than once or after a chart header."
+                    );
+
                 case "chart":
-                    return ("chart header", () => state = ArcParserState.Chart,
-                        "Cannot use a chart header more than once.", () => state < ArcParserState.Chart);
+                    return (
+                        "chart header",
+                        () =>
+                        {
+                            ClearContext();
+                            AddPermanentContext("chart");
+                            state = ArcParserState.Chart;
+                        },
+                        state < ArcParserState.Chart,
+                        "Cannot use a chart header more than once."
+                    );
 
                 //settings commands
                 case "audio_offset":
-                    return ("audio offset setter", SetOffset, SettingsModeMsg, SettingsMode);
+                    return ("audio offset setter", () => ChartOffset = GetInt(), settingsMode, SettingsModeMsg);
 
                 //objects commands
                 case "image":
-                    return ("image object", NewImage, ObjectsModeMsg, ObjectsMode);
+                    return ("image creator", NewImage, objectsMode, ObjectsModeMsg);
                 case "text":
-                    return ("text object", NewTextObject, ObjectsModeMsg, ObjectsMode);
+                    return ("text creator", NewTextObject, objectsMode, ObjectsModeMsg);
                 case "sprite":
-                    return ("sprite object", NewSpriteObject, ObjectsModeMsg, ObjectsMode);
+                    return ("sprite creator", NewSpriteObject, objectsMode, ObjectsModeMsg);
 
                 //chart commands
                 case "timing":
-                    return (null, NewTiming, ChartModeMsg, ChartMode);
+                    return ("timing", NewTiming, chartMode, ChartModeMsg);
                 case "tap":
-                    return (null, NewTap, ChartObjMsg, ChartObjMode);
+                    return ("tap", NewTap, chartObjMode, ChartObjModeMsg);
                 case "hold":
-                    return (null, NewHold, ChartObjMsg, ChartObjMode);
+                    return ("hold", NewHold, chartObjMode, ChartObjModeMsg);
                 case "arc":
-                    return (null, NewArc, ChartObjMsg, ChartObjMode);
+                    return ("arc", NewArc, chartObjMode, ChartObjModeMsg);
                 case "trace":
-                    return (null, NewTrace, ChartObjMsg, ChartObjMode);
+                    return ("trace", NewTrace, chartObjMode, ChartObjModeMsg);
                 case "arctap":
-                    return (null, NewArctap, ArctapMsg, Arctap);
+                    return ("arctap", NewArctap, arctap, ArctapMsg);
                 case "camera":
-                    return (null, NewCamera, ChartObjMsg, ChartObjMode);
+                    return ("camera", NewCamera, chartObjMode, ChartObjModeMsg);
+                case "cam_reset":
+                    return ("camera reset", NewCameraReset, chartObjMode, ChartObjModeMsg);
                 case "keyframe":
-                    return (null, NewKeyframe, ChartObjMsg, ChartObjMode);
+                    return ("keyframe", NewKeyframe, chartObjMode, ChartObjModeMsg);
                 case "new_group":
-                    return ("new timing group", ManageGroup, ChartModeMsg, ChartMode);
+                    return ("new timinggroup", ManageGroup, chartObjMode, ChartObjModeMsg);
             }
 
             return null;
@@ -240,105 +247,21 @@ namespace ArcCore.Parsing
 
         private protected override void OnExecutionEnd()
         {
-            foreach(var kvp in xAxisKeys) 
-            {
-                objects[kvp.Key].xAxisKeys = kvp.Value.ToArray();
-            }
+            foreach (var kvp in textSCDict)
+                TextScenecontrolData.Add((masterSCDict[kvp.Key], kvp.Value));
 
-            foreach (var kvp in yAxisKeys)
-            {
-                objects[kvp.Key].yAxisKeys = kvp.Value.ToArray();
-            }
-
-            foreach (var kvp in zAxisKeys)
-            {
-                objects[kvp.Key].zAxisKeys = kvp.Value.ToArray();
-            }
-
-            foreach (var kvp in xRotAxisKeys)
-            {
-                objects[kvp.Key].xRotAxisKeys = kvp.Value.ToArray();
-            }
-
-            foreach (var kvp in yRotAxisKeys)
-            {
-                objects[kvp.Key].yRotAxisKeys = kvp.Value.ToArray();
-            }
-
-            foreach (var kvp in zRotAxisKeys)
-            {
-                objects[kvp.Key].zRotAxisKeys = kvp.Value.ToArray();
-            }
-
-            foreach (var kvp in xSclAxisKeys)
-            {
-                objects[kvp.Key].xScaleAxisKeys = kvp.Value.ToArray();
-            }
-
-            foreach (var kvp in ySclAxisKeys)
-            {
-                objects[kvp.Key].yScaleAxisKeys = kvp.Value.ToArray();
-            }
-
-            foreach (var kvp in zSclAxisKeys)
-            {
-                objects[kvp.Key].zScaleAxisKeys = kvp.Value.ToArray();
-            }
-
-            foreach (var kvp in redKeys)
-            {
-                objects[kvp.Key].redKeys = kvp.Value.ToArray();
-            }
-
-            foreach (var kvp in greenKeys)
-            {
-                objects[kvp.Key].greenKeys = kvp.Value.ToArray();
-            }
-
-            foreach (var kvp in blueKeys)
-            {
-                objects[kvp.Key].blueKeys = kvp.Value.ToArray();
-            }
-
-            foreach (var kvp in alphaKeys)
-            {
-                objects[kvp.Key].alphaKeys = kvp.Value.ToArray();
-            }
-
-            foreach (var kvp in enableKeys)
-            {
-                objects[kvp.Key].enableKeys = kvp.Value.ToArray();
-            }
-
-            foreach (var kvp in enableKeys)
-            {
-                objects[kvp.Key].enableKeys = kvp.Value.ToArray();
-            }
-
-            foreach (var kvp in imageKeys)
-            {
-                (objects[kvp.Key] as SpriteSCObject).imageKeys = kvp.Value.ToArray();
-            }
-
-            foreach (var kvp in sortLayerKeys)
-            {
-                (objects[kvp.Key] as SpriteSCObject).sortLayerKeys = kvp.Value.ToArray();
-            }
-
-            foreach (var kvp in stringKeys)
-            {
-                (objects[kvp.Key] as TextSCObject).stringKeys = kvp.Value.ToArray();
-            }
+            foreach (var kvp in spriteSCDict)
+                SpriteScenecontrolData.Add((masterSCDict[kvp.Key], kvp.Value));
         }
 
         private int GetLane()
-            => GetInt("lane", value => 0 < value && value < 5);
+            => GetInt("lane", value => value >= 0 && value <= 5);
 
         private void NewImage()
         {
             var name = GetValue("identifier");
-            var path = GetValue("path");
-            path = FileManagement.GetRealPathFromUserInput(path) + ".png";
+            var opath = GetValue("path");
+            var path = FileManagement.GetRealPathFromUserInput(opath) + ".png";
 
             Texture2D tex = new Texture2D(2,2);
 
@@ -353,23 +276,22 @@ namespace ArcCore.Parsing
             return;
 
             ERR:
-            throw GetParsingException($"The provided path did not exist: \"{path}\".");
+            throw GetParsingException($"The provided path did not exist: \"{opath}\".");
         }
         private void NewKeyframe()
         {
-            EasingType GetEasing() => GetTypedValue<EasingType>("general easing type", Ease.TryParseEasingType);
+            EasingType GetEasing() => GetTypedValue<EasingType>("general easing type", Easing.TryParse);
 
             var obj = GetValue("identifier");
+            var isSprite = spriteSCDict.ContainsKey(obj);
 
-            if (!objects.ContainsKey(obj))
+            if (!isSprite && !textSCDict.ContainsKey(obj))
                 throw GetParsingException($"Undeclared object: \"{obj}\".");
-
-            bool isSprite = objects[obj] is SpriteSCObject;
 
             var type = GetValue("keyframe type");
             var timing = GetInt();
 
-            void AppendNewAxis(List<ControlAxisKey> l) => l.Add(new ControlAxisKey { timing = timing, easing = GetEasing(), targetValue = GetFloat() });
+            void AppendNewAxis(IndexedList<ControlAxisKey> l) => l.internalList.Add(new ControlAxisKey { timing = timing, easing = GetEasing(), targetValue = GetFloat() });
             void RequireSprite()
             {
                 if (!isSprite) throw GetParsingException($"Non-sprite object \"{obj}\" cannot have property \"{type}\" set.");
@@ -382,46 +304,46 @@ namespace ArcCore.Parsing
             switch (type)
             {
                 case "x_pos":
-                    AppendNewAxis(xAxisKeys[obj]);
+                    AppendNewAxis(masterSCDict[obj].xAxisKeys);
                     break;
                 case "y_pos":
-                    AppendNewAxis(yAxisKeys[obj]);
+                    AppendNewAxis(masterSCDict[obj].yAxisKeys);
                     break;
                 case "z_pos":
-                    AppendNewAxis(zAxisKeys[obj]);
+                    AppendNewAxis(masterSCDict[obj].zAxisKeys);
                     break;
                 case "x_rot":
-                    AppendNewAxis(xRotAxisKeys[obj]);
+                    AppendNewAxis(masterSCDict[obj].xRotAxisKeys);
                     break;
                 case "y_rot":
-                    AppendNewAxis(yRotAxisKeys[obj]);
+                    AppendNewAxis(masterSCDict[obj].yRotAxisKeys);
                     break;
                 case "z_rot":
-                    AppendNewAxis(zRotAxisKeys[obj]);
+                    AppendNewAxis(masterSCDict[obj].zRotAxisKeys);
                     break;
                 case "x_scl":
-                    AppendNewAxis(xSclAxisKeys[obj]);
+                    AppendNewAxis(masterSCDict[obj].xScaleAxisKeys);
                     break;
                 case "y_scl":
-                    AppendNewAxis(ySclAxisKeys[obj]);
+                    AppendNewAxis(masterSCDict[obj].yScaleAxisKeys);
                     break;
                 case "z_scl":
-                    AppendNewAxis(zSclAxisKeys[obj]);
+                    AppendNewAxis(masterSCDict[obj].zScaleAxisKeys);
                     break;
                 case "red":
-                    AppendNewAxis(redKeys[obj]);
+                    AppendNewAxis(masterSCDict[obj].redKeys);
                     break;
                 case "green":
-                    AppendNewAxis(greenKeys[obj]);
+                    AppendNewAxis(masterSCDict[obj].greenKeys);
                     break;
                 case "blue":
-                    AppendNewAxis(blueKeys[obj]);
+                    AppendNewAxis(masterSCDict[obj].blueKeys);
                     break;
                 case "alpha":
-                    AppendNewAxis(alphaKeys[obj]);
+                    AppendNewAxis(masterSCDict[obj].alphaKeys);
                     break;
                 case "enable":
-                    enableKeys[obj].Add(new ControlValueKey<bool> { timing = timing, value = GetBool() });
+                    masterSCDict[obj].enableKeys.internalList.Add(new ControlValueKey<bool> { timing = timing, value = GetBool() });
                     break;
 
                 case "image":
@@ -432,19 +354,19 @@ namespace ArcCore.Parsing
                     if (!sprites.ContainsKey(spr))
                         throw GetParsingException($"Undeclared sprite cannot be used: \"{spr}\".");
 
-                    imageKeys[obj].Add(new ControlValueKey<Sprite> { timing = timing, value = sprites[spr] });
+                    spriteSCDict[obj].imageKeys.internalList.Add(new ControlValueKey<Sprite> { timing = timing, value = sprites[spr] });
                     break;
 
                 case "sortLayer":
 
                     RequireSprite();
-                    sortLayerKeys[obj].Add(new ControlValueKey<int> { timing = timing, value = GetInt() });
+                    spriteSCDict[obj].sortLayerKeys.internalList.Add(new ControlValueKey<int> { timing = timing, value = GetInt() });
                     break;
 
                 case "string":
 
                     RequireText();
-                    stringKeys[obj].Add(new ControlValueKey<string> { timing = timing, value = GetStrValue() });
+                    textSCDict[obj].stringKeys.internalList.Add(new ControlValueKey<string> { timing = timing, value = GetStrValue() });
                     break;
 
                 default:
@@ -453,14 +375,14 @@ namespace ArcCore.Parsing
         }
         private void NewTiming()
         {
-            Timings.Add(
-                new TimingRaw
-                {
-                    timing = GetInt(),
-                    bpm = GetFloat(),
-                    divisor = GetFloat()
-                }
-            );
+            var raw = new TimingRaw();
+
+            raw.timing = GetInt();
+            raw.bpm = GetFloat();
+            raw.divisor = GetFloat();
+
+            Timings[timingGroup].Add(raw);
+
             timingGroupHasTiming = true;
         }
         private void NewTap()
@@ -500,7 +422,7 @@ namespace ArcCore.Parsing
                     endX = GetFloat(),
                     endY = GetFloat(),
                     easing = GetTypedValue<ArcEasing>("arc easing", TryGetArcEasing),
-                    color = col = GetInt(predicate: val => val > 0),
+                    color = col = GetInt(predicate: val => val >= 0),
                     timingGroup = timingGroup
                 }
             );
@@ -544,11 +466,17 @@ namespace ArcCore.Parsing
                 new CameraEvent
                 {
                     Timing = GetInt(),
-                    targetChange = new PosRot(new float3(GetFloat(), GetFloat(), GetFloat()), new float3(GetFloat(), GetFloat(), GetFloat()))
+                    Duration = GetInt(),
+                    PosChangeFromParam = new float3(GetFloat(), GetFloat(), GetFloat()), 
+                    RotChangeFromParam = new float3(GetFloat(), GetFloat(), GetFloat()),
+                    easing = GetTypedValue<EasingType>("camera easing type", Easing.TryParse)
                 }
             );
         }
-
+        private void NewCameraReset()
+        {
+            CameraResets.Add(GetInt());
+        }
         private void ManageGroup()
         {
             timingGroup++;
@@ -563,6 +491,8 @@ namespace ArcCore.Parsing
 
             timingGroupHasTiming = false;
             timingGroupHasTrace = false;
+
+            Timings.Add(new List<TimingRaw>());
         }
     }
 }

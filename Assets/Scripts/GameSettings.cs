@@ -33,16 +33,19 @@ namespace ArcCore
         public static void FinalizeInstance()
             => _instanceInvalid = true;
 
+        public static List<Color> DefaultColors => 
+            new List<Color>
+            {
+                {new Color(0.30f, 0.77f, 0.86f, 0.75f)},
+                {new Color(0.91f, 0.37f, 0.72f, 0.75f)},
+                {new Color(0.48f, 0.89f, 0.32f, 0.75f)},
+                {new Color(0.90f, 0.66f, 0.29f, 0.75f)}
+            };
+
         public static GameSettings GetDefault()
             => new GameSettings
             {
-                arcColors = new List<Color>
-                {
-                    {new Color(0.30f, 0.77f, 0.86f, 0.75f)},
-                    {new Color(0.91f, 0.37f, 0.72f, 0.75f)},
-                    {new Color(0.48f, 0.89f, 0.32f, 0.75f)},
-                    {new Color(0.90f, 0.66f, 0.29f, 0.75f)}
-                },
+                arcColors = DefaultColors,
                 _songSpeed = 1f,
                 chartSpeed = 1f,
                 audioOffset = 0

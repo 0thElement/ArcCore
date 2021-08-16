@@ -15,7 +15,7 @@ namespace ArcCore.Parsing.Data
         }
 
         public PosRot targetChange;
-        public CameraEasing easing;
+        public EasingType easing;
 
         private int _duration;
         public int Duration
@@ -49,7 +49,7 @@ namespace ArcCore.Parsing.Data
 
         public PosRot GetAt(int time)
         {
-            float t = Conversion.TransformCamPercent(LerpValue(time), easing);
+            float t = Easing.Do(LerpValue(time), easing);
             return targetChange * t;
         }
 

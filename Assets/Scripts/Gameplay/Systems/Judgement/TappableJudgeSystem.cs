@@ -11,13 +11,11 @@ using ArcCore.Gameplay.Utility;
 using ArcCore.Math;
 using ArcCore.Utilities.Extensions;
 
-namespace ArcCore.Gameplay.Systems.Judgement
+namespace ArcCore.Gameplay.Systems
 {
-    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(ExpirableJudgeSystem))]
+    [UpdateInGroup(typeof(JudgementSystemGroup))]
     public class TappableJudgeSystem : SystemBase
     {
-        public static TappableJudgeSystem Instance { get; private set; }
-
         public static readonly float2 arctapBoxExtents = new float2(2f, 1.75f);
         private enum MinType
         {
@@ -26,26 +24,20 @@ namespace ArcCore.Gameplay.Systems.Judgement
             Hold,
             Void
         }
-        private EndSimulationEntityCommandBufferSystem entityCommandBufferSystem;
-        protected override void OnCreate()
-        {
-            Instance = this;
-            entityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
-        }
 
         protected override void OnUpdate()
         {
-            if (!GameState.isChartMode) return;
+            if (!PlayManager.IsUpdatingAndActive) return;
 
-            var particleBuffer = ParticleJudgeSystem.particleBuffer;
+            var particleBuffer = PlayManager.ParticleBuffer;
 
             Entity minEntity = Entity.Null;
             int minTime;
             MinType minType;
             JudgeType minJType = JudgeType.Lost;
-            var commandBuffer = entityCommandBufferSystem.CreateCommandBuffer();
+            var commandBuffer = PlayManager.CommandBuffer;
 
-            var touchPoints = InputManager.Instance.GetEnumerator();
+            var touchPoints = PlayManager.InputHandler.GetEnumerator();
             while (touchPoints.MoveNext())
             {
                 minTime = int.MaxValue;
@@ -111,7 +103,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                     case MinType.Tap:
                         commandBuffer.DisableEntity(minEntity);
                         commandBuffer.AddComponent<PastJudgeRange>(minEntity);
-                        ScoreManager.Instance.tracker.AddJudge(minJType);
+                        PlayManager.ScoreHandler.tracker.AddJudge(minJType);
                         particleBuffer.PlayTapParticle(
                             new float2(Conversion.TrackToX(EntityManager.GetComponentData<ChartLane>(minEntity).lane), 0.5f),
                             minJType,
@@ -123,7 +115,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         commandBuffer.DisableEntity(EntityManager.GetComponentData<EntityReference>(minEntity).value);
                         commandBuffer.DisableEntity(minEntity);
                         commandBuffer.AddComponent<PastJudgeRange>(minEntity);
-                        ScoreManager.Instance.tracker.AddJudge(minJType);
+                        PlayManager.ScoreHandler.tracker.AddJudge(minJType);
                         particleBuffer.PlayTapParticle(
                             EntityManager.GetComponentData<ChartPosition>(minEntity).xy,
                             minJType,
@@ -136,7 +128,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         chartIncrTime.UpdateJudgePointCache(tapTime, out int count);
                         commandBuffer.SetComponent<ChartIncrTime>(minEntity, chartIncrTime);
                         commandBuffer.RemoveComponent<HoldLocked>(minEntity);
-                        ScoreManager.Instance.tracker.AddJudge(minJType, count);
+                        PlayManager.ScoreHandler.tracker.AddJudge(minJType, count);
                         particleBuffer.PlayHoldParticle(
                             EntityManager.GetComponentData<ChartLane>(minEntity).lane - 1,
                             true

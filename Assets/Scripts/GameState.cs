@@ -1,4 +1,6 @@
-﻿namespace ArcCore
+﻿using System;
+
+namespace ArcCore
 {
     public static class GameState
     {

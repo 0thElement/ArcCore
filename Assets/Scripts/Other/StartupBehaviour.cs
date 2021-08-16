@@ -3,15 +3,14 @@ using ArcCore.Serialization;
 
 namespace ArcCore.Other
 {
-    public class StartupBehaviour : MonoBehaviour
+    public class StartupBehaviour
     {
-        public void Awake()
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+        public static void OnAppStart()
         {
+            Debug.Log("a");
             //Setup files.
             FileManagement.OnAppStart();
-
-            //Delete this gameObject.
-            Destroy(gameObject);
         }
     }
 }

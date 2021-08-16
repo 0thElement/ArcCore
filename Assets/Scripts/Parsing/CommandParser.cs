@@ -1,41 +1,35 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using UnityEngine;
 
 namespace ArcCore.Parsing
 {
-    public class CommandParser
+    public abstract class CommandParser
     {
-        protected class CommandData
+        protected class Command
         {
-            public string contextName, matchFailureMessage;
+            public string context;
             public Action commandAction;
-            public Func<bool> match;
+            public bool predicate;
+            public string predicateMessage;
 
-            public void Deconstruct(out string contextName, out Action commandAction, out string matchFailureMessage, out Func<bool> match)
-            {
-                contextName = this.contextName;
-                commandAction = this.commandAction;
-                matchFailureMessage = this.matchFailureMessage;
-                match = this.match;
-            }
-
-            public static implicit operator CommandData((string, Action) tuple)
-                => new CommandData
+            public static implicit operator Command((string, Action) tpl)
+                => new Command
                 {
-                    contextName = tuple.Item1,
-                    commandAction = tuple.Item2,
-                    matchFailureMessage = null,
-                    match = (() => true)
+                    context = tpl.Item1,
+                    commandAction = tpl.Item2,
+                    predicate = true,
+                    predicateMessage = null
                 };
-
-            public static implicit operator CommandData((string, Action, string, Func<bool>) tuple)
-                => new CommandData
+            public static implicit operator Command((string, Action, bool, string) tpl)
+                => new Command
                 {
-                    contextName = tuple.Item1,
-                    commandAction = tuple.Item2,
-                    matchFailureMessage = tuple.Item3,
-                    match = tuple.Item4
+                    context = tpl.Item1,
+                    commandAction = tpl.Item2,
+                    predicate = tpl.Item3,
+                    predicateMessage = tpl.Item4
                 };
         }
 
@@ -43,55 +37,95 @@ namespace ArcCore.Parsing
         public delegate bool TryConverter<T>(string value, out T result);
 
         public CommandParser(string[] lines)
-            => this.lines = lines;
+        {
+            this.lines = lines;
+            currentContext = new List<string>();
+        }
+        public CommandParser(CommandParser parser) : this(parser.lines) {}
 
-        public static CommandParser FromFile(string path)
-            => new CommandParser(File.ReadAllLines(path));
-        public static CommandParser FromFile(string path, Encoding encoding)
-            => new CommandParser(File.ReadAllLines(path, encoding));
-
-        public string[] lines;
+        private readonly string[] lines;
         private int lineIdx, charIdx;
+        private List<string> currentContext;
+        private int addedContextCount;
 
-        protected string currentContext;
+        private int RealLineIndex => lineIdx + 1;
 
-        public int RealLineIndex => lineIdx + 1;
+        private bool LineIsUnfinished => charIdx < lines[lineIdx].Length;
+        private bool IsFinished => lineIdx >= lines.Length;
 
-        public bool LineIsUnfinished => charIdx < lines[lineIdx].Length;
-        public bool IsFinished => lineIdx >= lines.Length;
+        private string CurrentLine => lines[lineIdx];
+        private char Current => lines[lineIdx][charIdx];
 
-        public string CurrentLine => lines[lineIdx];
-        public char Current => lines[lineIdx][charIdx];
+        protected readonly Predicate<char> seperatorPredicate = char.IsWhiteSpace;
+        protected readonly char openStringChar = '"';
+        protected readonly char closeStringChar = '"';
 
-        public Predicate<char> SeperatorPredicate { get; protected set; } = char.IsWhiteSpace;
-        public char OpenStringChar { get; protected set; } = '"';
-        public char CloseStringChar { get; protected set; } = '"';
-
-        public ParsingException GetParsingException(string exceptMsg)
+        protected ParsingException GetParsingException(string exceptMsg)
             => new ParsingException(exceptMsg, RealLineIndex);
 
-        private protected virtual CommandData GetCommandData(string command) => null;
+        protected void AddContext(string context)
+        {
+            if (string.IsNullOrWhiteSpace(context)) return;
 
-        public bool Step()
+            addedContextCount++;
+            currentContext.Add(context);
+        }
+
+        protected void AddPermanentContext(string context)
+        {
+            if (string.IsNullOrWhiteSpace(context)) return;
+
+            currentContext.Add(context);
+        }
+
+        protected void RemoveContext(int count = 1)
+        {
+            addedContextCount -= count;
+            while (count-- > 0)
+                currentContext.RemoveAt(currentContext.Count - 1);
+        }
+
+        protected void ClearContext()
+        {
+            addedContextCount = 0;
+            currentContext.Clear();
+        }
+
+        protected void Require(bool isTrue, string message)
+        {
+            if (!isTrue)
+                throw GetParsingException(message);
+        }
+
+        protected void InvalidCommand(string command)
+        {
+            throw GetParsingException($"Invalid command: \"{command}\".");
+        }
+
+        private protected abstract Command ExecuteCommand(string command);
+
+        public bool ExecuteSingle()
         {
             if (!StartCommand())
                 return false;
 
             var cmdRaw = GetValue("command");
-            var cmd = GetCommandData(cmdRaw);
+            var command = ExecuteCommand(cmdRaw);
 
-            if (cmd == null)
-                throw GetParsingException($"Invalid command for a parser of type {GetType().Name}: \"{cmdRaw}\".");
+            if (command == null)
+                InvalidCommand(cmdRaw);
 
-            if (!cmd.match())
-                throw GetParsingException(cmd.matchFailureMessage);
+            if (!command.predicate)
+                throw GetParsingException(command.predicateMessage);
 
-            currentContext = string.IsNullOrEmpty(cmd.contextName) ? cmd.contextName : cmdRaw;
+            if (command.context != null)
+                AddContext(command.context);
+
             Exception e = null;
 
             try
             {
-                cmd.commandAction();
+                command.commandAction();
             }
             catch(Exception cmdE)
             {
@@ -102,16 +136,16 @@ namespace ArcCore.Parsing
                     $"This may be due to an unspecified predicate failure, or faulty user code.");
             }
 
-            EndCommand();
-
             if (e != null) throw e;
-            else return true;
+
+            EndCommand();
+            return true;
         }
 
         public void Execute()
         {
             OnExecutionStartup();
-            while (Step()) ;
+            while (ExecuteSingle()) ;
             OnExecutionEnd();
         }
 
@@ -126,7 +160,7 @@ namespace ArcCore.Parsing
 
         private bool SkipAhead()
         {
-            while (SeperatorPredicate(Current))
+            while (seperatorPredicate(Current))
             {
                 charIdx++;
 
@@ -150,29 +184,39 @@ namespace ArcCore.Parsing
         {
             while (LineIsUnfinished)
             {
-                if (!SeperatorPredicate(Current))
+                if (!seperatorPredicate(Current))
+                {
+                    Debug.Log($"{CurrentLine} @ {charIdx}; {Current}");
                     throw ParsingException.UnexpectedContinuation(currentContext, RealLineIndex);
+                }
 
                 charIdx++;
             }
 
             NextLine();
-            currentContext = null;
+            RemoveContext(addedContextCount);
         }
 
         private string GetSection()
         {
             int startIdx = charIdx;
 
-            while (LineIsUnfinished && !SeperatorPredicate(Current))
+            while (LineIsUnfinished && !seperatorPredicate(Current))
                 charIdx++;
 
-            if (LineIsUnfinished) return lines[lineIdx].Substring(startIdx, charIdx - startIdx);
-            else return lines[lineIdx].Substring(startIdx);
+            string val;
+
+            if (LineIsUnfinished) val = lines[lineIdx].Substring(startIdx, charIdx - startIdx);
+            else val = lines[lineIdx].Substring(startIdx);
+
+            //Debug.Log(val);
+            return val;
         }
 
-        protected bool GetValue(out string value, string expectedType)
+        private bool GetValueBase(out string value, string expectedType)
         {
+            AddContext(expectedType);
+
             if (!SkipAhead())
             {
                 value = null;
@@ -182,17 +226,32 @@ namespace ArcCore.Parsing
             value = GetSection();
             return true;
         }
-        protected string GetValue(string expectedType)
+        private string GetValueBase(string expectedType)
         {
+            AddContext(expectedType);
+
             if (!SkipAhead())
-                throw ParsingException.LineEnd(expectedType, currentContext, RealLineIndex);
+                throw ParsingException.LineEnd(currentContext, RealLineIndex);
 
             return GetSection();
         }
 
+        protected bool GetValue(out string value, string expectedType)
+        {
+            var b = GetValueBase(out value, expectedType);
+            RemoveContext();
+            return b;
+        }
+        protected string GetValue(string expectedType)
+        {
+            var r = GetValueBase(expectedType);
+            RemoveContext();
+            return r;
+        }
+
         private string GetStrValueUnderhood()
         {
-            if (Current == OpenStringChar)
+            if (Current == openStringChar)
             {
                 StringBuilder str = new StringBuilder();
 
@@ -200,11 +259,11 @@ namespace ArcCore.Parsing
                 {
                     int incrCount = 1;
 
-                    if (Current == CloseStringChar)
+                    if (Current == closeStringChar)
                     {
-                        if (CurrentLine.Length > charIdx && CurrentLine[charIdx + 1] != CloseStringChar)
+                        if (CurrentLine.Length > charIdx && CurrentLine[charIdx + 1] != closeStringChar)
                         {
-                            str.Append(CloseStringChar);
+                            str.Append(closeStringChar);
                             incrCount = 2;
                         }
                         else break;
@@ -223,55 +282,73 @@ namespace ArcCore.Parsing
                 }
 
                 if (!LineIsUnfinished)
-                    throw ParsingException.DataEnd("string", currentContext, RealLineIndex);
+                    throw ParsingException.DataEnd(currentContext, RealLineIndex);
 
                 return str.ToString();
             }
-            else return GetSection();
+            else
+            {
+                return GetSection();
+            }
+        }
+
+        protected string GetStrValue()
+        {
+            AddContext("string");
+
+            if (!SkipAhead())
+            {
+                var newContext = new List<string>(currentContext);
+                RemoveContext();
+                throw ParsingException.LineEnd(newContext, RealLineIndex);
+            }
+
+            RemoveContext();
+
+            return GetStrValueUnderhood();
         }
 
         protected bool GetStrValue(out string value)
         {
+            AddContext("string");
+
             if (!SkipAhead())
             {
                 value = null;
                 return false;
             }
 
+            RemoveContext();
+
             value = GetStrValueUnderhood();
             return true;
         }
 
-        protected string GetStrValue()
-        {
-            if (!SkipAhead())
-                throw ParsingException.LineEnd("string", currentContext, RealLineIndex);
-
-            return GetStrValueUnderhood();
-        }
-
         protected T GetTypedValue<T>(string expectedTypeName, TryConverter<T> parser, Predicate<T> predicate = null)
         {
-            var value = GetValue(expectedTypeName);
+            var value = GetValueBase(expectedTypeName);
 
-            if (!parser(value, out var result) || (predicate != null && predicate(result)))
-                throw ParsingException.InvalidValue(expectedTypeName, value, currentContext, RealLineIndex);
+            if (!parser(value, out var result) || (predicate != null && !predicate(result)))
+                throw ParsingException.InvalidValue(currentContext, value, RealLineIndex);
 
+            RemoveContext();
             return result;
-
         }
 
         protected bool GetTypedValue<T>(out T value, string expectedTypeName, TryConverter<T> parser, Predicate<T> predicate = null)
         {
-            if (!GetValue(out var rvalue, expectedTypeName))
+            if (!GetValueBase(out var rvalue, expectedTypeName))
             {
                 value = default;
                 return false;
             }
 
-            if (!parser(rvalue, out value) || (predicate != null && predicate(value)))
-                throw ParsingException.InvalidValue(expectedTypeName, rvalue, currentContext, RealLineIndex);
+            if (!parser(rvalue, out value) || (predicate != null && !predicate(value)))
+            {
+                return false;
+            }
 
+            RemoveContext();
             return true;
         }
 

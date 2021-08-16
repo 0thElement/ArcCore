@@ -10,26 +10,21 @@ using Unity.Mathematics;
 using ArcCore.Gameplay.Utility;
 using ArcCore.Utilities.Extensions;
 
-namespace ArcCore.Gameplay.Systems.Judgement
+namespace ArcCore.Gameplay.Systems
 {
-    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(ParticleJudgeSystem))]
+
+    [UpdateInGroup(typeof(JudgementSystemGroup))]
     public class ExpirableJudgeSystem : SystemBase
     {
-        public static ExpirableJudgeSystem Instance { get; private set; }
-
-        private EndSimulationEntityCommandBufferSystem entityCommandBufferSystem;
-        protected override void OnCreate()
-        {
-            Instance = this;
-            entityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
-        }
         protected override void OnUpdate()
         {
-            var tracker = ScoreManager.Instance.tracker;
-            int currentTime = Conductor.Instance.receptorTime;
+            if (!PlayManager.IsUpdatingAndActive) return;
 
-            var commandBuffer = entityCommandBufferSystem.CreateCommandBuffer();
-            var particleBuffer = ParticleJudgeSystem.particleBuffer;
+            var tracker = PlayManager.ScoreHandler.tracker;
+            int currentTime = PlayManager.ReceptorTime;
+
+            var commandBuffer = PlayManager.CommandBuffer;
+            var particleBuffer = PlayManager.ParticleBuffer;
 
             //- TAPS -//
             Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime, EntityReference>().ForEach(
@@ -114,7 +109,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 }
             ).Run();*/
 
-            ScoreManager.Instance.tracker = tracker;
+            PlayManager.ScoreHandler.tracker = tracker;
         }
     }
 }

@@ -96,7 +96,7 @@ namespace ArcCore.Gameplay.Data
             while (tapQueue.Count > 0)
             {
                 TapParticleDesc particleDesc = tapQueue.Dequeue();
-                ParticlePool.Instance.TapAt(particleDesc.position, particleDesc.type, particleDesc.detail, particleDesc.textYOffset);
+                PlayManager.ParticlePool.TapAt(particleDesc.position, particleDesc.type, particleDesc.detail, particleDesc.textYOffset);
             }
 
             bool[] toDisable = new bool[] {false, false, false, false};
@@ -109,12 +109,12 @@ namespace ArcCore.Gameplay.Data
                 }
                 else
                 {
-                    ParticlePool.Instance.HoldAt(particleDesc.lane, particleDesc.isHit);
+                    PlayManager.ParticlePool.HoldAt(particleDesc.lane, particleDesc.isHit);
                 }
             }
             for (int i=0; i<4; i++)
                 if (toDisable[i])
-                    ParticlePool.Instance.DisableLane(i);
+                    PlayManager.ParticlePool.DisableLane(i);
         }
 
         public bool IsCreated => tapQueue.IsCreated;
