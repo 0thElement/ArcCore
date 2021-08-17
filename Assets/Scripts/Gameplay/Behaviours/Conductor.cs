@@ -88,6 +88,11 @@ namespace ArcCore.Gameplay.Behaviours
         /// </summary>
         public bool isUpdating;
         
+
+        // TEMPORARY, WILL BE MOVED TO GAME MANAGER ON MERGE
+        [SerializeField] public IndicatorManager ArcIndicatorManager;
+        [SerializeField] public IndicatorManager TraceIndicatorManager;
+        
         public void Awake()
         {
             //Set the static instance to this object

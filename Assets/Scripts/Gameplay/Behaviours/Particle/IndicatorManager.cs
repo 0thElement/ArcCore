@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Unity.Mathematics;
 using UnityEngine;
 
 namespace ArcCore.Gameplay.Behaviours
@@ -38,12 +37,21 @@ namespace ArcCore.Gameplay.Behaviours
 
         public void Initialize(List<IIndicator> indicatorList)
         {
+            Destroy();
             this.indicatorList = indicatorList;
 
             indexByDestroyTime = new List<int>(indicatorList.Count);
             for (int i=0; i<indicatorList.Count; i++) indexByDestroyTime.Add(i);
 
             indexByDestroyTime.Sort((a, b) => indicatorList[a].endTime.CompareTo(indicatorList[b].endTime));
+        }
+
+        public void Destroy()
+        {
+            foreach (IIndicator indicator in indicatorList)
+            {
+                indicator.Destroy();
+            }
         }
 
         public IIndicator GetIndicator(int groupId)

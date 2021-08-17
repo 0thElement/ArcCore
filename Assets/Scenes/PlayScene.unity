@@ -202,6 +202,8 @@ MonoBehaviour:
   timeOfLastMix: 0
   songLength: 0
   isUpdating: 0
+  ArcIndicatorManager: {fileID: 1265843752}
+  TraceIndicatorManager: {fileID: 1599930149}
 --- !u!82 &72529308
 AudioSource:
   m_ObjectHideFlags: 0
@@ -442,6 +444,8 @@ MonoBehaviour:
   headTraceNotePrefab: {fileID: 4008384927795449545, guid: 9b24d1c1972c41248a79cdcf8945cede,
     type: 3}
   traceShadowPrefab: {fileID: 2857874093601128869, guid: 32fb81c32838fc345b0d528f30592ec4,
+    type: 3}
+  traceApproachIndicatorPrefab: {fileID: 2057882010206497123, guid: ebec4eb2639504f4ab68a4691d666f10,
     type: 3}
   traceMaterial: {fileID: 2100000, guid: 34c3ab2db1945b848a3df9cf1ea5c654, type: 2}
   traceShadowMaterial: {fileID: 2100000, guid: 8d2d9654992ee9c49bf0298ecc30e19a, type: 2}
@@ -6001,6 +6005,8 @@ MonoBehaviour:
     type: 3}
   arcShadowPrefab: {fileID: 345932005286596484, guid: 214e882901cb10a409006d01ba409ccc,
     type: 3}
+  arcApproachIndicatorPrefab: {fileID: 4796778903998022456, guid: 41b1b4021cb204944a67bfe468124817,
+    type: 3}
   arcColors:
   - {r: 0.16470589, g: 0.7648553, b: 0.8980392, a: 0.77254903}
   - {r: 0.9056604, g: 0.37166253, b: 0.71700245, a: 0.78039217}
@@ -11176,6 +11182,49 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   safeIndex: 0
   cameraCast: {fileID: 963194227}
+--- !u!1 &1265843750
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1265843751}
+  - component: {fileID: 1265843752}
+  m_Layer: 0
+  m_Name: ArcIndicatorManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1265843751
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1265843750}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1527301108}
+  m_RootOrder: 11
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1265843752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1265843750}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7671d9b645c6094c837a2740346270c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1375499811
 GameObject:
   m_ObjectHideFlags: 0
@@ -16129,6 +16178,8 @@ Transform:
   - {fileID: 5205166}
   - {fileID: 360237166}
   - {fileID: 1008731700}
+  - {fileID: 1265843751}
+  - {fileID: 1599930148}
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -16213,6 +16264,49 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &1599930147
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1599930148}
+  - component: {fileID: 1599930149}
+  m_Layer: 0
+  m_Name: TraceIndicatorManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1599930148
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1599930147}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1527301108}
+  m_RootOrder: 12
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1599930149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1599930147}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7671d9b645c6094c837a2740346270c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1719732238
 GameObject:
   m_ObjectHideFlags: 0

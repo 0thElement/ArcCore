@@ -18,6 +18,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         [SerializeField] private GameObject headArcNotePrefab;
         [SerializeField] private GameObject heightIndicatorPrefab;
         [SerializeField] private GameObject arcShadowPrefab;
+        [SerializeField] private GameObject arcApproachIndicatorPrefab;
         [SerializeField] public Color[] arcColors;
         [SerializeField] private Color redColor;
         private Entity arcNoteEntityPrefab;
@@ -119,7 +120,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
             foreach (List<AffArc> listByColor in affArcList)
             {
-                listByColor.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
+                listByColor.Sort((timingGruop, item2) => { return timingGruop.timing.CompareTo(item2.timing); });
 
                 Material arcColorMaterialInstance = Instantiate(arcMaterial);
                 Material heightIndicatorColorMaterialInstance = Instantiate(heightMaterial);
@@ -252,6 +253,15 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
             //TEMPORARY
             ArcCollisionCheckSystem.SetUpArray(GroupCount, ColorCount);
+
+            List<IIndicator> indicatorList = new List<IIndicator>(connectedArcsIdEndpoint.Count);
+
+            foreach (var groupIdEndPoint in connectedArcsIdEndpoint)
+            {
+                ArcIndicator indicator = new ArcIndicator(Instantiate(arcApproachIndicatorPrefab), groupIdEndPoint.time);
+                indicatorList.Add(indicator);
+            }
+            Conductor.Instance.ArcIndicatorManager.Initialize(indicatorList);
         }
 
         private void CreateSegment(RenderMesh renderMesh, float3 start, float3 end, int timingGroup, int timing, int endTiming, int groupId)
@@ -453,31 +463,31 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         /// <summary>
         /// Stores data requried to handle arc endpoints.
         /// </summary>
-        private struct ArcEndpointData
+        public struct ArcEndpointData
         {
-            public int Item1;
+            public int timingGroup;
             public int time;
-            public float Item3;
-            public float Item4;
-            public int Item5;
+            public float x;
+            public float y;
+            public int color;
 
-            public ArcEndpointData(int item1, int time, float item3, float item4, int item5)
+            public ArcEndpointData(int timingGruop, int time, float x, float y, int color)
             {
-                Item1 = item1;
+                this.timingGroup = timingGruop;
                 this.time = time;
-                Item3 = item3;
-                Item4 = item4;
-                Item5 = item5; 
+                this.x = x;
+                this.y = y;
+                this.color = color; 
             }
 
             public override bool Equals(object obj)
             {
                 return obj is ArcEndpointData other &&
-                       Item1 == other.Item1 &&
+                       timingGroup == other.timingGroup &&
                        time == other.time &&
-                       Item3 == other.Item3 &&
-                       Item4 == other.Item4 &&
-                       Item5 == other.Item5;
+                       x == other.x &&
+                       y == other.y &&
+                       color == other.color;
             }
 
             public static bool operator ==(ArcEndpointData l, ArcEndpointData r) => l.Equals(r);
@@ -486,26 +496,26 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             public override int GetHashCode()
             {
                 int hashCode = 1052165582;
-                hashCode = hashCode * -1521134295 + Item1.GetHashCode();
+                hashCode = hashCode * -1521134295 + timingGroup.GetHashCode();
                 hashCode = hashCode * -1521134295 + time.GetHashCode();
-                hashCode = hashCode * -1521134295 + Item3.GetHashCode();
-                hashCode = hashCode * -1521134295 + Item4.GetHashCode();
-                hashCode = hashCode * -1521134295 + Item5.GetHashCode();
+                hashCode = hashCode * -1521134295 + x.GetHashCode();
+                hashCode = hashCode * -1521134295 + y.GetHashCode();
+                hashCode = hashCode * -1521134295 + color.GetHashCode();
                 return hashCode;
             }
 
-            public void Deconstruct(out int item1, out int time, out float item3, out float item4, out float item5)
+            public void Deconstruct(out int timingGruop, out int time, out float x, out float y, out float color)
             {
-                item1 = Item1;
+                timingGruop = this.timingGroup;
                 time = this.time;
-                item3 = Item3;
-                item4 = Item4;
-                item5 = Item5;
+                x = this.x;
+                y = this.y;
+                color = this.color;
             }
 
             public static implicit operator (int, int time, float, float, int)(ArcEndpointData value)
             {
-                return (value.Item1, value.time, value.Item3, value.Item4, value.Item5);
+                return (value.timingGroup, value.time, value.x, value.y, value.color);
             }
 
             public static implicit operator ArcEndpointData((int, int time, float, float, int) value)

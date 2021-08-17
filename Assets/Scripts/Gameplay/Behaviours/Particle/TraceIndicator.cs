@@ -5,14 +5,12 @@ namespace ArcCore.Gameplay.Behaviours
 {
     public class TraceIndicator : IIndicator
     {
-        public int startTime {get; set;}
         public int endTime {get; set;}
 
         private Transform transform;
 
-        public TraceIndicator(GameObject gameObject, int startTime, int endTime)
+        public TraceIndicator(GameObject gameObject, int endTime)
         {
-            this.startTime = startTime;
             this.endTime = endTime;
 
             transform = gameObject.GetComponent<Transform>();
@@ -34,6 +32,11 @@ namespace ArcCore.Gameplay.Behaviours
 
             position.z = 0;
             transform.localPosition = position;
+        }
+        
+        public void Destroy()
+        {
+            Object.Destroy(transform.gameObject);
         }
     }
 }

@@ -10,6 +10,7 @@ namespace ArcCore
         public const float InputMaxX =  8.5f;
         public const float ArcYZero  =  1f;
         public const float RenderFloorPositionRange = 150f; //TODO: IS THIS THE LEN OF THE FLOOR PRECISELY?
+                                                            //0th: no
 
         public const int MaxPureWindow  = 25;
         public const int PureWindow     = 50;

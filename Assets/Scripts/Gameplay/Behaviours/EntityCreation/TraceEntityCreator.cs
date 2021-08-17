@@ -12,12 +12,14 @@ using ArcCore.Utilities.Extensions;
 
 namespace ArcCore.Gameplay.Behaviours.EntityCreation
 {
+    //TODO: SOMEHOW ABSTRACT THIS AND MERGE WITH ARC ENTITY CREATOR
     public class TraceEntityCreator : ECSMonoBehaviour
     {
         public static TraceEntityCreator Instance { get; private set; }
         [SerializeField] private GameObject traceNotePrefab;
         [SerializeField] private GameObject headTraceNotePrefab;
         [SerializeField] private GameObject traceShadowPrefab;
+        [SerializeField] private GameObject traceApproachIndicatorPrefab;
         [SerializeField] private Material traceMaterial;
         [SerializeField] private Material traceShadowMaterial;
         [SerializeField] private Mesh traceMesh;
@@ -122,6 +124,15 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
                 CreateSegment(start, end, trace.timingGroup, (int)(trace.endTiming - segmentLength), trace.endTiming);
             }
+            
+            List<IIndicator> indicatorList = new List<IIndicator>(connectedTracesIdEndpoint.Count);
+
+            foreach (float4 groupIdEndPoint in connectedTracesIdEndpoint)
+            {
+                TraceIndicator indicator = new TraceIndicator(Instantiate(traceApproachIndicatorPrefab), (int)groupIdEndPoint.y);
+                indicatorList.Add(indicator);
+            }
+            Conductor.Instance.ArcIndicatorManager.Initialize(indicatorList);
         }
 
         private void CreateSegment(float3 start, float3 end, int timingGroup, int time, int endTime)
