@@ -132,7 +132,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 TraceIndicator indicator = new TraceIndicator(Instantiate(traceApproachIndicatorPrefab), (int)groupIdEndPoint.y);
                 indicatorList.Add(indicator);
             }
-            Conductor.Instance.ArcIndicatorManager.Initialize(indicatorList);
+            Conductor.Instance.TraceIndicatorManager.Initialize(indicatorList);
         }
 
         private void CreateSegment(float3 start, float3 end, int timingGroup, int time, int endTime)

@@ -89,7 +89,7 @@ namespace ArcCore.Gameplay.Behaviours
         public bool isUpdating;
         
 
-        // TEMPORARY, WILL BE MOVED TO GAME MANAGER ON MERGE
+        // TODO: TEMPORARY, WILL BE MOVED TO GAME MANAGER ON MERGE
         [SerializeField] public IndicatorManager ArcIndicatorManager;
         [SerializeField] public IndicatorManager TraceIndicatorManager;
         
