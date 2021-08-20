@@ -16,13 +16,6 @@ namespace ArcCore.Gameplay.Systems
     [UpdateBefore(typeof(TransformSystemGroup))]
     public class MovingNotesSystem : SystemBase
     {
-        EntityQuery ExcludeUnlockedHoldQuery;
-        protected override void OnCreate()
-        {
-            var NotHoldQuery = new EntityQueryDesc { None = new ComponentType[] {typeof(ChartIncrTime)} };
-            var LockedHoldQuery = new EntityQueryDesc { All = new ComponentType[] {typeof(HoldLocked)} };
-            ExcludeUnlockedHoldQuery = GetEntityQuery(new EntityQueryDesc[] {NotHoldQuery, LockedHoldQuery});
-        }
         protected override void OnUpdate()
         {
             NativeArray<float> currentFloorPosition = Conductor.Instance.currentFloorPosition;
@@ -35,7 +28,12 @@ namespace ArcCore.Gameplay.Systems
             }).ScheduleParallel();
 
             //All note except arcs and holds
-            Entities.WithStoreEntityQueryInField(ref ExcludeUnlockedHoldQuery).ForEach((ref Translation translation, in FloorPosition floorPosition, in TimingGroup group) =>
+            Entities.WithNone<ChartIncrTime>().ForEach((ref Translation translation, in FloorPosition floorPosition, in TimingGroup group) =>
+            {
+                translation.Value.z = floorPosition.value - currentFloorPosition[group.value];
+            }).ScheduleParallel();
+
+            Entities.WithAll<HoldLocked>().ForEach((ref Translation translation, in FloorPosition floorPosition, in TimingGroup group) =>
             {
                 translation.Value.z = floorPosition.value - currentFloorPosition[group.value];
             }).ScheduleParallel();

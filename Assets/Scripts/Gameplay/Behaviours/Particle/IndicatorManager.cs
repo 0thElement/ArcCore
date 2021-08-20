@@ -20,14 +20,14 @@ namespace ArcCore.Gameplay.Behaviours
         /// <sumamry>
         /// Caching the last index accessed, minimizes index access
         /// </summary>
-        private int indexCache = 0;
+        public int indexCache = 0;
 
         /// <sumamry>
         /// If the manager is currently managing a list of indicators
         /// </summary>
         private bool isInitialized = false;
 
-        public void Update()
+        public void CheckForDisable()
         {
             if (!isInitialized) return;
 
@@ -48,10 +48,10 @@ namespace ArcCore.Gameplay.Behaviours
             }
 
             // This is really stupid
-            if (currentTime < indicatorList[indexByDestroyTime[0]].endTime)
+            if (currentTime > indicatorList[indexByDestroyTime[0]].endTime)
                 indicatorList[indexByDestroyTime[0]].Disable();
 
-            if (currentTime < indicatorList[indexByDestroyTime[indicatorList.Count - 1]].endTime)
+            if (currentTime > indicatorList[indexByDestroyTime[indicatorList.Count - 1]].endTime)
                 indicatorList[indexByDestroyTime[indicatorList.Count - 1]].Disable();
         }
 

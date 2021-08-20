@@ -85,7 +85,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                         Conversion.GetWorldY(trace.endY),
                         Conductor.Instance.GetFloorPositionFromTiming(trace.endTiming, trace.timingGroup)
                     );
-                    CreateSegment(tstart, tend, trace.timingGroup, trace.timing, trace.endTiming);
+                    CreateSegment(tstart, tend, trace.timingGroup, trace.timing, trace.endTiming, traceId);
                     continue;
                 }
 
@@ -112,7 +112,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                         Conductor.Instance.GetFloorPositionFromTiming(trace.timing + t, trace.timingGroup)
                     );
 
-                    CreateSegment(start, end, trace.timingGroup, trace.timing + (int)(i * segmentLength), trace.timing + (int)((i+1) * segmentLength));
+                    CreateSegment(start, end, trace.timingGroup, trace.timing + (int)(i * segmentLength), trace.timing + (int)((i+1) * segmentLength), traceId);
                 }
 
                 start = end;
@@ -122,7 +122,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     Conductor.Instance.GetFloorPositionFromTiming(trace.endTiming, trace.timingGroup)
                 );
 
-                CreateSegment(start, end, trace.timingGroup, (int)(trace.endTiming - segmentLength), trace.endTiming);
+                CreateSegment(start, end, trace.timingGroup, (int)(trace.endTiming - segmentLength), trace.endTiming, traceId);
             }
             
             List<IIndicator> indicatorList = new List<IIndicator>(connectedTracesIdEndpoint.Count);
@@ -135,7 +135,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             Conductor.Instance.TraceIndicatorManager.Initialize(indicatorList);
         }
 
-        private void CreateSegment(float3 start, float3 end, int timingGroup, int time, int endTime)
+        private void CreateSegment(float3 start, float3 end, int timingGroup, int time, int endTime, int groupID)
         {
             Entity traceEntity = EntityManager.Instantiate(traceNoteEntityPrefab);
 
@@ -176,6 +176,8 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData(traceEntity, new AppearTime() { value = appearTime });
             EntityManager.SetComponentData(traceEntity, new DestroyOnTiming(endTime));
             EntityManager.SetComponentData(traceEntity, new ChartTime() { value = time });
+            EntityManager.SetComponentData(traceEntity, new ChartEndTime() { value = endTime });
+            EntityManager.SetComponentData(traceEntity, new ArcGroupID() { value = groupID });
 
             if (time < endTime)
             {

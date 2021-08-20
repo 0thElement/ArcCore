@@ -14,7 +14,7 @@ namespace ArcCore.Gameplay.Behaviours
         public ArcIndicator(GameObject gameObject, int endTime)
         {
             this.endTime = endTime;
-
+            gameObject.SetActive(false);
             particle = gameObject.GetComponent<ParticleSystem>();
             diamond = gameObject.GetComponent<SpriteRenderer>();
             transform = gameObject.GetComponent<Transform>();
@@ -34,12 +34,12 @@ namespace ArcCore.Gameplay.Behaviours
         public void Update(float3 position)
         {
             Enable();
-            float dist = Mathf.Abs(position.z) / 100000;
+            float dist = Mathf.Abs(position.z) / 100;
 
-            float scale = 0.35f + 0.5f * (1 - dist);
+            float scale = 0.35f + 0.5f * dist;
             transform.localScale = new float3(scale, scale, 1);
 
-            diamond.color = new Color(1, 1, 1, dist);
+            diamond.color = new Color(1, 1, 1, 1 - dist);
 
             position.z = 0;
             transform.localPosition = position;

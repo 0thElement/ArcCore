@@ -12,7 +12,7 @@ namespace ArcCore.Gameplay.Behaviours
         public TraceIndicator(GameObject gameObject, int endTime)
         {
             this.endTime = endTime;
-
+            gameObject.SetActive(false);
             transform = gameObject.GetComponent<Transform>();
         }
 
@@ -29,7 +29,6 @@ namespace ArcCore.Gameplay.Behaviours
         public void Update(float3 position)
         {
             Enable();
-
             position.z = 0;
             transform.localPosition = position;
         }

@@ -168,7 +168,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                     if (isHeadArc)
                     {
                         connectedArcsIdEndpoint.Add(arcEndPoint);
-                        CreateHeadSegment(arc, arcColorMaterialInstance);
+                        CreateHeadSegment(arc, arcColorMaterialInstance, arcId);
                     }
 
                     if (isHeadArc || arc.startY != arc.endY)
@@ -303,6 +303,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData(arcInstEntity, new DestroyOnTiming(endTiming + Constants.HoldLostWindow));
             EntityManager.SetComponentData(arcInstEntity, new ArcGroupID(groupId));
             EntityManager.SetComponentData(arcInstEntity, new ChartTime(timing));
+            EntityManager.SetComponentData(arcInstEntity, new ChartEndTime(endTiming));
 
             if (timing < endTiming)
             {
@@ -366,7 +367,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
             EntityManager.SetComponentData(heightEntity, new DestroyOnTiming(arc.timing));
         }
 
-        private void CreateHeadSegment(AffArc arc, Material material)
+        private void CreateHeadSegment(AffArc arc, Material material, int groupID)
         {
             Entity headEntity = EntityManager.Instantiate(headArcNoteEntityPrefab);
 
@@ -391,6 +392,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
             EntityManager.SetComponentData(headEntity, new AppearTime(appearTime));
             EntityManager.SetComponentData(headEntity, new DestroyOnTiming(arc.timing));
+            EntityManager.SetComponentData(headEntity, new ArcGroupID(groupID));
         }
 
         private void CreateJudgeEntity(AffArc arc, int colorId, int groupId, float startBpm)
