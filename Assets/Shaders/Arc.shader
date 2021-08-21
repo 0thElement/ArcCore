@@ -14,7 +14,7 @@
 	}
 	SubShader
 	{
-		Tags { "Queue" = "Transparent"  "RenderType" = "Transparent" "CanUseSpriteAtlas"="true"  }
+		Tags { "Queue" = "Transparent+1"  "RenderType" = "Transparent" "CanUseSpriteAtlas"="true"  }
         Cull Off
 		ZTest Off
 		Blend SrcAlpha OneMinusSrcAlpha

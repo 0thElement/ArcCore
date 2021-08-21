@@ -91,7 +91,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
             //- ARCS -//
             NativeArray<GroupState> arcGroupHeldState = ArcCollisionCheckSystem.arcGroupHeldState;
             Entities.WithAll<WithinJudgeRange>().ForEach(
-                (Entity en, ref ChartIncrTime chartIncrTime, in ArcGroupID groupID, in ArcData arcData) =>
+                (Entity en, ref ChartIncrTime chartIncrTime, in ArcGroupID groupID) =>
                 {
                     if (chartIncrTime.time < currentTime - Constants.HoldLostWindow && arcGroupHeldState[groupID.value] != GroupState.Held)
                     {
@@ -99,8 +99,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         if (count > 0)
                         {
                             tracker.AddJudge(JudgeType.Lost, count);
-                            particleBuffer.PlayArcParticle(groupID.value, arcData.GetPosAt(currentTime), false);
                         }
+                        particleBuffer.PlayArcParticle(groupID.value, false, count > 0);
                     }
                 }
             ).Run();
@@ -132,14 +132,19 @@ namespace ArcCore.Gameplay.Systems.Judgement
             ).Run();
 
             //Arc
-            Entities.WithAll<ChartIncrTime>().WithNone<ChartLane>().ForEach(
-                (Entity en, in DestroyOnTiming destroyTime, in ArcGroupID groupID) =>
+            Entities.WithNone<ChartLane>().ForEach(
+                (Entity en, ref ChartIncrTime chartIncrTime, in DestroyOnTiming destroyTime, in ArcGroupID groupID) =>
                 {
                     if (currentTime >= destroyTime.value)
                     {
+                        int count = chartIncrTime.UpdateJudgePointCache(currentTime);
+                        if (count > 0)
+                        {
+                            tracker.AddJudge(JudgeType.Lost, count);
+                            particleBuffer.PlayArcParticle(groupID.value, false, true);
+                        }
                         commandBuffer.DisableEntity(en);
                         commandBuffer.AddComponent<PastJudgeRange>(en);
-                        particleBuffer.DisableArcParticle(groupID.value);
                     }
                 }
             ).Run();

@@ -63,13 +63,15 @@ namespace ArcCore.Gameplay.Components
         public int UpdateJudgePointCache(int ctime)
         {
             if (time > endTime) return 0;
-            int count = (ctime - time) / timeIncrement;
-            if (count > 0)
-                time += timeIncrement * (count + 1);
-            else
-                count = 0;
+            if (ctime > endTime) ctime = endTime;
 
-            return count;
+            int count = (ctime - time) / timeIncrement;
+            if (count >= 0)
+            {
+                time += timeIncrement * (count + 1);
+                return count + 1;
+            }
+            return 0;
         }
     }
 }

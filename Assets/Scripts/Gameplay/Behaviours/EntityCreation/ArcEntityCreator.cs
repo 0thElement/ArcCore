@@ -19,6 +19,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
         [SerializeField] private GameObject heightIndicatorPrefab;
         [SerializeField] private GameObject arcShadowPrefab;
         [SerializeField] private GameObject arcApproachIndicatorPrefab;
+        [SerializeField] private GameObject arcParticlePrefab;
         [SerializeField] public Color[] arcColors;
         [SerializeField] private Color redColor;
         private Entity arcNoteEntityPrefab;
@@ -258,7 +259,7 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
 
             foreach (var groupIdEndPoint in connectedArcsIdEndpoint)
             {
-                ArcIndicator indicator = new ArcIndicator(Instantiate(arcApproachIndicatorPrefab), groupIdEndPoint.time);
+                ArcIndicator indicator = new ArcIndicator(Instantiate(arcApproachIndicatorPrefab), Instantiate(arcParticlePrefab), groupIdEndPoint.time);
                 indicatorList.Add(indicator);
             }
             Conductor.Instance.ArcIndicatorManager.Initialize(indicatorList);

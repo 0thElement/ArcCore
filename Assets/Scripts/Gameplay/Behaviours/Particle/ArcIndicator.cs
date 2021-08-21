@@ -9,26 +9,32 @@ namespace ArcCore.Gameplay.Behaviours
 
         private ParticleSystem particle;
         private SpriteRenderer diamond;
-        private Transform transform;
+        private Transform particleTransform;
+        private Transform diamondTransform;
 
-        public ArcIndicator(GameObject gameObject, int endTime)
+        public ArcIndicator(GameObject diamondObj, GameObject particleObj, int endTime)
         {
             this.endTime = endTime;
-            gameObject.SetActive(false);
-            particle = gameObject.GetComponent<ParticleSystem>();
-            diamond = gameObject.GetComponent<SpriteRenderer>();
-            transform = gameObject.GetComponent<Transform>();
+            diamondObj.SetActive(false);
+            particleObj.SetActive(false);
+
+            particle = particleObj.GetComponent<ParticleSystem>();
+            diamond = diamondObj.GetComponent<SpriteRenderer>();
+            particleTransform = particleObj.GetComponent<Transform>();
+            diamondTransform = diamondObj.GetComponent<Transform>();
         }
 
         public void Enable()
         {
-            transform.gameObject.SetActive(true);
+            particleTransform.gameObject.SetActive(true);
+            diamondTransform.gameObject.SetActive(true);
         }
 
         public void Disable()
         {
             StopParticle();
-            transform.gameObject.SetActive(false);
+            particleTransform.gameObject.SetActive(false);
+            diamondTransform.gameObject.SetActive(false);
         }
 
         public void Update(float3 position)
@@ -37,12 +43,13 @@ namespace ArcCore.Gameplay.Behaviours
             float dist = Mathf.Abs(position.z) / 100;
 
             float scale = 0.35f + 0.5f * dist;
-            transform.localScale = new float3(scale, scale, 1);
+            diamondTransform.localScale = new float3(scale, scale, 1);
 
             diamond.color = new Color(1, 1, 1, 1 - dist);
 
             position.z = 0;
-            transform.localPosition = position;
+            diamondTransform.localPosition = position;
+            particleTransform.localPosition = position;
         }
 
         public void PlayParticle()
@@ -55,9 +62,15 @@ namespace ArcCore.Gameplay.Behaviours
             particle.Stop();
         }
 
+        public float2 GetPosition()
+        {
+            return new float2(diamondTransform.position.x, diamondTransform.position.y);
+        }
+
         public void Destroy()
         {
-            Object.Destroy(transform.gameObject);
+            Object.Destroy(diamondTransform.gameObject);
+            Object.Destroy(particleTransform.gameObject);
         }
     }
 }

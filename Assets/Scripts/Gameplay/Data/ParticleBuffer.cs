@@ -25,10 +25,9 @@ namespace ArcCore.Gameplay.Data
         }
         private struct ArcParticleDesc
         {
-            public float2 pos;
             public int groupID;
             public bool isHit;
-            public bool isArcEnd;
+            public bool shouldPlayText;
         }
 
         private NativeQueue<TapParticleDesc> tapQueue;
@@ -95,11 +94,8 @@ namespace ArcCore.Gameplay.Data
         public void DisableLaneParticle(int lane)
             => holdQueue.Enqueue(new HoldParticleDesc{lane = lane, isHit = false, isHoldEnd = true});
 
-        public void PlayArcParticle(int groupID, float2 position, bool isHit)
-            => arcQueue.Enqueue(new ArcParticleDesc{groupID = groupID, pos = position, isHit = isHit, isArcEnd = false});
-
-        public void DisableArcParticle(int groupID)
-            => arcQueue.Enqueue(new ArcParticleDesc{groupID = groupID, pos = float2.zero, isHit = false, isArcEnd = true});
+        public void PlayArcParticle(int groupID, bool isHit, bool shouldPlayText)
+            => arcQueue.Enqueue(new ArcParticleDesc{groupID = groupID, isHit = isHit, shouldPlayText = shouldPlayText});
 
         public void Playback()
         {
@@ -130,10 +126,16 @@ namespace ArcCore.Gameplay.Data
             while (arcQueue.Count > 0)
             {
                 ArcParticleDesc particleDesc = arcQueue.Dequeue();
-                if (particleDesc.isArcEnd)
-                    ParticlePool.Instance.DisableArc(particleDesc.groupID);
+                ArcIndicator indicator = Conductor.Instance.ArcIndicatorManager.GetIndicator(particleDesc.groupID) as ArcIndicator;
+
+                float2 position = indicator.GetPosition();
+
+                if (particleDesc.shouldPlayText) ParticlePool.Instance.ArcAt(position, particleDesc.isHit);
+
+                if (particleDesc.isHit)
+                    indicator.PlayParticle();
                 else
-                    ParticlePool.Instance.ArcAt(particleDesc.pos, particleDesc.groupID, particleDesc.isHit);
+                    indicator.StopParticle();
             }
         }
 

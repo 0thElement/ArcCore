@@ -40,10 +40,6 @@ namespace ArcCore.Gameplay.Behaviours
         /// The size of the tap particle pool.
         /// </summary>
         [SerializeField] private int tapParticlePoolSize;
-        /// <summary>
-        /// The size of the arc particle pool.
-        /// </summary>
-        [SerializeField] private int arcParticlePoolSize;
 
         /// <summary>
         /// The materials of all the text judges.
@@ -65,11 +61,7 @@ namespace ArcCore.Gameplay.Behaviours
         /// The base game object for tap particles.
         /// </summary>
         [SerializeField] private GameObject tapParticleBase;
-        /// <summary>
-        /// The base game object for arc particles.
-        /// </summary>
-        [SerializeField] private GameObject arcParticleBase;
-        
+
         /// <summary>
         /// The lane particle systems.
         /// </summary>
@@ -85,10 +77,6 @@ namespace ArcCore.Gameplay.Behaviours
         /// The particle pool for tap particles.
         /// </summary>
         private GameObject[] tapParticlePool;
-        /// <summary>
-        /// The particle pool for arc particles.
-        /// </summary>
-        private GameObject[] arcParticlePool;
 
         /// <summary>
         /// The renderer used to display early/late judgement detail when necessary.
@@ -115,14 +103,6 @@ namespace ArcCore.Gameplay.Behaviours
         /// The current free index of the tap particle pool.
         /// </summary>
         private int currentTapParticleIndex = 0;
-        /// <summary>
-        /// The current free index of the arc particle pool.
-        /// </summary>
-        private int currentArcParticleIndex = 0;
-        /// <summary>
-        /// Map from arc group id to index in arc particle pool.
-        /// </summary>
-        private Dictionary<int, int> arcGroupToPoolIndex = new Dictionary<int, int>();
 
         /// <summary>
         /// Set <paramref name="array"/> to an array of size <paramref name="size"/> filled with copies of <paramref name="baseObject"/>,
@@ -159,7 +139,6 @@ namespace ArcCore.Gameplay.Behaviours
 
             SetupPoolArray(ref textParticlePool, textParticlePoolSize, textParticleBase);
             SetupPoolArray(ref tapParticlePool, tapParticlePoolSize, tapParticleBase);
-            SetupPoolArray(ref arcParticlePool, arcParticlePoolSize, arcParticleBase);
         }
 
         /// <summary>
@@ -246,46 +225,11 @@ namespace ArcCore.Gameplay.Behaviours
             laneParticles[track].Clear();
         }
 
-        /// <summary>
-        /// top text
-        /// </summary>
-        public void ArcAt(float2 position, int groupID, bool isHit)
+        public void ArcAt(float2 position, bool isHit)
         {
-            position.y += 1f;
-
-            if (isHit)
-            {
-                int poolIndex;
-                if (!arcGroupToPoolIndex.TryGetValue(groupID, out poolIndex))
-                {
-                    arcGroupToPoolIndex.Add(groupID, currentArcParticleIndex);
-                    poolIndex = currentArcParticleIndex;
-                    IncrementOrCycle(ref currentArcParticleIndex, arcParticlePoolSize - 1);
-                }
-
-                GameObject particle = arcParticlePool[poolIndex];
-                particle.SetActive(true);
-                particle.GetComponent<ParticleSystem>().Play();
-                TextParticleAt(position, JudgeType.MaxPure, JudgeDetail.None);
-            }
-            else
-            {
-                DisableArc(groupID);
-                TextParticleAt(position, JudgeType.Lost, JudgeDetail.None);
-            }
-        }
-
-        public void DisableArc(int groupID)
-        {
-            if (arcGroupToPoolIndex.TryGetValue(groupID, out int poolIndex))
-            {
-                var obj = arcParticlePool[poolIndex];
-                var prt = obj.GetComponent<ParticleSystem>();
-                prt.Stop();
-                prt.Clear();
-                obj.SetActive(false);
-            }
+            var type = isHit ? JudgeType.MaxPure : JudgeType.Lost;
+            position.y += 0.5f;
+            TextParticleAt(position, type, JudgeDetail.None);
         }
     }
-
 }

@@ -55,7 +55,7 @@ namespace ArcCore.Gameplay.Systems
                                 float sz = lcw.Value.c3.z;
 
                                 float x = -sz * dx / dz + sx;
-                                float y = -sz * dy / dz + sx;
+                                float y = -sz * dy / dz + sy;
                                 pos = new float3(x, y, 0);
                             }
 

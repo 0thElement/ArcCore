@@ -28,7 +28,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 if (arcColorFsmArray[color].IsRedArc()) continue;
 
                 Entities.WithSharedComponentFilter<ArcColorID>(new ArcColorID(color)).WithAll<WithinJudgeRange>().ForEach(
-                    (Entity en, ref ChartIncrTime chartIncrTime, in ArcGroupID groupID, in ArcData arcData) =>
+                    (Entity en, ref ChartIncrTime chartIncrTime, in ArcGroupID groupID) =>
                     {
                         if (chartIncrTime.time < currentTime + Constants.HoldLostWindow && arcGroupHeldState[groupID.value] == GroupState.Held)
                         {
@@ -36,8 +36,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
                             if (count > 0)
                             {
                                 tracker.AddJudge(JudgeType.MaxPure, count);
-                                particleBuffer.PlayArcParticle(groupID.value, arcData.GetPosAt(currentTime), true);
                             }
+                            particleBuffer.PlayArcParticle(groupID.value, true, count > 0);
                         }
                     }
                 ).Run();

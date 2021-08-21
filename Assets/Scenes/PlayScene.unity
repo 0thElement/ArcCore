@@ -5253,7 +5253,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   textParticlePoolSize: 100
   tapParticlePoolSize: 50
-  arcParticlePoolSize: 10
   textJudgeMaterials:
   - {fileID: 2100000, guid: e721c71e3c78b104087159df33602562, type: 2}
   - {fileID: 2100000, guid: f7655ef33b463fe4e966141c3dc67a26, type: 2}
@@ -5262,8 +5261,6 @@ MonoBehaviour:
   textParticleBase: {fileID: 2168658041522373843, guid: e315c788f3d4ac144a2bdce65a0ba334,
     type: 3}
   tapParticleBase: {fileID: 4294837800304559334, guid: 262362bfbb58c214da105f4aa68f70cd,
-    type: 3}
-  arcParticleBase: {fileID: 2168658041522373843, guid: e315c788f3d4ac144a2bdce65a0ba334,
     type: 3}
   laneParticles:
   - {fileID: 1970482738}
@@ -6005,7 +6002,9 @@ MonoBehaviour:
     type: 3}
   arcShadowPrefab: {fileID: 345932005286596484, guid: 214e882901cb10a409006d01ba409ccc,
     type: 3}
-  arcApproachIndicatorPrefab: {fileID: 4796778903998022456, guid: 41b1b4021cb204944a67bfe468124817,
+  arcApproachIndicatorPrefab: {fileID: 8429976014079107216, guid: 0a57bd2af70dcde44b3c75defd27ea0e,
+    type: 3}
+  arcParticlePrefab: {fileID: 4796778903998022456, guid: 41b1b4021cb204944a67bfe468124817,
     type: 3}
   arcColors:
   - {r: 0.16470589, g: 0.7648553, b: 0.8980392, a: 0.77254903}
@@ -11225,6 +11224,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7671d9b645c6094c837a2740346270c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  indexCache: 0
 --- !u!1 &1375499811
 GameObject:
   m_ObjectHideFlags: 0
@@ -16307,6 +16307,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7671d9b645c6094c837a2740346270c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  indexCache: 0
 --- !u!1 &1719732238
 GameObject:
   m_ObjectHideFlags: 0

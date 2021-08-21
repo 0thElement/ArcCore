@@ -34,7 +34,7 @@ namespace ArcCore.Gameplay.Behaviours
             int currentTime = Conductor.Instance.receptorTime;  
 
             // If for whatever reason the chart jumped back in time, update indexcache and reenable indicator
-            while (indexCache > 0 && currentTime < indicatorList[indexByDestroyTime[indexCache]].endTime)
+            while (indexCache > 0 && currentTime < indicatorList[indexByDestroyTime[indexCache-1]].endTime)
             {
                 indicatorList[indexByDestroyTime[indexCache]].Disable();
                 indexCache--;
