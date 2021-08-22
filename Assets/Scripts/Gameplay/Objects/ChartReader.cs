@@ -213,7 +213,7 @@ namespace ArcCore.Gameplay.Behaviours
 
             PlayManager.Conductor.SetupTimingGroups(affTimingList);
             BeatlineEntityCreator.Instance.CreateEntities(affTimingList[0]);
-            TapEntityCreator.Instance.CreateEntities(affTapList);
+            TapEntityCreator.Instance.CreateEntities(affTapList, affArcTapList);
             HoldEntityCreator.Instance.CreateEntities(affHoldList);
             ArcEntityCreator.Instance.CreateEntities(affArcList);
             TraceEntityCreator.Instance.CreateEntities(affTraceList);

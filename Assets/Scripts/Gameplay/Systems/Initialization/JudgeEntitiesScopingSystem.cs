@@ -19,11 +19,9 @@ namespace ArcCore.Gameplay.Systems
             int currentTime = PlayManager.Conductor.receptorTime;
             var commandBuffer = PlayManager.CommandBuffer;
 
-            Entities.WithNone<WithinJudgeRange, PastJudgeRange>().ForEach(
+            Entities.WithNone<WithinJudgeRange, PastJudgeRange, BypassJudgeScoping>().ForEach(
 
-                    (Entity entity, in ChartTime chartTime)
-
-                        =>
+                    (Entity entity, in ChartTime chartTime) =>
 
                     {
                         if (currentTime + Constants.LostWindow >= chartTime.value)

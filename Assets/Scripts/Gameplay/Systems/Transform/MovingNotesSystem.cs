@@ -16,15 +16,6 @@ namespace ArcCore.Gameplay.Systems
     [UpdateInGroup(typeof(CustomTransformSystemGroup))]
     public class MovingNotesSystem : SystemBase
     {
-        EntityQuery ExcludeUnlockedHoldQuery;
-        protected override void OnCreate()
-        {
-            base.OnCreate();
-
-            var NotHoldQuery = new EntityQueryDesc { None = new ComponentType[] {typeof(ChartIncrTime)} };
-            var LockedHoldQuery = new EntityQueryDesc { All = new ComponentType[] {typeof(HoldLocked)} };
-            ExcludeUnlockedHoldQuery = GetEntityQuery(new EntityQueryDesc[] {NotHoldQuery, LockedHoldQuery});
-        }
         protected override void OnUpdate()
         {
             if (!PlayManager.IsUpdatingAndActive) return;
@@ -39,7 +30,12 @@ namespace ArcCore.Gameplay.Systems
             }).ScheduleParallel();
 
             //All note except arcs and holds
-            Entities.WithStoreEntityQueryInField(ref ExcludeUnlockedHoldQuery).ForEach((ref Translation translation, in FloorPosition floorPosition, in TimingGroup group) =>
+            Entities.WithNone<ChartIncrTime>().ForEach((ref Translation translation, in FloorPosition floorPosition, in TimingGroup group) =>
+            {
+                translation.Value.z = floorPosition.value - currentFloorPosition[group.value];
+            }).ScheduleParallel();
+
+            Entities.WithAll<HoldLocked>().ForEach((ref Translation translation, in FloorPosition floorPosition, in TimingGroup group) =>
             {
                 translation.Value.z = floorPosition.value - currentFloorPosition[group.value];
             }).ScheduleParallel();
@@ -54,32 +50,30 @@ namespace ArcCore.Gameplay.Systems
             }).ScheduleParallel();
 
             //Arc and trace segments
-            Entities.WithAll<DisappearTime>().ForEach((ref Cutoff cutoff, in ChartTime chartTime) => {
-                if (chartTime.value <= currentTime) cutoff.value = true;
-            }).ScheduleParallel();
+            Entities
+                .WithNone<Translation>()
+                .ForEach(
+                    (ref LocalToWorld lcwMatrix, in FloorPosition floorPosition, in TimingGroup group, in BaseShear baseshear, in BaseOffset baseoffset, in Cutoff cutoff, in ChartTime chartTime) =>
+                    {
+                        float newfp = floorPosition.value - currentFloorPosition[group.value];
+                        float percentage = newfp / baseshear.value.z;
 
-            Entities.WithNone<Translation>().
-            ForEach((ref LocalToWorld lcwMatrix, in FloorPosition floorPosition, in TimingGroup group, in BaseShear baseshear, in BaseOffset baseoffset, in Cutoff cutoff) =>
-            {
-                float newfp = floorPosition.value - currentFloorPosition[group.value];
-                float percentage = newfp / baseshear.value.z;
+                        if (currentTime > chartTime.value && percentage > 0 && cutoff.value)
+                        {
+                            if (percentage > 1) percentage = 1;
+                            float4 shear = baseshear.value * (1 - percentage);
+                            float4 offset = baseoffset.value - baseshear.value * percentage;
 
-                if (percentage > 0 && cutoff.value)
-                {
-                    if (percentage > 1) percentage = 1;
-                    float4 shear = baseshear.value * (1 - percentage);
-                    float4 offset = baseoffset.value - baseshear.value * percentage;
-
-                    lcwMatrix.Value.c2.x = shear.x;
-                    lcwMatrix.Value.c2.y = shear.y;
-                    lcwMatrix.Value.c2.z = shear.z;
-                    lcwMatrix.Value.c3.x = offset.x;
-                    lcwMatrix.Value.c3.y = offset.y;
-                    lcwMatrix.Value.c3.z = 0;
-                }
-                else
-                    lcwMatrix.Value.c3.z = newfp;
-            }).ScheduleParallel();
+                            lcwMatrix.Value.c2.x = shear.x;
+                            lcwMatrix.Value.c2.y = shear.y;
+                            lcwMatrix.Value.c2.z = shear.z;
+                            lcwMatrix.Value.c3.x = offset.x;
+                            lcwMatrix.Value.c3.y = offset.y;
+                            lcwMatrix.Value.c3.z = 0;
+                        }
+                        else
+                            lcwMatrix.Value.c3.z = newfp;
+                    }).ScheduleParallel();
         }
     }
 }

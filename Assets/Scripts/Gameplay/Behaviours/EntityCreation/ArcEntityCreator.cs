@@ -1,0 +1,530 @@
+﻿using System.Collections.Generic;
+using Unity.Entities;
+using Unity.Transforms;
+using Unity.Mathematics;
+using Unity.Rendering;
+using UnityEngine;
+using ArcCore.Gameplay.Components;
+using ArcCore.Parsing.Aff;
+using ArcCore.Utilities.Extensions;
+using ArcCore.Gameplay.Systems.Judgement;
+
+namespace ArcCore.Gameplay.Behaviours.EntityCreation
+{
+    public class ArcEntityCreator : ECSMonoBehaviour
+    {
+        public static ArcEntityCreator Instance { get; private set; }
+        [SerializeField] private GameObject arcNotePrefab;
+        [SerializeField] private GameObject headArcNotePrefab;
+        [SerializeField] private GameObject heightIndicatorPrefab;
+        [SerializeField] private GameObject arcShadowPrefab;
+        [SerializeField] private GameObject arcApproachIndicatorPrefab;
+        [SerializeField] private GameObject arcParticlePrefab;
+        [SerializeField] public Color[] arcColors;
+        [SerializeField] private Color redColor;
+        private Entity arcNoteEntityPrefab;
+        private Entity headArcNoteEntityPrefab;
+        private Entity heightIndicatorEntityPrefab;
+        private Entity arcShadowEntityPrefab;
+        private int colorShaderId;
+        private int highlightShaderId;
+        private int redColorShaderId;
+
+        private EntityArchetype arcJudgeArchetype; //CONTINUE HERE DUMBFUCK
+        [HideInInspector] private Material arcMaterial;
+        [HideInInspector] private Material heightMaterial;
+        [HideInInspector] private Mesh arcMesh;
+        [HideInInspector] private Mesh headMesh;
+        [HideInInspector] private Mesh heightMesh;
+
+        [HideInInspector] public static int ColorCount = 2;
+        [HideInInspector] public static int GroupCount = 0;
+        [HideInInspector] private List<RenderMesh> initialRenderMeshes;
+        [HideInInspector] private List<RenderMesh> highlightRenderMeshes;
+        [HideInInspector] private List<RenderMesh> grayoutRenderMeshes;
+        [HideInInspector] private List<RenderMesh> headRenderMeshes;
+        [HideInInspector] private List<RenderMesh> heightRenderMeshes;
+        [HideInInspector] public RenderMesh ArcShadowRenderMesh;
+        [HideInInspector] public RenderMesh ArcShadowGrayoutRenderMesh;
+
+        /// <summary>
+        /// Time between two judge points of a similar area and differing colorIDs in which both points will be set as unscrict
+        /// </summary>
+        public const int judgeStrictnessLeniency = 100;
+        /// <summary>
+        /// The distance between two points (in world space) at which they will begin to be considered for unstrictness
+        /// </summary>
+        public const float judgeStrictnessDist = 1f;
+
+        private void Awake()
+        {
+            Instance = this;
+
+            arcNoteEntityPrefab = GameObjectConversionSettings.ConvertToNote(arcNotePrefab, EntityManager);
+            EntityManager.ExposeLocalToWorld(arcNoteEntityPrefab);
+
+            headArcNoteEntityPrefab = GameObjectConversionSettings.ConvertToNote(headArcNotePrefab, EntityManager);
+
+            heightIndicatorEntityPrefab = GameObjectConversionSettings.ConvertToNote(heightIndicatorPrefab, EntityManager);
+
+            arcShadowEntityPrefab = GameObjectConversionSettings.ConvertToNote(arcShadowPrefab, EntityManager);
+            EntityManager.ExposeLocalToWorld(arcShadowEntityPrefab);
+            
+            arcJudgeArchetype = EntityManager.CreateArchetype(
+                
+                //Chart time
+                ComponentType.ReadOnly<ChartTime>(),
+                ComponentType.ReadOnly<DestroyOnTiming>(),
+                //Judge time
+                ComponentType.ReadWrite<ChartIncrTime>(),
+                //Color
+                ComponentType.ReadOnly<ArcColorID>(),
+                //Arc data
+                ComponentType.ReadOnly<ArcData>(),
+                ComponentType.ReadOnly<ArcGroupID>()
+            );
+            
+            colorShaderId = Shader.PropertyToID("_Color");
+            highlightShaderId = Shader.PropertyToID("_Highlight");
+
+            arcMaterial = arcNotePrefab.GetComponent<Renderer>().sharedMaterial;
+            heightMesh = heightIndicatorPrefab.GetComponent<MeshFilter>().sharedMesh;
+            heightMaterial = heightIndicatorPrefab.GetComponent<Renderer>().sharedMaterial;
+            arcMesh = arcNotePrefab.GetComponent<MeshFilter>().sharedMesh;
+            headMesh = headArcNotePrefab.GetComponent<MeshFilter>().sharedMesh;
+
+            RenderMesh shadowRenderMesh = EntityManager.GetSharedComponentData<RenderMesh>(arcShadowEntityPrefab);
+            Material shadowMaterial = shadowRenderMesh.material;
+            Material shadowGrayoutMaterial = Instantiate(shadowMaterial);
+
+            shadowGrayoutMaterial.SetFloat(highlightShaderId, -1);
+
+            ArcShadowRenderMesh = new RenderMesh()
+            {
+                mesh = shadowRenderMesh.mesh,
+                material = shadowMaterial
+            };
+            ArcShadowGrayoutRenderMesh = new RenderMesh()
+            {
+                mesh = shadowRenderMesh.mesh,
+                material = shadowGrayoutMaterial
+            };
+        }
+
+        public void CreateEntities(List<List<AffArc>> affArcList)
+        {
+            int colorId=0;
+            var connectedArcsIdEndpoint = new List<ArcEndpointData>();
+            ClearRenderMeshList();
+
+            //SET UP NEW JUDGES HEREEEEE
+
+            foreach (List<AffArc> listByColor in affArcList)
+            {
+                listByColor.Sort((timingGruop, item2) => { return timingGruop.timing.CompareTo(item2.timing); });
+
+                Material arcColorMaterialInstance = Instantiate(arcMaterial);
+                Material heightIndicatorColorMaterialInstance = Instantiate(heightMaterial);
+                arcColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
+                arcColorMaterialInstance.SetColor(redColorShaderId, redColor);
+                heightIndicatorColorMaterialInstance.SetColor(colorShaderId, arcColors[colorId]);
+                heightIndicatorColorMaterialInstance.SetColor(redColorShaderId, redColor);
+
+                RenderMesh arcRenderMesh = new RenderMesh()
+                {
+                    mesh = arcMesh,
+                    material = arcColorMaterialInstance
+                };
+                RenderMesh heightRenderMesh = new RenderMesh()
+                {
+                    mesh = heightMesh,
+                    material = heightIndicatorColorMaterialInstance
+                };
+                RegisterRenderMeshVariants(arcRenderMesh, heightRenderMesh);
+
+                foreach (AffArc arc in listByColor)
+                {
+                    int startGroupTime = default;
+
+                    //Precalc and assign a connected arc id to avoid having to figure out connection during gameplay
+                    //placed into a new block to prevent data from being used later on
+                    ArcEndpointData arcStartPoint = (arc.timingGroup, arc.timing, arc.startX, arc.startY, colorId);
+                    ArcEndpointData arcEndPoint = (arc.timingGroup, arc.endTiming, arc.endX, arc.endY, colorId);
+
+                    int arcId = connectedArcsIdEndpoint.Count;
+                    startGroupTime = arc.timing;
+                    bool isHeadArc = true;
+
+                    for (int id = connectedArcsIdEndpoint.Count - 1; id >= 0; id--)
+                    {
+                        if (connectedArcsIdEndpoint[id] == arcStartPoint)
+                        {
+                            arcId = id;
+
+                            isHeadArc = false;
+                            connectedArcsIdEndpoint[id] = arcEndPoint;
+                        }
+                    }
+
+                    if (isHeadArc)
+                    {
+                        connectedArcsIdEndpoint.Add(arcEndPoint);
+                        CreateHeadSegment(arc, arcColorMaterialInstance, arcId);
+                    }
+
+                    if (isHeadArc || arc.startY != arc.endY)
+                    {
+                        CreateHeightIndicator(arc, heightRenderMesh);
+                    }
+
+                    float startBpm = Conductor.Instance.GetTimingEventFromTiming(arc.timing, arc.timingGroup).bpm;
+
+                    //Generate arc segments and shadow segment(each segment is its own entity)
+                    int duration = arc.endTiming - arc.timing;
+
+                    if (duration == 0)
+                    {
+                        float3 tstart = new float3(
+                            Conversion.GetWorldX(arc.startX),
+                            Conversion.GetWorldY(arc.startY),
+                            Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
+                        );
+                        float3 tend = new float3(
+                            Conversion.GetWorldX(arc.endX),
+                            Conversion.GetWorldY(arc.endY),
+                            Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
+                        );
+                        CreateSegment(arcRenderMesh, tstart, tend, arc.timingGroup, arc.timing, arc.endTiming, arcId);
+                        continue;
+                    }
+
+                    int v1 = duration < 1000 ? 14 : 7;
+                    float v2 = 1000f / (v1 * duration);
+                    float segmentLength = duration * v2;
+                    int segmentCount = (int)(duration / segmentLength) + 1;
+
+                    int fromTiming;
+                    int toTiming = arc.timing;
+
+                    float3 start;
+                    float3 end = new float3(
+                        Conversion.GetWorldX(arc.startX),
+                        Conversion.GetWorldY(arc.startY),
+                        Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup)
+                    );
+
+                    for (int i = 0; i < segmentCount - 1; i++)
+                    {
+                        int t = (int)((i + 1) * segmentLength);
+
+                        fromTiming = toTiming;
+                        toTiming = arc.timing + t;
+
+                        start = end;
+                        end = new float3(
+                            Conversion.GetWorldX(Conversion.GetXAt((float)t / duration, arc.startX, arc.endX, arc.easing)),
+                            Conversion.GetWorldY(Conversion.GetYAt((float)t / duration, arc.startY, arc.endY, arc.easing)),
+                            Conductor.Instance.GetFloorPositionFromTiming(toTiming, arc.timingGroup)
+                        );
+
+                        CreateSegment(arcRenderMesh, start, end, arc.timingGroup, fromTiming, toTiming, arcId);
+                    }
+
+                    fromTiming = toTiming;
+                    toTiming = arc.endTiming;
+                    
+                    start = end;
+                    end = new float3(
+                        Conversion.GetWorldX(arc.endX),
+                        Conversion.GetWorldY(arc.endY),
+                        Conductor.Instance.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
+                    );
+
+                    CreateSegment(arcRenderMesh, start, end, arc.timingGroup, fromTiming, toTiming, arcId);
+                    CreateJudgeEntity(arc, colorId, arcId, startBpm);
+
+                }
+
+                colorId++;
+            }
+            ColorCount = colorId;
+            GroupCount = connectedArcsIdEndpoint.Count;
+
+            Debug.Log(GroupCount);
+
+            //TEMPORARY
+            ArcCollisionCheckSystem.SetUpArray(GroupCount, ColorCount);
+
+            List<IIndicator> indicatorList = new List<IIndicator>(connectedArcsIdEndpoint.Count);
+
+            foreach (var groupIdEndPoint in connectedArcsIdEndpoint)
+            {
+                ArcIndicator indicator = new ArcIndicator(Instantiate(arcApproachIndicatorPrefab), Instantiate(arcParticlePrefab), groupIdEndPoint.time);
+                indicatorList.Add(indicator);
+            }
+            Conductor.Instance.ArcIndicatorManager.Initialize(indicatorList);
+        }
+
+        private void CreateSegment(RenderMesh renderMesh, float3 start, float3 end, int timingGroup, int timing, int endTiming, int groupId)
+        {
+            Entity arcInstEntity = EntityManager.Instantiate(arcNoteEntityPrefab);
+            EntityManager.SetSharedComponentData<RenderMesh>(arcInstEntity, renderMesh); 
+
+            EntityManager.SetComponentData(arcInstEntity, new FloorPosition(start.z));
+
+            EntityManager.SetComponentData(arcInstEntity, new TimingGroup(timingGroup));
+
+            float dx = start.x - end.x;
+            float dy = start.y - end.y;
+            float dz = start.z - end.z;
+
+            //Shear along xy + scale along z matrix
+            LocalToWorld ltwArc = new LocalToWorld()
+            {
+                Value = new float4x4(
+                    1, 0, dx, start.x,
+                    0, 1, dy, start.y,
+                    0, 0, dz, 0,
+                    0, 0, 0, 1
+                )
+            };
+            EntityManager.SetComponentData(arcInstEntity, ltwArc);
+
+            EntityManager.SetComponentData(arcInstEntity, new BaseOffset(new float4(start.x, start.y, 0, 0)));
+            EntityManager.SetComponentData(arcInstEntity, new BaseShear(new float4(dx, dy, dz, 0)));
+
+            EntityManager.SetComponentData(arcInstEntity, new Cutoff(false));
+
+
+            int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, timingGroup);
+            int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, timingGroup);
+            int appearTime = (t1 < t2) ? t1 : t2;
+
+            EntityManager.SetComponentData(arcInstEntity, new AppearTime(appearTime));
+            EntityManager.SetComponentData(arcInstEntity, new DestroyOnTiming(endTiming + Constants.HoldLostWindow));
+            EntityManager.SetComponentData(arcInstEntity, new ArcGroupID(groupId));
+            EntityManager.SetComponentData(arcInstEntity, new ChartTime(timing));
+            EntityManager.SetComponentData(arcInstEntity, new ChartEndTime(endTiming));
+
+            if (timing < endTiming)
+            {
+                Entity arcShadowEntity = EntityManager.Instantiate(arcShadowEntityPrefab);
+                EntityManager.SetComponentData(arcShadowEntity, new FloorPosition(start.z));
+                EntityManager.SetComponentData(arcShadowEntity, new TimingGroup(timingGroup));
+                EntityManager.SetSharedComponentData<RenderMesh>(arcShadowEntity, ArcShadowRenderMesh);
+                LocalToWorld ltwShadow = new LocalToWorld()
+                {
+                    Value = new float4x4(
+                        1, 0, dx, start.x,
+                        0, 1, 0, 0,
+                        0, 0, dz, 0,
+                        0, 0, 0, 1
+                    )
+                };
+                EntityManager.SetComponentData(arcShadowEntity, new BaseOffset(new float4(start.x, 0, 0, 0)));
+                EntityManager.SetComponentData(arcShadowEntity, new BaseShear(new float4(dx, 0, dz, 0)));
+                EntityManager.SetComponentData(arcShadowEntity, new Cutoff(false));
+                EntityManager.SetComponentData(arcShadowEntity, ltwShadow);
+                EntityManager.SetComponentData(arcShadowEntity, new AppearTime(appearTime));
+                EntityManager.SetComponentData(arcShadowEntity, new DestroyOnTiming(endTiming + Constants.HoldLostWindow));
+                EntityManager.SetComponentData(arcShadowEntity, new ArcGroupID(groupId));
+                EntityManager.SetComponentData(arcShadowEntity, new ChartTime(timing));
+            }
+        }
+
+        private void CreateHeightIndicator(AffArc arc, RenderMesh renderMesh)
+        {
+            Entity heightEntity = EntityManager.Instantiate(heightIndicatorEntityPrefab);
+
+            float height = Conversion.GetWorldY(arc.startY) - 0.45f;
+
+            float x = Conversion.GetWorldX(arc.startX); 
+            float y = height / 2;
+            const float z = 0;
+
+            const float scaleX = 2.34f;
+            float scaleY = height;
+            const float scaleZ = 1;
+
+            EntityManager.SetSharedComponentData(heightEntity, renderMesh);
+
+            EntityManager.SetComponentData(heightEntity, new Translation()
+            {
+                Value = new float3(x, y, z)
+            });
+            EntityManager.AddComponentData(heightEntity, new NonUniformScale()
+            {
+                Value = new float3(scaleX, scaleY, scaleZ)
+            });
+            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup);
+            EntityManager.AddComponentData(heightEntity, new FloorPosition(floorpos));
+            EntityManager.SetComponentData(heightEntity, new TimingGroup(arc.timingGroup));
+
+            int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arc.timingGroup);
+            int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, arc.timingGroup);
+            int appearTime = (t1 < t2) ? t1 : t2;
+
+            EntityManager.SetComponentData(heightEntity, new AppearTime(appearTime));
+            EntityManager.SetComponentData(heightEntity, new DestroyOnTiming(arc.timing));
+        }
+
+        private void CreateHeadSegment(AffArc arc, Material material, int groupID)
+        {
+            Entity headEntity = EntityManager.Instantiate(headArcNoteEntityPrefab);
+
+            EntityManager.SetSharedComponentData(headEntity, new RenderMesh(){
+                mesh = headMesh,
+                material = material
+            });
+
+            float floorpos = Conductor.Instance.GetFloorPositionFromTiming(arc.timing, arc.timingGroup);
+            EntityManager.SetComponentData(headEntity, new FloorPosition(floorpos));
+
+            float x = Conversion.GetWorldX(arc.startX); 
+            float y = Conversion.GetWorldY(arc.startY); 
+            const float z = 0;
+            EntityManager.SetComponentData(headEntity, new Translation() { Value = math.float3(x, y, z) });
+
+            EntityManager.SetComponentData(headEntity, new TimingGroup(arc.timingGroup));
+
+            int t1 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, arc.timingGroup);
+            int t2 = Conductor.Instance.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, arc.timingGroup);
+            int appearTime = (t1 < t2) ? t1 : t2;
+
+            EntityManager.SetComponentData(headEntity, new AppearTime(appearTime));
+            EntityManager.SetComponentData(headEntity, new DestroyOnTiming(arc.timing));
+            EntityManager.SetComponentData(headEntity, new ArcGroupID(groupID));
+        }
+
+        private void CreateJudgeEntity(AffArc arc, int colorId, int groupId, float startBpm)
+        {
+
+            Entity en = EntityManager.CreateEntity(arcJudgeArchetype);
+
+            EntityManager.SetComponentData(en, ChartIncrTime.FromBpm(arc.timing, arc.endTiming, startBpm, out int comboCount));
+
+            ScoreManager.Instance.tracker.noteCount += comboCount;
+
+            //very stupid
+            EntityManager.SetComponentData(en, new ChartTime(arc.timing + Constants.LostWindow));
+            EntityManager.SetSharedComponentData(en, new ArcColorID(colorId));
+            EntityManager.SetComponentData(en,
+                new ArcData(
+                    Conversion.GetWorldPos(math.float2(arc.startX, arc.startY)),
+                    Conversion.GetWorldPos(math.float2(arc.endX, arc.endY)),
+                    arc.timing,
+                    arc.endTiming,
+                    arc.easing
+                ));
+
+            EntityManager.SetComponentData(en, new ArcGroupID(groupId));
+            EntityManager.SetComponentData(en, new DestroyOnTiming(arc.endTiming + Constants.HoldLostWindow));
+            
+        }
+
+        private void ClearRenderMeshList()
+        {
+            initialRenderMeshes = new List<RenderMesh>();
+            highlightRenderMeshes = new List<RenderMesh>();
+            grayoutRenderMeshes = new List<RenderMesh>();
+            headRenderMeshes = new List<RenderMesh>();
+            heightRenderMeshes = new List<RenderMesh>();
+        }
+        private void RegisterRenderMeshVariants(RenderMesh initialArc, RenderMesh height)
+        {
+            initialRenderMeshes.Add(initialArc);
+            heightRenderMeshes.Add(height);
+            
+            Material highlightMat = Instantiate(initialArc.material);
+            highlightMat.SetFloat(highlightShaderId, 1);
+            Material grayoutMat = Instantiate(initialArc.material);
+            grayoutMat.SetFloat(highlightShaderId,-1);
+
+            highlightRenderMeshes.Add(new RenderMesh{
+                mesh = initialArc.mesh,
+                material = highlightMat
+            });
+            grayoutRenderMeshes.Add(new RenderMesh{
+                mesh = initialArc.mesh,
+                material = grayoutMat
+            });
+            headRenderMeshes.Add(new RenderMesh{
+                mesh = headMesh,
+                material = initialArc.material
+            });
+        }
+        public (RenderMesh, RenderMesh, RenderMesh, RenderMesh, RenderMesh) GetRenderMeshVariants(int color)
+        {
+            return (initialRenderMeshes[color], highlightRenderMeshes[color], grayoutRenderMeshes[color], headRenderMeshes[color], heightRenderMeshes[color]);
+        }
+        public void UpdateRenderMeshVariants(int color, RenderMesh newinitial, RenderMesh newhighlight, RenderMesh newgrayout)
+        {
+            initialRenderMeshes[color] = newinitial;
+            highlightRenderMeshes[color] = newhighlight;
+            grayoutRenderMeshes[color] = newgrayout;
+        }
+        /// <summary>
+        /// Stores data requried to handle arc endpoints.
+        /// </summary>
+        public struct ArcEndpointData
+        {
+            public int timingGroup;
+            public int time;
+            public float x;
+            public float y;
+            public int color;
+
+            public ArcEndpointData(int timingGruop, int time, float x, float y, int color)
+            {
+                this.timingGroup = timingGruop;
+                this.time = time;
+                this.x = x;
+                this.y = y;
+                this.color = color; 
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is ArcEndpointData other &&
+                       timingGroup == other.timingGroup &&
+                       time == other.time &&
+                       x == other.x &&
+                       y == other.y &&
+                       color == other.color;
+            }
+
+            public static bool operator ==(ArcEndpointData l, ArcEndpointData r) => l.Equals(r);
+            public static bool operator !=(ArcEndpointData l, ArcEndpointData r) => !(l == r);
+
+            public override int GetHashCode()
+            {
+                int hashCode = 1052165582;
+                hashCode = hashCode * -1521134295 + timingGroup.GetHashCode();
+                hashCode = hashCode * -1521134295 + time.GetHashCode();
+                hashCode = hashCode * -1521134295 + x.GetHashCode();
+                hashCode = hashCode * -1521134295 + y.GetHashCode();
+                hashCode = hashCode * -1521134295 + color.GetHashCode();
+                return hashCode;
+            }
+
+            public void Deconstruct(out int timingGruop, out int time, out float x, out float y, out float color)
+            {
+                timingGruop = this.timingGroup;
+                time = this.time;
+                x = this.x;
+                y = this.y;
+                color = this.color;
+            }
+
+            public static implicit operator (int, int time, float, float, int)(ArcEndpointData value)
+            {
+                return (value.timingGroup, value.time, value.x, value.y, value.color);
+            }
+
+            public static implicit operator ArcEndpointData((int, int time, float, float, int) value)
+            {
+                return new ArcEndpointData(value.Item1, value.time, value.Item3, value.Item4, value.Item5);
+            }
+        }
+    }
+}

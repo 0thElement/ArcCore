@@ -4,6 +4,8 @@
 	{
 		_MainTex ("Texture", 2D) = "white" {}
 		_Color ("Color", Color) = (1,1,1,1)
+		_RedCol ("Red Color", Color) = (1,1,1,1)
+		_RedMix ("Red Mix", Float) = 0
 	}
 	SubShader
 	{
@@ -38,8 +40,8 @@
 				float4 worldpos : TEXCOORD1;
 			};
 			 
-			int _Highlight;
-			float4 _Color;
+			float _RedMix;
+			float4 _Color, _RedCol;
             float4 _MainTex_ST;
 			sampler2D _MainTex;
 
@@ -48,7 +50,7 @@
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-				o.color = v.color * _Color;
+				o.color = v.color * lerp(_Color, _RedCol, _RedMix);
 				o.worldpos = mul(unity_ObjectToWorld, v.vertex);
 				return o;
 			}

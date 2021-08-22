@@ -18,7 +18,8 @@ GameObject:
   - component: {fileID: 8666961278780998509}
   - component: {fileID: 1968307179160943979}
   - component: {fileID: 2857874093601128795}
-  - component: {fileID: 6238810245785734155}
+  - component: {fileID: 9197975471558397519}
+  - component: {fileID: 9024701586260238942}
   m_Layer: 0
   m_Name: TraceShadowPrefab
   m_TagString: Untagged
@@ -186,7 +187,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   value: 0
---- !u!114 &6238810245785734155
+--- !u!114 &9197975471558397519
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -195,7 +196,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 2857874093601128869}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5fcc3ca50480ad747bde0bfe962eac8d, type: 3}
+  m_Script: {fileID: 11500000, guid: 8c903ecb8ffd9d74f91e227defd0b63f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   value: 0
+--- !u!114 &9024701586260238942
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2857874093601128869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b42ef81b8b307d1429b27440fa8ef412, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

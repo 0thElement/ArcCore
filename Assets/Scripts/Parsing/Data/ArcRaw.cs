@@ -34,8 +34,6 @@ namespace ArcCore.Parsing.Data
         public float2 EndPos => new float2(endX, endY);
 
         public float2 PositionAt(int time) => PositionAt(time, timing, endTiming, StartPos, EndPos, easing);
-        public Circle2D ColliderAt(int time) => ColliderAt(time, timing, endTiming, StartPos, EndPos, easing);
-
         public static float2 PositionAt(int time, int timing, int endTiming, float2 start, float2 end, ArcEasing easing)
             => new float2(
                     Conversion.GetXAt(
@@ -47,8 +45,5 @@ namespace ArcCore.Parsing.Data
                         start.y, end.y, easing
                     )
                );
-
-        public static Circle2D ColliderAt(int time, int timing, int endTiming, float2 start, float2 end, ArcEasing easing)
-            => new Circle2D(PositionAt(time, timing, endTiming, start, end, easing), Constants.ArcColliderRadius);
     }
 }

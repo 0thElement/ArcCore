@@ -14,7 +14,7 @@
 	}
 	SubShader
 	{
-		Tags { "Queue" = "Transparent"  "RenderType" = "Transparent" "CanUseSpriteAtlas"="true"  }
+		Tags { "Queue" = "Transparent+1"  "RenderType" = "Transparent" "CanUseSpriteAtlas"="true"  }
         Cull Off
 		ZTest Off
 		Blend SrcAlpha OneMinusSrcAlpha
@@ -66,13 +66,13 @@
 				float4 inColor = i.color;
 
 				c *=  inColor;
-				c.a *= alpha_from_pos(i.worldpos.z) * 0.86;
-
 				if (_Highlight < 0)
 				{
 					c = lerp(c, _GrayCol, 0.2);
 					c.a *= 0.85;
 				}
+
+				c.a *= alpha_from_pos(i.worldpos.z) * 0.95;
 
 				return c;
 			}

@@ -83,7 +83,7 @@ namespace ArcCore.Gameplay.Behaviours
         /// </summary>
         [HideInInspector]
         public int chartOffset;
-
+        
         /// <summary>
         /// The full offset of the current chart, including user settings.
         /// </summary>

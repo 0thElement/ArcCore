@@ -1,6 +1,7 @@
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace ArcCore.Gameplay.Components
 {
@@ -17,7 +18,7 @@ namespace ArcCore.Gameplay.Components
         /// </summary>
         public readonly int timeIncrement;
         /// <summary>
-        /// The time at which the item is considered "finished" (no mroe judge points)
+        /// The time at which the item is considered "finished" (no more judge points)
         /// </summary>
         public readonly int endTime;
 
@@ -25,18 +26,29 @@ namespace ArcCore.Gameplay.Components
         
         /// <summary>
         /// Create a new <see cref="ChartIncrTime"/> from a start time, end time and bpm.
-        /// The <c>out</c> parameter <paramref name="count"/> will be set to the amount of judge points which the new
-        /// instance will take before <see cref="UpdateJudgePointCache(int, bool, out int)"/> will return false.
+        /// The <c>out</c> parameter <paramref name="count"/> will be set to the amount of judge points of the note
         /// </summary>
         public static ChartIncrTime FromBpm(int startTime, int endTime, float bpm, out int count)
         {
-            int i = GetIncr(bpm);
-            count = (int)math.ceil((float)(endTime - startTime) / i) - 1;
-            return new ChartIncrTime(startTime, endTime, i);
+            if (bpm == 0)
+            {
+                count = 0;
+                return new ChartIncrTime(startTime, endTime, int.MaxValue);
+            }
+
+            int incr = GetIncr(bpm);
+
+            count = math.max(1, (endTime - startTime) / incr - 1);
+
+            int firstJudgeTime = (count == 1) ? (startTime + (endTime - startTime) / 2) : (startTime + incr);
+            int finalJudgeTime = firstJudgeTime + (count - 1) * incr;
+
+            return new ChartIncrTime(firstJudgeTime, finalJudgeTime, incr);
         }
 
         public static int GetIncr(float bpm)
         {
+            bpm = math.abs(bpm);
             int v = (int)math.abs((bpm >= 255 ? 60_000f : 30_000f) / bpm);
             return math.max(1, v);
         }
@@ -45,30 +57,21 @@ namespace ArcCore.Gameplay.Components
         /// Update the field <c>time</c> of this instance to reflect the next judge point in the hold or arc.
         /// </summary>
         /// <returns>
-        /// <c>false</c> if the hold has reached its end
-        /// </returns>
-        [BurstCompile(FloatMode = FloatMode.Fast)] 
-        public bool UpdateJudgePointCache(int ctime, out int count)
-        {
-            count = math.max(1, (ctime - time - Constants.FarWindow) / timeIncrement);
-            time += timeIncrement * count;
-
-            return time + timeIncrement < endTime;
-        }
-
-        /// <summary>
-        /// Update the field <c>time</c> of this instance to reflect the next judge point in the hold or arc.
-        /// </summary>
-        /// <returns>
-        /// <c>false</c> if the hold has reached its end
+        /// The number <c>count</c> of judge points from <c>time</c> to <c>ctime</c>
         /// </returns>
         [BurstCompile(FloatMode = FloatMode.Fast)]
-        public bool UpdateJudgePointCachePure(int ctime, out int count)
+        public int UpdateJudgePointCache(int ctime)
         {
-            count = math.max(1, (ctime - time) / timeIncrement);
-            time += timeIncrement * count;
+            if (time > endTime) return 0;
+            if (ctime > endTime) ctime = endTime;
 
-            return time + timeIncrement < endTime;
+            int count = (ctime - time) / timeIncrement;
+            if (count >= 0)
+            {
+                time += timeIncrement * (count + 1);
+                return count + 1;
+            }
+            return 0;
         }
     }
 }

@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.37311918, g: 0.3807398, b: 0.35872716, a: 1}
+  m_IndirectSpecularColor: {r: 0.37311953, g: 0.38074014, b: 0.3587274, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -5145,7 +5145,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   textParticlePoolSize: 100
   tapParticlePoolSize: 50
-  arcParticlePoolSize: 10
   textJudgeMaterials:
   - {fileID: 2100000, guid: e721c71e3c78b104087159df33602562, type: 2}
   - {fileID: 2100000, guid: f7655ef33b463fe4e966141c3dc67a26, type: 2}
@@ -5154,8 +5153,6 @@ MonoBehaviour:
   textParticleBase: {fileID: 2168658041522373843, guid: e315c788f3d4ac144a2bdce65a0ba334,
     type: 3}
   tapParticleBase: {fileID: 4294837800304559334, guid: 262362bfbb58c214da105f4aa68f70cd,
-    type: 3}
-  arcParticleBase: {fileID: 2168658041522373843, guid: e315c788f3d4ac144a2bdce65a0ba334,
     type: 3}
   laneParticles:
   - {fileID: 1970482738}

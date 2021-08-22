@@ -11,7 +11,7 @@ namespace ArcCore.Math
     public static class Projection
     {
         public const float TAN_EPSILON = 0.01f; //Equal to tan(0.01 rad) //Go learn trig again floof, tan(x) ~= x
-        public const float Y_MAX_FOR_TRACK = 1.9f; //Equal to Convert.GetWorldY(0.2f)
+        public const float Y_MAX_FOR_TRACK = 3.25f; //Equal to Convert.GetWorldY(0.2f)
 
         [BurstCompile(FloatMode = FloatMode.Fast)]
         public static (float2? exactInput, Rect2D? inputPlane, int track) PerformInputRaycast(Ray cameraRay)
@@ -90,11 +90,8 @@ namespace ArcCore.Math
                     track = Conversion.XToTrack(lProjPosX);
                 }
 
-                //Reset to "no value" if track is invalid
-                if(track > 4 || track < 1)
-                {
-                    track = -1;
-                }
+                track = track > 4 ? 4 : track;
+                track = track < 1 ? 1 : track;
             }
 
             //RETURN

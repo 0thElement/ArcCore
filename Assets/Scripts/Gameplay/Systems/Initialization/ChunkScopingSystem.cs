@@ -15,13 +15,11 @@ namespace ArcCore.Gameplay.Systems
     {
         private int currentTime;
         private int nextMakeAppearUpdateTime = int.MinValue;
-        private int nextMakeDisappearUpdateTime = int.MinValue;
         private EntityQueryDesc makeAppearQueryDesc;
         private EntityQuery makeAppearQuery;
-        private EntityQuery makeDisappearQuery;
+        private EntityManager entityManager;
         private bool firstFrame = true;
         private EntityQuery appearTimeChangedQuery;
-        private EntityQuery disappearTimeChangedQuery;
 
         protected override void OnCreate()
         {
@@ -34,8 +32,6 @@ namespace ArcCore.Gameplay.Systems
             };
             makeAppearQuery = GetEntityQuery(makeAppearQueryDesc);
 
-            makeDisappearQuery = GetEntityQuery(ComponentType.ChunkComponent<ChunkDisappearTime>());
-
             var appearTimeChangedQueryDesc = new EntityQueryDesc()
             {
                 None = new ComponentType[] {typeof(Prefab), typeof(PastJudgeRange)},
@@ -44,13 +40,7 @@ namespace ArcCore.Gameplay.Systems
             appearTimeChangedQuery = GetEntityQuery(appearTimeChangedQueryDesc);
             appearTimeChangedQuery.SetChangedVersionFilter(typeof(AppearTime));
 
-            var disappearTimeChangedQueryDesc = new EntityQueryDesc()
-            {
-                None = new ComponentType[] {typeof(Prefab), typeof(Disabled)},
-                All = new ComponentType[] {ComponentType.ChunkComponent<ChunkDisappearTime>(), typeof(DisappearTime)}
-            };
-            disappearTimeChangedQuery = GetEntityQuery(disappearTimeChangedQueryDesc);
-            disappearTimeChangedQuery.SetChangedVersionFilter(typeof(DisappearTime));
+            entityManager = World.EntityManager;
         }
 
         protected override void OnStartRunning()
@@ -89,32 +79,6 @@ namespace ArcCore.Gameplay.Systems
             }
             chunks.Dispose();
 
-            queryDesc = new EntityQueryDesc()
-            {
-                All = new ComponentType[] { typeof(DisappearTime) },
-                Options = EntityQueryOptions.IncludeDisabled
-            };
-            query = entityManager.CreateEntityQuery(new EntityQueryDesc[] { queryDesc });
-            chunks = query.CreateArchetypeChunkArray(Allocator.Persistent);
-
-            foreach (var chunk in chunks)
-            {
-                var disappearTimeType = entityManager.GetArchetypeChunkComponentType<DisappearTime>(true);
-                NativeArray<DisappearTime> disappearTimeList = chunk.GetNativeArray<DisappearTime>(disappearTimeType);
-
-                int max = disappearTimeList[0].value;
-                foreach (DisappearTime disappearTime in disappearTimeList)
-                {
-                    if (max < disappearTime.value) max = disappearTime.value;
-                }
-
-                var chunkDisappearTimeType = entityManager.GetArchetypeChunkComponentType<ChunkDisappearTime>(false);
-                chunk.SetChunkComponentData<ChunkDisappearTime>(chunkDisappearTimeType, new ChunkDisappearTime()
-                {
-                    Value = max
-                });
-            }
-            chunks.Dispose();
         }
         protected override void OnUpdate()
         {
@@ -128,7 +92,6 @@ namespace ArcCore.Gameplay.Systems
             }
             currentTime = PlayManager.Conductor.receptorTime;
             if (currentTime >= nextMakeAppearUpdateTime) MakeNoteChunksAppear();
-            if (currentTime >= nextMakeDisappearUpdateTime) MakeNotesChunksDisappear();
         }
 
         private void MakeNoteChunksAppear()
@@ -157,29 +120,6 @@ namespace ArcCore.Gameplay.Systems
             chunks.Dispose();
 
             nextMakeAppearUpdateTime = minNextAppear;
-        }
-        private void MakeNotesChunksDisappear()
-        {
-            NativeArray<ArchetypeChunk> chunks = makeDisappearQuery.CreateArchetypeChunkArray(Allocator.TempJob);
-
-            int minNextDisappear = int.MaxValue;
-            for (int i = 0; i < chunks.Length; i++)
-            {
-                int disappearTime = World.EntityManager.GetChunkComponentData<ChunkDisappearTime>(chunks[i]).Value;
-
-                if (currentTime >= disappearTime)
-                {
-                    var acct = World.EntityManager.GetArchetypeChunkComponentType<DisappearTime>(false);
-                    chunks[i].GetNativeArray(acct);
-                }
-                else if (disappearTime < minNextDisappear) minNextDisappear = disappearTime;
-            }
-
-            World.EntityManager.AddComponent<Disappeared>(disappearTimeChangedQuery);
-            World.EntityManager.AddComponent<Disabled>(disappearTimeChangedQuery);
-            chunks.Dispose();
-
-            nextMakeDisappearUpdateTime = minNextDisappear;
         }
     }
 }
