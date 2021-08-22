@@ -11,5 +11,11 @@ namespace ArcCore.Serialization
                 new JsonPresetConverter<DifficultyType>(DifficultyType.Presets),
                 new JsonColorConverter()
             };
+
+        public static JsonConverter[] Settings
+            => new JsonConverter[]
+            {
+                new JsonColorConverter()
+            };
     }
 }

@@ -30,8 +30,6 @@ namespace ArcCore.Gameplay.Behaviours
             Late
         }
 
-        public static ParticlePool Instance { get; private set; }
-
         /// <summary>
         /// The size of the text particle pool.
         /// </summary>
@@ -135,8 +133,6 @@ namespace ArcCore.Gameplay.Behaviours
 
         private void Awake()
         {
-            Instance = this;
-
             SetupPoolArray(ref textParticlePool, textParticlePoolSize, textParticleBase);
             SetupPoolArray(ref tapParticlePool, tapParticlePoolSize, tapParticleBase);
         }
@@ -207,7 +203,7 @@ namespace ArcCore.Gameplay.Behaviours
             }
             else
             {
-                if (!InputManager.Instance.tracksHeld[lane+1])
+                if (PlayManager.InputHandler.tracksHeld[lane+1] <= 0)
                 {
                     DisableLane(lane);
                 }

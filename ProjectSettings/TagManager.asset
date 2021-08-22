@@ -13,7 +13,7 @@ TagManager:
   - UI
   - 
   - 
-  - 
+  - Shutter
   - 
   - 
   - 
@@ -43,4 +43,7 @@ TagManager:
     locked: 0
   - name: UI
     uniqueID: 1076155837
+    locked: 0
+  - name: Shutter
+    uniqueID: 3699498405
     locked: 0

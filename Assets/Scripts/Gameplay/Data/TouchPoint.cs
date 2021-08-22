@@ -2,6 +2,7 @@
 using Unity.Mathematics;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace ArcCore.Gameplay.Data
 {

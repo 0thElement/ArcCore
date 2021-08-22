@@ -1,5 +1,4 @@
 using ArcCore.Gameplay.Behaviours;
-using ArcCore.Gameplay.Behaviours.EntityCreation;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Tags;
 using Unity.Entities;
@@ -8,26 +7,22 @@ using Unity.Transforms;
 using ArcCore.Gameplay.Data;
 using UnityEngine;
 
-namespace ArcCore.Gameplay.Systems.Judgement
+namespace ArcCore.Gameplay.Systems
 {
     [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(TappableJudgeSystem))]
-
     public class HoldHighlightSystem : SystemBase
     {
-        private EndSimulationEntityCommandBufferSystem entityCommandBufferSystem;
-        protected override void OnCreate()
-        {
-            entityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
-        }
         protected override void OnUpdate()
         {
-            NTrackArray<ArcCore.Gameplay.Data.MulticountBool> tracksHeld = InputManager.Instance.tracksHeld;
+            if (!PlayManager.IsUpdatingAndActive) return;
             RenderMesh initialRenderMesh = HoldEntityCreator.Instance.InitialRenderMesh;
             RenderMesh highlightRenderMesh = HoldEntityCreator.Instance.HighlightRenderMesh;
             RenderMesh grayoutRenderMesh = HoldEntityCreator.Instance.GrayoutRenderMesh;
             int currentTime = Conductor.Instance.receptorTime;
+            var tracksHeld = PlayManager.InputHandler.tracksHeld;
 
-            var commandBuffer = entityCommandBufferSystem.CreateCommandBuffer();
+            RenderMesh highlightRenderMesh = PlayManager.HighlightHold;
+            RenderMesh grayoutRenderMesh = PlayManager.GrayoutHold;
 
             Entities
                 .WithSharedComponentFilter<RenderMesh>(grayoutRenderMesh)
@@ -64,7 +59,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 {
                     if (tracksHeld[lane.lane] <= 0 && time.value <= currentTime - Constants.FarWindow)
                     {
-                        commandBuffer.SetSharedComponent<RenderMesh>(en, grayoutRenderMesh);
+                        commandBuffer.SetSharedComponent(en, grayoutRenderMesh);
                     }
                     else if (tracksHeld[lane.lane])
                     {

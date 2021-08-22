@@ -1,5 +1,6 @@
 ﻿using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Chunk;
+using ArcCore.Math;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,12 +9,12 @@ using System.Threading.Tasks;
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
+using System.Reflection;
 
 namespace ArcCore.Utilities.Extensions
 {
     public static class ECSExtensions
     {
-        #region void ?.DisableEntity(Entity), void ?.EnableEntity(Entity)
         public static void DisableEntity(this EntityManager em, Entity entity)
         {
             em.AddComponent<Disabled>(entity);
@@ -32,9 +33,7 @@ namespace ArcCore.Utilities.Extensions
         {
             ec.RemoveComponent<Disabled>(entity);
         }
-        #endregion
 
-        #region Entity GameObjectConversionSettings.ConvertTo???(GameObject)
         public static Entity ConvertToEntity(this GameObjectConversionSettings gocSettings, GameObject obj)
             => GameObjectConversionUtility.ConvertGameObjectHierarchy(obj, gocSettings);
 
@@ -48,12 +47,20 @@ namespace ArcCore.Utilities.Extensions
             entityManager.AddComponent<Disabled>(en);
             return en;
         }
-        #endregion
 
         public static void ExposeLocalToWorld(this EntityManager entityManager, Entity entity)
         {
             entityManager.RemoveComponent<Translation>(entity);
             entityManager.RemoveComponent<Rotation>(entity);
+        }
+
+        public static void SetComponents(this EntityManager entityManager, Entity entity, params IComponentData[] components)
+        {
+            var setComp = typeof(EntityManager).GetMethod("SetComponentData", BindingFlags.Public | BindingFlags.Instance);
+            foreach (var component in components)
+            {
+                setComp.MakeGenericMethod(component.GetType()).Invoke(entityManager, new object[] { entity, component });
+            }
         }
     }
 }

@@ -13,6 +13,10 @@ namespace ArcCore.Serialization
 
     public static class FileManagement
     {
+        public static string currentChartDirectory;
+        public static string GetRealPathFromUserInput(string input)
+            => Path.Combine(input[0] == FileStatics.globalMarker ? FileStatics.GlobalsPath : currentChartDirectory, input);
+
         public static Dictionary<string, int> globalsMap;
         public static Dictionary<string, LevelInfoInternal> chartsMap;
         public static Dictionary<string, PackInfo> packsMap;
@@ -26,6 +30,39 @@ namespace ArcCore.Serialization
         public static void OnAppStart()
         {
             // SETUP FILES IF NON-EXISTENT //
+
+            //settings json
+            if (!File.Exists(FileStatics.SettingsJsonPath))
+            {
+                GameSettings.Instance = GameSettings.GetDefault();
+                using (var fs = File.CreateText(FileStatics.SettingsJsonPath))
+                {
+                    var settings = new JsonSerializerSettings
+                    {
+                        Converters = Converters.Settings
+                    };
+                    var serializer = JsonSerializer.Create(settings);
+                    var writer = new JsonTextWriter(fs);
+
+                    serializer.Serialize(writer, GameSettings.Instance);
+                }
+            }
+            else
+            {
+                using (var fs = File.OpenText(FileStatics.SettingsJsonPath))
+                {
+                    var settings = new JsonSerializerSettings
+                    {
+                        Converters = Converters.Settings
+                    };
+                    var serializer = JsonSerializer.Create(settings);
+                    var reader = new JsonTextReader(fs);
+
+                    GameSettings.Instance = serializer.Deserialize<GameSettings>(reader);
+                }
+            }
+
+            GameSettings.FinalizeInstance();
 
             //globals
             if (!Directory.Exists(FileStatics.GlobalsPath))
@@ -68,7 +105,11 @@ namespace ArcCore.Serialization
             {
                 using (var fs = File.OpenText(FileStatics.ChartsMapPath))
                 {
-                    var serializer = JsonSerializer.Create(new JsonSerializerSettings { Converters = Converters.Levels });
+                    var settings = new JsonSerializerSettings
+                    {
+                        Converters = Converters.Levels
+                    };
+                    var serializer = JsonSerializer.Create(settings);
                     var reader = new JsonTextReader(fs);
 
                     chartsMap = serializer.Deserialize<Dictionary<string, LevelInfoInternal>>(reader);

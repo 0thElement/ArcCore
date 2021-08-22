@@ -7,12 +7,15 @@ namespace ArcCore.Serialization
 {
     public static class FileStatics
     {
+        public const char globalMarker = '$';
+
         public const string Globals = "globals";
         public const string Charts = "charts";
         public const string Packs = "packs";
         public const string Temp = "__temp";
 
         public const string MapJson = "__map.json";
+        public const string SettingsJson = "__settings.json";
 
         public static string GetPersistentSubdir(string path)
             => Path.Combine(Application.persistentDataPath, path);
@@ -21,6 +24,7 @@ namespace ArcCore.Serialization
         public static readonly string ChartsPath = GetPersistentSubdir(Charts);
         public static readonly string PacksPath = GetPersistentSubdir(Packs);
         public static readonly string TempPath = GetPersistentSubdir(Temp);
+        public static readonly string SettingsJsonPath = GetPersistentSubdir(SettingsJson);
 
         public static readonly string GlobalsMapPath = Path.Combine(GlobalsPath, MapJson);
         public static readonly string ChartsMapPath = Path.Combine(ChartsPath, MapJson);

@@ -10,25 +10,21 @@ using Unity.Mathematics;
 using ArcCore.Gameplay.Utility;
 using ArcCore.Utilities.Extensions;
 
-namespace ArcCore.Gameplay.Systems.Judgement
+namespace ArcCore.Gameplay.Systems
 {
-    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(ParticleJudgeSystem))]
+
+    [UpdateInGroup(typeof(JudgementSystemGroup))]
     public class ExpirableJudgeSystem : SystemBase
     {
-        private EndSimulationEntityCommandBufferSystem entityCommandBufferSystem;
-        protected override void OnCreate()
-        {
-            entityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
-        }
         protected override void OnUpdate()
         {
-            if (!GameState.isChartMode) return;
+            if (!PlayManager.IsUpdatingAndActive) return;
 
-            var tracker = ScoreManager.Instance.tracker;
-            int currentTime = Conductor.Instance.receptorTime;
+            var tracker = PlayManager.ScoreHandler.tracker;
+            int currentTime = PlayManager.ReceptorTime;
 
-            var commandBuffer = entityCommandBufferSystem.CreateCommandBuffer();
-            var particleBuffer = ParticleJudgeSystem.particleBuffer;
+            var commandBuffer = PlayManager.CommandBuffer;
+            var particleBuffer = PlayManager.ParticleBuffer;
 
             //- TAPS -//
             Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime, ArcTapShadowReference>().ForEach(
@@ -36,8 +32,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 {
                     if (currentTime - Constants.FarWindow > chartTime.value)
                     {
-                        commandBuffer.DisableEntity(en);
                         commandBuffer.AddComponent<PastJudgeRange>(en);
+                        commandBuffer.DisableEntity(en);
                         tracker.AddJudge(JudgeType.Lost);
 
                         particleBuffer.PlayTapParticle(
@@ -59,7 +55,6 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         commandBuffer.DisableEntity(sdRef.value);
                         commandBuffer.AddComponent<PastJudgeRange>(sdRef.value);
                         commandBuffer.DisableEntity(en);
-                        commandBuffer.AddComponent<PastJudgeRange>(en);
                         tracker.AddJudge(JudgeType.Lost);
 
                         particleBuffer.PlayTapParticle(
@@ -147,9 +142,9 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         commandBuffer.AddComponent<PastJudgeRange>(en);
                     }
                 }
-            ).Run();
+            ).Run();*/
 
-            ScoreManager.Instance.tracker = tracker;
+            PlayManager.ScoreHandler.tracker = tracker;
         }
     }
 }
