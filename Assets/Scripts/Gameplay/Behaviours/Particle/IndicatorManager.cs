@@ -34,24 +34,24 @@ namespace ArcCore.Gameplay.Behaviours
             int currentTime = Conductor.Instance.receptorTime;  
 
             // If for whatever reason the chart jumped back in time, update indexcache and reenable indicator
-            while (indexCache > 0 && currentTime < indicatorList[indexByDestroyTime[indexCache-1]].endTime)
+            while (indexCache > 0 && currentTime < indicatorList[indexByDestroyTime[indexCache-1]].EndTime)
             {
                 indicatorList[indexByDestroyTime[indexCache]].Disable();
                 indexCache--;
             }
 
             // Progress the list and disable anything that needs to be disabled
-            while (indexCache < indicatorList.Count - 1 && currentTime >= indicatorList[indexByDestroyTime[indexCache]].endTime)
+            while (indexCache < indicatorList.Count - 1 && currentTime >= indicatorList[indexByDestroyTime[indexCache]].EndTime)
             {
                 indicatorList[indexByDestroyTime[indexCache]].Disable();
                 indexCache++;
             }
 
             // This is really stupid
-            if (currentTime > indicatorList[indexByDestroyTime[0]].endTime)
+            if (currentTime > indicatorList[indexByDestroyTime[0]].EndTime)
                 indicatorList[indexByDestroyTime[0]].Disable();
 
-            if (currentTime > indicatorList[indexByDestroyTime[indicatorList.Count - 1]].endTime)
+            if (currentTime > indicatorList[indexByDestroyTime[indicatorList.Count - 1]].EndTime)
                 indicatorList[indexByDestroyTime[indicatorList.Count - 1]].Disable();
         }
 
@@ -68,7 +68,7 @@ namespace ArcCore.Gameplay.Behaviours
             indexByDestroyTime = new List<int>(indicatorList.Count);
             for (int i=0; i<indicatorList.Count; i++) indexByDestroyTime.Add(i);
 
-            indexByDestroyTime.Sort((a, b) => indicatorList[a].endTime.CompareTo(indicatorList[b].endTime));
+            indexByDestroyTime.Sort((a, b) => indicatorList[a].EndTime.CompareTo(indicatorList[b].EndTime));
 
             if (indicatorList.Count > 0) isInitialized = true;
         }

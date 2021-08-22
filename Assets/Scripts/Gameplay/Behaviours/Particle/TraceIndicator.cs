@@ -5,13 +5,13 @@ namespace ArcCore.Gameplay.Behaviours
 {
     public class TraceIndicator : IIndicator
     {
-        public int endTime {get; set;}
+        public int EndTime {get; set;}
 
         private Transform transform;
 
         public TraceIndicator(GameObject gameObject, int endTime)
         {
-            this.endTime = endTime;
+            this.EndTime = endTime;
             gameObject.SetActive(false);
             transform = gameObject.GetComponent<Transform>();
         }

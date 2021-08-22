@@ -20,8 +20,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
         //Was held before
         Lifted
     }
-    [UpdateInGroup(typeof(JudgementSystemGroup))]
 
+    [UpdateInGroup(typeof(JudgementSystemGroup))]
     public class ArcCollisionCheckSystem : SystemBase
     {
 

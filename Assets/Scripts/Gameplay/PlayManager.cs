@@ -83,15 +83,23 @@ namespace ArcCore.Gameplay
         public GameObject traceNotePrefab;
         public GameObject headTraceNotePrefab;
         public GameObject traceShadowPrefab;
+        public GameObject traceApproachIndicatorPrefab;
         public Material traceMaterial;
         public Material traceShadowMaterial;
         public Mesh traceMesh;
         public Mesh traceHeadMesh;
         public Mesh traceShadowMesh;
 
+        [Header("Indicator Management")]
+        public IndicatorManager arcIndicatorManager;
+        public IndicatorManager traceIndicatorManager;
+
+        public static IndicatorManager ArcIndicatorManager => instance.arcIndicatorManager;
+        public static IndicatorManager TraceIndicatorManager => instance.traceIndicatorManager;
+
         public TraceEntityCreator GetTraceEntityCreator()
             => new TraceEntityCreator(
-                world, traceNotePrefab, headTraceNotePrefab,
+                world, traceNotePrefab, headTraceNotePrefab, traceApproachIndicatorPrefab,
                 traceShadowPrefab, traceMaterial, traceShadowMaterial,
                 traceMesh, traceHeadMesh, traceShadowMesh);
 

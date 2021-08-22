@@ -83,12 +83,6 @@ namespace ArcCore.Gameplay.Behaviours
         /// </summary>
         [HideInInspector]
         public int chartOffset;
-
-        
-
-        // TODO: TEMPORARY, WILL BE MOVED TO GAME MANAGER ON MERGE
-        [SerializeField] public IndicatorManager ArcIndicatorManager;
-        [SerializeField] public IndicatorManager TraceIndicatorManager;
         
         /// <summary>
         /// The full offset of the current chart, including user settings.

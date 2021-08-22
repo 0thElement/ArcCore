@@ -5,7 +5,7 @@ namespace ArcCore.Gameplay.Behaviours
 {
     public class ArcIndicator : IIndicator
     {
-        public int endTime {get; set;}
+        public int EndTime {get; set;}
 
         private ParticleSystem particle;
         private SpriteRenderer diamond;
@@ -14,7 +14,7 @@ namespace ArcCore.Gameplay.Behaviours
 
         public ArcIndicator(GameObject diamondObj, GameObject particleObj, int endTime)
         {
-            this.endTime = endTime;
+            this.EndTime = endTime;
             diamondObj.SetActive(false);
             particleObj.SetActive(false);
 
