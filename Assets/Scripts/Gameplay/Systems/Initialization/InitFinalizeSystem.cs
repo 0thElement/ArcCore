@@ -2,7 +2,7 @@
 
 namespace ArcCore.Gameplay.Systems
 {
-    [UpdateInGroup(typeof(CustomInitializationSystemGroup), OrderLast = true)]
+    [UpdateInGroup(typeof(CustomInitializationSystemGroup)), UpdateAfter(typeof(JudgeEntitiesScopingSystem))]
     public class InitFinalizeSystem : FinalizeSystemBase 
     {}
 }

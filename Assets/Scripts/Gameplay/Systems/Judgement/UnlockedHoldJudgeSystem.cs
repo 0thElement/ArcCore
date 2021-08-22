@@ -12,7 +12,7 @@ using ArcCore.Math;
 
 namespace ArcCore.Gameplay.Systems
 {
-    [UpdateInGroup(typeof(JudgementSystemGroup))]
+    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(HoldHighlightSystem))]
     public class UnlockedHoldJudgeSystem : SystemBase
     {
         protected override void OnUpdate()

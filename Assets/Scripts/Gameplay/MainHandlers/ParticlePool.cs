@@ -218,7 +218,7 @@ namespace ArcCore.Gameplay.Behaviours
             }
             else
             {
-                if (!PlayManager.InputHandler.tracksHeld[lane+1])
+                if (PlayManager.InputHandler.tracksHeld[lane+1] <= 0)
                 {
                     DisableLane(lane);
                 }

@@ -166,8 +166,12 @@ namespace ArcCore.Gameplay
         public static void PlaybackBuffer() => instance.PlaybackBufferInstance();
         private void PlaybackBufferInstance()
         {
-            if (!commandBuffer.IsCreated || !commandBuffer.ShouldPlayback) return;
-            commandBuffer.Playback(world.EntityManager);
+            if (commandBuffer.IsCreated)
+            { 
+                if(commandBuffer.ShouldPlayback) 
+                    commandBuffer.Playback(world.EntityManager);
+                commandBuffer.Dispose();
+            }
         }
 
         public static void CreateParticleBuffer() => instance.CreateParticleBufferInstance();
@@ -179,8 +183,11 @@ namespace ArcCore.Gameplay
         public static void PlaybackParticleBuffer() => instance.PlaybackParticleBufferInstance();
         private void PlaybackParticleBufferInstance()
         {
-            if (!particleBuffer.IsCreated) return;
-            particleBuffer.Playback();
+            if (particleBuffer.IsCreated)
+            {
+                particleBuffer.Playback();
+                particleBuffer.Dispose();
+            }
         }
 
         void OnDestroy()

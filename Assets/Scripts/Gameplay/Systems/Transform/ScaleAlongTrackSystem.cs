@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace ArcCore.Gameplay.Systems
 {
-    [UpdateInGroup(typeof(CustomTransformSystemGroup))]
+    [UpdateInGroup(typeof(CustomTransformSystemGroup)), UpdateAfter(typeof(MovingNotesSystem))]
     public class ScaleAlongTrackSystem : SystemBase
     {
         protected override void OnUpdate()

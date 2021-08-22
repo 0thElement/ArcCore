@@ -2,7 +2,7 @@
 
 namespace ArcCore.Gameplay.Systems
 {
-    [UpdateInGroup(typeof(JudgementSystemGroup), OrderLast = true)]
+    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(UnlockedHoldJudgeSystem))]
     public class JudgeFinalizeSystem : FinalizeSystemBase
     {
         protected override bool DoParticle => true;

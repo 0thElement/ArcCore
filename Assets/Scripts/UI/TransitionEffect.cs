@@ -1,97 +1,128 @@
 ﻿using ArcCore.Utilities;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 using UnityEngine.UI;
 using UnityCoroutineUtils;
 
 namespace ArcCore.UI
 {
+    [RequireComponent(typeof(Animation))]
+    public class TransitionAnimationInterface : MonoBehaviour
+    {
+        public AnimationClip transitionIn, transitionOut;
+        private const string InStr = "_In", OutStr = "_Out";
+
+        private new Animation animation;
+        private bool isSetup;
+
+        private void EnsureAnimationSetup()
+        {
+            if (isSetup) return;
+
+            animation.AddClip(transitionIn, InStr);
+            animation.AddClip(transitionOut, OutStr);
+            isSetup = true;
+        }
+
+        public void TransitionIn()
+        {
+            EnsureAnimationSetup();
+            animation.Play(InStr);
+        }
+        public void TransitionOut()
+        {
+            EnsureAnimationSetup();
+            animation.Play(OutStr);
+        }
+        public bool IsPlaying 
+        {
+            get
+            {
+                EnsureAnimationSetup();
+                return animation.IsPlaying(InStr) || animation.isPlaying(OutStr);
+            }
+        }
+    }
 
     public class TransitionEffect : MonoBehaviour
     {
         public static TransitionEffect Instance { get; private set; }
+        public static bool InTransition => Instance.inTransition;
 
-        public static event Action OnStartTransitionIn;
-        public static event Action OnEndTransitionIn;
-        public static event Action OnStartTransitionOut;
-        public static event Action OnEndTransitionOut;
-
-        public static event Action<Timer> OnMidTransitionIn;
-        public static event Action<Timer> OnMidTransitionOut;
-
-        public static bool StartTransitionIn(float timeSec = BaseTimeOfTransition)
+        private IEnumerator middleCoroutine = null;
+        private bool inTransition = false;
+        
+        [Serializable]
+        private struct AnimationEntry
         {
-            if (InTransitionMode || IsMidTransition)
-                return false;
-
-            Instance.gameObject.SetActive(true);
-
-            Instance.autoContinue = false;
-            Instance.CTransitionIn(timeSec).Start(Instance);
-
-            return true;
-        }
-        public static bool StartMiddleCoroutine(IEnumerator coroutine)
-        {
-            if (!InTransitionMode || IsMidTransition)
-                return false;
-
-            Instance.gameObject.SetActive(true);
-
-            Instance.autoContinue = false;
-            coroutine.Start(Instance);
-
-            return true;
-        }
-        public static bool StartTransitionOut(float timeSec = BaseTimeOfTransition)
-        {
-            if (!InTransitionMode || IsMidTransition)
-                return false;
-
-            Instance.gameObject.SetActive(true);
-
-            Instance.autoContinue = false;
-            Instance.CTransitionOut(timeSec).Start(Instance);
-
-            return true;
+            public string name;
+            public TransitionAnimationInterface animation;
+            public bool isActiveByDefault;
         }
 
-        public static bool AutoTransition(IEnumerator middleRoutine = null, float timeSec = BaseTimeOfTransition)
-        {
-            if (InTransitionMode || IsMidTransition)
-                return false;
+        [SerializeField]
+        private AnimationEntry[] entries;
+        private Dictionary<string, TransitionAnimationInterface> animatorDict;
 
-            Instance.gameObject.SetActive(true);
-
-            Instance.autoContinue = true;
-            Instance.autoRoutine = middleRoutine;
-            Instance.CTransitionIn(timeSec).Start(Instance);
-
-            return true;
-        }
-        public static bool AutoTransition(Action middleRoutine, float timeSec = BaseTimeOfTransition)
-            => AutoTransition(Co.action(middleRoutine), timeSec);
-
-        public static bool IsMidTransition => Instance._isMidTransition;
-        public static bool InTransitionMode => Instance._inTransitionMode;
-
-        private bool _isMidTransition;
-        private bool _inTransitionMode;
-
-        public const float BaseTimeOfTransition = 0.5f;
-
-        [SerializeField] private Image img;
-
-        private IEnumerator autoRoutine;
-        private bool autoContinue;
+        private readonly List<TransitionAnimationInterface> transitionAnimators;
 
         public void Awake()
         {
             DontDestroyOnLoad(this);
             Instance = this;
 
-            gameObject.SetActive(false);
+            gameObject.SetActive(false); 
+            
+            transitionAnimators = new List<TransitionAnimationInterface>();
+
+            animatorDict = new Dictionary<string, Animator>();
+            foreach(var entry in entries)
+            {
+                if(entry.isActiveByDefault)
+                {
+                    transitionAnimators.Add(entry.animation);
+                }
+                animatorDict.Add(entry.name, entry.animation);
+            }
+
+            entries = null;
+        }
+
+        public static void SetTransitionAnimators(string[] transitionAnimatorNames)
+            => Instance.SetTransitionAnimatorsInstance(transitionAnimatorNames);
+        private void SetTransitionAnimatorsInstance(string[] transitionAnimatorNames) 
+        {
+            if (inTransition)
+                throw new Exception("Cannot set transion animators while currently in transition!");
+
+            transitionAnimators.Clear();
+
+            foreach(var name in transitionAnimatorNames)
+            {
+                if(!animatorDict.ContainsKey(name)) 
+                    throw new Exception("Unfound animators provided to SetTransitionAnimators.");
+
+                transitionAnimators.Add(animatorDict[name]);
+            }
+        }
+
+        public static void SetMiddleCoroutine(IEnumerator coroutine)
+        {
+            if (Instance.inTransition)
+                throw new Exception("Cannot set middle coroutine while currently in transition!");
+            Instance.middleCoroutine = coroutine;
+        }
+        public static void SetMiddleCoroutine(Action coroutine)
+        {
+            IEnumerator Coroutine()
+            {
+                coroutine();
+                yield break;
+            }
+            SetMiddleCoroutine(Coroutine());
         }
 
         public void OnDestroy()
@@ -99,84 +130,40 @@ namespace ArcCore.UI
             Instance = null;
         }
 
-        private IEnumerator CTransitionIn(float timeSec) 
-        => Co.sequence
-        (
-            Co.action(() => 
+        public static void StartTransition()
+            => Instance.StartTransitionInstance();
+        public void StartTransitionInstance()
+        {
+            gameObject.SetActive(true);
+            inTransition = true;
+            CTransition().Start(this);
+        }
+        private IEnumerator CTransition()
+        {
+            foreach (var anim in transitionAnimators)
             {
-                _isMidTransition = true;
+                anim.TransitionIn();
+            }
 
-                OnStartTransitionIn?.Invoke();
-            }),
-
-            Co.procedure(TimeSpan.FromSeconds(timeSec), timer => 
+            while(transitionAnimators.Any(v => v.IsPlaying))
             {
-                //Default behaviour
-                img.color = new Color(img.color.r, img.color.g, img.color.b, timer.PercentComplete);
-                img.enabled = true;
+                yield return null;
+            }
 
-                //Custom behaviour
-                OnMidTransitionIn?.Invoke(timer);
-            }),
+            yield return middleCoroutine;
 
-            Co.action(() =>
+            foreach (var anim in transitionAnimators)
             {
-                img.color = Color.black;
+                anim.TransitionOut();
+            }
 
-                _inTransitionMode = true;
-                _isMidTransition = false;
-
-                OnEndTransitionIn?.Invoke();
-
-                if (autoContinue)
-                {
-                    Co.sequence
-                    (
-                        autoRoutine.or_none(),
-
-                        Co.action(() => 
-                        { 
-                            autoRoutine = null; 
-                        }),
-
-                        CTransitionOut(timeSec)
-                    )
-                    .Start(this);
-                }
-            })
-        );
-
-        private IEnumerator CTransitionOut(float timeSec) 
-        => Co.sequence
-        (
-            Co.action(() =>
+            while (transitionAnimators.Any(v => v.IsPlaying))
             {
-                _isMidTransition = true;
-                _inTransitionMode = false;
+                yield return null;
+            }
 
-                OnStartTransitionOut?.Invoke();
-            }),
-
-            Co.procedure(TimeSpan.FromSeconds(timeSec), timer => 
-            { 
-                //Default behaviour
-                img.color = new Color(img.color.r, img.color.g, img.color.b, 1 - timer.PercentComplete);
-                img.enabled = true;
-
-                //Custom behaviour
-                OnMidTransitionOut?.Invoke(timer);
-            }),
-
-            Co.action(() =>
-            {
-                img.color = Color.clear;
-
-                _isMidTransition = false;
-
-                gameObject.SetActive(false);
-
-                OnEndTransitionOut?.Invoke();
-            })
-        );
+            inTransition = false;
+            gameObject.SetActive(false);
+        }
     }
 }

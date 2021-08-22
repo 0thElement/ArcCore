@@ -25,7 +25,7 @@ namespace ArcCore.Math
 
             //Edge case: tap will never collide with plane
             //Multiplication allows for simultaneous checks for no z difference between camera and origin, and invalid z signs
-            if (origin.z * dir.z > 0)
+            if (origin.z * dir.z >= 0)
             {
                 inputPlane = null;
                 exactInput = null;
@@ -76,7 +76,7 @@ namespace ArcCore.Math
             //Check if the tap is too high on the input plane for a track tap
             if (
                 (!inputPlane.HasValue || inputPlane.Value.min.y < Y_MAX_FOR_TRACK)
-                && origin.y * cameraRay.direction.y < 0
+                && origin.y * cameraRay.direction.y <= 0
                 )
             {
                 //Cast ray onto xz plane at y=0

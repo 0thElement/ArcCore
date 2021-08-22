@@ -2,7 +2,7 @@
 
 namespace ArcCore.Gameplay.Systems
 {
-    [UpdateInGroup(typeof(CustomTransformSystemGroup), OrderLast = true)]
+    [UpdateInGroup(typeof(CustomTransformSystemGroup)), UpdateAfter(typeof(ScaleAlongTrackSystem))]
     public class TransformFinalizeSystem : FinalizeSystemBase 
     {}
 }

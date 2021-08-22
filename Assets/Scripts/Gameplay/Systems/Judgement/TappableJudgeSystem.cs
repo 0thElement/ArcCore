@@ -13,7 +13,7 @@ using ArcCore.Utilities.Extensions;
 
 namespace ArcCore.Gameplay.Systems
 {
-    [UpdateInGroup(typeof(JudgementSystemGroup))]
+    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(ExpirableJudgeSystem))]
     public class TappableJudgeSystem : SystemBase
     {
         public static readonly float2 arctapBoxExtents = new float2(2f, 1.75f);

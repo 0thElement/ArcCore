@@ -9,7 +9,7 @@ using ArcCore.Gameplay.Data;
 
 namespace ArcCore.Gameplay.Systems
 {
-    [UpdateInGroup(typeof(JudgementSystemGroup))]
+    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(TappableJudgeSystem))]
     public class HoldHighlightSystem : SystemBase
     {
         protected override void OnUpdate()
