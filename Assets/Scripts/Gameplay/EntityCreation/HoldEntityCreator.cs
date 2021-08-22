@@ -26,13 +26,13 @@ namespace ArcCore.Gameplay.EntityCreation
             holdNoteEntityPrefab = gocs.ConvertToNote(holdNotePrefab, em);
         }
 
-        public void CreateEntitiesAndGetMeshes(IChartParser parser, out RenderMesh highlight, out RenderMesh grayout)
+        public void CreateEntitiesAndGetMeshes(IChartParser parser, out RenderMesh highlight, out RenderMesh grayout, out RenderMesh initial)
         {
-            GetRenderMeshes(out highlight, out grayout);
+            GetRenderMeshes(out highlight, out grayout, out initial);
             CreateEntities(parser);
         }
 
-        public void GetRenderMeshes(out RenderMesh highlight, out RenderMesh grayout)
+        public void GetRenderMeshes(out RenderMesh highlight, out RenderMesh grayout, out RenderMesh initial)
         {
             RenderMesh holdRenderMesh = em.GetSharedComponentData<RenderMesh>(holdNoteEntityPrefab);
 
@@ -54,6 +54,8 @@ namespace ArcCore.Gameplay.EntityCreation
                 mesh = holdRenderMesh.mesh,
                 material = grayoutMaterial
             };
+
+            initial = holdRenderMesh;
         }
 
         public void CreateEntities(IChartParser parser)
@@ -98,6 +100,7 @@ namespace ArcCore.Gameplay.EntityCreation
                 int appearTime = (t1 < t2) ? t1 : t2;
 
                 em.SetComponentData(holdEntity, new AppearTime(appearTime));
+                em.SetComponentData(holdEntity, new DestroyOnTiming(hold.endTiming + Constants.FarWindow));
 
                 //Judge entities
                 float startBpm = PlayManager.Conductor.GetTimingEventFromTiming(hold.timing, hold.timingGroup).bpm;

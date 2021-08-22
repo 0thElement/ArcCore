@@ -2,14 +2,13 @@
 
 using ArcCore.Gameplay.Behaviours;
 using ArcCore.Gameplay.Data;
-using ArcCore.Gameplay.Systems;
+using ArcCore.Gameplay.Objects.Particle;
 using Unity.Entities;
 using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 using ArcCore.Gameplay.EntityCreation;
 using ArcCore.Parsing;
 using Unity.Rendering;
-using System.Linq;
 using Unity.Collections;
 
 namespace ArcCore.Gameplay
@@ -41,8 +40,13 @@ namespace ArcCore.Gameplay
         [Header("Tap Creation Information")]
         public GameObject tapNotePrefab;
 
+        [Header("Arctap Creation Information")]
+        public GameObject arcTapNotePrefab;
+        public GameObject connectionLinePrefab;
+        public GameObject shadowPrefab;
+
         public TapEntityCreator GetTapEntityCreator()
-            => new TapEntityCreator(world, tapNotePrefab);
+            => new TapEntityCreator(world, tapNotePrefab, arcTapNotePrefab, connectionLinePrefab, shadowPrefab);
 
         [Header("Hold Creation Information")]
         public GameObject holdNotePrefab;
@@ -50,22 +54,14 @@ namespace ArcCore.Gameplay
         public HoldEntityCreator GetHoldEntityCreator()
             => new HoldEntityCreator(world, holdNotePrefab);
 
-        [Header("Arctap Creation Information")]
-        public GameObject arcTapNotePrefab;
-        public GameObject connectionLinePrefab;
-        public GameObject shadowPrefab;
-
-        public ArcTapEntityCreator GetArcTapEntityCreator()
-            => new ArcTapEntityCreator(
-                world, arcTapNotePrefab,
-                connectionLinePrefab, shadowPrefab);
-
         [Header("Arc Creation Information")]
         public GameObject arcNotePrefab;
         public GameObject headArcNotePrefab;
         public GameObject heightIndicatorPrefab;
         public GameObject arcShadowPrefab;
         public GameObject arcJudgePrefab;
+        public GameObject arcApproachIndicatorPrefab;
+        public GameObject arcParticlePrefab;
         public Material arcMaterial;
         public Material heightMaterial;
         public Color redColor;
@@ -76,8 +72,7 @@ namespace ArcCore.Gameplay
             => new ArcEntityCreator(
                 world, arcNotePrefab, headArcNotePrefab,
                 heightIndicatorPrefab, arcShadowPrefab, arcJudgePrefab,
-                arcMaterial, heightMaterial, redColor, arcMesh,
-                arcHeadMesh);
+                arcApproachIndicatorPrefab, arcParticlePrefab, redColor);
 
         [Header("Trace Creation Information")]
         public GameObject traceNotePrefab;
@@ -113,12 +108,37 @@ namespace ArcCore.Gameplay
         public static bool IsUpdatingAndActive => IsUpdating && IsActive;
 
         public static ParticleBuffer ParticleBuffer => instance.particleBuffer;
-        public static RenderMesh HighlightHold => instance.highlightHold;
-        public static RenderMesh GrayoutHold => instance.grayoutHold;
+    
+        //TODO: MAYBE MOVE THIS TO A SEPARATE SKIN OBJECT?
+        //Hold skin data
+        public static RenderMesh HoldHighlightRenderMesh => instance.holdHighlightRenderMesh;
+        public static RenderMesh HoldGrayoutRenderMesh => instance.holdGrayoutRenderMesh;
+        public static RenderMesh HoldInitialRenderMesh => instance.holdInitialRenderMesh;
 
         private ParticleBuffer particleBuffer;
-        private RenderMesh highlightHold;
-        private RenderMesh grayoutHold;
+        private RenderMesh holdHighlightRenderMesh;
+        private RenderMesh holdGrayoutRenderMesh;
+        private RenderMesh holdInitialRenderMesh;
+
+        //Arc skin data
+        public static (RenderMesh, RenderMesh, RenderMesh, RenderMesh, RenderMesh) GetRenderMeshVariants(int color)
+            => (instance.arcInitialRenderMeshes[color],
+                instance.arcHighlightRenderMeshes[color],
+                instance.arcGrayoutRenderMeshes[color],
+                instance.archeadRenderMeshes[color],
+                instance.arcHeightRenderMeshes[color]);
+
+        private Dictionary<int, RenderMesh> arcInitialRenderMeshes = new Dictionary<int, RenderMesh>();
+        private Dictionary<int, RenderMesh> arcHighlightRenderMeshes = new Dictionary<int, RenderMesh>();
+        private Dictionary<int, RenderMesh> arcGrayoutRenderMeshes = new Dictionary<int, RenderMesh>();
+        private Dictionary<int, RenderMesh> archeadRenderMeshes = new Dictionary<int, RenderMesh>();
+        private Dictionary<int, RenderMesh> arcHeightRenderMeshes = new Dictionary<int, RenderMesh>();
+
+        public static RenderMesh ArcShadowRenderMesh => instance.arcShadowRenderMesh;
+        public static RenderMesh ArcShadowGrayoutRenderMesh => instance.arcShadowGrayoutRenderMesh;
+
+        private RenderMesh arcShadowRenderMesh;
+        private RenderMesh arcShadowGrayoutRenderMesh;
 
         public static EntityCommandBuffer CommandBuffer => instance.commandBuffer;
         private EntityCommandBuffer commandBuffer;
@@ -149,10 +169,24 @@ namespace ArcCore.Gameplay
             gameplayCamera.SetupCamera(parser);
             scenecontrolHandler.CreateObjects(parser);
 
-            GetArcEntityCreator().CreateEntities(parser);
-            GetArcTapEntityCreator().CreateEntities(parser);
+            GetArcEntityCreator().CreateEntitiesAndGetMeshes(
+                parser,
+                out arcInitialRenderMeshes,
+                out arcHighlightRenderMeshes,
+                out arcGrayoutRenderMeshes,
+                out archeadRenderMeshes,
+                out arcHeightRenderMeshes,
+                out arcShadowRenderMesh,
+                out arcShadowGrayoutRenderMesh
+            );
+            GetHoldEntityCreator().CreateEntitiesAndGetMeshes(
+                parser,
+                out holdHighlightRenderMesh,
+                out holdGrayoutRenderMesh,
+                out holdInitialRenderMesh
+            );
+
             GetBeatlineEntityCreator().CreateEntities(parser);
-            GetHoldEntityCreator().CreateEntities(parser);
             GetTapEntityCreator().CreateEntities(parser);
             GetTraceEntityCreator().CreateEntities(parser);
         }

@@ -15,14 +15,11 @@ namespace ArcCore.Gameplay.Systems
         protected override void OnUpdate()
         {
             if (!PlayManager.IsUpdatingAndActive) return;
-            RenderMesh initialRenderMesh = HoldEntityCreator.Instance.InitialRenderMesh;
-            RenderMesh highlightRenderMesh = HoldEntityCreator.Instance.HighlightRenderMesh;
-            RenderMesh grayoutRenderMesh = HoldEntityCreator.Instance.GrayoutRenderMesh;
-            int currentTime = Conductor.Instance.receptorTime;
+            RenderMesh initialRenderMesh = PlayManager.HoldInitialRenderMesh;
+            RenderMesh highlightRenderMesh = PlayManager.HoldHighlightRenderMesh;
+            RenderMesh grayoutRenderMesh = PlayManager.HoldGrayoutRenderMesh;
+            int currentTime = PlayManager.ReceptorTime;
             var tracksHeld = PlayManager.InputHandler.tracksHeld;
-
-            RenderMesh highlightRenderMesh = PlayManager.HighlightHold;
-            RenderMesh grayoutRenderMesh = PlayManager.GrayoutHold;
 
             Entities
                 .WithSharedComponentFilter<RenderMesh>(grayoutRenderMesh)
@@ -33,7 +30,7 @@ namespace ArcCore.Gameplay.Systems
                     {
                         if (tracksHeld[lane.lane] > 0)
                         {
-                            commandBuffer.SetSharedComponent<RenderMesh>(en, highlightRenderMesh);
+                            PlayManager.CommandBuffer.SetSharedComponent<RenderMesh>(en, highlightRenderMesh);
                         }
                     }
                 ).WithoutBurst().Run();
@@ -47,7 +44,7 @@ namespace ArcCore.Gameplay.Systems
                     {
                         if (tracksHeld[lane.lane] <= 0)
                         {
-                            commandBuffer.SetSharedComponent<RenderMesh>(en, grayoutRenderMesh);
+                            PlayManager.CommandBuffer.SetSharedComponent<RenderMesh>(en, grayoutRenderMesh);
                         }
                     }
                 ).WithoutBurst().Run();
@@ -59,11 +56,11 @@ namespace ArcCore.Gameplay.Systems
                 {
                     if (tracksHeld[lane.lane] <= 0 && time.value <= currentTime - Constants.FarWindow)
                     {
-                        commandBuffer.SetSharedComponent(en, grayoutRenderMesh);
+                        PlayManager.CommandBuffer.SetSharedComponent(en, grayoutRenderMesh);
                     }
-                    else if (tracksHeld[lane.lane])
+                    else if (tracksHeld[lane.lane] > 0)
                     {
-                        commandBuffer.SetSharedComponent<RenderMesh>(en, highlightRenderMesh);
+                        PlayManager.CommandBuffer.SetSharedComponent<RenderMesh>(en, highlightRenderMesh);
                     }
                 }
             ).WithoutBurst().Run();

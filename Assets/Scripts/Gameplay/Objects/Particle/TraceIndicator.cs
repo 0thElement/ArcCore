@@ -1,7 +1,7 @@
 using UnityEngine;
 using Unity.Mathematics;
 
-namespace ArcCore.Gameplay.Behaviours
+namespace ArcCore.Gameplay.Objects.Particle
 {
     public class TraceIndicator : IIndicator
     {

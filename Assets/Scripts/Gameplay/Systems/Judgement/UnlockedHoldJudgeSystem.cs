@@ -28,7 +28,7 @@ namespace ArcCore.Gameplay.Systems
             Entities.WithNone<HoldLocked, PastJudgeRange>().ForEach(
                 (Entity en, ref ChartIncrTime chartIncrTime, in ChartLane lane) =>
                 {
-                    if (chartIncrTime.time < currentTime + Constants.HoldLostWindow && (bool)tracksHeld[lane.lane])
+                    if (chartIncrTime.time < currentTime + Constants.HoldLostWindow && tracksHeld[lane.lane] > 0)
                     {
                         int count = chartIncrTime.UpdateJudgePointCache(currentTime + Constants.HoldLostWindow);
                         if (count > 0)

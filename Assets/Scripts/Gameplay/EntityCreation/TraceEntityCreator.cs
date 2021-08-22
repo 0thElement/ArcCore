@@ -4,13 +4,11 @@ using Unity.Transforms;
 using Unity.Mathematics;
 using Unity.Rendering;
 using UnityEngine;
-using ArcCore.Gameplay.Utility;
 using ArcCore.Gameplay.Components;
-using ArcCore.Gameplay.Components.Chunk;
 using ArcCore.Parsing.Data;
 using ArcCore.Utilities.Extensions;
 using ArcCore.Parsing;
-using ArcCore.Gameplay.Behaviours;
+using ArcCore.Gameplay.Objects.Particle;
 
 namespace ArcCore.Gameplay.EntityCreation
 {

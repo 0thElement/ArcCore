@@ -1,4 +1,4 @@
-namespace ArcCore.Gameplay.Behaviours
+namespace ArcCore.Gameplay.Objects.Particle
 {
     public interface IIndicator
     {

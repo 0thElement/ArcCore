@@ -1,6 +1,6 @@
 using ArcCore.Gameplay.Data;
 using ArcCore.Gameplay.Behaviours;
-using ArcCore.Gameplay.Behaviours.EntityCreation;
+using ArcCore.Gameplay.EntityCreation;
 using ArcCore.Gameplay.Components;
 using Unity.Collections;
 using Unity.Entities;
@@ -36,7 +36,7 @@ namespace ArcCore.Gameplay.Systems
             //Arc segments
             for (int color=0; color < ArcEntityCreator.ColorCount; color++)
             {
-                (initial, highlight, grayout, head, height) = ArcEntityCreator.Instance.GetRenderMeshVariants(color);
+                (initial, highlight, grayout, head, height) = PlayManager.GetRenderMeshVariants(color);
 
                 float redmix = arcColorFsmArray[color].redmix;
                 initial.material.SetFloat(redmixShaderId, redmix);
@@ -90,8 +90,8 @@ namespace ArcCore.Gameplay.Systems
             }
 
             //Shadow segments
-            shadowInitial = ArcEntityCreator.Instance.ArcShadowRenderMesh;
-            shadowGrayout = ArcEntityCreator.Instance.ArcShadowGrayoutRenderMesh;
+            shadowInitial = PlayManager.ArcShadowRenderMesh;
+            shadowGrayout = PlayManager.ArcShadowGrayoutRenderMesh;
 
             Entities.WithSharedComponentFilter<RenderMesh>(shadowInitial).ForEach(
                 (Entity en, ref Cutoff cutoff, in ArcGroupID groupID) =>

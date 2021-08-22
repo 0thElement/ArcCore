@@ -46,7 +46,7 @@ namespace ArcCore.Gameplay.Data
             get 
             {
                 if (state != State.Red && state != State.LiftedRed) return 0;
-                float result = (float)(schedule - Conductor.Instance.receptorTime) / Constants.ArcRedArcWindow;
+                float result = (float)(schedule - PlayManager.ReceptorTime) / Constants.ArcRedArcWindow;
                 return Mathf.Clamp(result, 0, 1);
             }
         }
@@ -79,7 +79,7 @@ namespace ArcCore.Gameplay.Data
         }
         public void CheckSchedule()
         {
-            if (Conductor.Instance.receptorTime >= schedule)
+            if (PlayManager.ReceptorTime >= schedule)
                 Execute(Event.Scheduled);
         }
 
@@ -91,12 +91,12 @@ namespace ArcCore.Gameplay.Data
         private void Lift(int id)
         {
             fingerId = TouchPoint.NullId;
-            schedule = Conductor.Instance.receptorTime + Constants.ArcRedArcWindow;
+            schedule = PlayManager.ReceptorTime + Constants.ArcRedArcWindow;
             state = State.Lifted;
         }
         private void Red(int id)
         {
-            schedule = Conductor.Instance.receptorTime + Constants.ArcRedArcWindow;
+            schedule = PlayManager.ReceptorTime + Constants.ArcRedArcWindow;
             state = State.Red;
         }
         private void LiftRed(int id)
@@ -112,7 +112,7 @@ namespace ArcCore.Gameplay.Data
         private void Grace(int id)
         {
             fingerId = TouchPoint.NullId;
-            schedule = Conductor.Instance.receptorTime + Constants.ArcGraceDuration;
+            schedule = PlayManager.ReceptorTime + Constants.ArcGraceDuration;
             state = State.Grace;
         }
         private void StopRed(int id)

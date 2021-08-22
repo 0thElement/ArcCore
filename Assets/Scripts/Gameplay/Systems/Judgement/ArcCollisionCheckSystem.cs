@@ -1,5 +1,5 @@
 using ArcCore.Gameplay.Behaviours;
-using ArcCore.Gameplay.Behaviours.EntityCreation;
+using ArcCore.Gameplay.EntityCreation;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Tags;
 using Unity.Collections;

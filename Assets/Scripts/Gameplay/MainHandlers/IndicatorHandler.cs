@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace ArcCore.Gameplay.Behaviours
+namespace ArcCore.Gameplay.Objects.Particle
 {
     public class IndicatorHandler : MonoBehaviour
     {
