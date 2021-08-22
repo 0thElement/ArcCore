@@ -88,11 +88,7 @@ namespace ArcCore.Gameplay.EntityCreation
 
             float floorpos = PlayManager.Conductor.GetFloorPositionFromTiming(timing, 0);
 
-<<<<<<< HEAD:Assets/Scripts/Gameplay/Behaviours/EntityCreation/BeatlineEntityCreator.cs
-            EntityManager.SetComponentData(lineEntity, new FloorPosition(){
-=======
             em.SetComponentData<FloorPosition>(lineEntity, new FloorPosition(){
->>>>>>> overhual_b:Assets/Scripts/Gameplay/EntityCreation/BeatlineEntityCreator.cs
                 value = floorpos
             });
 
@@ -101,13 +97,8 @@ namespace ArcCore.Gameplay.EntityCreation
             int appearTime = (t1 < t2) ? t1 : t2;
             int disappearTime = (t1 < t2) ? t2 : t1;
 
-<<<<<<< HEAD:Assets/Scripts/Gameplay/Behaviours/EntityCreation/BeatlineEntityCreator.cs
-            EntityManager.SetComponentData(lineEntity, new AppearTime(){ value = appearTime });
-            EntityManager.SetComponentData(lineEntity, new DestroyOnTiming(disappearTime));
-=======
-            em.SetComponentData<AppearTime>(lineEntity, new AppearTime(){ value = appearTime });
-            em.SetComponentData<DisappearTime>(lineEntity, new DisappearTime(){ value = disappearTime });
->>>>>>> overhual_b:Assets/Scripts/Gameplay/EntityCreation/BeatlineEntityCreator.cs
+            em.SetComponentData(lineEntity, new AppearTime(appearTime));
+            em.SetComponentData(lineEntity, new DestroyOnTiming(disappearTime));
         }
     }
 

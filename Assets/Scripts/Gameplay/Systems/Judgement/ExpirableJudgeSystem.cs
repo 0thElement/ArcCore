@@ -9,6 +9,7 @@ using ArcCore.Gameplay.Data;
 using Unity.Mathematics;
 using ArcCore.Gameplay.Utility;
 using ArcCore.Utilities.Extensions;
+using ArcCore.Gameplay.Systems;
 
 namespace ArcCore.Gameplay.Systems
 {
@@ -142,7 +143,7 @@ namespace ArcCore.Gameplay.Systems
                         commandBuffer.AddComponent<PastJudgeRange>(en);
                     }
                 }
-            ).Run();*/
+            ).Run();
 
             PlayManager.ScoreHandler.tracker = tracker;
         }

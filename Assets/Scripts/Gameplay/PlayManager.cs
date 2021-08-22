@@ -91,11 +91,11 @@ namespace ArcCore.Gameplay
         public Mesh traceShadowMesh;
 
         [Header("Indicator Management")]
-        public IndicatorManager arcIndicatorManager;
-        public IndicatorManager traceIndicatorManager;
+        public IndicatorHandler arcIndicatorManager;
+        public IndicatorHandler traceIndicatorManager;
 
-        public static IndicatorManager ArcIndicatorManager => instance.arcIndicatorManager;
-        public static IndicatorManager TraceIndicatorManager => instance.traceIndicatorManager;
+        public static IndicatorHandler ArcIndicatorManager => instance.arcIndicatorManager;
+        public static IndicatorHandler TraceIndicatorManager => instance.traceIndicatorManager;
 
         public TraceEntityCreator GetTraceEntityCreator()
             => new TraceEntityCreator(

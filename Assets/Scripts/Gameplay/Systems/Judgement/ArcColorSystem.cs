@@ -8,7 +8,7 @@ using Unity.Rendering;
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace ArcCore.Gameplay.Systems.Judgement
+namespace ArcCore.Gameplay.Systems
 {
     [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(ArcCollisionCheckSystem))]
     public class ArcColorSystem : SystemBase
@@ -25,9 +25,11 @@ namespace ArcCore.Gameplay.Systems.Judgement
         }
         protected override void OnUpdate()
         {
+            if (!PlayManager.IsUpdatingAndActive) return;
+
             var commandBuffer = entityCommandBufferSystem.CreateCommandBuffer();
 
-            int currentTime = Conductor.Instance.receptorTime;
+            int currentTime = PlayManager.ReceptorTime;
             NativeArray<GroupState> arcGroupHeldState = ArcCollisionCheckSystem.arcGroupHeldState;
             List<ArcColorFSM> arcColorFsmArray = ArcCollisionCheckSystem.arcColorFsmArray;
 

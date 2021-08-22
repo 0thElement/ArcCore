@@ -234,5 +234,15 @@ namespace ArcCore.Gameplay.Behaviours
             laneParticles[track].Stop();
             laneParticles[track].Clear();
         }
+
+        /// <summary>
+        /// Create an arc particle at the given position.
+        /// </summary>
+        public void ArcAt(float2 position, bool isHit)
+        {
+            var type = isHit ? JudgeType.MaxPure : JudgeType.Lost;
+            position.y += 0.5f;
+            TextParticleAt(position, type, JudgeDetail.None);
+        }
     }
 }

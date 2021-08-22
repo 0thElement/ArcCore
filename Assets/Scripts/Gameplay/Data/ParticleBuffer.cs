@@ -120,27 +120,23 @@ namespace ArcCore.Gameplay.Data
             }
             for (int i=0; i<4; i++)
                 if (toDisable[i])
-<<<<<<< HEAD
-                    ParticlePool.Instance.DisableLane(i);
+                    PlayManager.ParticlePool.DisableLane(i);
             
 
             while (arcQueue.Count > 0)
             {
                 ArcParticleDesc particleDesc = arcQueue.Dequeue();
-                ArcIndicator indicator = Conductor.Instance.ArcIndicatorManager.GetIndicator(particleDesc.groupID) as ArcIndicator;
+                ArcIndicator indicator = PlayManager.ArcIndicatorManager.GetIndicator(particleDesc.groupID) as ArcIndicator;
 
                 float2 position = indicator.GetPosition();
 
-                if (particleDesc.shouldPlayText) ParticlePool.Instance.ArcAt(position, particleDesc.isHit);
+                if (particleDesc.shouldPlayText) PlayManager.ParticlePool.ArcAt(position, particleDesc.isHit);
 
                 if (particleDesc.isHit)
                     indicator.PlayParticle();
                 else
                     indicator.StopParticle();
             }
-=======
-                    PlayManager.ParticlePool.DisableLane(i);
->>>>>>> overhual_b
         }
 
         public bool IsCreated => tapQueue.IsCreated;

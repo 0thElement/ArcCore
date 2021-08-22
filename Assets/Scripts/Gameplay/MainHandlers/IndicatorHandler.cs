@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ArcCore.Gameplay.Behaviours
 {
-    public class IndicatorManager : MonoBehaviour
+    public class IndicatorHandler : MonoBehaviour
     {
         //A class for managing approach indicators of arc and traces
         
@@ -31,7 +31,7 @@ namespace ArcCore.Gameplay.Behaviours
         {
             if (!isInitialized) return;
 
-            int currentTime = Conductor.Instance.receptorTime;  
+            int currentTime = PlayManager.ReceptorTime;  
 
             // If for whatever reason the chart jumped back in time, update indexcache and reenable indicator
             while (indexCache > 0 && currentTime < indicatorList[indexByDestroyTime[indexCache-1]].EndTime)

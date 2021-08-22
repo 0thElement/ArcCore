@@ -16,9 +16,11 @@ namespace ArcCore.Gameplay.Systems.Judgement
     {
         protected override void OnUpdate()
         {
-            int currentTime = Conductor.Instance.receptorTime;
-            var tracker = ScoreManager.Instance.tracker;
-            var particleBuffer = ParticleJudgeSystem.particleBuffer;
+            if (!PlayManager.IsUpdatingAndActive) return;
+
+            int currentTime = PlayManager.ReceptorTime;
+            var tracker = PlayManager.ScoreHandler.tracker;
+            var particleBuffer = PlayManager.ParticleBuffer;
 
             NativeArray<GroupState> arcGroupHeldState = ArcCollisionCheckSystem.arcGroupHeldState;
             List<ArcColorFSM> arcColorFsmArray = ArcCollisionCheckSystem.arcColorFsmArray;
@@ -43,7 +45,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 ).Run();
             }
 
-            ScoreManager.Instance.tracker = tracker;
+            PlayManager.ScoreHandler.tracker = tracker;
         }
     }
 }

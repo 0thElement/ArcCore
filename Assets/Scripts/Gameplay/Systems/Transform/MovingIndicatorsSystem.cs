@@ -13,7 +13,7 @@ using ArcCore.Gameplay.Systems.Judgement;
 
 namespace ArcCore.Gameplay.Systems
 {
-    [UpdateAfter(typeof(MovingNotesSystem))]
+    [UpdateInGroup(typeof(CustomTransformSystemGroup)), UpdateAfter(typeof(MovingNotesSystem))]
     public class MovingIndicatorsSystem : SystemBase
     {
         public struct IndicatorMovementCommand
@@ -29,7 +29,9 @@ namespace ArcCore.Gameplay.Systems
         }
         protected override void OnUpdate()
         {
-            int currentTime = Conductor.Instance.receptorTime;
+            if (!PlayManager.IsUpdatingAndActive) return;
+
+            int currentTime = PlayManager.ReceptorTime;
             var parallel = queue.AsParallelWriter();
 
             //Arc and trace segments
@@ -87,9 +89,9 @@ namespace ArcCore.Gameplay.Systems
             while (queue.Count > 0)
             {
                 var command = queue.Dequeue();
-                Conductor.Instance.ArcIndicatorManager.GetIndicator(command.groupID).Update(command.position);
+                PlayManager.ArcIndicatorManager.GetIndicator(command.groupID).Update(command.position);
             }
-            Conductor.Instance.ArcIndicatorManager.CheckForDisable();
+            PlayManager.ArcIndicatorManager.CheckForDisable();
             
             Entities
                 .WithAll<IsTraceBodies>()
@@ -110,9 +112,9 @@ namespace ArcCore.Gameplay.Systems
             while (queue.Count > 0)
             {
                 var command = queue.Dequeue();
-                Conductor.Instance.TraceIndicatorManager.GetIndicator(command.groupID).Update(command.position);
+                PlayManager.TraceIndicatorManager.GetIndicator(command.groupID).Update(command.position);
             }
-            Conductor.Instance.TraceIndicatorManager.CheckForDisable();
+            PlayManager.TraceIndicatorManager.CheckForDisable();
         }
 
         protected override void OnDestroy()

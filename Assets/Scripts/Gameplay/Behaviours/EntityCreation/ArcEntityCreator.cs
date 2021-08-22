@@ -507,9 +507,9 @@ namespace ArcCore.Gameplay.Behaviours.EntityCreation
                 return hashCode;
             }
 
-            public void Deconstruct(out int timingGruop, out int time, out float x, out float y, out float color)
+            public void Deconstruct(out int timingGroup, out int time, out float x, out float y, out float color)
             {
-                timingGruop = this.timingGroup;
+                timingGroup = this.timingGroup;
                 time = this.time;
                 x = this.x;
                 y = this.y;

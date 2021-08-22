@@ -7,7 +7,7 @@ using Unity.Entities;
 using ArcCore.Gameplay.Data;
 using System.Collections.Generic;
 
-namespace ArcCore.Gameplay.Systems.Judgement
+namespace ArcCore.Gameplay.Systems
 {
     public enum GroupState
     {
@@ -25,6 +25,8 @@ namespace ArcCore.Gameplay.Systems.Judgement
     public class ArcCollisionCheckSystem : SystemBase
     {
 
+        //TODO: REMOVE STATICS
+
         /// <summary>
         /// Keep track of whether a group was held or not this frame.
         /// </summary>
@@ -37,15 +39,10 @@ namespace ArcCore.Gameplay.Systems.Judgement
 
         protected override void OnUpdate()
         {
-            var touchPoints = InputManager.Instance.GetEnumerator();
-            NativeArray<TouchPoint> touchArray = new NativeArray<TouchPoint>(InputManager.MaxTouches, Allocator.Temp);
-            int touchCount=0;
-            while (touchPoints.MoveNext())
-            {
-                touchArray[touchCount++] = touchPoints.Current;
-            }
+            if (!PlayManager.IsUpdatingAndActive) return;
 
-            int currentTime = Conductor.Instance.receptorTime;
+            NativeArray<TouchPoint> touchArray = PlayManager.InputHandler.touchPoints;
+            int currentTime = PlayManager.ReceptorTime;
 
             for (int color = 0; color < ArcEntityCreator.ColorCount; color++)
             {
@@ -57,7 +54,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                 bool touchLifted = true;
                 bool existEntities = false;
 
-                for (int i=0; i < touchCount; i++)
+                for (int i=0; i < touchArray.Length; i++)
                 {
                     if (touchArray[i].fingerId == colorState.FingerId)
                     {
@@ -76,7 +73,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
                         existEntities = true;
                         bool groupHeld = false;
 
-                        for (int i=0; i < touchCount; i++)
+                        for (int i=0; i < touchArray.Length; i++)
                         {
                             TouchPoint currentTouch = touchArray[i];
                             if (!currentTouch.InputPlaneValid) continue;
