@@ -22,10 +22,10 @@ namespace ArcCore.Gameplay.Systems.Judgement
             var tracker = PlayManager.ScoreHandler.tracker;
             var particleBuffer = PlayManager.ParticleBuffer;
 
-            NativeArray<GroupState> arcGroupHeldState = ArcCollisionCheckSystem.arcGroupHeldState;
-            List<ArcColorFSM> arcColorFsmArray = ArcCollisionCheckSystem.arcColorFsmArray;
+            var arcGroupHeldState = PlayManager.ArcGroupHeldState;
+            var arcColorFsmArray  = PlayManager.ArcColorFsm;
 
-            for (int color = 0; color < ArcEntityCreator.ColorCount; color ++) 
+            for (int color = 0; color < PlayManager.MaxArcColor; color ++) 
             {
                 if (arcColorFsmArray[color].IsRedArc()) continue;
 

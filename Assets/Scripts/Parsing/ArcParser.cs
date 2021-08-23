@@ -35,7 +35,7 @@ namespace ArcCore.Parsing
         public List<int> CameraResets { get; private set; } = new List<int>();
         public int ChartOffset { get; private set; }
         public List<TimingGroupFlag> TimingGroupFlags { get; private set; } = new List<TimingGroupFlag>();
-        public HashSet<int> UsedArcColors { get; private set; } = new HashSet<int>();
+        public int MaxArcColor { get; set; }
         public List<(ScenecontrolData, TextScenecontrolData)> TextScenecontrolData { get; private set; } 
             = new List<(ScenecontrolData, TextScenecontrolData)>();
         public List<(ScenecontrolData, SpriteScenecontrolData)> SpriteScenecontrolData { get; private set; }
@@ -148,21 +148,18 @@ namespace ArcCore.Parsing
             //message and predicate constants
             bool settingsMode = (state == ArcParserState.Settings);
             const string SettingsModeMsg = "Cannot use this command unless in settings mode.";
-            void RequireSettingsMode() => Require(settingsMode, SettingsModeMsg);
 
             bool objectsMode = (state == ArcParserState.Objects);
             const string ObjectsModeMsg = "Cannot use this command unless in objects mode.";
-            void RequireObjectsMode() => Require(objectsMode, ObjectsModeMsg);
 
             bool chartMode = (state == ArcParserState.Chart);
             const string ChartModeMsg = "Cannot use this command unless in chart mode.";
-            void RequireChartMode() => Require(chartMode, ChartModeMsg);
 
-            const string ChartObjModeMsg = "Cannot create this chart item unless in chart mode and timing group has at least one timing.";
             bool chartObjMode = (state == ArcParserState.Chart && timingGroupHasTiming);
+            const string ChartObjModeMsg = "Cannot create this chart item unless in chart mode and timing group has at least one timing.";
 
-            const string ArctapMsg = "Cannot create this chart item unless in chart mode, timing group has at least one timing, and there is at least one trace in the current timinggroup.";
             bool arctap = chartObjMode && timingGroupHasTrace;
+            const string ArctapMsg = "Cannot create this chart item unless in chart mode, timing group has at least one timing, and there is at least one trace in the current timinggroup.";
 
             //actual cases
             switch (command)
@@ -427,7 +424,8 @@ namespace ArcCore.Parsing
                 }
             );
 
-            UsedArcColors.Add(col);
+            if (MaxArcColor > col)
+                MaxArcColor = col;
         }
         private void NewTrace()
         {

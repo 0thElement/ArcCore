@@ -4,6 +4,7 @@ using Unity.Mathematics;
 using ArcCore.Gameplay.Behaviours;
 using UnityEngine;
 using ArcCore.Gameplay.Utility;
+using ArcCore.Gameplay.Objects.Particle;
 
 namespace ArcCore.Gameplay.Data
 {

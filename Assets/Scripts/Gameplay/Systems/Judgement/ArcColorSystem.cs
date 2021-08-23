@@ -30,11 +30,11 @@ namespace ArcCore.Gameplay.Systems
             var commandBuffer = entityCommandBufferSystem.CreateCommandBuffer();
 
             int currentTime = PlayManager.ReceptorTime;
-            NativeArray<GroupState> arcGroupHeldState = ArcCollisionCheckSystem.arcGroupHeldState;
-            List<ArcColorFSM> arcColorFsmArray = ArcCollisionCheckSystem.arcColorFsmArray;
+            var arcGroupHeldState = PlayManager.ArcGroupHeldState;
+            var arcColorFsmArray = PlayManager.ArcColorFsm;
 
             //Arc segments
-            for (int color=0; color < ArcEntityCreator.ColorCount; color++)
+            for (int color=0; color < PlayManager.MaxArcColor; color++)
             {
                 (initial, highlight, grayout, head, height) = PlayManager.GetRenderMeshVariants(color);
 

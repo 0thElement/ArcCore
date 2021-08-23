@@ -9,6 +9,7 @@ using ArcCore.Gameplay.Components;
 using ArcCore.Parsing.Data;
 using ArcCore.Utilities.Extensions;
 using ArcCore.Parsing;
+using ArcCore.Gameplay.Systems;
 
 namespace ArcCore.Gameplay.EntityCreation
 {
@@ -125,7 +126,7 @@ namespace ArcCore.Gameplay.EntityCreation
             head = new Dictionary<int, RenderMesh>();
             height = new Dictionary<int, RenderMesh>();
 
-            foreach (int i in parser.UsedArcColors)
+            for (int i = 0; i < parser.MaxArcColor; i++)
             {
                 Material arcColorMaterialInstance             = Object.Instantiate(arcMaterial);
                 Material heightIndicatorColorMaterialInstance = Object.Instantiate(heightMaterial);
@@ -284,9 +285,6 @@ namespace ArcCore.Gameplay.EntityCreation
                 indicatorList.Add(indicator);
             }
             PlayManager.ArcIndicatorManager.Initialize(indicatorList);
-
-            //AAAAAAAAAAAAAAAAAAAAAA
-            ArcCollisionCheckSystem.SetUpArray(connectedArcsIdEndpoint.Count, parser.UsedArcColors);
         }
 
         private void CreateSegment(RenderMesh renderMesh, float3 start, float3 end, int timingGroup, int timing, int endTiming, int groupId)

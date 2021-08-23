@@ -85,7 +85,7 @@ namespace ArcCore.Gameplay.Systems
             ).Run();
 
             //- ARCS -//
-            NativeArray<GroupState> arcGroupHeldState = ArcCollisionCheckSystem.arcGroupHeldState;
+            var arcGroupHeldState = PlayManager.ArcGroupHeldState;
             Entities.WithAll<WithinJudgeRange>().ForEach(
                 (Entity en, ref ChartIncrTime chartIncrTime, in ArcGroupID groupID) =>
                 {

@@ -18,7 +18,7 @@ namespace ArcCore.Parsing
         List<int> CameraResets { get; }
         int ChartOffset { get; }
         List<TimingGroupFlag> TimingGroupFlags { get; }
-        HashSet<int> UsedArcColors { get; }
+        int MaxArcColor { get; }
         List<(ScenecontrolData, TextScenecontrolData)> TextScenecontrolData { get; }
         List<(ScenecontrolData, SpriteScenecontrolData)> SpriteScenecontrolData { get; }
     }

@@ -120,6 +120,14 @@ namespace ArcCore.Gameplay
         private RenderMesh holdGrayoutRenderMesh;
         private RenderMesh holdInitialRenderMesh;
 
+        private NativeArray<GroupState> arcGroupHeldState;
+        private List<ArcColorFSM> arcColorFsm;
+        private int maxArcColor;
+
+        public static NativeArray<GroupState> ArcGroupHeldState => instance.arcGroupHeldState;
+        public static List<ArcColorFSM> ArcColorFsm => instance.arcColorFsm;
+        public static int MaxArcColor => instance.maxArcColor;
+
         //Arc skin data
         public static (RenderMesh, RenderMesh, RenderMesh, RenderMesh, RenderMesh) GetRenderMeshVariants(int color)
             => (instance.arcInitialRenderMeshes[color],
@@ -189,6 +197,15 @@ namespace ArcCore.Gameplay
             GetBeatlineEntityCreator().CreateEntities(parser);
             GetTapEntityCreator().CreateEntities(parser);
             GetTraceEntityCreator().CreateEntities(parser);
+
+            maxArcColor = parser.MaxArcColor;
+
+            arcGroupHeldState = new NativeArray<GroupState>(maxArcColor, Allocator.Persistent);
+            arcColorFsm = new List<ArcColorFSM>();
+            for (int i = 0; i < maxArcColor; i++)
+            {
+                arcColorFsm.Add(new ArcColorFSM(i));
+            }
         }
 
         public static void PlayMusic() => instance.PlayMusicInstance();
@@ -235,6 +252,7 @@ namespace ArcCore.Gameplay
         void OnDestroy()
         {
             instance = null;
+            arcGroupHeldState.Dispose();
         }
 
         public void Update()

@@ -42,7 +42,7 @@ namespace ArcCore.UI
             get
             {
                 EnsureAnimationSetup();
-                return animation.IsPlaying(InStr) || animation.isPlaying(OutStr);
+                return animation.IsPlaying(InStr) || animation.IsPlaying(OutStr);
             }
         }
     }
@@ -67,7 +67,7 @@ namespace ArcCore.UI
         private AnimationEntry[] entries;
         private Dictionary<string, TransitionAnimationInterface> animatorDict;
 
-        private readonly List<TransitionAnimationInterface> transitionAnimators;
+        private readonly List<TransitionAnimationInterface> transitionAnimators = new List<TransitionAnimationInterface>();
 
         public void Awake()
         {
@@ -75,10 +75,8 @@ namespace ArcCore.UI
             Instance = this;
 
             gameObject.SetActive(false); 
-            
-            transitionAnimators = new List<TransitionAnimationInterface>();
 
-            animatorDict = new Dictionary<string, Animator>();
+            animatorDict = new Dictionary<string, TransitionAnimationInterface>();
             foreach(var entry in entries)
             {
                 if(entry.isActiveByDefault)
