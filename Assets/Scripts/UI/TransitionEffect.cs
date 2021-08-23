@@ -9,44 +9,6 @@ using UnityCoroutineUtils;
 
 namespace ArcCore.UI
 {
-    [RequireComponent(typeof(Animation))]
-    public class TransitionAnimationInterface : MonoBehaviour
-    {
-        public AnimationClip transitionIn, transitionOut;
-        private const string InStr = "_In", OutStr = "_Out";
-
-        private new Animation animation;
-        private bool isSetup;
-
-        private void EnsureAnimationSetup()
-        {
-            if (isSetup) return;
-
-            animation.AddClip(transitionIn, InStr);
-            animation.AddClip(transitionOut, OutStr);
-            isSetup = true;
-        }
-
-        public void TransitionIn()
-        {
-            EnsureAnimationSetup();
-            animation.Play(InStr);
-        }
-        public void TransitionOut()
-        {
-            EnsureAnimationSetup();
-            animation.Play(OutStr);
-        }
-        public bool IsPlaying 
-        {
-            get
-            {
-                EnsureAnimationSetup();
-                return animation.IsPlaying(InStr) || animation.IsPlaying(OutStr);
-            }
-        }
-    }
-
     public class TransitionEffect : MonoBehaviour
     {
         public static TransitionEffect Instance { get; private set; }
@@ -67,21 +29,23 @@ namespace ArcCore.UI
         private AnimationEntry[] entries;
         private Dictionary<string, TransitionAnimationInterface> animatorDict;
 
-        private readonly List<TransitionAnimationInterface> transitionAnimators = new List<TransitionAnimationInterface>();
+        private List<TransitionAnimationInterface> animators;
 
         public void Awake()
         {
             DontDestroyOnLoad(this);
             Instance = this;
 
-            gameObject.SetActive(false); 
+            gameObject.SetActive(false);
 
+            animators = new List<TransitionAnimationInterface>();
             animatorDict = new Dictionary<string, TransitionAnimationInterface>();
+
             foreach(var entry in entries)
             {
                 if(entry.isActiveByDefault)
                 {
-                    transitionAnimators.Add(entry.animation);
+                    animators.Add(entry.animation);
                 }
                 animatorDict.Add(entry.name, entry.animation);
             }
@@ -89,22 +53,38 @@ namespace ArcCore.UI
             entries = null;
         }
 
-        public static void SetTransitionAnimators(string[] transitionAnimatorNames)
-            => Instance.SetTransitionAnimatorsInstance(transitionAnimatorNames);
-        private void SetTransitionAnimatorsInstance(string[] transitionAnimatorNames) 
+        public static void AddAnimator(string name)
+            => Instance.AddAnimatorInstance(name);
+        public static void AddAnimators(params string[] names)
         {
-            if (inTransition)
-                throw new Exception("Cannot set transion animators while currently in transition!");
-
-            transitionAnimators.Clear();
-
-            foreach(var name in transitionAnimatorNames)
+            foreach (var name in names)
             {
-                if(!animatorDict.ContainsKey(name)) 
-                    throw new Exception("Unfound animators provided to SetTransitionAnimators.");
-
-                transitionAnimators.Add(animatorDict[name]);
+                AddAnimator(name);
             }
+        }
+        private void AddAnimatorInstance(string name) 
+        {
+            if(!animatorDict.ContainsKey(name)) 
+                throw new Exception("Unfound animators provided to SetTransitionAnimators.");
+
+            animators.Add(animatorDict[name]);
+        }
+
+        public static void RemoveAnimator(string name)
+            => Instance.RemoveAnimatorInstance(name);
+        public static void RemoveAnimators(params string[] names)
+        {
+            foreach(var name in names)
+            {
+                RemoveAnimator(name);
+            }
+        }
+        private void RemoveAnimatorInstance(string name)
+        {
+            if (!animatorDict.ContainsKey(name))
+                throw new Exception("Unfound animators provided to SetTransitionAnimators.");
+             
+            animators.Remove(animatorDict[name]);
         }
 
         public static void SetMiddleCoroutine(IEnumerator coroutine)
@@ -134,28 +114,38 @@ namespace ArcCore.UI
         {
             gameObject.SetActive(true);
             inTransition = true;
-            CTransition().Start(this);
+
+            StartCoroutine(CTransition());
         }
+
         private IEnumerator CTransition()
         {
-            foreach (var anim in transitionAnimators)
+            foreach (var anim in animators)
             {
                 anim.TransitionIn();
             }
 
-            while(transitionAnimators.Any(v => v.IsPlaying))
+            while(animators.Any(v => v.IsPlaying))
             {
                 yield return null;
             }
 
-            yield return middleCoroutine;
+            if (middleCoroutine != null)
+            {
+                while (middleCoroutine.MoveNext())
+                {
+                    yield return middleCoroutine.Current;
+                }
 
-            foreach (var anim in transitionAnimators)
+                middleCoroutine = null;
+            }
+
+            foreach (var anim in animators)
             {
                 anim.TransitionOut();
             }
 
-            while (transitionAnimators.Any(v => v.IsPlaying))
+            while (animators.Any(v => v.IsPlaying))
             {
                 yield return null;
             }

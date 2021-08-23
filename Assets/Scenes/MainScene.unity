@@ -422,35 +422,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 982800954874217724, guid: ea57947241b86b246aeee771438d156b,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1173963498971092680, guid: ea57947241b86b246aeee771438d156b,
-        type: 3}
-      propertyPath: m_Layer
-      value: 8
-      objectReference: {fileID: 0}
     - target: {fileID: 1275446258375841482, guid: ea57947241b86b246aeee771438d156b,
         type: 3}
       propertyPath: m_Name
       value: TransitionEffect
-      objectReference: {fileID: 0}
-    - target: {fileID: 1275446258375841482, guid: ea57947241b86b246aeee771438d156b,
-        type: 3}
-      propertyPath: m_Layer
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 1275446258375841483, guid: ea57947241b86b246aeee771438d156b,
-        type: 3}
-      propertyPath: startAnimatorNames.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1275446258375841483, guid: ea57947241b86b246aeee771438d156b,
-        type: 3}
-      propertyPath: startAnimatorNames.Array.data[0]
-      value: Base
       objectReference: {fileID: 0}
     - target: {fileID: 1275446258375841484, guid: ea57947241b86b246aeee771438d156b,
         type: 3}
@@ -506,11 +481,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7670273218992482410, guid: ea57947241b86b246aeee771438d156b,
-        type: 3}
-      propertyPath: m_Layer
-      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ea57947241b86b246aeee771438d156b, type: 3}

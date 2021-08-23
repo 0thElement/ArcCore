@@ -8,7 +8,6 @@ namespace ArcCore.Other
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
         public static void OnAppStart()
         {
-            Debug.Log("a");
             //Setup files.
             FileManagement.OnAppStart();
         }
