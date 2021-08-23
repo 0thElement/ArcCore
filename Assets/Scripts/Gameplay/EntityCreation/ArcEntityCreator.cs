@@ -28,10 +28,11 @@ namespace ArcCore.Gameplay.EntityCreation
         private Entity headArcNoteEntityPrefab;
         private Entity heightIndicatorEntityPrefab;
         private Entity arcShadowEntityPrefab;
-        private Entity arcJudgeEntityPrefab;
 
         private GameObject arcApproachIndicatorPrefab;
         private GameObject arcParticlePrefab;
+
+        private EntityArchetype arcJudgeArchetype;
 
         private int colorShaderId;
         private int redColorShaderId;
@@ -54,7 +55,6 @@ namespace ArcCore.Gameplay.EntityCreation
             GameObject headArcNotePrefab,
             GameObject heightIndicatorPrefab,
             GameObject arcShadowPrefab,
-            GameObject arcJudgePrefab,
             GameObject arcApproachIndicatorPrefab,
             GameObject arcParticlePrefab,
             Color redColor)
@@ -77,7 +77,19 @@ namespace ArcCore.Gameplay.EntityCreation
             arcShadowEntityPrefab = gocs.ConvertToNote(arcShadowPrefab, em);
             em.ExposeLocalToWorld(arcShadowEntityPrefab);
 
-            arcJudgeEntityPrefab = gocs.ConvertToEntity(arcJudgePrefab);
+            arcJudgeArchetype = em.CreateArchetype(
+                
+                //Chart time
+                ComponentType.ReadOnly<ChartTime>(),
+                ComponentType.ReadOnly<DestroyOnTiming>(),
+                //Judge time
+                ComponentType.ReadWrite<ChartIncrTime>(),
+                //Color
+                ComponentType.ReadOnly<ArcColorID>(),
+                //Arc data
+                ComponentType.ReadOnly<ArcData>(),
+                ComponentType.ReadOnly<ArcGroupID>()
+            );
 
             //Shader ID
             colorShaderId = Shader.PropertyToID("_Color");
@@ -109,24 +121,25 @@ namespace ArcCore.Gameplay.EntityCreation
             };
         }
 
-        public void CreateEntitiesAndGetMeshes(
+        public void CreateEntitiesAndGetData(
             IChartParser parser,
-            out Dictionary<int, RenderMesh> initial,
-            out Dictionary<int, RenderMesh> highlight,
-            out Dictionary<int, RenderMesh> grayout,
-            out Dictionary<int, RenderMesh> head,
-            out Dictionary<int, RenderMesh> height,
+            out List<RenderMesh> initial,
+            out List<RenderMesh> highlight,
+            out List<RenderMesh> grayout,
+            out List<RenderMesh> head,
+            out List<RenderMesh> height,
             out RenderMesh shadow,
-            out RenderMesh shadowGrayout)
+            out RenderMesh shadowGrayout,
+            out int arcGroupCount)
         {
             //SETUP MATERIALS
-            initial = new Dictionary<int, RenderMesh>();
-            highlight = new Dictionary<int, RenderMesh>();
-            grayout = new Dictionary<int, RenderMesh>();
-            head = new Dictionary<int, RenderMesh>();
-            height = new Dictionary<int, RenderMesh>();
+            initial = new List<RenderMesh>();
+            highlight = new List<RenderMesh>();
+            grayout = new List<RenderMesh>();
+            head = new List<RenderMesh>();
+            height = new List<RenderMesh>();
 
-            for (int i = 0; i < parser.MaxArcColor; i++)
+            for (int i = 0; i <= parser.MaxArcColor; i++)
             {
                 Material arcColorMaterialInstance             = Object.Instantiate(arcMaterial);
                 Material heightIndicatorColorMaterialInstance = Object.Instantiate(heightMaterial);
@@ -139,23 +152,23 @@ namespace ArcCore.Gameplay.EntityCreation
                 Material grayoutMat = Object.Instantiate(arcColorMaterialInstance);
                 grayoutMat.SetFloat(highlightShaderId,-1);
 
-                initial.Add(i, new RenderMesh {
+                initial.Add(new RenderMesh {
                     mesh = arcMesh,
                     material = arcColorMaterialInstance
                 });
-                highlight.Add(i, new RenderMesh {
+                highlight.Add(new RenderMesh {
                     mesh = arcMesh,
                     material = highlightMat
                 });
-                grayout.Add(i, new RenderMesh {
+                grayout.Add(new RenderMesh {
                     mesh = arcMesh,
                     material = grayoutMat
                 });
-                head.Add(i, new RenderMesh {
+                head.Add(new RenderMesh {
                     mesh = headMesh,
                     material = arcColorMaterialInstance
                 });
-                height.Add(i, new RenderMesh {
+                height.Add(new RenderMesh {
                     mesh = heightMesh,
                     material = heightIndicatorColorMaterialInstance
                 });
@@ -273,7 +286,7 @@ namespace ArcCore.Gameplay.EntityCreation
                 );
 
                 CreateSegment(initial[arc.color], start, end, arc.timingGroup, fromTiming, toTiming, arcId);
-                CreateJudgeEntity(arc, arc.color, startGroupTime, startBpm);
+                CreateJudgeEntity(arc, arc.color, arcId, startBpm);
 
             }
 
@@ -284,7 +297,8 @@ namespace ArcCore.Gameplay.EntityCreation
                 ArcIndicator indicator = new ArcIndicator(Object.Instantiate(arcApproachIndicatorPrefab), Object.Instantiate(arcParticlePrefab), groupIdEndPoint.time);
                 indicatorList.Add(indicator);
             }
-            PlayManager.ArcIndicatorManager.Initialize(indicatorList);
+            PlayManager.ArcIndicatorHandler.Initialize(indicatorList);
+            arcGroupCount = connectedArcsIdEndpoint.Count;
         }
 
         private void CreateSegment(RenderMesh renderMesh, float3 start, float3 end, int timingGroup, int timing, int endTiming, int groupId)
@@ -418,7 +432,7 @@ namespace ArcCore.Gameplay.EntityCreation
         private void CreateJudgeEntity(ArcRaw arc, int colorId, int groupId, float startBpm)
         {
 
-            Entity en = em.Instantiate(arcJudgeEntityPrefab);
+            Entity en = em.CreateEntity(arcJudgeArchetype);
 
             em.SetComponentData(en, ChartIncrTime.FromBpm(arc.timing, arc.endTiming, startBpm, out int comboCount));
 

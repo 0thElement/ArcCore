@@ -209,7 +209,6 @@ namespace ArcCore.Parsing
             if (LineIsUnfinished) val = lines[lineIdx].Substring(startIdx, charIdx - startIdx);
             else val = lines[lineIdx].Substring(startIdx);
 
-            //Debug.Log(val);
             return val;
         }
 

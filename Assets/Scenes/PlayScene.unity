@@ -5140,7 +5140,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 360237165}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7234255468f340d4daa1fa3cb7a4d999, type: 3}
+  m_Script: {fileID: 11500000, guid: d492e0b496192ff42a9b24dc987801f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   textParticlePoolSize: 100
@@ -5159,7 +5159,6 @@ MonoBehaviour:
   - {fileID: 319528889}
   - {fileID: 1129376712}
   - {fileID: 1487336521}
-  laneParticlesBurstCount: 10
   earlylateJudgeRenderer: {fileID: 1833523681637646590}
   earlylateJudgeParticleSystem: {fileID: 5023353054831144329}
   earlyJudgeMaterial: {fileID: 2100000, guid: 0dbf25aac95a06b44aac98241838f18b, type: 2}
@@ -5872,7 +5871,8 @@ Transform:
   m_LocalRotation: {x: -0, y: 0.97324914, z: -0.22975242, w: 0}
   m_LocalPosition: {x: 0, y: 9, z: 9}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
+  m_Children:
+  - {fileID: 1399822501834664265}
   m_Father: {fileID: 1527301108}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 26.565, y: 180, z: 0}
@@ -5929,7 +5929,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1008731699}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0a7c129ceeb8f4e43b5a7d8564728c31, type: 3}
+  m_Script: {fileID: 11500000, guid: f8d498493027f51418817f4305b738ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   laneHighlights:
@@ -5938,7 +5938,7 @@ MonoBehaviour:
   - {fileID: 582800331}
   - {fileID: 1375499812}
   highlightDuration: 0.5
-  highlightAlpha: 0.3
+  highlightAlpha: 0.5
   horizontalLinePrefab: {fileID: 810017893650666070, guid: 863d5b0fae81e4a4ab8b37387c0f0c1b,
     type: 3}
 --- !u!1 &1110048713
@@ -5996,7 +5996,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1110048716
 MonoBehaviour:
@@ -15845,7 +15845,7 @@ Transform:
   - {fileID: 1339030120}
   - {fileID: 360237166}
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1527301109
 MonoBehaviour:
@@ -15869,13 +15869,13 @@ MonoBehaviour:
     type: 3}
   tapNotePrefab: {fileID: 2994907523628847089, guid: e4e0fa23086e0e74e98c16b8d525d520,
     type: 3}
-  holdNotePrefab: {fileID: 1128270376758739520, guid: a1e2e728e75223c488b75baf1d36daa0,
-    type: 3}
   arcTapNotePrefab: {fileID: 6915217587042562500, guid: 1916ae4801f8520438e76fb06614e538,
     type: 3}
   connectionLinePrefab: {fileID: 6999443773866882105, guid: d2d95facb0a89ed46b986440d2d9628e,
     type: 3}
   shadowPrefab: {fileID: 6324984913872004424, guid: c8dd83811280464479564fb9b71d73d9,
+    type: 3}
+  holdNotePrefab: {fileID: 1128270376758739520, guid: a1e2e728e75223c488b75baf1d36daa0,
     type: 3}
   arcNotePrefab: {fileID: 9045023917371828371, guid: 4b34afa0455f74444afc52de081d35b2,
     type: 3}
@@ -15886,6 +15886,10 @@ MonoBehaviour:
   arcShadowPrefab: {fileID: 345932005286596484, guid: 214e882901cb10a409006d01ba409ccc,
     type: 3}
   arcJudgePrefab: {fileID: 1543761954282729168, guid: 2003e5b2a68091a4389ca0afbfd139d6,
+    type: 3}
+  arcApproachIndicatorPrefab: {fileID: 8429976014079107216, guid: 0a57bd2af70dcde44b3c75defd27ea0e,
+    type: 3}
+  arcParticlePrefab: {fileID: 4796778903998022456, guid: 41b1b4021cb204944a67bfe468124817,
     type: 3}
   arcMaterial: {fileID: 2100000, guid: 6a9129239f6b3054db310a0864ba9eb2, type: 2}
   heightMaterial: {fileID: 2100000, guid: 7df61da0627a5714080a4c06cd73892e, type: 2}
@@ -15899,6 +15903,8 @@ MonoBehaviour:
     type: 3}
   traceShadowPrefab: {fileID: 2857874093601128869, guid: 32fb81c32838fc345b0d528f30592ec4,
     type: 3}
+  traceApproachIndicatorPrefab: {fileID: 2057882010206497123, guid: ebec4eb2639504f4ab68a4691d666f10,
+    type: 3}
   traceMaterial: {fileID: 2100000, guid: 34c3ab2db1945b848a3df9cf1ea5c654, type: 2}
   traceShadowMaterial: {fileID: 2100000, guid: 8d2d9654992ee9c49bf0298ecc30e19a, type: 2}
   traceMesh: {fileID: -1560609305294098807, guid: c8586b7b9fca50d488fe3feac4af49f5,
@@ -15907,6 +15913,8 @@ MonoBehaviour:
     type: 3}
   traceShadowMesh: {fileID: -1996656762450497758, guid: 7eb034e112e7def419be91b43307c123,
     type: 3}
+  arcIndicatorManager: {fileID: 0}
+  traceIndicatorManager: {fileID: 0}
 --- !u!1 &1595804374
 GameObject:
   m_ObjectHideFlags: 0
@@ -21278,12 +21286,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1307187150583234479}
-  m_LocalRotation: {x: -0, y: 0.85065055, z: 0.5257316, w: 0}
-  m_LocalPosition: {x: 0, y: 5, z: 0}
+  m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.70710677}
+  m_LocalPosition: {x: 0, y: 0.44720364, z: 9.838701}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_Father: {fileID: 963194228}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!199 &1833523681637646590
 ParticleSystemRenderer:

@@ -59,7 +59,6 @@ namespace ArcCore.Gameplay
         public GameObject headArcNotePrefab;
         public GameObject heightIndicatorPrefab;
         public GameObject arcShadowPrefab;
-        public GameObject arcJudgePrefab;
         public GameObject arcApproachIndicatorPrefab;
         public GameObject arcParticlePrefab;
         public Material arcMaterial;
@@ -71,7 +70,7 @@ namespace ArcCore.Gameplay
         public ArcEntityCreator GetArcEntityCreator()
             => new ArcEntityCreator(
                 world, arcNotePrefab, headArcNotePrefab,
-                heightIndicatorPrefab, arcShadowPrefab, arcJudgePrefab,
+                heightIndicatorPrefab, arcShadowPrefab,
                 arcApproachIndicatorPrefab, arcParticlePrefab, redColor);
 
         [Header("Trace Creation Information")]
@@ -85,12 +84,11 @@ namespace ArcCore.Gameplay
         public Mesh traceHeadMesh;
         public Mesh traceShadowMesh;
 
-        [Header("Indicator Management")]
-        public IndicatorHandler arcIndicatorManager;
-        public IndicatorHandler traceIndicatorManager;
+        private IndicatorHandler arcIndicatorHandler = new IndicatorHandler();
+        private IndicatorHandler traceIndicatorHandler = new IndicatorHandler();
 
-        public static IndicatorHandler ArcIndicatorManager => instance.arcIndicatorManager;
-        public static IndicatorHandler TraceIndicatorManager => instance.traceIndicatorManager;
+        public static IndicatorHandler ArcIndicatorHandler => instance.arcIndicatorHandler;
+        public static IndicatorHandler TraceIndicatorHandler => instance.traceIndicatorHandler;
 
         public TraceEntityCreator GetTraceEntityCreator()
             => new TraceEntityCreator(
@@ -136,11 +134,11 @@ namespace ArcCore.Gameplay
                 instance.archeadRenderMeshes[color],
                 instance.arcHeightRenderMeshes[color]);
 
-        private Dictionary<int, RenderMesh> arcInitialRenderMeshes = new Dictionary<int, RenderMesh>();
-        private Dictionary<int, RenderMesh> arcHighlightRenderMeshes = new Dictionary<int, RenderMesh>();
-        private Dictionary<int, RenderMesh> arcGrayoutRenderMeshes = new Dictionary<int, RenderMesh>();
-        private Dictionary<int, RenderMesh> archeadRenderMeshes = new Dictionary<int, RenderMesh>();
-        private Dictionary<int, RenderMesh> arcHeightRenderMeshes = new Dictionary<int, RenderMesh>();
+        private List<RenderMesh> arcInitialRenderMeshes = new List<RenderMesh>();
+        private List<RenderMesh> arcHighlightRenderMeshes = new List<RenderMesh>();
+        private List<RenderMesh> arcGrayoutRenderMeshes = new List<RenderMesh>();
+        private List<RenderMesh> archeadRenderMeshes = new List<RenderMesh>();
+        private List<RenderMesh> arcHeightRenderMeshes = new List<RenderMesh>();
 
         public static RenderMesh ArcShadowRenderMesh => instance.arcShadowRenderMesh;
         public static RenderMesh ArcShadowGrayoutRenderMesh => instance.arcShadowGrayoutRenderMesh;
@@ -177,7 +175,8 @@ namespace ArcCore.Gameplay
             gameplayCamera.SetupCamera(parser);
             scenecontrolHandler.CreateObjects(parser);
 
-            GetArcEntityCreator().CreateEntitiesAndGetMeshes(
+            int arcGroupCount = 0;
+            GetArcEntityCreator().CreateEntitiesAndGetData(
                 parser,
                 out arcInitialRenderMeshes,
                 out arcHighlightRenderMeshes,
@@ -185,7 +184,8 @@ namespace ArcCore.Gameplay
                 out archeadRenderMeshes,
                 out arcHeightRenderMeshes,
                 out arcShadowRenderMesh,
-                out arcShadowGrayoutRenderMesh
+                out arcShadowGrayoutRenderMesh,
+                out arcGroupCount
             );
             GetHoldEntityCreator().CreateEntitiesAndGetMeshes(
                 parser,
@@ -198,11 +198,12 @@ namespace ArcCore.Gameplay
             GetTapEntityCreator().CreateEntities(parser);
             GetTraceEntityCreator().CreateEntities(parser);
 
-            maxArcColor = parser.MaxArcColor;
+            
+            arcGroupHeldState = new NativeArray<GroupState>(arcGroupCount, Allocator.Persistent);
 
-            arcGroupHeldState = new NativeArray<GroupState>(maxArcColor, Allocator.Persistent);
+            maxArcColor = parser.MaxArcColor;
             arcColorFsm = new List<ArcColorFSM>();
-            for (int i = 0; i < maxArcColor; i++)
+            for (int i = 0; i <= maxArcColor; i++)
             {
                 arcColorFsm.Add(new ArcColorFSM(i));
             }
@@ -253,13 +254,6 @@ namespace ArcCore.Gameplay
         {
             instance = null;
             arcGroupHeldState.Dispose();
-        }
-
-        public void Update()
-        {
-            if (!IsUpdating) return;
-
-            Debug.Log("tst");
         }
     }
 }

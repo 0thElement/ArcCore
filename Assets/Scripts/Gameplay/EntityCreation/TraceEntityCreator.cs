@@ -143,7 +143,7 @@ namespace ArcCore.Gameplay.EntityCreation
                 TraceIndicator indicator = new TraceIndicator(Object.Instantiate(traceApproachIndicatorPrefab), (int)groupIdEndPoint.y);
                 indicatorList.Add(indicator);
             }
-            PlayManager.TraceIndicatorManager.Initialize(indicatorList);
+            PlayManager.TraceIndicatorHandler.Initialize(indicatorList);
         }
 
         private void CreateSegment(float3 start, float3 end, int timingGroup, int time, int endTime, int groupID)
@@ -157,7 +157,7 @@ namespace ArcCore.Gameplay.EntityCreation
             });
 
             em.SetComponentData<FloorPosition>(traceEntity, new FloorPosition() { value = start.z });
-            em.SetComponentData(traceEntity, new TimingGroup(groupID));
+            em.SetComponentData(traceEntity, new TimingGroup(timingGroup));
 
             float dx = start.x - end.x;
             float dy = start.y - end.y;

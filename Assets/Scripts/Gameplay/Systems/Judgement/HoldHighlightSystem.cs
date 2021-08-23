@@ -51,7 +51,7 @@ namespace ArcCore.Gameplay.Systems
             
             Entities
                 .WithSharedComponentFilter<RenderMesh>(initialRenderMesh)
-                .WithAll<Translation, ChartIncrTime>().WithNone<PastJudgeRange>().ForEach( 
+                .WithAll<Translation, ChartIncrTime>().WithNone<PastJudgeRange, HoldLocked>().ForEach( 
                 (Entity en, in ChartLane lane, in ChartTime time) =>
                 {
                     if (tracksHeld[lane.lane] <= 0 && time.value <= currentTime - Constants.FarWindow)

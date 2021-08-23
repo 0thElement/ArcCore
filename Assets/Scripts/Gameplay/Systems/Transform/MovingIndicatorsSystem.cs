@@ -89,9 +89,9 @@ namespace ArcCore.Gameplay.Systems
             while (queue.Count > 0)
             {
                 var command = queue.Dequeue();
-                PlayManager.ArcIndicatorManager.GetIndicator(command.groupID).Update(command.position);
+                PlayManager.ArcIndicatorHandler.GetIndicator(command.groupID).Update(command.position);
             }
-            PlayManager.ArcIndicatorManager.CheckForDisable();
+            PlayManager.ArcIndicatorHandler.CheckForDisable();
             
             Entities
                 .WithAll<IsTraceBodies>()
@@ -112,9 +112,9 @@ namespace ArcCore.Gameplay.Systems
             while (queue.Count > 0)
             {
                 var command = queue.Dequeue();
-                PlayManager.TraceIndicatorManager.GetIndicator(command.groupID).Update(command.position);
+                PlayManager.TraceIndicatorHandler.GetIndicator(command.groupID).Update(command.position);
             }
-            PlayManager.TraceIndicatorManager.CheckForDisable();
+            PlayManager.TraceIndicatorHandler.CheckForDisable();
         }
 
         protected override void OnDestroy()

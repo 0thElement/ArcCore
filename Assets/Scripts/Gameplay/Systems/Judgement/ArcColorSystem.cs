@@ -34,7 +34,7 @@ namespace ArcCore.Gameplay.Systems
             var arcColorFsmArray = PlayManager.ArcColorFsm;
 
             //Arc segments
-            for (int color=0; color < PlayManager.MaxArcColor; color++)
+            for (int color=0; color <= PlayManager.MaxArcColor; color++)
             {
                 (initial, highlight, grayout, head, height) = PlayManager.GetRenderMeshVariants(color);
 

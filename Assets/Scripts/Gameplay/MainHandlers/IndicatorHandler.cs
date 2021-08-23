@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ArcCore.Gameplay.Objects.Particle
 {
-    public class IndicatorHandler : MonoBehaviour
+    public class IndicatorHandler
     {
         //A class for managing approach indicators of arc and traces
         

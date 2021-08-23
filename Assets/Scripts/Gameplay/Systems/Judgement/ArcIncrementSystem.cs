@@ -25,7 +25,7 @@ namespace ArcCore.Gameplay.Systems.Judgement
             var arcGroupHeldState = PlayManager.ArcGroupHeldState;
             var arcColorFsmArray  = PlayManager.ArcColorFsm;
 
-            for (int color = 0; color < PlayManager.MaxArcColor; color ++) 
+            for (int color = 0; color <= PlayManager.MaxArcColor; color ++) 
             {
                 if (arcColorFsmArray[color].IsRedArc()) continue;
 

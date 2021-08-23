@@ -19,7 +19,7 @@ namespace ArcCore.Gameplay.Systems
             var touchArray = PlayManager.InputHandler.touchPoints;
             int currentTime = PlayManager.ReceptorTime;
 
-            for (int color = 0; color < PlayManager.MaxArcColor; color++)
+            for (int color = 0; color <= PlayManager.MaxArcColor; color++)
             {
                 ArcColorFSM colorState = PlayManager.ArcColorFsm[color];
                 colorState.CheckSchedule();
@@ -112,7 +112,6 @@ namespace ArcCore.Gameplay.Systems
                 if (!collided && wrongFinger)
                     colorState.Execute(ArcColorFSM.Event.WrongFinger);
             }
-            touchArray.Dispose();
         }
     }
 

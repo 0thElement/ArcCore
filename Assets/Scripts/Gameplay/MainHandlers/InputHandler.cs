@@ -94,7 +94,6 @@ namespace ArcCore.Gameplay.Behaviours
                 if (t.fingerId == TouchPoint.NullId)
                     continue;
 
-                // Debug.Log($"{t.fingerId} is at phase {t.status}");
                 if (t.InputPlaneValid && t.inputPosition.Value.y > 2f)
                 {
                     inputVisualFeedback.HorizontalLineAt(t.inputPosition.Value.y, i);
@@ -114,9 +113,6 @@ namespace ArcCore.Gameplay.Behaviours
                 {
                     Debug.DrawRay(new Vector3(Utility.Conversion.TrackToX(t.track), 0.01f, 0), Vector3.back * 150, Color.red);
                 }
-
-                Debug.Log(t.InputPlane.min);
-                Debug.Log(t.track);
 #endif
             }
         }

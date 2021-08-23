@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 987391400156801863}
   - component: {fileID: 5609261401292390531}
   - component: {fileID: 7939624201343729076}
-  - component: {fileID: 2789634165839452915}
   - component: {fileID: 8299806788010137536}
   - component: {fileID: 3978344767579475883}
+  - component: {fileID: 3174464163435826398}
   m_Layer: 0
   m_Name: ArcJudgePrefab
   m_TagString: Untagged
@@ -61,19 +61,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   time: 0
---- !u!114 &2789634165839452915
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1543761954282729168}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 56b49f0a582fedc4eb19708c14f3c796, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  value: 0
 --- !u!114 &8299806788010137536
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -92,6 +79,8 @@ MonoBehaviour:
   end:
     x: 0
     y: 0
+  startTiming: 0
+  endTiming: 0
   easing: 0
 --- !u!114 &3978344767579475883
 MonoBehaviour:
@@ -102,7 +91,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 1543761954282729168}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b221e52184103a340867dc7dccf87873, type: 3}
+  m_Script: {fileID: 11500000, guid: 98890a049284a0d46912af34122cc86d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  value: 0
+--- !u!114 &3174464163435826398
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1543761954282729168}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c903ecb8ffd9d74f91e227defd0b63f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   value: 0

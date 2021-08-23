@@ -424,7 +424,7 @@ namespace ArcCore.Parsing
                 }
             );
 
-            if (MaxArcColor > col)
+            if (MaxArcColor < col)
                 MaxArcColor = col;
         }
         private void NewTrace()

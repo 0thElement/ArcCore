@@ -52,7 +52,7 @@ namespace ArcCore.Gameplay.EntityCreation
             while (tapIndex < tapCount && arcTapIndex < arcTapCount) 
             {
                 TapRaw tap = taps[tapIndex];
-                ArctapRaw arctap = arctaps[tapIndex];
+                ArctapRaw arctap = arctaps[arcTapIndex];
 
                 if (tap.timing == arctap.timing)
                 {

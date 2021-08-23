@@ -127,7 +127,7 @@ namespace ArcCore.Gameplay.Data
             while (arcQueue.Count > 0)
             {
                 ArcParticleDesc particleDesc = arcQueue.Dequeue();
-                ArcIndicator indicator = PlayManager.ArcIndicatorManager.GetIndicator(particleDesc.groupID) as ArcIndicator;
+                ArcIndicator indicator = PlayManager.ArcIndicatorHandler.GetIndicator(particleDesc.groupID) as ArcIndicator;
 
                 float2 position = indicator.GetPosition();
 
