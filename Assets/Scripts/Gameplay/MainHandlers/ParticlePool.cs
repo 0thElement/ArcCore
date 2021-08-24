@@ -143,7 +143,7 @@ namespace ArcCore.Gameplay.Behaviours
             tap.GetComponent<Transform>().position = new float3(position, 0);
             tap.GetComponent<ParticleSystem>().Play();
 
-            IncrementOrCycle(ref currentTapParticleIndex, tapParticlePoolSize - 1);
+            IncrementOrCycle(ref currentTapParticleIndex, tapParticlePoolSize);
         }
 
         /// <summary>
@@ -157,7 +157,7 @@ namespace ArcCore.Gameplay.Behaviours
             text.GetComponent<Renderer>().material = textJudgeMaterials[(int)judgeType];
             text.GetComponent<ParticleSystem>().Play();
 
-            IncrementOrCycle(ref currentTextParticleIndex, textParticlePoolSize - 1);
+            IncrementOrCycle(ref currentTextParticleIndex, textParticlePoolSize);
 
             //Early - Late
             if (judgeDetail == JudgeDetail.Early) 

@@ -5513,7 +5513,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_AdditionalShaderChannelsFlag: 0
-  m_SortingLayerID: 0
+  m_SortingLayerID: 1076155837
   m_SortingOrder: 0
   m_TargetDisplay: 0
 --- !u!224 &560663235
@@ -15885,8 +15885,6 @@ MonoBehaviour:
     type: 3}
   arcShadowPrefab: {fileID: 345932005286596484, guid: 214e882901cb10a409006d01ba409ccc,
     type: 3}
-  arcJudgePrefab: {fileID: 1543761954282729168, guid: 2003e5b2a68091a4389ca0afbfd139d6,
-    type: 3}
   arcApproachIndicatorPrefab: {fileID: 8429976014079107216, guid: 0a57bd2af70dcde44b3c75defd27ea0e,
     type: 3}
   arcParticlePrefab: {fileID: 4796778903998022456, guid: 41b1b4021cb204944a67bfe468124817,
@@ -15899,7 +15897,7 @@ MonoBehaviour:
     type: 3}
   traceNotePrefab: {fileID: 3551100467126968062, guid: c43598f4d61754a4db9a149e30d6c50d,
     type: 3}
-  headTraceNotePrefab: {fileID: 4008384927795449545, guid: 9b24d1c1972c41248a79cdcf8945cede,
+  headTraceNotePrefab: {fileID: 8177735640193569480, guid: dd1943fb6e80d1b4e8c848eb655b9d3f,
     type: 3}
   traceShadowPrefab: {fileID: 2857874093601128869, guid: 32fb81c32838fc345b0d528f30592ec4,
     type: 3}
@@ -15913,8 +15911,6 @@ MonoBehaviour:
     type: 3}
   traceShadowMesh: {fileID: -1996656762450497758, guid: 7eb034e112e7def419be91b43307c123,
     type: 3}
-  arcIndicatorManager: {fileID: 0}
-  traceIndicatorManager: {fileID: 0}
 --- !u!1 &1595804374
 GameObject:
   m_ObjectHideFlags: 0

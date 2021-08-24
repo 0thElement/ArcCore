@@ -54,7 +54,7 @@ namespace ArcCore.Gameplay.Systems
                     if (currentTime - Constants.FarWindow > chartTime.value)
                     {
                         commandBuffer.DisableEntity(sdRef.value);
-                        commandBuffer.AddComponent<PastJudgeRange>(sdRef.value);
+                        commandBuffer.AddComponent<PastJudgeRange>(en);
                         commandBuffer.DisableEntity(en);
                         tracker.AddJudge(JudgeType.Lost);
 

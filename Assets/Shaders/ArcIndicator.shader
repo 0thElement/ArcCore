@@ -17,6 +17,7 @@
             #pragma fragment frag
 
             #include "UnityCG.cginc"
+			#include "ColorSpace.cginc"
 
             struct appdata
             {

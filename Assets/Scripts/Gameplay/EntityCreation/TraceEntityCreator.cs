@@ -65,13 +65,15 @@ namespace ArcCore.Gameplay.EntityCreation
                 float4 traceEndPoint = new float4((float)trace.timingGroup, (float)trace.endTiming, trace.endX, trace.endY);
                 int traceId = -1;
                 bool isHeadTrace = true;
-                for (int id = 0; id < connectedTracesIdEndpoint.Count; id++)
+
+                for (int id = connectedTracesIdEndpoint.Count - 1; id >= 0; id--)
                 {
                     if (connectedTracesIdEndpoint[id].Equals(traceStartPoint))
                     {
                         traceId = id;
                         isHeadTrace = false;
                         connectedTracesIdEndpoint[id] = traceEndPoint;
+                        break;
                     }
                 }
 

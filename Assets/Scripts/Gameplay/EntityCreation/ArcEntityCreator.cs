@@ -183,19 +183,15 @@ namespace ArcCore.Gameplay.EntityCreation
             arcs.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
 
             var connectedArcsIdEndpoint = new List<ArcEndpointData>();
-            var startTimesById = new List<int>();
 
             foreach (ArcRaw arc in arcs)
             {
-                int startGroupTime = default;
-
                 //Precalc and assign a connected arc id to avoid having to figure out connection during gameplay
                 //placed into a new block to prevent data from being used later on
                 ArcEndpointData arcStartPoint = (arc.timingGroup, arc.timing, arc.startX, arc.startY, arc.color);
                 ArcEndpointData arcEndPoint = (arc.timingGroup, arc.endTiming, arc.endX, arc.endY, arc.color);
 
                 int arcId = connectedArcsIdEndpoint.Count;
-                startGroupTime = arc.timing;
                 bool isHeadArc = true;
 
                 for (int id = connectedArcsIdEndpoint.Count - 1; id >= 0; id--)
@@ -203,17 +199,15 @@ namespace ArcCore.Gameplay.EntityCreation
                     if (connectedArcsIdEndpoint[id] == arcStartPoint)
                     {
                         arcId = id;
-                        startGroupTime = startTimesById[id];
-
                         isHeadArc = false;
                         connectedArcsIdEndpoint[id] = arcEndPoint;
+                        break;
                     }
                 }
 
                 if (isHeadArc)
                 {
                     connectedArcsIdEndpoint.Add(arcEndPoint);
-                    startTimesById.Add(startGroupTime);
                     CreateHeadSegment(arc, head[arc.color], arcId);
                 }
 

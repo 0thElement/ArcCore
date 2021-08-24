@@ -115,7 +115,6 @@ namespace ArcCore.Gameplay.Systems
                     case MinType.Arctap:
                         Entity shadow = EntityManager.GetComponentData<ArcTapShadowReference>(minEntity).value;
                         commandBuffer.DisableEntity(shadow);
-                        commandBuffer.AddComponent<PastJudgeRange>(shadow);
                         commandBuffer.DisableEntity(minEntity);
                         commandBuffer.AddComponent<PastJudgeRange>(minEntity);
                         PlayManager.ScoreHandler.tracker.AddJudge(minJType);
