@@ -9,7 +9,7 @@ using System.Collections.Generic;
 
 namespace ArcCore.Gameplay.Systems
 {
-    [UpdateInGroup(typeof(JudgementSystemGroup))]
+    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(UnlockedHoldJudgeSystem))]
     public class ArcCollisionCheckSystem : SystemBase
     {
         protected override void OnUpdate()

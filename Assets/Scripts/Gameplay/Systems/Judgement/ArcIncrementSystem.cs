@@ -9,9 +9,9 @@ using Unity.Rendering;
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace ArcCore.Gameplay.Systems.Judgement
+namespace ArcCore.Gameplay.Systems
 {
-    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(ArcCollisionCheckSystem))]
+    [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(ArcColorSystem))]
     public class ArcIncrementSystem : SystemBase
     {
         protected override void OnUpdate()
