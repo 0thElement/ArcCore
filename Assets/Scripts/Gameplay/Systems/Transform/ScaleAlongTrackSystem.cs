@@ -19,7 +19,7 @@ namespace ArcCore.Gameplay.Systems
 
                 (ref NonUniformScale scale, in Translation translation, in BaseZScale baseScale) =>
                 {
-                    scale.Value.z = baseScale.value - translation.Value.z / 100;
+                    scale.Value.z = baseScale.value + Mathf.Abs(translation.Value.z) / 50;
                 }
 
             ).Schedule();

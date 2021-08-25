@@ -10,8 +10,8 @@
 	SubShader
 	{
 		Tags { "Queue" = "Transparent+1"  "RenderType" = "Transparent" "CanUseSpriteAtlas"="true"  }
-
         Cull Off
+		ZWrite Off
 		Blend SrcAlpha OneMinusSrcAlpha
   
 		Pass

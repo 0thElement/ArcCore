@@ -15,6 +15,7 @@
         Tags { "RenderType"="Transparent" "Queue" = "Background+3"}
 		Blend SrcAlpha OneMinusSrcAlpha
         ZTest Always
+        ZWrite Off
         Cull Off
 
         Pass

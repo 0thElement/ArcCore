@@ -103,17 +103,12 @@ namespace ArcCore.Gameplay.EntityCreation
             headMesh = headArcNotePrefab.GetComponent<MeshFilter>().sharedMesh;
             heightMesh = heightIndicatorPrefab.GetComponent<MeshFilter>().sharedMesh;
 
-            RenderMesh shadowRenderMesh = em.GetSharedComponentData<RenderMesh>(arcShadowEntityPrefab);
+            shadowRenderMesh = em.GetSharedComponentData<RenderMesh>(arcShadowEntityPrefab);
             Material shadowMaterial = shadowRenderMesh.material;
+            shadowMaterial.SetFloat(highlightShaderId, 1);
+
             Material shadowGrayoutMaterial = Object.Instantiate(shadowMaterial);
-
             shadowGrayoutMaterial.SetFloat(highlightShaderId, -1);
-
-            shadowRenderMesh = new RenderMesh()
-            {
-                mesh = shadowRenderMesh.mesh,
-                material = shadowMaterial
-            };
             shadowGrayoutRenderMesh = new RenderMesh()
             {
                 mesh = shadowRenderMesh.mesh,

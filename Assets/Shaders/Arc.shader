@@ -15,8 +15,9 @@
 	SubShader
 	{
 		Tags { "Queue" = "Transparent+1"  "RenderType" = "Transparent" "CanUseSpriteAtlas"="true"  }
-        Cull Off
-		ZTest Off
+		Cull Off
+		ZWrite Off
+		ZTest Always
 		Blend SrcAlpha OneMinusSrcAlpha
   
 		Pass
@@ -69,7 +70,7 @@
 				if (_Highlight < 0)
 				{
 					c = lerp(c, _GrayCol, 0.2);
-					c.a *= 0.85;
+					c.a *= 0.65;
 				}
 
 				c.a *= alpha_from_pos(i.worldpos.z) * 0.95;
