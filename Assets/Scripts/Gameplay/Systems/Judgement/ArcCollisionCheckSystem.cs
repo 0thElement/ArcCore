@@ -28,6 +28,8 @@ namespace ArcCore.Gameplay.Systems
 
             var touchArray = PlayManager.InputHandler.touchPoints;
             int currentTime = PlayManager.ReceptorTime;
+            var arcGroupHeldState = PlayManager.ArcGroupHeldState;
+            float accumulativeArcX = 0;
 
 #if DEBUG
             string s = "";
@@ -43,6 +45,8 @@ namespace ArcCore.Gameplay.Systems
             {
                 ArcColorFSM colorState = PlayManager.ArcColorFsm[color];
                 colorState.CheckSchedule();
+
+                float colorCumulativeX = 0;
 
                 bool collided = false;
                 bool wrongFinger = false;
@@ -107,19 +111,18 @@ namespace ArcCore.Gameplay.Systems
                             }
                         }
 
-                        var arcGroupHelpState = PlayManager.ArcGroupHeldState;
-
                         if (groupHeld)
                         {
-                            arcGroupHelpState[groupID.value] = GroupState.Held;
+                            arcGroupHeldState[groupID.value] = GroupState.Held;
+                            colorCumulativeX += arcData.GetPosAt(currentTime).x;
                         }
-                        else if (arcGroupHelpState[groupID.value] == GroupState.Held)
+                        else if (arcGroupHeldState[groupID.value] == GroupState.Held)
                         {
-                            arcGroupHelpState[groupID.value] = GroupState.Lifted;
+                            arcGroupHeldState[groupID.value] = GroupState.Lifted;
                         }
                         else
                         {
-                            arcGroupHelpState[groupID.value] = GroupState.Missed;
+                            arcGroupHeldState[groupID.value] = GroupState.Missed;
                         }
                     }
 
@@ -135,6 +138,8 @@ namespace ArcCore.Gameplay.Systems
                 if (!collided && wrongFinger)
                     colorState.Execute(ArcColorFSM.Event.WrongFinger);
 
+                accumulativeArcX += colorCumulativeX;
+
 #if DEBUG
                 s += $"Color: {color} -> finger: {colorState.FingerId} & state: {statesString[(int)colorState._state]} \n";
 #endif
@@ -142,6 +147,7 @@ namespace ArcCore.Gameplay.Systems
 #if DEBUG
             PlayManager.DebugText.text = s;
 #endif
+            PlayManager.GameplayCamera.AccumulativeArcX = accumulativeArcX;
         }
     }
 

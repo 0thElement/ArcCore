@@ -28,6 +28,16 @@ namespace ArcCore.Gameplay.Behaviours
         private int[] resetTimings;
         private int currentResetTiming;
 
+        /// <summary>
+        /// Current tilt value, affected by active arcs' x positions on the scene
+        /// </summary>
+        private float currentTilt;
+        private float accumulativeArcX;
+        public float AccumulativeArcX
+        {
+            set => accumulativeArcX = value;
+        }
+
         private PosRot accumulate;
 
         /// <summary>
@@ -94,9 +104,9 @@ namespace ArcCore.Gameplay.Behaviours
             if (!PlayManager.IsUpdating) return;
 
             if (cameraMovements.Length > 0) UpdateMove();
-            if (isReset) UpdateTilt();
-
             transform.SetPositionAndRotation(accumulate);
+
+            if (isReset) UpdateTilt();
         }
 
         public void UpdateMove()
@@ -167,7 +177,12 @@ namespace ArcCore.Gameplay.Behaviours
         }
         public void UpdateTilt()
         {
-
+            //Taken from arcade. Might need tweaking
+            float pos = Mathf.Clamp(-accumulativeArcX / 4.25f, -1, 1) * 0.05f;
+            float delta = pos - currentTilt;
+            float speed = PlayManager.IsUpdatingAndActive ? (accumulativeArcX == 0 ? 4f : 8f) : 0;
+            currentTilt = currentTilt + speed * delta * Time.deltaTime;
+            transform.LookAt(new Vector3(0, -5.5f, -20), new Vector3(currentTilt, 1 - currentTilt, 0)); 
         }
     }
 }
