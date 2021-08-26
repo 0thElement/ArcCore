@@ -9,6 +9,8 @@ namespace ArcCore.Gameplay.Data
         public enum State {
             //Waiting for new finger
             Await,
+            //Waiting for assigned finger to be lifted
+            AwaitLift,
             //Listening and listening for a finger
             Listening,
             //The assigned finger is no longer touching the screen
@@ -32,6 +34,8 @@ namespace ArcCore.Gameplay.Data
             Scheduled,
             //No arcs of this color is present in the judge range
             Rest,
+            //Opposite of above
+            Unrest,
             //Grace period activated
             Grace
         }
@@ -39,6 +43,7 @@ namespace ArcCore.Gameplay.Data
         //Acts as a timer inbetween state changes
         private int schedule;
         private State state;
+        public State _state => state;
         private Action<int>[,] fsm;
 
         public float redmix
@@ -62,14 +67,15 @@ namespace ArcCore.Gameplay.Data
             schedule = 0;
             this.color = color;
             state = State.Await;
-            fsm = new Action<int>[6,6] {
-                             //Collide , Lift   , WrongFinger, Scheduled, Rest , Grace
-                /* Await     */{Assign , null   , null       , null     , null , Grace},
-                /* Listening */{null   , Lift   , Red        , null     , Reset, Grace},
-                /* Lifted    */{LiftRed, null   , null       , Reset    , Reset, Grace},
-                /* LiftedRed */{null   , null   , null       , Reset    , Reset, Grace},
-                /* Red       */{null   , LiftRed, null       , StopRed  , null , Grace},
-                /* Grace     */{null   , null   , null       , Reset    , null , Grace}
+            fsm = new Action<int>[7,7] {
+                             //Collide , Lift   , WrongFinger, Scheduled, Rest     , Unrest, Grace
+                /* Await     */{Assign , null   , null       , null     , null     , null  , Grace},
+                /* AwaitLift */{null   , Reset  , null       , null     , null     , Unrest, Grace},
+                /* Listening */{null   , Lift   , Red        , null     , AwaitLift, null  , Grace},
+                /* Lifted    */{LiftRed, null   , null       , Reset    , Reset    , null  , Grace},
+                /* LiftedRed */{null   , null   , null       , Reset    , Reset    , null  , Grace},
+                /* Red       */{null   , LiftRed, null       , StopRed  , null     , null  , Grace},
+                /* Grace     */{null   , null   , null       , Reset    , null     , null  , Grace}
             };
         } 
         public void Execute(Event e, int id = TouchPoint.NullId)
@@ -102,6 +108,14 @@ namespace ArcCore.Gameplay.Data
         private void LiftRed(int id)
         {
             state = State.LiftedRed;
+        }
+        private void AwaitLift(int id)
+        {
+            state = State.AwaitLift;
+        }
+        private void Unrest(int id)
+        {
+            state = State.Listening;
         }
         private void Reset(int id)
         {

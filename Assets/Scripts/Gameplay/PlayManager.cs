@@ -151,6 +151,10 @@ namespace ArcCore.Gameplay
 
         private World world;
 
+        [Header("Debug")]
+        [SerializeField] private UnityEngine.UI.Text debugText;
+        public static UnityEngine.UI.Text DebugText => instance.debugText;
+
         private bool isUpdating;
         public void Start()
         {

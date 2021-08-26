@@ -1,3 +1,4 @@
+#define DEBUG
 using ArcCore.Gameplay.Behaviours;
 using ArcCore.Gameplay.EntityCreation;
 using ArcCore.Gameplay.Components;
@@ -6,18 +7,37 @@ using Unity.Collections;
 using Unity.Entities;
 using ArcCore.Gameplay.Data;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace ArcCore.Gameplay.Systems
 {
     [UpdateInGroup(typeof(JudgementSystemGroup)), UpdateAfter(typeof(UnlockedHoldJudgeSystem))]
     public class ArcCollisionCheckSystem : SystemBase
     {
+#if DEBUG
+        string[] statesString = new string[] {"Await", "AwaitLift", "Listening", "Lifted", "LiftedRed", "Red", "Grace"};
+#endif
         protected override void OnUpdate()
         {
             if (!PlayManager.IsUpdatingAndActive) return;
 
+            //Cheating ECS and forcing this system to update every frame
+            Entities
+                .WithAll<Prefab, Disabled>()
+                .ForEach((in ArcGroupID _)=>{return;}).Run();
+
             var touchArray = PlayManager.InputHandler.touchPoints;
             int currentTime = PlayManager.ReceptorTime;
+
+#if DEBUG
+            string s = "";
+
+            for (int i=0; i < touchArray.Length; i++)
+            {
+                if (touchArray[i].InputPlaneValid)
+                    s+= $"touch: {i} {touchArray[i].inputPosition.Value}\n";
+            }
+#endif
 
             for (int color = 0; color <= PlayManager.MaxArcColor; color++)
             {
@@ -61,7 +81,7 @@ namespace ArcCore.Gameplay.Systems
                                 if (colorState.IsAwaiting())
                                 {
                                     bool canAssign = true;
-                                    for (int c=0; c < PlayManager.MaxArcColor; c++)
+                                    for (int c=0; c <= PlayManager.MaxArcColor; c++)
                                     {
                                         if (c!=color && PlayManager.ArcColorFsm[c].FingerId == currentTouch.fingerId)
                                         {
@@ -105,13 +125,23 @@ namespace ArcCore.Gameplay.Systems
 
                 ).WithoutBurst().Run();
 
-                if (!existEntities) colorState.Execute(ArcColorFSM.Event.Rest);
+                if (existEntities)
+                    colorState.Execute(ArcColorFSM.Event.Unrest);
+                else
+                    colorState.Execute(ArcColorFSM.Event.Rest);
 
                 if (collided)
                     colorState.Execute(ArcColorFSM.Event.Collide);
                 if (!collided && wrongFinger)
                     colorState.Execute(ArcColorFSM.Event.WrongFinger);
+
+#if DEBUG
+                s += $"Color: {color} -> finger: {colorState.FingerId} & state: {statesString[(int)colorState._state]} \n";
+#endif
             }
+#if DEBUG
+            PlayManager.DebugText.text = s;
+#endif
         }
     }
 
