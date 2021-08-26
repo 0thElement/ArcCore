@@ -18,7 +18,6 @@ namespace ArcCore.Gameplay.Systems
             arcJudgeQuery = GetEntityQuery(
                 ComponentType.ReadOnly<WithinJudgeRange>(),
                 ComponentType.ReadOnly<ArcData>(),
-                ComponentType.ReadOnly<ArcGroupID>(),
                 ComponentType.ReadOnly<ArcColorID>(),
                 ComponentType.ReadOnly<ChartIncrTime>()
             );
@@ -30,42 +29,33 @@ namespace ArcCore.Gameplay.Systems
             int currentTime = PlayManager.ReceptorTime;
             int maxArcColor = PlayManager.MaxArcColor;
 
-            List<NativeArray<ArcData>> arcDataByColor = new List<NativeArray<ArcData>>();
+            NativeArray<Entity> arcEntities = arcJudgeQuery.ToEntityArray(Allocator.TempJob);
+            NativeArray<ArcData> arcData = arcJudgeQuery.ToComponentDataArray<ArcData>(Allocator.Temp);
 
-            for (int c=0; c <= maxArcColor; c++)
-            {
-                arcJudgeQuery.SetSharedComponentFilter(new ArcColorID(c));
-                arcDataByColor.Add(arcJudgeQuery.ToComponentDataArray<ArcData>(Allocator.Temp));
-            }
+            int count = arcEntities.Length;
 
-            for (int c1 = 0; c1 <= maxArcColor - 1; c1++)
+            for (int i = 0; i < count - 1; i++)
             {
-                for (int c2 = c1 + 1; c2 <= maxArcColor; c2++)
+                for (int j = i + 1; j < count; j++)
                 {
-                    for (int i = 0; i < arcDataByColor[c1].Length; i++)
+                    float2 posDifference = arcData[i].GetPosAt(currentTime) - arcData[j].GetPosAt(currentTime);
+
+                    if (Mathf.Abs(posDifference.x) <= Constants.ArcBoxExtents.x
+                    &&  Mathf.Abs(posDifference.y) <= Constants.ArcBoxExtents.y
+                    &&  EntityManager.GetSharedComponentData<ArcColorID>(arcEntities[i]).id
+                    !=  EntityManager.GetSharedComponentData<ArcColorID>(arcEntities[j]).id)
                     {
-                        for (int j = 0; j < arcDataByColor[c2].Length; j++)
-                        {
-                            float2 posDifference = arcDataByColor[c1][i].GetPosAt(currentTime) - arcDataByColor[c2][j].GetPosAt(currentTime);
-
-                            if (Mathf.Abs(posDifference.x) <= Constants.ArcBoxExtents.x
-                            &&  Mathf.Abs(posDifference.y) <= Constants.ArcBoxExtents.y)
-                            {
-                                ActivateGrace();
-
-                                for (int k = c1; k <= maxArcColor; k++)
-                                {
-                                    arcDataByColor[k].Dispose();
-                                }
-                                return;
-                            }
-                        }
+                        ActivateGrace();
+                    
+                        arcEntities.Dispose();
+                        arcData.Dispose();
+                        return;
                     }
                 }
-
-                arcDataByColor[c1].Dispose();
             }
-            arcDataByColor[maxArcColor].Dispose();
+
+            arcEntities.Dispose();
+            arcData.Dispose();
         }
 
         private void ActivateGrace()
