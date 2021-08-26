@@ -1,12 +1,9 @@
-﻿using System.Collections.Generic;
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
 using UnityEngine;
-using ArcCore.Gameplay.Utility;
 using ArcCore.Gameplay.Components;
 using ArcCore.Parsing.Data;
-using ArcCore.Gameplay.Components.Chunk;
 using ArcCore.Utilities.Extensions;
 using Unity.Rendering;
 using ArcCore.Parsing;
@@ -40,22 +37,13 @@ namespace ArcCore.Gameplay.EntityCreation
             Material grayoutMaterial   = Object.Instantiate(holdRenderMesh.material);
 
             var highlightShaderID = Shader.PropertyToID("_Highlight");
+
             highlightMaterial.SetFloat(highlightShaderID, 1);
-            grayoutMaterial.SetFloat(highlightShaderID, -1);
-
-            highlight = new RenderMesh
-            {
-                mesh = holdRenderMesh.mesh,
-                material = highlightMaterial
-            };
-
-            grayout = new RenderMesh
-            {
-                mesh = holdRenderMesh.mesh,
-                material = grayoutMaterial
-            };
+            grayoutMaterial  .SetFloat(highlightShaderID, -1);
 
             initial = holdRenderMesh;
+            highlight = new RenderMesh { mesh = holdRenderMesh.mesh, material = highlightMaterial };
+            grayout   = new RenderMesh { mesh = holdRenderMesh.mesh, material = grayoutMaterial };
         }
 
         public void CreateEntities(IChartParser parser)
@@ -80,33 +68,23 @@ namespace ArcCore.Gameplay.EntityCreation
                 float startFloorPosition = PlayManager.Conductor.GetFloorPositionFromTiming(hold.timing, hold.timingGroup);
                 float scalez = - endFloorPosition + startFloorPosition;
 
-                em.SetComponentData(holdEntity, new Translation(){
-                    Value = new float3(x, y, z)
-                });
-                em.AddComponentData(holdEntity, new NonUniformScale(){
-                    Value = new float3(scalex, scaley, scalez)
-                });
-                em.SetComponentData(holdEntity, new BaseLength(scalez));
-
-                em.SetComponentData(holdEntity, new FloorPosition(startFloorPosition));
-                em.SetComponentData(holdEntity, new TimingGroup(hold.timingGroup));
-                em.SetComponentData(holdEntity, new ChartTime{value = hold.timing});
-
-                em.SetComponentData(holdEntity, new ChartLane(hold.track));
-
-                //Appear and disappear time
                 int t1 = PlayManager.Conductor.GetFirstTimingFromFloorPosition(startFloorPosition + Constants.RenderFloorPositionRange, 0);
                 int t2 = PlayManager.Conductor.GetFirstTimingFromFloorPosition(endFloorPosition - Constants.RenderFloorPositionRange, 0);
                 int appearTime = (t1 < t2) ? t1 : t2;
 
+                em.SetComponentData(holdEntity, new Translation(){ Value = new float3(x, y, z) });
+                em.AddComponentData(holdEntity, new NonUniformScale(){ Value = new float3(scalex, scaley, scalez) });
+                em.SetComponentData(holdEntity, new BaseLength(scalez));
+                em.SetComponentData(holdEntity, new FloorPosition(startFloorPosition));
+                em.SetComponentData(holdEntity, new TimingGroup(hold.timingGroup));
+                em.SetComponentData(holdEntity, new ChartTime{value = hold.timing});
+                em.SetComponentData(holdEntity, new ChartLane(hold.track));
                 em.SetComponentData(holdEntity, new AppearTime(appearTime));
                 em.SetComponentData(holdEntity, new DestroyOnTiming(hold.endTiming + Constants.FarWindow));
 
-                //Judge entities
                 float startBpm = PlayManager.Conductor.GetTimingEventFromTiming(hold.timing, hold.timingGroup).bpm;
                 em.SetComponentData(holdEntity, ChartIncrTime.FromBpm(hold.timing, hold.endTiming, startBpm, out int comboCount));
 
-                //Add combo
                 PlayManager.ScoreHandler.tracker.noteCount += comboCount;
             }
         }

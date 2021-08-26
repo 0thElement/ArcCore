@@ -14,12 +14,6 @@ namespace ArcCore.Gameplay.EntityCreation
 {
     public class TraceEntityCreator
     {
-        private Material traceMaterial;
-        private Material traceShadowMaterial;
-        private Mesh traceMesh;
-        private Mesh headMesh;
-        private Mesh traceShadowMesh;
-
         private Entity traceNoteEntityPrefab;
         private Entity traceShadowEntityPrefab;
         private Entity headTraceNoteEntityPrefab;
@@ -29,27 +23,19 @@ namespace ArcCore.Gameplay.EntityCreation
         private EntityManager em;
 
         public TraceEntityCreator(
-            World world, GameObject traceNotePrefab, GameObject headTraceNotePrefab,  GameObject traceApproachIndicatorPrefab,
-            GameObject traceShadowPrefab, Material traceMaterial, Material traceShadowMaterial,
-            Mesh traceMesh, Mesh headMesh, Mesh traceShadowMesh)
+            World world, GameObject traceNotePrefab, GameObject headTraceNotePrefab, GameObject traceApproachIndicatorPrefab, GameObject traceShadowPrefab)
         {
             em = world.EntityManager;
             var gocs = GameObjectConversionSettings.FromWorld(world, null);
 
-            this.traceMaterial = traceMaterial;
-            this.traceShadowMaterial = traceShadowMaterial;
-            this.traceMesh = traceMesh;
-            this.headMesh = headMesh;
-            this.traceShadowMesh = traceShadowMesh;
             this.traceApproachIndicatorPrefab = traceApproachIndicatorPrefab;
 
-            traceNoteEntityPrefab = gocs.ConvertToNote(traceNotePrefab, em);
-            em.ExposeLocalToWorld(traceNoteEntityPrefab);
-
-            traceShadowEntityPrefab = gocs.ConvertToNote(traceShadowPrefab, em);
-            em.ExposeLocalToWorld(traceShadowEntityPrefab);
-
+            traceNoteEntityPrefab     = gocs.ConvertToNote(traceNotePrefab, em);
+            traceShadowEntityPrefab   = gocs.ConvertToNote(traceShadowPrefab, em);
             headTraceNoteEntityPrefab = gocs.ConvertToNote(headTraceNotePrefab, em);
+
+            em.ExposeLocalToWorld(traceNoteEntityPrefab);
+            em.ExposeLocalToWorld(traceShadowEntityPrefab);
         }
         //Similar to arc creation
         public void CreateEntities(IChartParser parser)
@@ -152,21 +138,16 @@ namespace ArcCore.Gameplay.EntityCreation
         {
             Entity traceEntity = em.Instantiate(traceNoteEntityPrefab);
 
-            em.SetSharedComponentData<RenderMesh>(traceEntity, new RenderMesh()
-            {
-                mesh = traceMesh,
-                material = traceMaterial
-            });
-
-            em.SetComponentData<FloorPosition>(traceEntity, new FloorPosition() { value = start.z });
-            em.SetComponentData(traceEntity, new TimingGroup(timingGroup));
-
             float dx = start.x - end.x;
             float dy = start.y - end.y;
             float dz = start.z - end.z;
 
+            int t1 = PlayManager.Conductor.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, timingGroup);
+            int t2 = PlayManager.Conductor.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, timingGroup);
+            int appearTime = (t1 < t2) ? t1 : t2;
+
             //Shear along xy + scale along z matrix
-            em.SetComponentData<LocalToWorld>(traceEntity, new LocalToWorld()
+            em.SetComponentData(traceEntity, new LocalToWorld()
             {
                 Value = new float4x4(
                     1, 0, dx, start.x,
@@ -175,33 +156,23 @@ namespace ArcCore.Gameplay.EntityCreation
                     0, 0, 0,  1
                 )
             });
-
+            em.SetComponentData(traceEntity, new FloorPosition(start.z));
+            em.SetComponentData(traceEntity, new TimingGroup(timingGroup));
             em.SetComponentData(traceEntity, new BaseOffset(new float4(start.x, start.y, 0, 0)));
             em.SetComponentData(traceEntity, new BaseShear(new float4(dx, dy, dz, 0)));
-
             em.SetComponentData(traceEntity, new Cutoff(true));
-
-            int t1 = PlayManager.Conductor.GetFirstTimingFromFloorPosition(start.z + Constants.RenderFloorPositionRange, timingGroup);
-            int t2 = PlayManager.Conductor.GetFirstTimingFromFloorPosition(end.z - Constants.RenderFloorPositionRange, timingGroup);
-            int appearTime = (t1 < t2) ? t1 : t2;
-
-            em.SetComponentData(traceEntity, new AppearTime() { value = appearTime });
+            em.SetComponentData(traceEntity, new AppearTime(appearTime));
             em.SetComponentData(traceEntity, new DestroyOnTiming(endTime));
-            em.SetComponentData(traceEntity, new ChartTime() { value = time });
-            em.SetComponentData(traceEntity, new ChartEndTime() { value = endTime });
-            em.SetComponentData(traceEntity, new ArcGroupID() { value = groupID });
+            em.SetComponentData(traceEntity, new ChartTime(time));
+            em.SetComponentData(traceEntity, new ChartEndTime(endTime));
+            em.SetComponentData(traceEntity, new ArcGroupID(groupID));
 
             if (time < endTime)
             {
                 Entity traceShadowEntity = em.Instantiate(traceShadowEntityPrefab);
-                em.SetSharedComponentData<RenderMesh>(traceShadowEntity, new RenderMesh()
-                {
-                    mesh = traceShadowMesh,
-                    material = traceShadowMaterial
-                });
-                em.SetComponentData<FloorPosition>(traceShadowEntity, new FloorPosition() { value = start.z });
 
-                em.SetComponentData<LocalToWorld>(traceShadowEntity, new LocalToWorld()
+                em.SetComponentData(traceShadowEntity, new FloorPosition() { value = start.z });
+                em.SetComponentData(traceShadowEntity, new LocalToWorld()
                 {
                     Value = new float4x4(
                         1, 0, dx, start.x,
@@ -213,48 +184,31 @@ namespace ArcCore.Gameplay.EntityCreation
                 em.SetComponentData(traceShadowEntity, new BaseOffset(new float4(start.x, 0, 0, 0)));
                 em.SetComponentData(traceShadowEntity, new BaseShear(new float4(dx, 0, dz, 0)));
                 em.SetComponentData(traceShadowEntity, new Cutoff(true));
-                em.SetComponentData(traceShadowEntity, new TimingGroup() { value = timingGroup });
-                em.SetComponentData(traceShadowEntity, new AppearTime() { value = appearTime });
+                em.SetComponentData(traceShadowEntity, new TimingGroup(timingGroup));
+                em.SetComponentData(traceShadowEntity, new AppearTime(appearTime));
                 em.SetComponentData(traceShadowEntity, new DestroyOnTiming(endTime));
-                em.SetComponentData(traceShadowEntity, new ChartTime() { value = time });
+                em.SetComponentData(traceShadowEntity, new ChartTime(time));
             }
         }
 
         private void CreateHeadSegment(TraceRaw trace)
         {
             Entity headEntity = em.Instantiate(headTraceNoteEntityPrefab);
-            em.SetSharedComponentData<RenderMesh>(headEntity, new RenderMesh(){
-                mesh = headMesh,
-                material = traceMaterial
-            });
 
             float floorpos = PlayManager.Conductor.GetFloorPositionFromTiming(trace.timing, trace.timingGroup);
-            em.SetComponentData<FloorPosition>(headEntity, new FloorPosition()
-            {
-                value = floorpos
-            });
 
             float x = Conversion.GetWorldX(trace.startX); 
             float y = Conversion.GetWorldY(trace.startY); 
             const float z = 0;
-
-            em.SetComponentData<Translation>(headEntity, new Translation()
-            {
-                Value = new float3(x, y, z)
-            });
-            em.SetComponentData<TimingGroup>(headEntity, new TimingGroup()
-            {
-                value = trace.timingGroup
-            });
             
             int t1 = PlayManager.Conductor.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, 0);
             int t2 = PlayManager.Conductor.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, 0);
             int appearTime = (t1 < t2) ? t1 : t2;
 
-            em.SetComponentData<AppearTime>(headEntity, new AppearTime()
-            {
-                value = appearTime
-            });
+            em.SetComponentData(headEntity, new FloorPosition(floorpos));
+            em.SetComponentData(headEntity, new Translation() { Value = new float3(x, y, z) });
+            em.SetComponentData(headEntity, new TimingGroup(trace.timingGroup));
+            em.SetComponentData(headEntity, new AppearTime(appearTime));
         }
     }
 }

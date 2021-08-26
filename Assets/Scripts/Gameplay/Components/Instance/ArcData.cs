@@ -15,13 +15,13 @@ namespace ArcCore.Gameplay.Components
         public int endTiming;
         public ArcEasing easing;
 
-        public ArcData(float2 start, float2 end, int startTiming, int endTiming, ArcEasing easing)
+        public ArcData(ArcRaw arc)
         {
-            this.start = start;
-            this.end = end;
-            this.easing = easing;
-            this.startTiming = startTiming;
-            this.endTiming = endTiming;
+            this.start = Conversion.GetWorldPos(math.float2(arc.startX, arc.startY));
+            this.end = Conversion.GetWorldPos(math.float2(arc.endX, arc.endY));
+            this.easing = arc.easing;
+            this.startTiming = arc.timing;
+            this.endTiming = arc.endTiming;
         }
 
         public bool CollideWith(int currentTiming, Rect2D rect)

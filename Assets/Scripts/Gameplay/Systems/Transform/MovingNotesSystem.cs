@@ -1,15 +1,10 @@
-﻿using Unity.Burst;
-using Unity.Collections;
+﻿using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Transforms;
 using Unity.Mathematics;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Tags;
-using ArcCore.Gameplay.Behaviours;
-using UnityEngine;
-using Unity.Rendering;
-using ArcCore.Gameplay.Systems;
 
 namespace ArcCore.Gameplay.Systems
 {

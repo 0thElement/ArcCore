@@ -1,10 +1,8 @@
-using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Gameplay.Components;
 using ArcCore.Parsing.Data;
-using ArcCore.Gameplay.Components.Chunk;
 using ArcCore.Utilities.Extensions;
 using ArcCore.Parsing;
 
@@ -82,21 +80,18 @@ namespace ArcCore.Gameplay.EntityCreation
 
         private void CreateLineAt(TimingRaw timingEvent, float timingf)
         {
-            int timing = (int)Mathf.Round(timingf);
-
             Entity lineEntity = em.Instantiate(beatlineEntityPrefab);
 
-            float floorpos = PlayManager.Conductor.GetFloorPositionFromTiming(timing, 0);
+            int timing = Mathf.RoundToInt(timingf);
 
-            em.SetComponentData<FloorPosition>(lineEntity, new FloorPosition(){
-                value = floorpos
-            });
+            float floorpos = PlayManager.Conductor.GetFloorPositionFromTiming(timing, 0);
 
             int t1 = PlayManager.Conductor.GetFirstTimingFromFloorPosition(floorpos - Constants.RenderFloorPositionRange, 0);
             int t2 = PlayManager.Conductor.GetFirstTimingFromFloorPosition(floorpos + Constants.RenderFloorPositionRange, 0);
             int appearTime = (t1 < t2) ? t1 : t2;
             int disappearTime = (t1 < t2) ? t2 : t1;
 
+            em.SetComponentData(lineEntity, new FloorPosition(floorpos));
             em.SetComponentData(lineEntity, new AppearTime(appearTime));
             em.SetComponentData(lineEntity, new DestroyOnTiming(disappearTime));
         }

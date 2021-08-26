@@ -1,14 +1,8 @@
-﻿using ArcCore;
-using ArcCore.Gameplay.Behaviours;
-using ArcCore.Gameplay.Components;
+﻿using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Tags;
-using Unity.Collections;
 using Unity.Entities;
-using UnityEngine;
 using ArcCore.Gameplay.Data;
 using Unity.Mathematics;
-using ArcCore.Gameplay.Utility;
-using Unity.Rendering;
 using ArcCore.Math;
 using ArcCore.Utilities.Extensions;
 

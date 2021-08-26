@@ -31,14 +31,17 @@ namespace ArcCore.Gameplay
         public static GameplayCamera GameplayCamera => instance.gameplayCamera;
         public static ParticlePool ParticlePool => instance.particlePool;
 
+
         [Header("Beatline Creation Information")]
         public GameObject beatlinePrefab;
 
         public BeatlineEntityCreator GetBeatlineEntityCreator()
             => new BeatlineEntityCreator(world, beatlinePrefab);
 
+
         [Header("Tap Creation Information")]
         public GameObject tapNotePrefab;
+
 
         [Header("Arctap Creation Information")]
         public GameObject arcTapNotePrefab;
@@ -48,11 +51,13 @@ namespace ArcCore.Gameplay
         public TapEntityCreator GetTapEntityCreator()
             => new TapEntityCreator(world, tapNotePrefab, arcTapNotePrefab, connectionLinePrefab, shadowPrefab);
 
+
         [Header("Hold Creation Information")]
         public GameObject holdNotePrefab;
 
         public HoldEntityCreator GetHoldEntityCreator()
             => new HoldEntityCreator(world, holdNotePrefab);
+
 
         [Header("Arc Creation Information")]
         public GameObject arcNotePrefab;
@@ -61,11 +66,7 @@ namespace ArcCore.Gameplay
         public GameObject arcShadowPrefab;
         public GameObject arcApproachIndicatorPrefab;
         public GameObject arcParticlePrefab;
-        public Material arcMaterial;
-        public Material heightMaterial;
         public Color redColor;
-        public Mesh arcMesh;
-        public Mesh arcHeadMesh;
 
         public ArcEntityCreator GetArcEntityCreator()
             => new ArcEntityCreator(
@@ -73,16 +74,12 @@ namespace ArcCore.Gameplay
                 heightIndicatorPrefab, arcShadowPrefab,
                 arcApproachIndicatorPrefab, arcParticlePrefab, redColor);
 
+
         [Header("Trace Creation Information")]
         public GameObject traceNotePrefab;
         public GameObject headTraceNotePrefab;
         public GameObject traceShadowPrefab;
         public GameObject traceApproachIndicatorPrefab;
-        public Material traceMaterial;
-        public Material traceShadowMaterial;
-        public Mesh traceMesh;
-        public Mesh traceHeadMesh;
-        public Mesh traceShadowMesh;
 
         private IndicatorHandler arcIndicatorHandler = new IndicatorHandler();
         private IndicatorHandler traceIndicatorHandler = new IndicatorHandler();
@@ -93,8 +90,7 @@ namespace ArcCore.Gameplay
         public TraceEntityCreator GetTraceEntityCreator()
             => new TraceEntityCreator(
                 world, traceNotePrefab, headTraceNotePrefab, traceApproachIndicatorPrefab,
-                traceShadowPrefab, traceMaterial, traceShadowMaterial,
-                traceMesh, traceHeadMesh, traceShadowMesh);
+                traceShadowPrefab);
 
         public static int ReceptorTime => instance.conductor.receptorTime;
         public static bool IsActive => instance != null;

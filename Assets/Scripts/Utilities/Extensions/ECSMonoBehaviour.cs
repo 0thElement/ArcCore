@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using Unity.Entities;
+﻿using Unity.Entities;
 using UnityEngine;
 
 namespace ArcCore.Utilities.Extensions

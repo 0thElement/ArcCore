@@ -1,13 +1,8 @@
 #define DEBUG
-using ArcCore.Gameplay.Behaviours;
-using ArcCore.Gameplay.EntityCreation;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Tags;
-using Unity.Collections;
 using Unity.Entities;
 using ArcCore.Gameplay.Data;
-using System.Collections.Generic;
-using UnityEngine;
 
 namespace ArcCore.Gameplay.Systems
 {
@@ -37,7 +32,7 @@ namespace ArcCore.Gameplay.Systems
             for (int i=0; i < touchArray.Length; i++)
             {
                 if (touchArray[i].InputPlaneValid)
-                    s+= $"touch: {i} {touchArray[i].inputPosition.Value}\n";
+                    s+= $"touch: {touchArray[i].fingerId} {touchArray[i].inputPosition.Value}\n";
             }
 #endif
 
@@ -62,9 +57,7 @@ namespace ArcCore.Gameplay.Systems
                     }
                 }
                 if (touchLifted) 
-                {
                     colorState.Execute(ArcColorFSM.Event.Lift);
-                }
                 
                 Entities.WithSharedComponentFilter(new ArcColorID(color)).WithAll<ChartIncrTime,WithinJudgeRange>().ForEach(
                     
@@ -94,20 +87,14 @@ namespace ArcCore.Gameplay.Systems
                                         }
                                     }
                                     if (canAssign) 
-                                    {
                                         colorState.Execute(ArcColorFSM.Event.Collide, currentTouch.fingerId);
-                                    }
                                 }
 
                                 collided = true;
                                 if (colorState.IsValidId(currentTouch.fingerId))
-                                {
                                     groupHeld = true;
-                                }
                                 else
-                                {
                                     wrongFinger = true;
-                                }
                             }
                         }
 
@@ -117,13 +104,9 @@ namespace ArcCore.Gameplay.Systems
                             colorCumulativeX += arcData.GetPosAt(currentTime).x;
                         }
                         else if (arcGroupHeldState[groupID.value] == GroupState.Held)
-                        {
                             arcGroupHeldState[groupID.value] = GroupState.Lifted;
-                        }
                         else
-                        {
                             arcGroupHeldState[groupID.value] = GroupState.Missed;
-                        }
                     }
 
                 ).WithoutBurst().Run();

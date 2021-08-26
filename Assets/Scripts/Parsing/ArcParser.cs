@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace ArcCore.Parsing
 {
-    using ArcCore.Gameplay;
     using ArcCore.Gameplay.Behaviours;
-    using ArcCore.Math;
     using ArcCore.Serialization;
     using ArcCore.Utilities;
     using Data;
     using System.IO;
-    using System.Linq;
-    using System.Text;
     using Unity.Mathematics;
     using UnityEngine;
 

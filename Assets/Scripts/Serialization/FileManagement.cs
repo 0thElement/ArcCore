@@ -1,12 +1,9 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Converters;
 using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO.Compression;
-using UnityEngine;
 
 namespace ArcCore.Serialization
 {

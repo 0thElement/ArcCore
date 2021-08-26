@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using ArcCore.Gameplay.Behaviours;
 
 namespace ArcCore.Gameplay.Data
 {

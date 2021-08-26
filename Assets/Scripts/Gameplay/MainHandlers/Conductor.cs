@@ -2,10 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Collections;
 using System;
-using ArcCore.Gameplay.Utility;
 using ArcCore.Parsing.Data;
 using ArcCore.Utilities;
-using ArcCore.Gameplay.Systems;
 using ArcCore.Parsing;
 
 namespace ArcCore.Gameplay.Behaviours

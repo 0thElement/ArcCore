@@ -1,8 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Unity.Collections;
-using System;
-using ArcCore.Gameplay.Utility;
 using ArcCore.Parsing.Data;
 using Unity.Mathematics;
 using ArcCore.Math;
@@ -20,6 +17,7 @@ namespace ArcCore.Gameplay.Behaviours
         private CameraEvent[] cameraMovements;
         private int firstInactiveIndex;
         private List<int> activeIndices;
+
         /// <summary>
         /// Is the camera currently reset?
         /// </summary>
@@ -83,8 +81,6 @@ namespace ArcCore.Gameplay.Behaviours
         {
             accumulate = ResetPosRot;
             isReset = true;
-
-            //print("sus");
         }
         public void Start()
         {
@@ -161,13 +157,6 @@ namespace ArcCore.Gameplay.Behaviours
 
                 isReset = false;
             }
-
-            /*
-            if (activeIndices.Count > 0)
-            {
-                print($"{{{cameraMovements[activeIndices[0]].targetDelta}, {transform.position}, {transform.eulerAngles}}}");
-            }
-            */
 
             //remove dead indices.
             foreach (int i in toRemove)

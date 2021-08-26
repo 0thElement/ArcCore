@@ -1,11 +1,8 @@
-using ArcCore.Gameplay.Behaviours;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Tags;
 using Unity.Entities;
 using Unity.Rendering;
 using Unity.Transforms;
-using ArcCore.Gameplay.Data;
-using UnityEngine;
 
 namespace ArcCore.Gameplay.Systems
 {

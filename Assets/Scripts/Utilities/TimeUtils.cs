@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ArcCore.Utilities
+﻿namespace ArcCore.Utilities
 {
     public static class TimeUtils
     {

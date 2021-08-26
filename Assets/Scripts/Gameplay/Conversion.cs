@@ -1,8 +1,5 @@
-using ArcCore.Gameplay.Behaviours;
 using ArcCore.Parsing.Data;
-using System;
 using Unity.Mathematics;
-using UnityEngine;
 
 namespace ArcCore.Gameplay
 {
@@ -10,14 +7,6 @@ namespace ArcCore.Gameplay
     {
         public static float TrackToX(int track)
             => Constants.LaneWidth * 5 - Constants.LaneFullwidth * track;
-
-        /*
-         * Constants.LaneWidth * 5 - Constants.LaneFullwidth * track = x
-         * x - laneWidth * 5 = -lanefullwidth * track
-         * track = -(x - laneWidth * 5) / lanefullwidth
-         * track = (laneWidth * 5 - x) / lanefullwidth
-         * 
-         */
 
         public static int XToTrack(float x)
             => (int)math.round((Constants.LaneWidth * 5 - x) * Constants.LaneFullwidthRecip);
