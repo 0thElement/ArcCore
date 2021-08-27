@@ -30,17 +30,7 @@ namespace ArcCore.Parsing.Data
         public float2 StartPos => new float2(startX, startY);
         public float2 EndPos => new float2(endX, endY);
 
-        public float2 PositionAt(int time) => PositionAt(time, timing, endTiming, StartPos, EndPos, easing);
-        public static float2 PositionAt(int time, int timing, int endTiming, float2 start, float2 end, ArcEasing easing)
-            => new float2(
-                    Conversion.GetXAt(
-                        math.clamp(math.unlerp(time, timing, endTiming), 0, 1),
-                        start.x, end.x, easing
-                    ),
-                    Conversion.GetYAt(
-                        math.clamp(math.unlerp(time, timing, endTiming), 0, 1),
-                        start.y, end.y, easing
-                    )
-               );
+        public float2 GetPosAt(int time)
+            => Conversion.GetPosAt(math.unlerp(timing, endTiming, time), new float2(startX, startY), new float2(endX, endY), easing);
     }
 }

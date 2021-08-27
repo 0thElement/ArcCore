@@ -24,7 +24,7 @@ namespace ArcCore.Parsing
         public List<TapRaw> Taps { get; private set; } = new List<TapRaw>();
         public List<HoldRaw> Holds { get; private set; } = new List<HoldRaw>();
         public List<ArcRaw> Arcs { get; private set; } = new List<ArcRaw>();
-        public List<TraceRaw> Traces { get; private set; } = new List<TraceRaw>();
+        public List<ArcRaw> Traces { get; private set; } = new List<ArcRaw>();
         public List<ArctapRaw> Arctaps { get; private set; } = new List<ArctapRaw>();
         public List<CameraEvent> Cameras { get; private set; } = new List<CameraEvent>();
         public List<int> CameraResets { get; private set; } = new List<int>();
@@ -426,7 +426,7 @@ namespace ArcCore.Parsing
         {
             int t;
             Traces.Add(
-                new TraceRaw
+                new ArcRaw
                 {
                     timing = t = GetInt(),
                     endTiming = GetInt(predicate: val => val >= t),
@@ -435,7 +435,8 @@ namespace ArcCore.Parsing
                     endX = GetFloat(),
                     endY = GetFloat(),
                     easing = GetTypedValue<ArcEasing>("arc easing", TryGetArcEasing),
-                    timingGroup = timingGroup
+                    timingGroup = timingGroup,
+                    color = -1
                 }
             );
 

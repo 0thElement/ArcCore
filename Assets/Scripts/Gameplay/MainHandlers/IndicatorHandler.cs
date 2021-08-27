@@ -57,8 +57,6 @@ namespace ArcCore.Gameplay.Objects.Particle
         /// <summary>
         /// Initializes the manager with indicators
         /// </summary>
-        /// TODO: instead of constructing indicator outside of this class, initializes them here
-        /// Will be done when refactor ArcEntityCreator and TraceEntityCreator
         public void Initialize(List<IIndicator> indicatorList)
         {
             Destroy();

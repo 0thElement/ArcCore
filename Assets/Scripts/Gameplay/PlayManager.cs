@@ -66,13 +66,12 @@ namespace ArcCore.Gameplay
         public GameObject arcShadowPrefab;
         public GameObject arcApproachIndicatorPrefab;
         public GameObject arcParticlePrefab;
-        public Color redColor;
 
         public ArcEntityCreator GetArcEntityCreator()
             => new ArcEntityCreator(
                 world, arcNotePrefab, headArcNotePrefab,
                 heightIndicatorPrefab, arcShadowPrefab,
-                arcApproachIndicatorPrefab, arcParticlePrefab, redColor);
+                arcApproachIndicatorPrefab, arcParticlePrefab);
 
 
         [Header("Trace Creation Information")]
@@ -89,8 +88,8 @@ namespace ArcCore.Gameplay
 
         public TraceEntityCreator GetTraceEntityCreator()
             => new TraceEntityCreator(
-                world, traceNotePrefab, headTraceNotePrefab, traceApproachIndicatorPrefab,
-                traceShadowPrefab);
+                world, traceNotePrefab, headTraceNotePrefab,
+                traceApproachIndicatorPrefab, traceShadowPrefab);
 
         public static int ReceptorTime => instance.conductor.receptorTime;
         public static bool IsActive => instance != null;
@@ -130,6 +129,11 @@ namespace ArcCore.Gameplay
                 instance.archeadRenderMeshes[color],
                 instance.arcHeightRenderMeshes[color]);
 
+        public static List<RenderMesh> ArcInitialRenderMeshes => instance.arcInitialRenderMeshes;
+        public static List<RenderMesh> ArcHighlightRenderMeshes => instance.arcHighlightRenderMeshes;
+        public static List<RenderMesh> ArcGrayoutRenderMeshes => instance.arcGrayoutRenderMeshes;
+        public static List<RenderMesh> ArcheadRenderMeshes => instance.archeadRenderMeshes;
+        public static List<RenderMesh> ArcHeightRenderMeshes => instance.arcHeightRenderMeshes;
         private List<RenderMesh> arcInitialRenderMeshes = new List<RenderMesh>();
         private List<RenderMesh> arcHighlightRenderMeshes = new List<RenderMesh>();
         private List<RenderMesh> arcGrayoutRenderMeshes = new List<RenderMesh>();

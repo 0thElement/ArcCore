@@ -12,7 +12,7 @@ namespace ArcCore.Parsing
         List<TapRaw> Taps { get; }
         List<HoldRaw> Holds { get; }
         List<ArcRaw> Arcs { get; }
-        List<TraceRaw> Traces { get; }
+        List<ArcRaw> Traces { get; }
         List<ArctapRaw> Arctaps { get; }
         List<CameraEvent> Cameras { get; }
         List<int> CameraResets { get; }
