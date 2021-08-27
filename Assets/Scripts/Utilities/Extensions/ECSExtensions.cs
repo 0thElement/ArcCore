@@ -1,6 +1,4 @@
-﻿using ArcCore.Gameplay.Components;
-using ArcCore.Gameplay.Components.Chunk;
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
 using System.Reflection;
@@ -34,10 +32,6 @@ namespace ArcCore.Utilities.Extensions
         public static Entity ConvertToNote(this GameObjectConversionSettings gocSettings, GameObject obj, EntityManager entityManager)
         {
             Entity en = gocSettings.ConvertToEntity(obj);
-            if (entityManager.HasComponent<AppearTime>(en))
-            {
-                entityManager.AddChunkComponentData<ChunkAppearTime>(en);
-            }
             entityManager.AddComponent<Disabled>(en);
             return en;
         }

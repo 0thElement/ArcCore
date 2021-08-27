@@ -9,8 +9,8 @@ using ArcCore.Gameplay.Components.Tags;
 
 namespace ArcCore.Gameplay.Systems
 {
-    [UpdateInGroup(typeof(CustomInitializationSystemGroup)), UpdateAfter(typeof(ChunkScopingSystem))]
-    public class JudgeEntitiesScopingSystem : SystemBase
+    [UpdateInGroup(typeof(CustomInitializationSystemGroup)), UpdateAfter(typeof(InitSetupSystem))]
+    public class ScopingSystem : SystemBase
     {
         protected override void OnUpdate()
         {
@@ -24,10 +24,21 @@ namespace ArcCore.Gameplay.Systems
                     (Entity entity, in ChartTime chartTime) =>
 
                     {
-                        if (currentTime + Constants.LostWindow >= chartTime.value)
+                        if (Mathf.Abs(currentTime - chartTime.value) <= Constants.LostWindow)
                         {
                             commandBuffer.AddComponent<WithinJudgeRange>(entity);
                         }
+                    }
+
+                ).Run();
+
+            Entities.WithAll<Disabled>().WithNone<PastJudgeRange>().ForEach(
+
+                    (Entity entity, in AppearTime appearTime) =>
+
+                    {
+                        if (currentTime > appearTime.value)
+                            commandBuffer.RemoveComponent<Disabled>(entity);
                     }
 
                 ).Run();
