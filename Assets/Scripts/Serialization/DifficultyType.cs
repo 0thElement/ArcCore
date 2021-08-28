@@ -1,10 +1,13 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using ArcCore.Serialization.NewtonsoftExtensions;
 
 namespace ArcCore.Serialization
 {
-    public class DifficultyType : ICloneable, IEquatable<DifficultyType>
+    [JsonHasPresets]
+    public class DifficultyType
     {
         public string fullName;
         public string idName;
@@ -13,15 +16,6 @@ namespace ArcCore.Serialization
 
         public Color textColor;
         public Color baseColor;
-
-        public object Clone() => new DifficultyType
-        {
-            fullName = fullName,
-            idName = idName,
-            sortOrder = sortOrder,
-            textColor = textColor,
-            baseColor = baseColor
-        };
 
         public bool Equals(DifficultyType other)
         {
@@ -53,6 +47,7 @@ namespace ArcCore.Serialization
             => !(a == b);
 
         #region Standard Difficulty Classes
+        [JsonPreset]
         public static DifficultyType Past => new DifficultyType
         {
             fullName = "Past",
@@ -63,6 +58,7 @@ namespace ArcCore.Serialization
             textColor = ColorExtensions.FromHexcode("#FFFFFF"),
             baseColor = ColorExtensions.FromHexcode("#B0FFA0")
         };
+        [JsonPreset]
         public static DifficultyType Present => new DifficultyType
         {
             fullName = "Present",
@@ -73,6 +69,7 @@ namespace ArcCore.Serialization
             textColor = ColorExtensions.FromHexcode("#FFFFFF"),
             baseColor = ColorExtensions.FromHexcode("#0020FF")
         };
+        [JsonPreset]
         public static DifficultyType Future => new DifficultyType
         {
             fullName = "Future",
@@ -83,10 +80,11 @@ namespace ArcCore.Serialization
             textColor = ColorExtensions.FromHexcode("#FFFFFF"),
             baseColor = ColorExtensions.FromHexcode("#FF2000")
         };
-        public static DifficultyType beyond = new DifficultyType
+        [JsonPreset]
+        public static DifficultyType Beyond = new DifficultyType
         {
-            fullName = "Future",
-            idName = "ftr",
+            fullName = "Beyond",
+            idName = "byd",
 
             sortOrder = 1f,
 
@@ -94,12 +92,5 @@ namespace ArcCore.Serialization
             baseColor = ColorExtensions.FromHexcode("#D00000")
         };
         #endregion
-        public static Dictionary<string, DifficultyType> Presets
-            => new Dictionary<string, DifficultyType>
-            {
-            {"past", Past},
-            {"present", Present},
-            {"future", Future}
-            };
     }
 }

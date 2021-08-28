@@ -3,7 +3,7 @@ using System;
 
 namespace ArcCore.Serialization
 {
-    public class Style : ICloneable
+    public class Style
     {
         public StyleScheme scheme;
         [JsonIgnore]
@@ -23,11 +23,5 @@ namespace ArcCore.Serialization
                 _background = value;
             }
         }
-
-        public object Clone() => new Style
-        {
-            scheme = (StyleScheme)scheme.Clone(),
-            _background = _background
-        };
     }
 }
