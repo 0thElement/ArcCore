@@ -81,7 +81,7 @@ namespace ArcCore.Serialization
             baseColor = ColorExtensions.FromHexcode("#FF2000")
         };
         [JsonPreset]
-        public static DifficultyType Beyond = new DifficultyType
+        public static DifficultyType Beyond => new DifficultyType
         {
             fullName = "Beyond",
             idName = "byd",

@@ -7,7 +7,7 @@ namespace ArcCore.Serialization
 {
     public static class FileStatics
     {
-        public const char globalMarker = '$';
+        public const char GlobalMarker = '$';
 
         public const string Globals = "globals";
         public const string Charts = "charts";

@@ -6,6 +6,8 @@ namespace ArcCore.Serialization
     public class Style
     {
         public StyleScheme scheme;
+
+
         [JsonIgnore]
         private string _background;
         [JsonProperty(PropertyName = "bg")]
@@ -16,7 +18,7 @@ namespace ArcCore.Serialization
             {
                 if (value.StartsWith("$"))
                 {
-                    if (FileStatics.IsValidGlobalName(value.Substring(1)))
+                    if (!FileStatics.IsValidGlobalName(value.Substring(1)))
                         throw new Exception("Invalid global item name");
                 }
 
