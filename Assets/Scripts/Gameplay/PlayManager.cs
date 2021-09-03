@@ -213,7 +213,9 @@ namespace ArcCore.Gameplay
             }
         }
 
-        public static void PlayMusic() => instance.PlayMusicInstance();
+        public static void Pause() {}
+        public static void Resume() {}
+        public static void PlayMusic(int startTime = 0) => instance.PlayMusicInstance();
         private void PlayMusicInstance()
         {
             conductor.PlayMusic();
