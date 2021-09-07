@@ -3,6 +3,6 @@
     [JsonHasPresets]
     public interface IJsonPresetSpecialization<T>
     {
-        public T Value { get; set; }
+        T Value { get; set; }
     }
 }
