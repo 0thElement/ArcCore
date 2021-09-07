@@ -166,7 +166,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 24300002, guid: c0893ca8f89ae564a84bb1a02dc66b6b,
     type: 2}
-  m_audioClip: {fileID: 8300000, guid: 98ab1b8ba99b5e14cb2082fbfca35bb4, type: 3}
+  m_audioClip: {fileID: 8300000, guid: b178594fa8d150745b270c2c8ee43341, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 0.235
   m_Pitch: 1
@@ -5803,7 +5803,6 @@ GameObject:
   - component: {fileID: 963194228}
   - component: {fileID: 963194229}
   - component: {fileID: 963194227}
-  - component: {fileID: 963194226}
   m_Layer: 0
   m_Name: GameplayCamera
   m_TagString: MainCamera
@@ -5811,14 +5810,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!81 &963194226
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 963194225}
-  m_Enabled: 1
 --- !u!20 &963194227
 Camera:
   m_ObjectHideFlags: 0
@@ -15968,12 +15959,6 @@ MonoBehaviour:
     type: 3}
   arcParticlePrefab: {fileID: 4796778903998022456, guid: 41b1b4021cb204944a67bfe468124817,
     type: 3}
-  arcMaterial: {fileID: 2100000, guid: 6a9129239f6b3054db310a0864ba9eb2, type: 2}
-  heightMaterial: {fileID: 2100000, guid: 7df61da0627a5714080a4c06cd73892e, type: 2}
-  redColor: {r: 1, g: 0, b: 0, a: 0}
-  arcMesh: {fileID: 5628013574231025859, guid: 90cc480477edf894685f61a3a6723260, type: 3}
-  arcHeadMesh: {fileID: -4335921442542054854, guid: 08b948e6802acc44ea07fb34e3ebb8db,
-    type: 3}
   traceNotePrefab: {fileID: 3551100467126968062, guid: c43598f4d61754a4db9a149e30d6c50d,
     type: 3}
   headTraceNotePrefab: {fileID: 8177735640193569480, guid: dd1943fb6e80d1b4e8c848eb655b9d3f,
@@ -15981,14 +15966,6 @@ MonoBehaviour:
   traceShadowPrefab: {fileID: 2857874093601128869, guid: 32fb81c32838fc345b0d528f30592ec4,
     type: 3}
   traceApproachIndicatorPrefab: {fileID: 2057882010206497123, guid: ebec4eb2639504f4ab68a4691d666f10,
-    type: 3}
-  traceMaterial: {fileID: 2100000, guid: 34c3ab2db1945b848a3df9cf1ea5c654, type: 2}
-  traceShadowMaterial: {fileID: 2100000, guid: 8d2d9654992ee9c49bf0298ecc30e19a, type: 2}
-  traceMesh: {fileID: -1560609305294098807, guid: c8586b7b9fca50d488fe3feac4af49f5,
-    type: 3}
-  traceHeadMesh: {fileID: 2682099171716125172, guid: 9c37bcb1e6b4e1048b4709c8fc01a490,
-    type: 3}
-  traceShadowMesh: {fileID: -1996656762450497758, guid: 7eb034e112e7def419be91b43307c123,
     type: 3}
   debugText: {fileID: 980197648}
 --- !u!1 &1595804374
