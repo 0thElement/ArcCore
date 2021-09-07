@@ -8,8 +8,8 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/MainScene.unity
     guid: a31ed941a3ed64b4eb9bb3fab211ee38
-  - enabled: 0
-    path: Assets/Scenes/MenuScene.unity
+  - enabled: 1
+    path: Assets/Scenes/SongSelectionScene.unity
     guid: 85d0d2a2a78848f41bb7f328bfe9326e
   - enabled: 1
     path: Assets/Scenes/PlayScene.unity
