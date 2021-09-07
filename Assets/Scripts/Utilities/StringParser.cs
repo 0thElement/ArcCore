@@ -1,9 +1,5 @@
 ﻿namespace ArcCore.Utilities
 {
-    using System;
-    using System.Runtime.Serialization;
-
-
     /// <summary>
     /// A class to read a string and parse string-ified primitives
     /// </summary>

@@ -1,0 +1,39 @@
+﻿namespace ArcCore
+{
+    public enum EasingType
+    {
+        Linear,
+        SineIn,
+        SineOut,
+        SineInOut,
+        QuadIn,
+        QuadOut,
+        QuadInOut,
+        CubicIn,
+        CubicOut,
+        CubicInOut,
+        QuarticIn,
+        QuarticOut,
+        QuarticInOut,
+        QuinticIn,
+        QuinticOut,
+        QuinticInOut,
+        ExponentialIn,
+        ExponentialOut,
+        ExponentialInOut,
+        CircleIn,
+        CircleOut,
+        CircleInOut,
+        BackIn,
+        BackOut,
+        BackInOut,
+        ElasticIn,
+        ElasticOut,
+        ElasticInOut,
+        BounceIn,
+        BounceOut,
+        BounceInOut,
+        InstantIn,
+        InstantOut
+    }
+}

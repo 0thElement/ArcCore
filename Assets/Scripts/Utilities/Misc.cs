@@ -1,11 +1,4 @@
-using ArcCore.Gameplay.Behaviours;
-using ArcCore.Gameplay.Behaviours.EntityCreation;
 using ArcCore.Math;
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using Unity.Entities;
-using Unity.Mathematics;
 using UnityEngine;
 
 namespace ArcCore.Utilities

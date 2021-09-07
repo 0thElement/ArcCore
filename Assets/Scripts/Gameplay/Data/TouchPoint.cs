@@ -1,7 +1,5 @@
 ﻿using ArcCore.Math;
 using Unity.Mathematics;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace ArcCore.Gameplay.Data
 {

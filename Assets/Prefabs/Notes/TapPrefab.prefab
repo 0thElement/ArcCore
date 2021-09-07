@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 6767152816892613200}
   - component: {fileID: 9049747518178383543}
   - component: {fileID: 5980156913905255465}
+  - component: {fileID: 8624676004376514443}
   m_Layer: 0
   m_Name: TapPrefab
   m_TagString: Untagged
@@ -33,7 +34,7 @@ Transform:
   m_GameObject: {fileID: 2994907523628847089}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -6.375, y: 0, z: 500}
-  m_LocalScale: {x: 1, y: 1, z: 5}
+  m_LocalScale: {x: 1, y: 1, z: 2.5}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -162,4 +163,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7077e8a8d54ea74ba3839a1239ae068, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  value: 5
+  value: 2.5
+--- !u!114 &8624676004376514443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2994907523628847089}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ccd910b39ba23e4abff7afa1ec49a1c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  value: {fileID: 0}

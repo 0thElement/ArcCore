@@ -1,8 +1,5 @@
-using ArcCore.Gameplay.Behaviours;
-using ArcCore.Parsing.Aff;
-using System;
+using ArcCore.Parsing.Data;
 using Unity.Mathematics;
-using UnityEngine;
 
 namespace ArcCore.Gameplay
 {
@@ -10,14 +7,6 @@ namespace ArcCore.Gameplay
     {
         public static float TrackToX(int track)
             => Constants.LaneWidth * 5 - Constants.LaneFullwidth * track;
-
-        /*
-         * Constants.LaneWidth * 5 - Constants.LaneFullwidth * track = x
-         * x - laneWidth * 5 = -lanefullwidth * track
-         * track = -(x - laneWidth * 5) / lanefullwidth
-         * track = (laneWidth * 5 - x) / lanefullwidth
-         * 
-         */
 
         public static int XToTrack(float x)
             => (int)math.round((Constants.LaneWidth * 5 - x) * Constants.LaneFullwidthRecip);
@@ -30,6 +19,27 @@ namespace ArcCore.Gameplay
         {
             float o = 1 - t;
             return (o * o * o * start) + (3 * o * o * t * start) + (3 * o * t * t * end) + (t * t * t * end);
+        }
+
+        public static float QiPercent(float value)
+            => value * value * value;
+        public static float QoPercent(float value)
+            => QiPercent(value - 1) + 1;
+
+        public static float TransformCamPercent(float t, CameraEasing easing)
+        {
+            switch(easing)
+            {
+                case CameraEasing.qi:
+                    return QiPercent(t);
+                case CameraEasing.qo:
+                    return QoPercent(t);
+                case CameraEasing.l:
+                case CameraEasing.s:
+                    return t;
+            }
+            //please die c#
+            return "f*cking die".Length;
         }
 
         public static float GetXAt(float t, float startX, float endX, ArcEasing easing)

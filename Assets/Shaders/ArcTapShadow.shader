@@ -1,4 +1,4 @@
-﻿Shader "Unlit/ArcTapShadow"
+﻿Shader "Unlit/ChartTapShadow"
 {
 	Properties
 	{

@@ -2,6 +2,20 @@
 
 namespace ArcCore.Gameplay.Data
 {
+    public readonly struct Floorpos
+    {
+        public readonly int position;
+        public readonly int jumpLevel;
+
+        public const int Shift = 12;
+        public const int One = 1 >> 12;
+
+        public float GetRealPositionFromBase(Floorpos basePos)
+        {
+            return (position - basePos.position) / (float)One;
+        }
+    }
+
     public struct JudgeTracker
     {
         public const float MaxBaseScore = 10_000_000f;

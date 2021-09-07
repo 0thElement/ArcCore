@@ -2,8 +2,7 @@
 using Unity.Collections;
 using Unity.Mathematics;
 using ArcCore.Gameplay.Behaviours;
-using UnityEngine;
-using ArcCore.Gameplay.Utility;
+using ArcCore.Gameplay.Objects.Particle;
 
 namespace ArcCore.Gameplay.Data
 {
@@ -23,16 +22,22 @@ namespace ArcCore.Gameplay.Data
             public bool isHit;
             public bool isHoldEnd;
         }
+        private struct ArcParticleDesc
+        {
+            public int groupID;
+            public bool isHit;
+            public bool shouldPlayText;
+        }
 
         private NativeQueue<TapParticleDesc> tapQueue;
         private NativeQueue<HoldParticleDesc> holdQueue;
-        // private NativeQueue<TapParticleDesc> arcQueue;
+        private NativeQueue<ArcParticleDesc> arcQueue;
 
         public ParticleBuffer(Allocator allocator)
         {
             tapQueue = new NativeQueue<TapParticleDesc>(allocator);
             holdQueue = new NativeQueue<HoldParticleDesc>(allocator);
-            // arcQueue = new NativeQueue<TapParticleDesc>(allocator);
+            arcQueue = new NativeQueue<ArcParticleDesc>(allocator);
         }
 
         public void PlayTapParticle(float2 position, ParticlePool.JudgeType type, ParticlePool.JudgeDetail detail, float textYOffset = 0)
@@ -83,20 +88,20 @@ namespace ArcCore.Gameplay.Data
         }
 
         public void PlayHoldParticle(int lane, bool isHit)
-        {
-            holdQueue.Enqueue(new HoldParticleDesc{lane = lane, isHit = isHit, isHoldEnd = false});
-        }
+            => holdQueue.Enqueue(new HoldParticleDesc{lane = lane, isHit = isHit, isHoldEnd = false});
+
         public void DisableLaneParticle(int lane)
-        {
-            holdQueue.Enqueue(new HoldParticleDesc{lane = lane, isHit = false, isHoldEnd = true});
-        }
+            => holdQueue.Enqueue(new HoldParticleDesc{lane = lane, isHit = false, isHoldEnd = true});
+
+        public void PlayArcParticle(int groupID, bool isHit, bool shouldPlayText)
+            => arcQueue.Enqueue(new ArcParticleDesc{groupID = groupID, isHit = isHit, shouldPlayText = shouldPlayText});
 
         public void Playback()
         {
             while (tapQueue.Count > 0)
             {
                 TapParticleDesc particleDesc = tapQueue.Dequeue();
-                ParticlePool.Instance.TapAt(particleDesc.position, particleDesc.type, particleDesc.detail, particleDesc.textYOffset);
+                PlayManager.ParticlePool.TapAt(particleDesc.position, particleDesc.type, particleDesc.detail, particleDesc.textYOffset);
             }
 
             bool[] toDisable = new bool[] {false, false, false, false};
@@ -109,12 +114,28 @@ namespace ArcCore.Gameplay.Data
                 }
                 else
                 {
-                    ParticlePool.Instance.HoldAt(particleDesc.lane, particleDesc.isHit);
+                    PlayManager.ParticlePool.HoldAt(particleDesc.lane, particleDesc.isHit);
                 }
             }
             for (int i=0; i<4; i++)
                 if (toDisable[i])
-                    ParticlePool.Instance.DisableLane(i);
+                    PlayManager.ParticlePool.DisableLane(i);
+            
+
+            while (arcQueue.Count > 0)
+            {
+                ArcParticleDesc particleDesc = arcQueue.Dequeue();
+                ArcIndicator indicator = PlayManager.ArcIndicatorHandler.GetIndicator(particleDesc.groupID) as ArcIndicator;
+
+                float2 position = indicator.GetPosition();
+
+                if (particleDesc.shouldPlayText) PlayManager.ParticlePool.ArcAt(position, particleDesc.isHit);
+
+                if (particleDesc.isHit)
+                    indicator.PlayParticle();
+                else
+                    indicator.StopParticle();
+            }
         }
 
         public bool IsCreated => tapQueue.IsCreated;
@@ -123,7 +144,7 @@ namespace ArcCore.Gameplay.Data
         {
             tapQueue.Dispose();
             holdQueue.Dispose();
-            // arcQueue.Dispose();
+            arcQueue.Dispose();
         }
     }
 }
