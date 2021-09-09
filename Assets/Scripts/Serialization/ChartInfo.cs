@@ -25,7 +25,6 @@ namespace ArcCore.Serialization
 
         public string filename;
 
-        public string difficulty;
         public ushort cc = 0;
         public DifficultyType diffType;
 

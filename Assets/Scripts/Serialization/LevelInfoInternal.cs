@@ -17,5 +17,19 @@
 
             this.importedGlobals = importedGlobals;
         }
+
+        public ChartInfo GetClosestDifficulty(float prioritizedDifficulty)
+        {
+            ChartInfo result = null;
+            float closestDifference = float.PositiveInfinity;
+
+            foreach (ChartInfo chart in charts)
+            {
+                if (chart.diffType.sortOrder - prioritizedDifficulty < closestDifference)
+                    result = chart;
+            }
+
+            return result;
+        }
     }
 }
