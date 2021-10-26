@@ -44,6 +44,9 @@ TagManager:
   - name: UI
     uniqueID: 1076155837
     locked: 0
+  - name: Particles
+    uniqueID: 1577165531
+    locked: 0
   - name: Shutter
     uniqueID: 3699498405
     locked: 0
