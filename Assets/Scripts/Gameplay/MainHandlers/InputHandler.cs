@@ -15,7 +15,7 @@ namespace ArcCore.Gameplay.Behaviours
     {
         public IEnumerator<TouchPoint> GetEnumerator()
         {
-            int idx = 0;
+            int idx = -1;
 
             while (true) //yes i know. im awful.
             {
@@ -138,18 +138,10 @@ namespace ArcCore.Gameplay.Behaviours
         /// </summary>
         private int SafeIndex()
         {
-            for (int i = safeIndex; i < MaxTouches; i++)
+            for (int i = 0; i < MaxTouches; i++)
                 if (touchPoints[i].IsNull)
                     return safeIndex = i;
             return safeIndex = MaxTouches;
-        }
-
-        /// <summary>
-        /// Get the precise touch time of sus.
-        /// </summary>
-        private static int GetChartTime(double realTime)
-        {
-            return PlayManager.Conductor.receptorTime - (int)System.Math.Round(realTime * 1000.0);
         }
 
         /// <summary>
@@ -157,15 +149,6 @@ namespace ArcCore.Gameplay.Behaviours
         /// </summary>
         public void PollInput()
         {
-            for (int ti = 0; ti < touchPoints.Length; ti++)
-            {
-                if(touchPoints[ti].status == TouchPoint.Status.Released)
-                {
-                    touchPoints[ti] = TouchPoint.Null;
-                    if (ti < safeIndex) safeIndex = ti;
-                }
-            }
-
             var touches = LeanTouch.GetFingers(false, false);
             for (int i=0; i < touches.Count; i++)
             {
@@ -179,11 +162,7 @@ namespace ArcCore.Gameplay.Behaviours
                     if (index != -1)
                     {
                         TouchPoint tp = touchPoints[index];
-
-                        tp.status = TouchPoint.Status.Released;
-
-                        touchPoints[index] = tp;
-
+                        touchPoints[index] = TouchPoint.Null;
                         if (tp.track != -1) tracksHeld[tp.track]--;
                     }
 
@@ -195,18 +174,15 @@ namespace ArcCore.Gameplay.Behaviours
                 index = IdIndex(f.Index);
 
                 //tapped
-                if (f.Down)
+                //hardware index does not exist == touch was registered just now == tap
+                if (index == -1)
                 {
-                    //hardware index does not exist
-                    if (index == -1)
-                    {
-                        (float2? exact, Rect2D? ipt, int track) = Projection.PerformInputRaycast(CameraCast.ScreenPointToRay(f.ScreenPosition));
-                        touchPoints[safeIndex] = new TouchPoint(exact, ipt, track, GetChartTime(f.Age), TouchPoint.Status.Tapped, f.Index);
+                    (float2? exact, Rect2D? ipt, int track) = Projection.PerformInputRaycast(CameraCast.ScreenPointToRay(f.ScreenPosition));
+                    touchPoints[safeIndex] = new TouchPoint(exact, ipt, track, PlayManager.Conductor.receptorTime, TouchPoint.Status.Tapped, f.Index);
 
-                        if(track != -1)
-                        {
-                            tracksHeld[track]++;
-                        }
+                    if(track != -1)
+                    {
+                        tracksHeld[track]++;
                     }
 
                     continue;

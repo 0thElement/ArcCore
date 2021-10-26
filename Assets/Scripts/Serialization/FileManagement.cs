@@ -67,6 +67,8 @@ namespace ArcCore.Serialization
                 }
             }
 
+            // TEMPORARY: we don't have a settings menu yet
+            GameSettings.Instance = GameSettings.GetDefault();
             GameSettings.FinalizeInstance();
 
             //globals

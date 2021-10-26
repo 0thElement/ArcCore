@@ -175,6 +175,7 @@ namespace ArcCore.Gameplay
 
             world = World.DefaultGameObjectInjectionWorld;
 
+            conductor.chartOffset = parser.ChartOffset;
             conductor.SetupTimingGroups(parser);
             gameplayCamera.SetupCamera(parser);
             scenecontrolHandler.CreateObjects(parser);
