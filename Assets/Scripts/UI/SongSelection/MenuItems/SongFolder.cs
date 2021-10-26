@@ -1,6 +1,7 @@
 using Zeroth.HierarchyScroll;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 namespace ArcCore.UI.SongSelection
 {
@@ -8,13 +9,15 @@ namespace ArcCore.UI.SongSelection
     {
         //Text title
         //Text count
-        public void SetCellData(CellDataBase cellDataBase)
+        public override void SetCellData(CellDataBase cellDataBase)
         {
             SongFolderData packData = cellDataBase as SongFolderData;
+            //TODO: make the prefab and complete this
         }
 
-        public IEnumerator LoadCellFullyCoroutine(CellDataBase cellDataBase)
+        protected override IEnumerator LoadCellFullyCoroutine(CellDataBase cellDataBase)
         {
+            yield return null;
         }
     }
 }

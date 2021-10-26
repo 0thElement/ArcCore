@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using Zeroth.HierarchyScroll;
+using ArcCore.Serialization;
 
 namespace ArcCore.UI.SongSelection
 {
@@ -25,31 +26,37 @@ namespace ArcCore.UI.SongSelection
             var levelsData = MainMenu.Instance.levelsData;
             var packsData  = MainMenu.Instance.packsData;
 
-            List<LevelInfoInternal> toDisplay;
+            List<LevelInfoInternal> toDisplay = new List<LevelInfoInternal>();
 
             if (pack == "")
             {
-                toDisplay = levelsData.Values.ToList();
+                toDisplay = new List<LevelInfoInternal>(levelsData.Values);
             }
             else
             {
-                foreach (string song in packsData.songList)
+                foreach (string song in packsData.Keys)
                 {
                     toDisplay.Add(levelsData[song]);
                 }
             }
 
-            List<CellDataBase> displayCells = displayMethod.FromSongList(toDisplay);
+            //TODO: Fetch correct difficulty
+            float prioritizedDifficulty = 2;
+            List<CellDataBase> displayCells = displayMethod.FromSongList(toDisplay, cellPrefab, folderPrefab, prioritizedDifficulty);
             scrollRect.SetData(displayCells);
         }
 
         public void SetSelectedSong(CellDataBase selectedCell)
         {
             SongCellData songData = selectedCell as SongCellData;
+            string name = songData.chartInfo.songInfoOverride.name;
+            SetSelectedSong(name);
+        }
 
-            //set song info to song info panel
-
-            PlayerPrefs.SetString("LastSelectedSong", songData.chartInfo.songInfo.name);
+        public void SetSelectedSong(string song)
+        {
+            //TODO: COMPLETE THIS
+            PlayerPrefs.SetString("LastSelectedSong", song);
         }
     }
 }

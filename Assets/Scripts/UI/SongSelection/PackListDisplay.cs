@@ -26,11 +26,16 @@ namespace ArcCore.UI.SongSelection
         public void SetSelectedPack(CellDataBase selectedCell)
         {
             PackCellData packData = selectedCell as PackCellData;
-            //get pack name from cell
+            //TODO: get pack name from cell
+            string name = "";
+            SetSelectedPack(name);
+        }
 
-            //COMPLETE THIS
-            MainMenu.Instance.songList.DisplaySongs("");
-            PlayerPrefs.SetString("LastSelectedPack", "");
+        public void SetSelectedPack(string pack)
+        {
+            //TODO: COMPLETE THIS
+            MainMenu.Instance.songList.DisplaySongs(pack);
+            PlayerPrefs.SetString("LastSelectedPack", pack);
         }
     }
 }

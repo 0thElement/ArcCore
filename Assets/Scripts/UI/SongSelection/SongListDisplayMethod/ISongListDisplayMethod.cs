@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using ArcCore.Serialization;
+using Zeroth.HierarchyScroll;
+using UnityEngine;
 
 namespace ArcCore.UI.SongSelection
 {

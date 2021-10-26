@@ -3,6 +3,7 @@ using Zeroth.HierarchyScroll;
 using ArcCore.Serialization;
 using System.Linq;
 using ArcCore.Utitlities;
+using UnityEngine;
 
 namespace ArcCore.UI.SongSelection
 {
@@ -13,21 +14,22 @@ namespace ArcCore.UI.SongSelection
             List<SongCellData> cellDataList = new List<SongCellData>();
             List<DifficultyItem> diffList = new List<DifficultyItem>();
 
-            foreach (ChartInfo chart in charts)
+            foreach (LevelInfoInternal level in toDisplay)
             {
-                (int diff, bool isPlus) = CcToDifficulty.Convert(chart.cc);
 
-                diffList.Add(new DifficultyItem {
-                    difficulty = diff,
-                    isPlus = isPlus,
-                    diffType = chart.diffType
-                });
-            }
+                foreach (ChartInfo chart in level.charts)
+                {
+                    (int diff, bool isPlus) = CcToDifficulty.Convert(chart.cc);
 
-            foreach (LevelInfoInternal level in sorted)
-            {
+                    diffList.Add(new DifficultyItem {
+                        difficulty = diff,
+                        isPlus = isPlus,
+                        diffType = chart.diffType
+                    });
+                }
+
                 cellDataList.Add(new SongCellData {
-                    cellPrefab = cellPrefab,
+                    prefab = cellPrefab,
                     chartInfo = level.GetClosestDifficulty(prioritizedDifficulty),
                     diffList = diffList
                 });
@@ -37,11 +39,11 @@ namespace ArcCore.UI.SongSelection
             return cellDataList
                         .OrderBy(cell => {
                             float cc = cell.chartInfo.cc;
-                            (int diff, bool isPlus) = CcToDifficulty.Convert(chart.cc);
+                            (int diff, bool isPlus) = CcToDifficulty.Convert(cc);
                             return (isPlus ? diff + 0.1f : diff);
                         })
-                        .ThenBy(cell => cell.chartInfo.songInfo.name)
-                        .ToList().Cast<CellDataBase>();
+                        .ThenBy(cell => cell.chartInfo.songInfoOverride.name)
+                        .Cast<CellDataBase>().ToList();
         }
     }
 }

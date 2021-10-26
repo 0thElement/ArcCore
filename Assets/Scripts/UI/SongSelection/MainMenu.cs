@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
+using ArcCore.Serialization;
+using System.Collections.Generic;
 
 namespace ArcCore.UI.SongSelection
 {
@@ -22,7 +24,7 @@ namespace ArcCore.UI.SongSelection
         public void Display()
         {
             //Get json to fill levelsData and packsData. For now from a temporary test file
-            //COMPLETE THIS
+            //TODO: COMPLETE THIS
 
             string lastLoadedPack = PlayerPrefs.GetString("LastLoadedPack");
             packList.SetSelectedPack(lastLoadedPack);
