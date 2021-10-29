@@ -261,5 +261,27 @@ namespace ArcCore.Gameplay
             arcGroupHeldState.Dispose();        
         }
 
+        public static void Pause() {
+            //instance.Conductor.????
+            //disable inputhandler
+        }
+
+        public static void Play() {
+            //instance.Conductor.????
+            //enable inputhandler
+        }
+
+        public static void JumpTo(int timing)
+        {
+            instance.DestroyAllEntities();          
+            // Reload the chart
+            // Playback at timing
+        }
+
+        private void DestroyAllEntities()
+        {
+            var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            entityManager.DestroyEntity(entityManager.UniversalQuery);
+        }
     }
 }

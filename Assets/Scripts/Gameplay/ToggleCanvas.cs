@@ -10,35 +10,29 @@ namespace ArcCore.Gameplay.Behaviours
     public class ToggleCanvas : MonoBehaviour
     {
         public GameObject PauseCanvas;
+        public InputField JumpToTimingInput;
         public void TogglePauseCanvas()
         {
             if (!PauseCanvas.activeSelf)
             {
-                Time.timeScale = 0;
-                //Conductor.Instance.isPaused = true;
-                //Conductor.Instance.PauseAudio();
                 PauseCanvas.SetActive(true);
+                PlayManager.Pause();
             }
             else
             {
-                Time.timeScale = 1;
                 PauseCanvas.SetActive(false);
-                //Conductor.Instance.isPaused = false;
-                //Conductor.Instance.ResumeAudio();
+                PlayManager.Play();
             }
         }
 
         public void Restart()
         {
-            DestroyAllEntities();          
-            PlayManager.LoadChart(Constants.GetDebugChart());
-            //PlayManager.PlayMusic();
+            PlayManager.JumpTo(0);
         }
 
-        void DestroyAllEntities()
+        public void Jump()
         {
-            var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-            entityManager.DestroyEntity(entityManager.UniversalQuery);
+            PlayManager.JumpTo(int.Parse(JumpToTimingInput.text));
         }
-    } 
+    }
 }
