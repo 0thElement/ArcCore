@@ -11,8 +11,8 @@
 
             for (int i = 0; i < charts.Length; i++)
             {
-                charts[i].styleOverride = charts[i].styleOverride ?? levelInfo.style;
-                charts[i].songInfoOverride = charts[i].songInfoOverride ?? levelInfo.songInfo;
+                charts[i].cStyle = charts[i].cStyle ?? levelInfo.style;
+                charts[i].cSongInfo = charts[i].cSongInfo ?? levelInfo.songInfo;
             }
 
             this.importedGlobals = importedGlobals;

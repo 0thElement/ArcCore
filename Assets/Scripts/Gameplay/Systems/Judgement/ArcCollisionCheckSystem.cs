@@ -123,13 +123,13 @@ namespace ArcCore.Gameplay.Systems
 
                 accumulativeArcX += colorCumulativeX;
 
-// #if DEBUG
-//                 s += $"Color: {color} -> finger: {colorState.FingerId} & state: {statesString[(int)colorState._state]} \n";
-// #endif
+#if DEBUG
+                s += $"Color: {color} -> finger: {colorState.FingerId} & state: {statesString[(int)colorState._state]} \n";
+#endif
             }
-// #if DEBUG
-//             PlayManager.DebugText.text = s;
-// #endif
+#if DEBUG
+            PlayManager.DebugText.text = s;
+#endif
             PlayManager.GameplayCamera.AccumulativeArcX = accumulativeArcX;
         }
     }

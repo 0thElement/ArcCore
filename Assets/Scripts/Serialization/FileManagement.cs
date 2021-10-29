@@ -7,20 +7,12 @@ using System.IO.Compression;
 
 namespace ArcCore.Serialization
 {
-    internal static class Converters
-    {
-        internal static JsonConverter[] Settings => new JsonConverter[]
-        {
-            new JsonColorConverter()
-        };
-        internal static JsonConverter[] Levels => Settings;
-    }
 
     public static class FileManagement
     {
         public static string currentChartDirectory;
         public static string GetRealPathFromUserInput(string input)
-            => Path.Combine(input[0] == FileStatics.GlobalMarker ? FileStatics.GlobalsPath : currentChartDirectory, input);
+            => Path.Combine(input[0] == FileStatics.globalMarker ? FileStatics.GlobalsPath : currentChartDirectory, input);
 
         public static Dictionary<string, int> globalsMap;
         public static Dictionary<string, LevelInfoInternal> chartsMap;
@@ -67,8 +59,6 @@ namespace ArcCore.Serialization
                 }
             }
 
-            // TEMPORARY: we don't have a settings menu yet
-            GameSettings.Instance = GameSettings.GetDefault();
             GameSettings.FinalizeInstance();
 
             //globals

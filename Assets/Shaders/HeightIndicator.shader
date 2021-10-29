@@ -12,7 +12,6 @@
 		Tags { "Queue" = "Transparent+1"  "RenderType" = "Transparent" "CanUseSpriteAtlas"="true"  }
         Cull Off
 		ZWrite Off
-		ZTest Always
 		Blend SrcAlpha OneMinusSrcAlpha
   
 		Pass

@@ -12,11 +12,11 @@ namespace ArcCore.Gameplay.Behaviours
         /// <summary>
         /// The duration which a highlight remains after a track is released.
         /// </summary>
-        [SerializeField] private float highlightDuration = 0.25f; 
+        [SerializeField] private float highlightDuration = 0.5f; 
         /// <summary>
         /// The alpha of a highlight at "full" alpha.
         /// </summary>
-        [SerializeField] private float highlightAlpha = 0.15f; 
+        [SerializeField] private float highlightAlpha = 0.5f; 
 
         /// <summary>
         /// An array of <see cref="InputHandler.MaxTouches"/> horizontal line effects for use.

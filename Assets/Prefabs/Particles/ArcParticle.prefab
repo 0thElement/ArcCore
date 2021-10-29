@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4796778903998022437}
   - component: {fileID: 4796778903998022438}
   m_Layer: 0
-  m_Name: ArcParticle
+  m_Name: ArcApproachIndicatorPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -284,8 +284,8 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 4
-      minScalar: 3
+      scalar: 5
+      minScalar: 4
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -4727,8 +4727,8 @@ ParticleSystemRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 1577165531
-  m_SortingLayer: 2
+  m_SortingLayerID: 1076155837
+  m_SortingLayer: 1
   m_SortingOrder: 0
   m_RenderMode: 0
   m_SortMode: 0

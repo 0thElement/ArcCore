@@ -8,15 +8,15 @@
             if (timeDifference > Constants.FarWindow)
                 return JudgeType.Lost;
             else if (timeDifference > Constants.PureWindow)
-                return JudgeType.LateFar;
+                return JudgeType.EarlyFar;
             else if (timeDifference > Constants.MaxPureWindow)
-                return JudgeType.LatePure;
+                return JudgeType.EarlyPure;
             else if (timeDifference > -Constants.MaxPureWindow)
                 return JudgeType.MaxPure;
             else if (timeDifference > -Constants.PureWindow)
-                return JudgeType.EarlyPure;
+                return JudgeType.LatePure;
             else if (timeDifference > -Constants.FarWindow)
-                return JudgeType.EarlyFar;
+                return JudgeType.LateFar;
             else return JudgeType.Lost;
         }
     }

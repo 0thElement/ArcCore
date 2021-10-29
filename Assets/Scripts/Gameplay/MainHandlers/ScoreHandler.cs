@@ -31,8 +31,7 @@ namespace ArcCore.Gameplay.Behaviours
         /// <summary>
         /// The text ui element responsible for displaying the score.
         /// </summary>
-        public Text scoreFirst5TextUI;
-        public Text scoreLast3TextUI;
+        public Text scoreTextUI;
 
         /// <summary>
         /// Reset all the score values.
@@ -51,13 +50,8 @@ namespace ArcCore.Gameplay.Behaviours
             currentScore = tracker.Score;
             currentScoreDisplay += math.ceil((currentScore - currentScoreDisplay) / 1.8f);
 
-            int first2digits = (int)currentScoreDisplay / 1000000;
-            int middle3digits = ((int)currentScoreDisplay % 1000000) / 1000;
-            int last3digits = (int)currentScoreDisplay % 1000;
-
             comboTextUI.text = $"{tracker.combo}";
-            scoreFirst5TextUI.text = $"{first2digits:D2}'{middle3digits:D3}";
-            scoreLast3TextUI.text = $"'{last3digits:D3}";
+            scoreTextUI.text = $"{(int)currentScoreDisplay:D8}";
         }
     }
 }

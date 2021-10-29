@@ -10,6 +10,7 @@ using ArcCore.Gameplay.EntityCreation;
 using ArcCore.Parsing;
 using Unity.Rendering;
 using Unity.Collections;
+using UnityEngine.SceneManagement;
 
 namespace ArcCore.Gameplay
 {
@@ -162,7 +163,7 @@ namespace ArcCore.Gameplay
             isUpdating = false;
 
 #if DEFAULT_CHART
-            LoadChart(Constants.GetDefaultArcChart());
+            LoadChart(Constants.GetDebugChart());
             PlayMusic();
 #endif
         }
@@ -175,7 +176,6 @@ namespace ArcCore.Gameplay
 
             world = World.DefaultGameObjectInjectionWorld;
 
-            conductor.chartOffset = parser.ChartOffset;
             conductor.SetupTimingGroups(parser);
             gameplayCamera.SetupCamera(parser);
             scenecontrolHandler.CreateObjects(parser);
@@ -214,9 +214,7 @@ namespace ArcCore.Gameplay
             }
         }
 
-        public static void Pause() {}
-        public static void Resume() {}
-        public static void PlayMusic(int startTime = 0) => instance.PlayMusicInstance();
+        public static void PlayMusic() => instance.PlayMusicInstance();
         private void PlayMusicInstance()
         {
             conductor.PlayMusic();
@@ -260,7 +258,8 @@ namespace ArcCore.Gameplay
         void OnDestroy()
         {
             instance = null;
-            arcGroupHeldState.Dispose();
+            arcGroupHeldState.Dispose();        
         }
+
     }
 }

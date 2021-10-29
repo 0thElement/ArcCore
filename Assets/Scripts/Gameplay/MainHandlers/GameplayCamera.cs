@@ -50,7 +50,7 @@ namespace ArcCore.Gameplay.Behaviours
         public const float Ratio16By9 = 16f / 9f;
 
         public float AspectRatioLerp
-            => 1 - math.clamp((AspectRatio - Ratio4By3) / (Ratio16By9 - Ratio4By3), 0, 1);
+            => math.clamp((AspectRatio - Ratio4By3) / (Ratio16By9 - Ratio4By3), 0, 1);
 
         public float3 ResetPosition
             => math.lerp(
