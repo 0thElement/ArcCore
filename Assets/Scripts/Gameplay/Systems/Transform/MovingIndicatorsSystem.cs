@@ -31,7 +31,7 @@ namespace ArcCore.Gameplay.Systems
 
             //Arc and trace segments
             JobHandle arcBodies = Entities
-                .WithNone<Translation, IsTraceBodies, Prefab>()
+                .WithNone<Translation, IsTraceBodies>()
                 .ForEach(
                     (in ArcGroupID groupID, in LocalToWorld lcw, in ChartTime chartTime, in ChartEndTime endTime, in Cutoff cutoff) =>
                     {
@@ -67,7 +67,6 @@ namespace ArcCore.Gameplay.Systems
             var dependency = JobHandle.CombineDependencies(arcBodies, this.Dependency);
 
             JobHandle arcHeads = Entities
-                .WithNone<Prefab>()
                 .ForEach(
                     (in ArcGroupID groupID, in Translation translation) =>
                     {
@@ -91,7 +90,7 @@ namespace ArcCore.Gameplay.Systems
             
             Entities
                 .WithAll<IsTraceBodies>()
-                .WithNone<Translation, Prefab>()
+                .WithNone<Translation>()
                 .ForEach(
                     (in ArcGroupID groupID, in LocalToWorld lcw, in ChartTime chartTime, in ChartEndTime endTime) =>
                     {

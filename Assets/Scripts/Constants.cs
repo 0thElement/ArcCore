@@ -28,6 +28,22 @@ namespace ArcCore
         public static readonly float2 ArctapBoxExtents = new float2(2.975f, 2.25f);
         public static readonly float2 ArcBoxExtents = new float2(1.955f, 1.8f);
 
+        public static string GetEmptyTestChart() =>
+@"
+settings
+audio_offset 50
+chart
+timing 0 190.00 6.00
+timing 34105 95.00 3.00
+timing 35368 190.00 2.00
+timing 35999 190.00 6.00
+tap 3947 4
+tap 4105 1
+tap 4263 2
+tap 4421 3
+trace 1894 3157 0.50 1.00 0.50 1.00 b
+trace 3157 3789 0.50 1.00 0.83 1.00 si".Trim();
+
         public static string GetDebugChart() =>
 @"
 settings

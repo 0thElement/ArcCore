@@ -4,35 +4,44 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Unity.Entities;
+using Lean.Touch;
+using ArcCore.Gameplay;
+using ArcCore.Gameplay.EntityCreation;
 
 namespace ArcCore.Gameplay.Behaviours 
 {
     public class ToggleCanvas : MonoBehaviour
     {
         public GameObject PauseCanvas;
+        public InputHandler touchHandler;
         public void TogglePauseCanvas()
         {
             if (!PauseCanvas.activeSelf)
-            {
-                Time.timeScale = 0;
-                //Conductor.Instance.isPaused = true;
-                //Conductor.Instance.PauseAudio();
+            {            
+                PlayManager.Conductor.PauseMusic();
+                touchHandler.enabled = false;
                 PauseCanvas.SetActive(true);
             }
             else
             {
-                Time.timeScale = 1;
+                
+                PlayManager.Conductor.ResumeMusic();
+                touchHandler.enabled = true;
                 PauseCanvas.SetActive(false);
-                //Conductor.Instance.isPaused = false;
-                //Conductor.Instance.ResumeAudio();
             }
         }
 
         public void Restart()
         {
-            DestroyAllEntities();          
+            DestroyAllEntities();
+            PlayManager.ArcIndicatorHandler.Destroy();
+            PlayManager.TraceIndicatorHandler.Destroy();
+            touchHandler.enabled = true;
+            PauseCanvas.SetActive(false);
+            PlayManager.Conductor.GetAudioSource().Stop();
+
             PlayManager.LoadChart(Constants.GetDebugChart());
-            //PlayManager.PlayMusic();
+            PlayManager.Conductor.PlayMusic();
         }
 
         void DestroyAllEntities()

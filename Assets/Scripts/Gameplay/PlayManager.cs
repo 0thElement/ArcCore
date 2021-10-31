@@ -10,7 +10,6 @@ using ArcCore.Gameplay.EntityCreation;
 using ArcCore.Parsing;
 using Unity.Rendering;
 using Unity.Collections;
-using UnityEngine.SceneManagement;
 
 namespace ArcCore.Gameplay
 {
@@ -159,11 +158,14 @@ namespace ArcCore.Gameplay
         private bool isUpdating;
         public void Start()
         {
+            Application.targetFrameRate = 120;
+
             instance = this;
             isUpdating = false;
 
 #if DEFAULT_CHART
             LoadChart(Constants.GetDebugChart());
+            //LoadChart(Constants.GetEmptyTestChart());
             PlayMusic();
 #endif
         }
@@ -258,8 +260,7 @@ namespace ArcCore.Gameplay
         void OnDestroy()
         {
             instance = null;
-            arcGroupHeldState.Dispose();        
+            arcGroupHeldState.Dispose();
         }
-
     }
 }

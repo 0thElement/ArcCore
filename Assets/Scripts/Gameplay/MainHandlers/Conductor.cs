@@ -29,6 +29,12 @@ namespace ArcCore.Gameplay.Behaviours
         /// </summary>
         private AudioSource audioSource;
 
+        public AudioSource GetAudioSource()
+        {
+            return audioSource;
+        }
+
+
         /// <summary>
         /// The value of <see cref="AudioSettings.dspTime"/> at which the current song started playing.
         /// </summary>
@@ -45,17 +51,17 @@ namespace ArcCore.Gameplay.Behaviours
         /// This is used to speed up calculations which require the current-most timing event.
         /// </summary>
         private int[] groupIndexCache;
+        /// <summary>
+        /// The time of the last audio mix, accessed through <see cref="TimeUtils.Ticks"/>
+        /// </summary>
+        public long timeOfLastMix;
 
         /// <summary>
         /// The value, in milliseconds, of time passed since the start of this chart.
         /// </summary>
         [HideInInspector]
         public int receptorTime;
-        /// <summary>
-        /// The time of the last audio mix, accessed through <see cref="TimeUtils.Ticks"/>
-        /// </summary>
-        [HideInInspector]
-        public long timeOfLastMix;
+        
 
         /// <summary>
         /// The length of the current song in milliseconds.
@@ -110,6 +116,18 @@ namespace ArcCore.Gameplay.Behaviours
 
             //Schedule playing of song
             audioSource.PlayScheduled(dspStartPlayingTime);
+        }
+
+        public void PauseMusic()
+        {
+            audioSource.Pause();
+            AudioListener.pause = true;
+        }
+
+        public void ResumeMusic()
+        {
+            audioSource.Play();
+            AudioListener.pause = false;
         }
 
         public void Update()

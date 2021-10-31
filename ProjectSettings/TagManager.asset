@@ -3,7 +3,8 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - ApproachIndicators
   layers:
   - Default
   - TransparentFX
@@ -43,9 +44,6 @@ TagManager:
     locked: 0
   - name: UI
     uniqueID: 1076155837
-    locked: 0
-  - name: Particles
-    uniqueID: 1577165531
     locked: 0
   - name: Shutter
     uniqueID: 3699498405
