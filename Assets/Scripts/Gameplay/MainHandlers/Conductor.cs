@@ -27,11 +27,12 @@ namespace ArcCore.Gameplay.Behaviours
         /// The source which audio will be played from.
         /// This must be a component of this game object.
         /// </summary>
-        private AudioSource audioSource;
+        private AudioSource audioSourcePriv;
+        public AudioSource AudioSource => audioSourcePriv;
 
         public AudioSource GetAudioSource()
         {
-            return audioSource;
+            return audioSourcePriv;
         }
 
 
@@ -83,6 +84,11 @@ namespace ArcCore.Gameplay.Behaviours
         private float scrollSpeed;
 
         /// <summary>
+        /// 
+        /// </summary>
+        private bool isPaused;
+
+        /// <summary>
         /// The audio offset of the current chart.
         /// </summary>
         [HideInInspector]
@@ -100,39 +106,41 @@ namespace ArcCore.Gameplay.Behaviours
         public void PlayMusic()
         {
             //Find the audio source
-            audioSource = GetComponent<AudioSource>();
+            audioSourcePriv = GetComponent<AudioSource>();
 
             //Setup song speed: http://answers.unity.com/answers/1677904/view.html
-            audioSource.pitch = GameSettings.Instance.SongSpeed;
-            Debug.Log(audioSource.outputAudioMixerGroup.audioMixer);
-            audioSource.outputAudioMixerGroup.audioMixer.SetFloat("Pitch", 1 / GameSettings.Instance.SongSpeed);
+            audioSourcePriv.pitch = GameSettings.Instance.SongSpeed;
+            Debug.Log(audioSourcePriv.outputAudioMixerGroup.audioMixer);
+            audioSourcePriv.outputAudioMixerGroup.audioMixer.SetFloat("Pitch", 1 / GameSettings.Instance.SongSpeed);
             
             //Get song length
-            songLength = (uint)Mathf.Round(audioSource.clip.length / GameSettings.Instance.SongSpeed * 1000);
+            songLength = (uint)Mathf.Round(audioSourcePriv.clip.length / GameSettings.Instance.SongSpeed * 1000);
 
             //Set timing information
             dspStartPlayingTime = AudioSettings.dspTime + StartPlayOffset;
             timeOfLastMix = DateTimeOffset.Now.Ticks;
 
             //Schedule playing of song
-            audioSource.PlayScheduled(dspStartPlayingTime);
+            audioSourcePriv.PlayScheduled(dspStartPlayingTime);
         }
 
         public void PauseMusic()
         {
-            audioSource.Pause();
+            audioSourcePriv.Pause();
             AudioListener.pause = true;
+            isPaused = true;
         }
 
         public void ResumeMusic()
         {
-            audioSource.Play();
+            audioSourcePriv.Play();
             AudioListener.pause = false;
+            isPaused = false;
         }
 
         public void Update()
         {
-            if (!PlayManager.IsUpdating) return;
+            if (!PlayManager.IsUpdating || isPaused) return;
 
             //Calculate the current time
             receptorTime = 

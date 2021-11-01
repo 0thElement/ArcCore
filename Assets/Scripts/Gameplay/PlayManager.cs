@@ -162,7 +162,7 @@ namespace ArcCore.Gameplay
 
             instance = this;
             isUpdating = false;
-
+            
 #if DEFAULT_CHART
             LoadChart(Constants.GetDebugChart());
             //LoadChart(Constants.GetEmptyTestChart());
