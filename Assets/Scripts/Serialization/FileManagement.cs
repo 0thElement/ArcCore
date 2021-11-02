@@ -16,6 +16,12 @@ namespace ArcCore.Serialization
         internal static JsonConverter[] Levels => Settings;
     }
 
+    internal class LevelInfoDeserialized 
+    { 
+        public string levelNamespace;
+        public ChartInfo[] charts;
+    }
+
     public static class FileManagement
     {
         public static string currentChartDirectory;
@@ -280,23 +286,23 @@ namespace ArcCore.Serialization
             }
 
             //get level information
-            LevelInfo levelInfo;
+            LevelInfoDeserialized levelInfoDeserialized;
 
             using (var fs = settings.OpenText())
             {
                 var serializer = JsonSerializer.Create(new JsonSerializerSettings { Converters = Converters.Levels });
                 var reader = new JsonTextReader(fs);
 
-                levelInfo = serializer.Deserialize<LevelInfo>(reader);
+                levelInfoDeserialized = serializer.Deserialize<LevelInfoDeserialized>(reader);
             }
 
             //validate namespacing
-            if (!levelInfo.ns.All(ch => char.IsLetterOrDigit(ch) || ch == '.'))
+            if (!levelInfoDeserialized.levelNamespace.All(ch => char.IsLetterOrDigit(ch) || ch == '.'))
             {
                 throw new Exception("The namespace of the given file is invalid.");
             }
 
-            string targetChartPath = Path.Combine(FileStatics.ChartsPath, levelInfo.ns);
+            string targetChartPath = Path.Combine(FileStatics.ChartsPath, levelInfoDeserialized.levelNamespace);
 
             //get globals
             var subdirs = dirInfo.GetDirectories();
@@ -364,8 +370,8 @@ namespace ArcCore.Serialization
             }
 
             //create and serialize full level info
-            LevelInfoInternal levelInfoFull = new LevelInfoInternal(levelInfo, globalsTracker.ToArray());
-            chartsMap.Add(levelInfo.ns, levelInfoFull);
+            LevelInfoInternal levelInfo = new LevelInfoInternal(levelInfoDeserialized.charts, globalsTracker.ToArray());
+            chartsMap.Add(levelInfoDeserialized.levelNamespace, levelInfo);
 
             //update chart map if needed
             if (updateMaps)

@@ -2,11 +2,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using ArcCore.Serialization.NewtonsoftExtensions;
 
 namespace ArcCore.Serialization
 {
-    [JsonHasPresets]
     public class DifficultyType
     {
         public string fullName;
@@ -47,7 +45,6 @@ namespace ArcCore.Serialization
             => !(a == b);
 
         #region Standard Difficulty Classes
-        [JsonPreset]
         public static DifficultyType Past => new DifficultyType
         {
             fullName = "Past",
@@ -58,7 +55,6 @@ namespace ArcCore.Serialization
             textColor = ColorExtensions.FromHexcode("#FFFFFF"),
             baseColor = ColorExtensions.FromHexcode("#B0FFA0")
         };
-        [JsonPreset]
         public static DifficultyType Present => new DifficultyType
         {
             fullName = "Present",
@@ -69,7 +65,6 @@ namespace ArcCore.Serialization
             textColor = ColorExtensions.FromHexcode("#FFFFFF"),
             baseColor = ColorExtensions.FromHexcode("#0020FF")
         };
-        [JsonPreset]
         public static DifficultyType Future => new DifficultyType
         {
             fullName = "Future",
@@ -80,7 +75,6 @@ namespace ArcCore.Serialization
             textColor = ColorExtensions.FromHexcode("#FFFFFF"),
             baseColor = ColorExtensions.FromHexcode("#FF2000")
         };
-        [JsonPreset]
         public static DifficultyType Beyond => new DifficultyType
         {
             fullName = "Beyond",

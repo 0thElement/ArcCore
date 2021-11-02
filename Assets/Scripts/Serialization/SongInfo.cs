@@ -6,8 +6,8 @@
         public string artist;
         public string illustrator;
 
-        public string artFilename = "base.jpg";
-        public string songFilename = "base.ogg";
+        public string artFilename;
+        public string songFilename;
 
         public float? baseBpm;
         public string displayBpm;
@@ -16,6 +16,5 @@
         public int? previewEnd;
 
         public string sauce;
-        //idfk
     }
 }
