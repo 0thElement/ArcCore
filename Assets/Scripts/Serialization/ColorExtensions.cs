@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AcSpec;
+using System;
 using UnityEngine;
 
 namespace ArcCore.Serialization
@@ -27,5 +28,8 @@ namespace ArcCore.Serialization
             Color32 value32 = value;
             return $"#{value32.r:x2}{value32.g:x2}{value32.b:x2}";
         }
+
+        public static Color32 ToUnityColor(this AcColor acColor)
+            => new Color32(acColor.r, acColor.g, acColor.b, acColor.a);
     }
 }

@@ -1,0 +1,14 @@
+﻿
+-- Charts --
+charts are imported as a series of files and a "spec.acspec" inside of a zip named 
+"anything.arccorelevel"
+
+
+-- Globals --
+globals are marked with "globals." inside of the given .arccorelevel
+globals can be namespaced as needed... "globals.floofer.my_image.jpg"
+
+these globals are stored inside the "/globals" folder, along with "_rc.json",
+which stores the amount of charts which reference the given global
+
+when deleted, a chart will decrement the reference counts of all associated globals
