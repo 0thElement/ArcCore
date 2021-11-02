@@ -1,39 +1,18 @@
-﻿using ArcCore.Serialization.NewtonsoftExtensions;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace ArcCore.Serialization
 {
-    [JsonHasPresets]
     public class StyleScheme : IEquatable<StyleScheme>
     {
-        public TrackColor trackColor;
+        public string background;
+        public Color trackColor;
         public StyleChoice particle;
         public StyleChoice tap;
         public StyleChoice hold;
         public StyleChoice arctap;
-
-
-        [JsonPreset]
-        public static StyleScheme Light => new StyleScheme 
-        {
-            trackColor = new TrackColor { Value = TrackColor.Light },
-            tap = StyleChoice.Light,
-            arctap = StyleChoice.Light,
-            hold = StyleChoice.Light,
-            particle = StyleChoice.Light
-        };
-        [JsonPreset]
-        public static StyleScheme Conflict => new StyleScheme
-        {
-            trackColor = new TrackColor { Value = TrackColor.Conflict },
-            tap = StyleChoice.Conflict,
-            arctap = StyleChoice.Conflict,
-            hold = StyleChoice.Conflict,
-            particle = StyleChoice.Conflict
-        };
 
         public override bool Equals(object obj)
         {
