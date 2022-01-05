@@ -1,49 +1,42 @@
 using System.Collections.Generic;
 using Zeroth.HierarchyScroll;
-using ArcCore.Serialization;
+using ArcCore.UI;
 using System.Linq;
 using ArcCore.Utitlities;
 using UnityEngine;
 
 namespace ArcCore.UI.SongSelection
 {
-    public class SortByDifficultyDisplayMethod : ISongListDisplayMethod
+    public class SortByDifficultyDisplayMethod : SortingDisplayMethod
     {
-        public List<CellDataBase> FromSongList(List<LevelInfoInternal> toDisplay, GameObject folderPrefab, GameObject cellPrefab, float prioritizedDifficulty)
+        public List<CellDataBase> SortCells(List<SongCellData> songCellDataList)
         {
-            List<SongCellData> cellDataList = new List<SongCellData>();
-            List<DifficultyItem> diffList = new List<DifficultyItem>();
+            List<CellDataBase> folderCellDataList = new List<CellDataBase>();
 
-            foreach (LevelInfoInternal level in toDisplay)
-            {
-
-                foreach (ChartInfo chart in level.charts)
-                {
-                    (int diff, bool isPlus) = CcToDifficulty.Convert(chart.cc);
-
-                    diffList.Add(new DifficultyItem {
-                        difficulty = diff,
-                        isPlus = isPlus,
-                        diffType = chart.diffType
-                    });
-                }
-
-                cellDataList.Add(new SongCellData {
-                    prefab = cellPrefab,
-                    chartInfo = level.GetClosestDifficulty(prioritizedDifficulty),
-                    diffList = diffList
-                });
-            }
-
-            //yes
-            return cellDataList
-                        .OrderBy(cell => {
+            songCellDataList = songCellDataList
+                        .OrderBy(cell =>
+                        {
                             float cc = cell.chartInfo.cc;
                             (int diff, bool isPlus) = CcToDifficulty.Convert(cc);
                             return (isPlus ? diff + 0.1f : diff);
                         })
                         .ThenBy(cell => cell.chartInfo.songInfoOverride.name)
-                        .Cast<CellDataBase>().ToList();
+                        .ToList();
+            
+            //Sort to folders
+            (int cdiff, bool cisPlus) = CcToDifficulty.Convert(songCellDataList[0].chartInfo.Constant);
+            folderCellDataList.Add(CreateFolder(cdiff, cisPlus, folderPrefab));
+
+            foreach (SongCellData song in songCellDataList)
+            {
+                (int diff, bool isPlus) = CcToDifficulty.Convert(songCellDataList[0].chartInfo.cc);
+                if (diff != cdiff || cisPlus != isPlus)
+                {
+                    folderCellDataList.Add(CreateFolder(diff, isPlus, folderPrefab));
+                }
+                folderCellDataList[folderCellDataList.Count - 1].children.Add(song);
+            }
+            return folderCellDataList;
         }
     }
 }

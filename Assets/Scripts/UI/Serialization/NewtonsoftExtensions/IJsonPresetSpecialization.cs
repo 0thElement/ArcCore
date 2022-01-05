@@ -1,5 +1,6 @@
 ﻿namespace ArcCore.Serialization.NewtonsoftExtensions
 {
+    [System.Obsolete]
     [JsonHasPresets]
     public interface IJsonPresetSpecialization<T>
     {

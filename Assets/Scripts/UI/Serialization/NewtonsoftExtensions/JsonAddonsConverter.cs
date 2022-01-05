@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace ArcCore.Serialization.NewtonsoftExtensions
 {
-
+    [Obsolete]
     public sealed class JsonAddonsConverter : JsonConverter
     {
         private readonly Dictionary<Type, Dictionary<string, object>> storedTypePresets = new Dictionary<Type, Dictionary<string, object>>();

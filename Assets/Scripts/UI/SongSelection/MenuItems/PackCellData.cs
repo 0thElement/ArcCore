@@ -6,11 +6,10 @@ namespace ArcCore.UI.SongSelection
 {
     public class PackCellData : CellDataBase
     {
-        public string title;
+        public Pack pack;
         public int chartCount;
         public int clearCount;
         public int frCount;
         public int pmCount;
-        public string imagePath;
     }
 }

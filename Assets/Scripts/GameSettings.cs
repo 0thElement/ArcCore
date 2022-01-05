@@ -25,13 +25,13 @@ namespace ArcCore
                 }
                 else
                 {
-                    throw new Exception("You cannot set Instance directely after it has been created. Please modify it's fields instead.");
+                    throw new Exception("You cannot set Instance directely after it has been created. Please modify its fields instead.");
                 }
             }
         }
 
         public static void FinalizeInstance()
-            => _instanceInvalid = true;
+            => _instanceInvalid = false;
 
         public static List<Color> DefaultColors => 
             new List<Color>
@@ -42,32 +42,32 @@ namespace ArcCore
                 {new Color(0.90f, 0.66f, 0.29f, 0.75f)}
             };
 
-        public static GameSettings GetDefault()
+        public static GameSettings Default
             => new GameSettings
             {
                 arcColors = DefaultColors,
-                _songSpeed = 1f,
+                songSpeed = 1f,
                 chartSpeed = 1f,
                 audioOffset = 0
             };
         #endregion
 
         #region Song Speed
-        private float _songSpeed;
+        private float songSpeed;
 
         /// <summary>
         /// The modifier which will be placed on song and chart speeds.
         /// </summary>
         public float SongSpeed
         {
-            get => _songSpeed;
+            get => songSpeed;
             set
             {
-                if (_songSpeed == value)
+                if (songSpeed == value)
                     return;
 
                 songSpeedChanged = true;
-                _songSpeed = value;
+                songSpeed = value;
             }
         }
 
@@ -90,7 +90,7 @@ namespace ArcCore
         /// <summary>
         /// Get the value which the given <paramref name="timing"/> will take on after squashed by a factor of <see cref="SongSpeed"/>.
         /// </summary>
-        public int GetSpeedModifiedTime(int timing) => (int)(timing / _songSpeed);
+        public int GetSpeedModifiedTime(int timing) => (int)(timing / songSpeed);
         #endregion
 
         /// <summary>

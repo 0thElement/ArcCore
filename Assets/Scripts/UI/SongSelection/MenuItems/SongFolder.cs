@@ -5,19 +5,37 @@ using System.Collections;
 
 namespace ArcCore.UI.SongSelection
 {
-    public class SongFolder : CellBase
+    public class SongFolder : CellBase, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
     {
-        //Text title
-        //Text count
+        [SerializeField] private Text title;
+        [SerializeField] private Text count;
+        [SerializeField] private Image hoverOverlay;
+
         public override void SetCellData(CellDataBase cellDataBase)
         {
-            SongFolderData packData = cellDataBase as SongFolderData;
-            //TODO: make the prefab and complete this
+            SongFolderData folderData = cellDataBase as SongFolderData;
+            title.text = folderData.title;
+            count.text = children.Count;
         }
 
         protected override IEnumerator LoadCellFullyCoroutine(CellDataBase cellDataBase)
         {
             yield return null;
+        }
+
+        public void OnPointerDown(PointerEventData _)
+        {
+            hoverOverlay.enabled = true;
+        }
+
+        public void OnPointerUp(PointerEventData _)
+        {
+            hoverOverlay.enabled = false;
+        }
+
+        public void OnPointerClick(PointerEventData _)
+        {
+            ToggleCollapse();
         }
     }
 }

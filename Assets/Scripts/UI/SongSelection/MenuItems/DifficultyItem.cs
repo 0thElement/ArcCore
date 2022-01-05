@@ -1,4 +1,4 @@
-using ArcCore.Serialization;
+using ArcCore.UI;
 
 namespace ArcCore.UI.SongSelection
 {
@@ -6,6 +6,6 @@ namespace ArcCore.UI.SongSelection
     {
         public int difficulty;
         public bool isPlus; 
-        public DifficultyType diffType;
+        public Difficulty diffType;
     }
 }
