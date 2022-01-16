@@ -1,7 +1,8 @@
-namespace ArcCore.UI.Data
+﻿namespace ArcCore.UI.Data
 {
     public enum ScoreCategory
     {
+        None,
         Fail,
         EasyClear,
         NormalClear,

@@ -1,7 +1,7 @@
 ﻿using Unity.Mathematics;
 using System.Diagnostics.CodeAnalysis;
 
-namespace ArcCore.Math
+namespace ArcCore.Mathematics
 {
     public readonly struct PosRot
     {

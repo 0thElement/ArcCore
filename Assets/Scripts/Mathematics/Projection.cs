@@ -3,7 +3,7 @@ using Unity.Burst;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace ArcCore.Math
+namespace ArcCore.Mathematics
 {
     public static class Projection
     {

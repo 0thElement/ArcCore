@@ -31,7 +31,7 @@ namespace ArcCore.Serialization
                 Precedence = 200
             };
 
-        public static readonly DifficultyGroup Beyond = 
+        public static readonly DifficultyGroup Beyond =
             new DifficultyGroup
             {
                 Color = ColorExtensions.FromHexcode("000000"),
@@ -46,7 +46,7 @@ namespace ArcCore.Serialization
             return obj;
         }
 
-        public static DifficultyGroup ReadDifficultyGroup(JsonReader reader)
+        public static DifficultyGroup ReadDifficultyGroupJson(JsonReader reader)
         {
             var obj = DefaultReadJToken(reader);
 
@@ -70,19 +70,19 @@ namespace ArcCore.Serialization
 
             return new DifficultyGroup
             {
-                Color       = ColorExtensions.FromHexcode((string)obj["color"]),
-                Name        = (string)obj["name"],
-                Precedence  = (int)obj["precedence"]
+                Color = ColorExtensions.FromHexcode((string)obj["color"]),
+                Name = (string)obj["name"],
+                Precedence = (int)obj["precedence"]
             };
         }
 
-        public static Difficulty ReadDifficulty(JsonReader reader)
+        public static Difficulty ReadDifficultyJson(JsonReader reader)
         {
             var obj = DefaultReadJToken(reader);
             var name = (string)obj;
             var isPlus = false;
 
-            if(name.EndsWith("+"))
+            if (name.EndsWith("+"))
             {
                 name = name.Substring(0, name.Length - 1);
                 isPlus = true;
@@ -95,7 +95,7 @@ namespace ArcCore.Serialization
             };
         }
 
-        public static Chart ReadChart(JsonReader reader)
+        public static Chart ReadChartJson(JsonReader reader)
         {
             var jtoken = DefaultReadJToken(reader);
             if (!(jtoken is JObject obj))
@@ -103,8 +103,8 @@ namespace ArcCore.Serialization
 
             var chart = new Chart
             {
-                DifficultyGroup = ReadDifficultyGroup(reader),
-                Difficulty = ReadDifficulty(reader),
+                DifficultyGroup = ReadDifficultyGroupJson(reader),
+                Difficulty = ReadDifficultyJson(reader),
 
                 SongPath = obj.TryGet<string>("song_path")?.AsFileReference() ?? "base.ogg",
                 ImagePath = obj.TryGet<string>("image_path")?.AsFileReference() ?? "base.jpg",
@@ -122,10 +122,10 @@ namespace ArcCore.Serialization
                 ChartPath = obj.TryGet<string>("chart_path")?.AsFileReference()
             };
 
-            chart.NameRomanized   = obj.TryGet<string>("name_romanized") ?? chart.Name;
+            chart.NameRomanized = obj.TryGet<string>("name_romanized") ?? chart.Name;
             chart.ArtistRomanized = obj.TryGet<string>("artist_romanized") ?? chart.Artist;
 
-            if (obj.TryGet<string>("chart_path")is var chartPath && chartPath != null)
+            if (obj.TryGet<string>("chart_path") is var chartPath && chartPath != null)
             {
                 chart.ChartPath = chartPath;
             }
@@ -147,18 +147,36 @@ namespace ArcCore.Serialization
         public static Level ReadLevelJson(JsonReader reader)
         {
             var charts = new List<Chart>();
-            var chartsJson = (JArray)DefaultReadJToken(reader);
+            if (!(DefaultReadJToken(reader) is JArray chartsJson))
+                throw new JsonReaderException("Expected an array.");
 
-            foreach(var chartJson in chartsJson)
+            foreach (var chartJson in chartsJson)
             {
                 var chartReader = chartJson.CreateReader();
-                charts.Add(ReadChart(chartReader));
+                charts.Add(ReadChartJson(chartReader));
             }
 
             return new Level
             {
                 Charts = charts.ToArray()
             };
+        }
+
+        public static Pack ReadPackJson(JsonReader reader)
+        {
+            var jToken = DefaultReadJToken(reader);
+            if (!(jToken is JObject obj))
+                throw new JsonReaderException("Expected an object.");
+
+            var pack = new Pack
+            {
+                ImagePath = obj.TryGet<string>("image_path"),
+                Name = obj.TryGet<string>("name"),
+            };
+
+            pack.NameRomanized = obj.TryGet<string>("name_romanized") ?? pack.Name;
+
+            return pack;
         }
     }
 }

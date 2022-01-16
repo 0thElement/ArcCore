@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using Zeroth.HierarchyScroll;
 using ArcCore.Serialization;
+using ArcCore.UI.Data;
 
 namespace ArcCore.UI.SongSelection
 {

@@ -1,7 +1,7 @@
 ﻿using ArcCore.Parsing.Data;
 using Unity.Entities;
 using Unity.Mathematics;
-using ArcCore.Math;
+using ArcCore.Mathematics;
 using UnityEngine;
 
 namespace ArcCore.Gameplay.Components

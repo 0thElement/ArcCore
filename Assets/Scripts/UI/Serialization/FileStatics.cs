@@ -11,16 +11,19 @@ namespace ArcCore.Serialization
     {
         public const char GlobalMarker = '$';
 
-        public const string Globals = "globals";
-        public const string Levels = "levels";
-        public const string Packs = "packs";
-        public const string Temp = "__temp";
+        public const string 
+            Globals = "globals", 
+            Locals = "locals", 
+            Packs = "packs", 
+            Levels = "levels", 
+            Partners = "partners",
+            Temp = "__temp";
 
-        public const string MapJson = "__map.json";
-        public const string SettingsJson = "__settings.json";
-
-        public static string GetPersistentSubpath(string path)
-            => Path.Combine(Application.persistentDataPath, path);
+        public const string 
+            MapJson = "__map.json",
+            SettingsJson = "__settings.json",
+            ListJson = "__list.json",
+            UserSettingsJson = "__user_settings.json";
 
         public static HashSet<string> SupportedFileExtensions => new HashSet<string>
         {
@@ -32,16 +35,18 @@ namespace ArcCore.Serialization
             "mp3"
         };
 
-        public static readonly string GlobalsPath = GetPersistentSubpath(Globals);
-        public static readonly string LevelsPath = GetPersistentSubpath(Levels);
-        public static readonly string PacksPath = GetPersistentSubpath(Packs);
-        public static readonly string TempPath = Application.temporaryCachePath;
+        public static readonly string
+            GlobalsPath = Path.Combine(Application.persistentDataPath, Globals),
+            LocalsPath = Path.Combine(Application.persistentDataPath, Locals),
+            LevelsPath = Path.Combine(Application.persistentDataPath, Locals, Levels),
+            PacksPath = Path.Combine(Application.persistentDataPath, Locals, Packs),
+            TempPath = Application.temporaryCachePath;
 
-        public static readonly string SettingsJsonPath = GetPersistentSubpath(SettingsJson);
-
-        public static readonly string GlobalsMapPath = Path.Combine(GlobalsPath, MapJson);
-        public static readonly string LevelsMapPath = Path.Combine(LevelsPath, MapJson);
-        public static readonly string PacksMapPath = Path.Combine(PacksPath, MapJson);
+        public static readonly string
+            GlobalsMapPath = Path.Combine(GlobalsPath, MapJson),
+            LevelsListPath = Path.Combine(LevelsPath, ListJson),
+            PacksListPath = Path.Combine(LevelsPath, ListJson),
+            UserSettingsPath = Path.Combine(GlobalsPath, UserSettingsJson);
 
         public const string GlobalsMapDefault = @"{""light.png"":1,""conf.png"":1}";
         public static Dictionary<string, int> GlobalsMapDefaultSerialized
@@ -52,12 +57,12 @@ namespace ArcCore.Serialization
             };
 
         public const string LevelsDefault = @"";
-        public static Dictionary<long, Level> ChartsDefaultSerialized
-            => new Dictionary<long, Level> { };
+        public static List<Level> LevelsDefaultSerialized
+            => new List<Level> {};
             
         public const string PacksDefault = @"";
-        public static Dictionary<long, Pack> PacksDefaultSerialized
-            => new Dictionary<long, Pack> { };
+        public static List<Pack> PacksDefaultSerialized
+            => new List<Pack> { };
 
         public static bool IsValidFileReference(string s)
             => (s.StartsWith(GlobalMarker + "") && IsValidGlobalName(s.Skip(1))) || IsValidGlobalName(s);
@@ -74,5 +79,21 @@ namespace ArcCore.Serialization
             global = null;
             return false;
         }
+
+        public static string GetStorageDir(this ArccoreInfoType type)
+        {
+            switch(type)
+            {
+                case ArccoreInfoType.Level:
+                    return LevelsPath;
+                case ArccoreInfoType.Pack:
+                    return PacksPath;
+            }
+
+            throw new NotImplementedException();
+        }
+
+        public static string GetStoragePath(this IArccoreInfo info)
+            => Path.Combine(info.Type().GetStorageDir(), info.Id.ToString());
     }
 }

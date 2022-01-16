@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using Zeroth.HierarchyScroll;
+using ArcCore.UI.Data;
+using System.Linq;
 
 namespace ArcCore.UI.SongSelection
 {
@@ -15,7 +17,7 @@ namespace ArcCore.UI.SongSelection
             List<CellDataBase> packCells = new List<CellDataBase>();
             foreach (Pack pack in packs)
             {
-                List<Level> levelsOfPack = levels.Where(level => level.Pack.PackPath == pack.PackPath);
+                var levelsOfPack = levels.Where(level => level.Pack.PackPath == pack.PackPath);
                 int count = 0;
                 int clear = 0;
                 int fr = 0;

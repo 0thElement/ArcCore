@@ -1,6 +1,6 @@
 ﻿using Unity.Mathematics;
 
-namespace ArcCore.Math
+namespace ArcCore.Mathematics
 {
     public readonly struct Rect2D
     {

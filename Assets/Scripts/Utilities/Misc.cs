@@ -1,4 +1,4 @@
-using ArcCore.Math;
+using ArcCore.Mathematics;
 using UnityEngine;
 
 namespace ArcCore.Utilities

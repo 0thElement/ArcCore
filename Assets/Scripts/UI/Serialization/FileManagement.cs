@@ -7,28 +7,10 @@ using System.IO.Compression;
 using ArcCore.UI.Data;
 using UnityEngine;
 using Newtonsoft.Json.Linq;
+using UnityEditor.Timeline;
 
 namespace ArcCore.Serialization
 {
-    [Flags]
-    public enum ArccoreInfoTypes : byte
-    {
-        Level = 1 << 0,
-        Pack = 1 << 1,
-        Partner = 1 << 2,
-
-        All = Level | Pack | Partner
-    }
-
-    internal static class Converters
-    {
-        internal static JsonConverter[] Settings => new JsonConverter[]
-        {
-            new JsonColorConverter()
-        };
-        internal static JsonConverter[] Levels => Settings;
-    }
-
     public static class FileManagement
     {
         public static string currentChartDirectory;
@@ -36,8 +18,12 @@ namespace ArcCore.Serialization
             => Path.Combine(input[0] == FileStatics.GlobalMarker ? FileStatics.GlobalsPath : currentChartDirectory, input);
 
         public static Dictionary<string, int> globalsMap;
-        public static Dictionary<long, Level> levels;
-        public static Dictionary<long, Pack> packs;
+
+        public static List<Level> levels;
+        public static List<Pack> packs;
+
+        public static long maxLevelId;
+        public static long maxPackId; 
 
         public static bool IsValidFilePath(string path)
         {
@@ -50,14 +36,13 @@ namespace ArcCore.Serialization
             // SETUP FILES IF NON-EXISTENT //
 
             // ...\__settings.json
-            if (!File.Exists(FileStatics.SettingsJsonPath))
+            if (!File.Exists(FileStatics.UserSettingsPath))
             {
                 GameSettings.Instance = GameSettings.Default;
 
-                using (var fs = File.CreateText(FileStatics.SettingsJsonPath))
+                using (var fs = File.CreateText(FileStatics.UserSettingsPath))
                 {
-                    var settings = new JsonSerializerSettings { Converters = Converters.Settings };
-                    var serializer = JsonSerializer.Create(settings);
+                    var serializer = JsonSerializer.Create(new JsonSerializerSettings());
                     var writer = new JsonTextWriter(fs);
 
                     serializer.Serialize(writer, GameSettings.Instance);
@@ -65,10 +50,9 @@ namespace ArcCore.Serialization
             }
             else
             {
-                using (var fs = File.OpenText(FileStatics.SettingsJsonPath))
+                using (var fs = File.OpenText(FileStatics.UserSettingsPath))
                 {
-                    var settings = new JsonSerializerSettings { Converters = Converters.Settings };
-                    var serializer = JsonSerializer.Create(settings);
+                    var serializer = JsonSerializer.Create(new JsonSerializerSettings());
                     var reader = new JsonTextReader(fs);
 
                     GameSettings.Instance = serializer.Deserialize<GameSettings>(reader);
@@ -107,27 +91,23 @@ namespace ArcCore.Serialization
             if (!Directory.Exists(FileStatics.LevelsPath))
             {
                 Directory.CreateDirectory(FileStatics.LevelsPath);
-                using (var fs = File.CreateText(FileStatics.LevelsMapPath))
+                using (var fs = File.CreateText(FileStatics.LevelsListPath))
                 {
                     fs.Write(FileStatics.LevelsDefault);
                 }
 
-                levels = FileStatics.ChartsDefaultSerialized;
+                levels = FileStatics.LevelsDefaultSerialized;
 
                 //copy in pre-built charts
             }
             else
             {
-                using (var fs = File.OpenText(FileStatics.LevelsMapPath))
+                using (var fs = File.OpenText(FileStatics.LevelsListPath))
                 {
-                    var settings = new JsonSerializerSettings
-                    {
-                        Converters = Converters.Levels
-                    };
-                    var serializer = JsonSerializer.Create(settings);
+                    var serializer = JsonSerializer.Create();
                     var reader = new JsonTextReader(fs);
 
-                    levels = serializer.Deserialize<Dictionary<long, Level>>(reader);
+                    levels = serializer.Deserialize<List<Level>>(reader);
                 }
             }
 
@@ -135,7 +115,7 @@ namespace ArcCore.Serialization
             if (!Directory.Exists(FileStatics.PacksPath))
             {
                 Directory.CreateDirectory(FileStatics.PacksPath);
-                using (var fs = File.CreateText(FileStatics.PacksMapPath))
+                using (var fs = File.CreateText(FileStatics.PacksListPath))
                 {
                     fs.Write(FileStatics.PacksDefault);
                 }
@@ -146,45 +126,14 @@ namespace ArcCore.Serialization
             }
             else
             {
-                using (var fs = File.OpenText(FileStatics.PacksMapPath))
+                using (var fs = File.OpenText(FileStatics.PacksListPath))
                 {
                     var serializer = JsonSerializer.Create();
                     var reader = new JsonTextReader(fs);
 
-                    packs = serializer.Deserialize<Dictionary<long, Pack>>(reader);
+                    packs = serializer.Deserialize<List<Pack>>(reader);
                 }
             }
-        }
-
-        public static void UpdateGlobalMap()
-        {
-            using (var fs = File.Open(FileStatics.GlobalsMapPath, FileMode.Truncate, FileAccess.Write))
-            using (var sw = new StreamWriter(fs))
-            {
-                var serializer = new JsonSerializer();
-                var writer = new JsonTextWriter(sw);
-
-                serializer.Serialize(writer, globalsMap);
-            }
-        }
-
-        public static void ImportGlobal(FileInfo info, List<string> tracker)
-        {
-            string destination = Path.Combine(FileStatics.GlobalsPath, info.Name);
-
-            if (File.Exists(destination))
-            {
-                //Already imported
-                globalsMap[info.Name]++;
-            }
-            else
-            {
-                //New import
-                File.Copy(info.FullName, destination);
-                globalsMap.Add(info.Name, 1);
-            }
-
-            tracker.Add(info.Name);
         }
 
         public static void DeleteGlobal(string filename)
@@ -200,9 +149,20 @@ namespace ArcCore.Serialization
             }
         }
 
-        public static void UpdateLevelMap()
+        public static void UpdateGlobalMap()
         {
-            using (var fs = File.Open(FileStatics.LevelsMapPath, FileMode.Truncate, FileAccess.Write))
+            using (var fs = File.Open(FileStatics.GlobalsMapPath, FileMode.Truncate, FileAccess.Write))
+            using (var sw = new StreamWriter(fs))
+            {
+                var serializer = new JsonSerializer();
+                var writer = new JsonTextWriter(sw);
+
+                serializer.Serialize(writer, globalsMap);
+            }
+        }
+        public static void UpdateLevelList()
+        {
+            using (var fs = File.Open(FileStatics.LevelsPath, FileMode.Truncate, FileAccess.Write))
             using (var sw = new StreamWriter(fs))
             {
                 var serializer = JsonSerializer.Create(new JsonSerializerSettings {Converters = Converters.Levels});
@@ -211,52 +171,26 @@ namespace ArcCore.Serialization
                 serializer.Serialize(writer, levels);
             }
         }
-
-        public static void AddLevelCollection(ZipArchive archive)
+        private static void UpdatePackList()
         {
-            Directory.CreateDirectory(FileStatics.TempPath);
-            archive.ExtractToDirectory(FileStatics.TempPath);
-
-            var tempInfo = new DirectoryInfo(Directory.GetDirectories(FileStatics.TempPath)[0]);
-
-            //prevent files
-            if (tempInfo.GetFiles().Length != 0)
+            using(var fs = File.Open(FileStatics.PacksPath, FileMode.Truncate, FileAccess.Write))
+            using(var sw = new StreamWriter(fs))
             {
-                Directory.Delete(FileStatics.TempPath);
-                throw new Exception("Level collections may not contain anything other than subdirectories.");
+                var serializer = JsonSerializer.Create(new JsonSerializerSettings {Converters = Converters.Levels});
+                var writer = new JsonTextWriter(sw);
+
+                serializer.Serialize(writer, packs);
             }
-
-            //add all level directories
-            foreach (var dir in tempInfo.EnumerateDirectories())
-            {
-                try
-                {
-                    ReadSingle(FileStatics.TempPath, false);
-                }
-                catch (Exception e)
-                {
-                    Directory.Delete(FileStatics.TempPath, true);
-                    throw e;
-                }
-            }
-
-            //update maps
-            UpdateLevelMap();
-            UpdateGlobalMap();
-
-            //finalize
-            Directory.Delete(FileStatics.TempPath, true);
         }
 
         public static void AddLevelArchive(ZipArchive archive)
         {
-            Directory.CreateDirectory(FileStatics.TempPath);
             archive.ExtractToDirectory(FileStatics.TempPath);
 
             //try catch to prevent memory leakage
             try
             {
-                ReadSingle(Directory.GetDirectories(FileStatics.TempPath)[0]);
+                ImportDirectory(new DirectoryInfo(FileStatics.TempPath));
             }
             catch (Exception e)
             {
@@ -270,21 +204,36 @@ namespace ArcCore.Serialization
 
         public static void ImportDirectory(DirectoryInfo dir)
         {
-            var (item, filesToCopy, globalsToCopy) = ReadItem(dir, ArccoreInfoTypes.All);
+            var (item, globalsToCopy, localsToCopy) = ReadItem(dir, ArccoreInfoType.All);
 
-            foreach(var global in globalsToCopy)
+            foreach(var (file, path, name) in globalsToCopy)
             {
-                if(!globalsMap.ContainsKey())
+                if(!globalsMap.ContainsKey(name))
+                {
+                    globalsMap.Add(name, 1);
+                    file.CopyTo(path);
+                }
+                else
+                {
+                    globalsMap[name]++;
+                }
+            }
+
+            foreach (var (file, path, _) in localsToCopy)
+            {
+                file.CopyTo(path);
             }
         }
 
 
-        public static (IArccoreInfo item, IList<FileInfo> filesToCopy, IList<FileInfo> globalsToCopy) ReadItem(DirectoryInfo sourceDirectory, ArccoreInfoTypes allowedTypes)
+        public static (IArccoreInfo item, 
+            List<(FileInfo file, string path, string name)> globalsToCopy, 
+            List<(FileInfo file, string path, string name)> localsToCopy) 
+            ReadItem(DirectoryInfo sourceDirectory, ArccoreInfoType allowedTypes)
         {
             // Find settings file and globals directory
             var settingsFile = sourceDirectory.EnumerateFiles().FirstOrDefault(f => f.Name == FileStatics.SettingsJson) 
                                ?? throw new JsonReaderException("Directory must contain a '__settings.json'.");
-            var files = sourceDirectory.EnumerateFiles().ToDictionary(f => f.Name, f => f);
 
             // Verify other files are valid
             if(sourceDirectory.EnumerateFiles().FirstOrDefault(
@@ -311,19 +260,21 @@ namespace ArcCore.Serialization
             IArccoreInfo info;
             IList<DirectoryInfo> useDirectories;
 
+            var dataReader = data.CreateReader();
+
             if (type == "level")
             {
-                if (!allowedTypes.HasFlag(ArccoreInfoTypes.Level))
+                if (!allowedTypes.HasFlag(ArccoreInfoType.Level))
                     throw new JsonReaderException("Levels are dissallowed in the current context.");
 
-                (info, useDirectories) = ReadLevel(sourceDirectory, data.CreateReader());
+                (info, useDirectories) = ReadLevel(sourceDirectory, dataReader);
             }
             else if (type == "pack")
             {
-                if (!allowedTypes.HasFlag(ArccoreInfoTypes.Pack))
+                if (!allowedTypes.HasFlag(ArccoreInfoType.Pack))
                     throw new JsonReaderException("Packs are dissallowed in the current context.");
 
-                (info, useDirectories) = ReadPack(sourceDirectory);
+                (info, useDirectories) = ReadPack(sourceDirectory, dataReader);
             }
             else if (type == "partner")
             {
@@ -335,16 +286,18 @@ namespace ArcCore.Serialization
             }
 
             // Get globals
-            var globals = useDirectories.SelectMany(useDir => useDir.EnumerateDirectories()
-                                                                    .Where(d => d.Name == FileStatics.Globals))
+            var locals = useDirectories.SelectMany(useDir => useDir.EnumerateFiles().Where(f => f.Name != FileStatics.SettingsJson))
+                                       .ToDictionary(f => f.Name, f => f);
+            var globals = useDirectories.SelectMany(useDir => useDir.EnumerateDirectories().Where(d => d.Name == FileStatics.Globals))
                                         .SelectMany(d => d.GetFiles())
                                         .ToDictionary(f => f.Name, f => f);
 
             // Verify references
-            var filesToCopy = new List<FileInfo>();
-            var globalsToCopy = new List<FileInfo>();
+            var localsToCopy = new List<(FileInfo file, string path, string name)>();
+            var globalsToCopy = new List<(FileInfo file, string path, string name)>();
+            var nameMap = new Dictionary<string, string>();
 
-            foreach (var r in info.GetReferences())
+            foreach(var r in info.References)
             {
                 if(!FileStatics.IsValidFileReference(r))
                 {
@@ -355,7 +308,10 @@ namespace ArcCore.Serialization
                 {
                     if (globals?.ContainsKey(glb) is bool b && b)
                     {
-                        globalsToCopy.Add(globals[glb]);
+                        var path = Path.Combine(FileStatics.GlobalsPath, glb);
+
+                        globalsToCopy.Add((globals[glb], path, glb));
+                        nameMap.Add(r, path);
                     }
                     else
                     {
@@ -364,9 +320,12 @@ namespace ArcCore.Serialization
                 }
                 else
                 {
-                    if (files.ContainsKey(r))
+                    if (locals.ContainsKey(r))
                     {
-                        filesToCopy.Add(files[r]);
+                        var path = Path.Combine(info.GetStoragePath(), r);
+
+                        localsToCopy.Add((locals[r], path, r));
+                        nameMap.Add(r, path);
                     }
                     else
                     {
@@ -375,11 +334,14 @@ namespace ArcCore.Serialization
                 }
             }
 
+            // Modify references
+            info.ModifyReferences(s => nameMap[s]);
+
             // Setup globals
-            info.ImportedGlobals = globalsToCopy.Select(g => g.Name).ToArray();
+            info.ImportedGlobals = globalsToCopy.Select(g => g.file.Name).ToArray();
 
             // Return!
-            return (info, filesToCopy, globalsToCopy);
+            return (info, localsToCopy, globalsToCopy);
         }
 
         public static (Level level, IList<DirectoryInfo> useDirectories) ReadLevel(DirectoryInfo sourceDirectory, JsonReader settingsReader)
@@ -397,7 +359,7 @@ namespace ArcCore.Serialization
             );
         }
 
-        public static (Pack pack, IList<DirectoryInfo> useDirectories) ReadPack(DirectoryInfo sourceDirectory)
+        public static (Pack pack, IList<DirectoryInfo> useDirectories) ReadPack(DirectoryInfo sourceDirectory, JsonReader settingsReader)
         {
             //check folders
             if(sourceDirectory.EnumerateFiles().Any(f => f.Name != FileStatics.SettingsJson))
@@ -410,24 +372,38 @@ namespace ArcCore.Serialization
             useDirs.Add(sourceDirectory);
 
             return (
-                new Pack
-                {
-                    Levels = subdirs
-                             .Where(d => d.Name != FileStatics.Globals)
-                             .Select(d => (Level)ReadItem(d, ArccoreInfoTypes.Level).item)
-                             .ToArray()
-                },
+                JsonUserInput.ReadPackJson(settingsReader),
                 useDirs
             );
         }
+        
+        public static void DeletePack(Pack pack)
+        {
+            //delete globals
+            foreach(var glb in pack.ImportedGlobals)
+            {
+                DeleteGlobal(glb);
+            }
 
+            foreach(var glb in levels.Where(l => l.Pack == pack).SelectMany(l => l.ImportedGlobals))
+            {
+                DeleteGlobal(glb);
+            }
 
+            //delete pack data
+            Directory.Delete(pack.GetStoragePath(), true);
+
+            //delete from maps and update
+            packs.Remove(pack);
+            UpdatePackList();
+
+            levels.RemoveAll(l => l.Pack == pack);
+            UpdateLevelList();
+        }
 
         /// WARNING: might cause errors if files are tampered with or there are bugs!
-        public static void DeleteSingle(long id)
+        public static void DeleteSingle(Level single)
         {
-            var single = levels[id];
-
             //delete globals
             foreach (var glb in single.ImportedGlobals)
             {
@@ -435,13 +411,11 @@ namespace ArcCore.Serialization
             }
 
             //delete level data
-            Directory.Delete(Path.Combine(FileStatics.LevelsPath, single.Directory), true);
+            Directory.Delete(single.GetStoragePath(), true);
 
             //delete from maps and update
-            levels.Remove(id);
-
-            UpdateLevelMap();
-            UpdateGlobalMap();
+            levels.Remove(single);
+            UpdateLevelList();
         }
     }
 }
