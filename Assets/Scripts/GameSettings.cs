@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
+using System;
 
 namespace ArcCore
 {
     public class GameSettings
     {
-        #region --Statics--
         private static bool _instanceInvalid = true;
         private static GameSettings _instance;
 
@@ -33,85 +30,14 @@ namespace ArcCore
         public static void FinalizeInstance()
             => _instanceInvalid = false;
 
-        public static List<Color> DefaultColors => 
-            new List<Color>
-            {
-                {new Color(0.30f, 0.77f, 0.86f, 0.75f)},
-                {new Color(0.91f, 0.37f, 0.72f, 0.75f)},
-                {new Color(0.48f, 0.89f, 0.32f, 0.75f)},
-                {new Color(0.90f, 0.66f, 0.29f, 0.75f)}
-            };
-
-        public static GameSettings Default
+        public static GameSettings Default 
             => new GameSettings
             {
-                arcColors = DefaultColors,
-                songSpeed = 1f,
-                chartSpeed = 1f,
-                audioOffset = 0
+                maxLevelId = 0,
+                maxPackId = 0
             };
-        #endregion
 
-        #region Song Speed
-        private float songSpeed;
-
-        /// <summary>
-        /// The modifier which will be placed on song and chart speeds.
-        /// </summary>
-        public float SongSpeed
-        {
-            get => songSpeed;
-            set
-            {
-                if (songSpeed == value)
-                    return;
-
-                songSpeedChanged = true;
-                songSpeed = value;
-            }
-        }
-
-        /// <summary>
-        /// Indicate that the current value of <see cref="SongSpeed"/> has been used in a meaningful manner.
-        /// </summary>
-        public void MarkSongSpeedUsed()
-        {
-            songSpeedChanged = false;
-        }
-
-        /// <summary>
-        /// Has the value of <see cref="SongSpeed"/> been changed since its last usage?
-        /// <para>
-        /// <b>NOTE:</b> users are exected to call <see cref="MarkSongSpeedUsed()"/> after reading from <see cref="SongSpeed"/> in a meaningful way.
-        /// </para>
-        /// </summary>
-        public bool songSpeedChanged = false;
-
-        /// <summary>
-        /// Get the value which the given <paramref name="timing"/> will take on after squashed by a factor of <see cref="SongSpeed"/>.
-        /// </summary>
-        public int GetSpeedModifiedTime(int timing) => (int)(timing / songSpeed);
-        #endregion
-
-        /// <summary>
-        /// The chart speed provided by the user.
-        /// </summary>
-        public float chartSpeed;
-
-        /// <summary>
-        /// The offset provided by the user.
-        /// </summary>
-        public int audioOffset;
-
-        /// <summary>
-        /// The colors assigned to the current arcs.
-        /// </summary>
-        public List<Color> arcColors;
-
-        public Color GetArcColor(int color)
-        {
-            if (color >= arcColors.Count) return arcColors[0];
-            return arcColors[color];
-        }
+        public ulong maxLevelId;
+        public ulong maxPackId;
     }
 }

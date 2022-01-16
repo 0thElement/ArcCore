@@ -23,7 +23,8 @@ namespace ArcCore.Serialization
             MapJson = "__map.json",
             SettingsJson = "__settings.json",
             ListJson = "__list.json",
-            UserSettingsJson = "__user_settings.json";
+            UserSettingsJson = "__user_settings.json",
+            GameSettingsJson = "__game_settings.json";
 
         public static HashSet<string> SupportedFileExtensions => new HashSet<string>
         {
@@ -46,7 +47,8 @@ namespace ArcCore.Serialization
             GlobalsMapPath = Path.Combine(GlobalsPath, MapJson),
             LevelsListPath = Path.Combine(LevelsPath, ListJson),
             PacksListPath = Path.Combine(LevelsPath, ListJson),
-            UserSettingsPath = Path.Combine(GlobalsPath, UserSettingsJson);
+            UserSettingsPath = Path.Combine(GlobalsPath, UserSettingsJson),
+            GameSettingsPath = Path.Combine(GlobalsPath, GameSettingsJson);
 
         public const string GlobalsMapDefault = @"{""light.png"":1,""conf.png"":1}";
         public static Dictionary<string, int> GlobalsMapDefaultSerialized

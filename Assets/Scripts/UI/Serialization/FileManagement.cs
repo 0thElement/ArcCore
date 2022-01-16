@@ -22,9 +22,6 @@ namespace ArcCore.Serialization
         public static List<Level> levels;
         public static List<Pack> packs;
 
-        public static long maxLevelId;
-        public static long maxPackId; 
-
         public static bool IsValidFilePath(string path)
         {
             bool isValid = Uri.TryCreate(path, UriKind.Absolute, out Uri result);
@@ -35,8 +32,34 @@ namespace ArcCore.Serialization
         {
             // SETUP FILES IF NON-EXISTENT //
 
-            // ...\__settings.json
+            // ...\__user_settings.json
             if (!File.Exists(FileStatics.UserSettingsPath))
+            {
+                UserSettings.Instance = UserSettings.Default;
+
+                using (var fs = File.CreateText(FileStatics.UserSettingsPath))
+                {
+                    var serializer = JsonSerializer.Create(new JsonSerializerSettings());
+                    var writer = new JsonTextWriter(fs);
+
+                    serializer.Serialize(writer, UserSettings.Instance);
+                }
+            }
+            else
+            {
+                using (var fs = File.OpenText(FileStatics.UserSettingsPath))
+                {
+                    var serializer = JsonSerializer.Create(new JsonSerializerSettings());
+                    var reader = new JsonTextReader(fs);
+
+                    UserSettings.Instance = serializer.Deserialize<UserSettings>(reader);
+                }
+            }
+
+            UserSettings.FinalizeInstance();
+
+            // ...\__game_settings.json
+            if (!File.Exists(FileStatics.GameSettingsPath))
             {
                 GameSettings.Instance = GameSettings.Default;
 
@@ -45,7 +68,7 @@ namespace ArcCore.Serialization
                     var serializer = JsonSerializer.Create(new JsonSerializerSettings());
                     var writer = new JsonTextWriter(fs);
 
-                    serializer.Serialize(writer, GameSettings.Instance);
+                    serializer.Serialize(writer, UserSettings.Instance);
                 }
             }
             else
@@ -180,6 +203,17 @@ namespace ArcCore.Serialization
                 var writer = new JsonTextWriter(sw);
 
                 serializer.Serialize(writer, packs);
+            }
+        }
+        private static void UpdateGameSettings()
+        {
+            using(var fs = File.Open(FileStatics.GameSettingsPath, FileMode.Truncate, FileAccess.Write))
+            using(var sw = new StreamWriter(fs))
+            {
+                var serializer = JsonSerializer.Create(new JsonSerializerSettings {Converters = Converters.Levels});
+                var writer = new JsonTextWriter(sw);
+
+                serializer.Serialize(writer, GameSettings.Instance);
             }
         }
 
@@ -352,9 +386,13 @@ namespace ArcCore.Serialization
                 throw new JsonReaderException("Level folders cannot have subdirectories other than a possible 'globals' folder.");
             }
 
+            var level = JsonUserInput.ReadLevelJson(settingsReader);
+            level.Id = GameSettings.Instance.maxLevelId++;
+            UpdateGameSettings();
+
             //return level
             return (
-                JsonUserInput.ReadLevelJson(settingsReader),
+                level,
                 new DirectoryInfo[] { sourceDirectory }
             );
         }
@@ -371,12 +409,16 @@ namespace ArcCore.Serialization
             var useDirs = subdirs.ToList();
             useDirs.Add(sourceDirectory);
 
+            var pack = JsonUserInput.ReadPackJson(settingsReader);
+            pack.Id = GameSettings.Instance.maxLevelId++;
+            UpdateGameSettings();
+
             return (
-                JsonUserInput.ReadPackJson(settingsReader),
+                pack,
                 useDirs
             );
         }
-        
+
         public static void DeletePack(Pack pack)
         {
             //delete globals
