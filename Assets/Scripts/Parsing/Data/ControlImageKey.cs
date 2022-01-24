@@ -8,7 +8,7 @@ namespace ArcCore.Parsing.Data
         public int timing
         {
             get => _timing;
-            set => _timing = UserSettings.Instance.GetSpeedModifiedTime(value);
+            set => _timing = Settings.GetSpeedModifiedTime(value);
         }
 
         public Sprite sprite;

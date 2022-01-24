@@ -188,7 +188,7 @@ namespace ArcCore.Serialization
             using (var fs = File.Open(FileStatics.LevelsPath, FileMode.Truncate, FileAccess.Write))
             using (var sw = new StreamWriter(fs))
             {
-                var serializer = JsonSerializer.Create(new JsonSerializerSettings {Converters = Converters.Levels});
+                var serializer = JsonSerializer.Create();
                 var writer = new JsonTextWriter(sw);
 
                 serializer.Serialize(writer, levels);
@@ -199,21 +199,10 @@ namespace ArcCore.Serialization
             using(var fs = File.Open(FileStatics.PacksPath, FileMode.Truncate, FileAccess.Write))
             using(var sw = new StreamWriter(fs))
             {
-                var serializer = JsonSerializer.Create(new JsonSerializerSettings {Converters = Converters.Levels});
+                var serializer = JsonSerializer.Create();
                 var writer = new JsonTextWriter(sw);
 
                 serializer.Serialize(writer, packs);
-            }
-        }
-        private static void UpdateGameSettings()
-        {
-            using(var fs = File.Open(FileStatics.GameSettingsPath, FileMode.Truncate, FileAccess.Write))
-            using(var sw = new StreamWriter(fs))
-            {
-                var serializer = JsonSerializer.Create(new JsonSerializerSettings {Converters = Converters.Levels});
-                var writer = new JsonTextWriter(sw);
-
-                serializer.Serialize(writer, GameSettings.Instance);
             }
         }
 
@@ -387,8 +376,7 @@ namespace ArcCore.Serialization
             }
 
             var level = JsonUserInput.ReadLevelJson(settingsReader);
-            level.Id = GameSettings.Instance.maxLevelId++;
-            UpdateGameSettings();
+            level.Id = Settings.MaxLevelId++;
 
             //return level
             return (
@@ -410,8 +398,7 @@ namespace ArcCore.Serialization
             useDirs.Add(sourceDirectory);
 
             var pack = JsonUserInput.ReadPackJson(settingsReader);
-            pack.Id = GameSettings.Instance.maxLevelId++;
-            UpdateGameSettings();
+            pack.Id = Settings.MaxPackId++;
 
             return (
                 pack,

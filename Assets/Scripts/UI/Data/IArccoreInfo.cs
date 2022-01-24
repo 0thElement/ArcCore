@@ -19,9 +19,9 @@ namespace ArcCore.UI.Data
         {
             switch(info)
             {
-                case Level:
+                case Level level:
                     return ArccoreInfoType.Level;
-                case Pack:
+                case Pack pack:
                     return ArccoreInfoType.Pack;
             }
 

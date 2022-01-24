@@ -2,6 +2,7 @@ using Zeroth.HierarchyScroll;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using UnityEngine.EventSystems;
 
 namespace ArcCore.UI.SongSelection
 {
@@ -15,7 +16,7 @@ namespace ArcCore.UI.SongSelection
         {
             SongFolderData folderData = cellDataBase as SongFolderData;
             title.text = folderData.title;
-            count.text = children.Count;
+            count.text = cellDataBase.children.Count.ToString();
         }
 
         protected override IEnumerator LoadCellFullyCoroutine(CellDataBase cellDataBase)

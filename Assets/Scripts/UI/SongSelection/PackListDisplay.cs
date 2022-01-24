@@ -17,7 +17,8 @@ namespace ArcCore.UI.SongSelection
             List<CellDataBase> packCells = new List<CellDataBase>();
             foreach (Pack pack in packs)
             {
-                var levelsOfPack = levels.Where(level => level.Pack.PackPath == pack.PackPath);
+                IEnumerable<Level> levelsOfPack = levels;
+                if (selectedPack != null) levelsOfPack = levels.Where(level => level.Pack.Id == pack.Id);
                 int count = 0;
                 int clear = 0;
                 int fr = 0;

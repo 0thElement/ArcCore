@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace EnumerableUtils
+namespace ArcCore.Utitlities
 {
     public static class EnumerableUtils
     {

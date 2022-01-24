@@ -22,17 +22,17 @@ namespace ArcCore.UI.SongSelection
 
         private ISongListDisplayMethod displayMethod = new SortByDifficultyDisplayMethod();
 
-        public void Display(List<Level> levels, Level selectedLevel, Difficulty selectedDiff, bool playAnimation = false)
+        public void Display(List<Level> levels, Level selectedLevel, DifficultyGroup selectedDiff, bool playAnimation = false)
         {
-            List<CellDataBase> displayCells = displayMethod.FromSongList(toDisplay, cellPrefab, folderPrefab, selectedDiff);
+            List<CellDataBase> displayCells = displayMethod.Convert(levels, cellPrefab, folderPrefab, selectedDiff);
             scrollRect.SetData(displayCells);
 
-            Chart chart = selectedLevel.GetClosestDifficulty(selectedDiff);
+            Chart chart = selectedLevel.GetClosestChart(selectedDiff);
             //TODO: set img of selectedJacket
             selectedTitle.text = chart.Name;
             selectedArtist.text = chart.Artist;
             selectedBpm.text = chart.Bpm;
-            selectedScore = chart.PbScore;
+            selectedScore.text = chart.PbScore.Value.ToString("D8");
             //TODO: set img of selectedGrade
 
             //if playanimation is true then animate the cell's scrolling to the new position

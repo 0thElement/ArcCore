@@ -1,4 +1,4 @@
-namespace ArcCore.Utitlities
+namespace ArcCore.Utilities
 {
     public class CcToDifficulty
     {

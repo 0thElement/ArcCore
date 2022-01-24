@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace ArcCore.Serialization
+namespace ArcCore.Utitlities
 {
     public static class ColorExtensions
     {

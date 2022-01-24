@@ -2,20 +2,18 @@ using System.Collections.Generic;
 using Zeroth.HierarchyScroll;
 using ArcCore.Serialization;
 using System.Linq;
-using ArcCore.Utitlities;
+using ArcCore.Utilities;
 using UnityEngine;
 
 namespace ArcCore.UI.SongSelection
 {
-    public class SortByDifficultyDisplayMethod : SortingDisplayMethod
+    public class SortByTitleDisplayMethod : SortingDisplayMethod
     {
-        public List<CellDataBase> SortCells(List<SongCellData> songCellDataList)
+        protected override List<CellDataBase> SortCells(List<LevelCellData> songCellDataList)
         {
-            songCellDataList = songCellDataList
-                        .OrderBy(cell => cell.chartInfo.Name)
-                        .ToList();
-            
-            return songCellDataList;
+            return songCellDataList
+                    .OrderBy(cell => cell.chart.Name)
+                    .ToList<CellDataBase>();
         }
     }
 }

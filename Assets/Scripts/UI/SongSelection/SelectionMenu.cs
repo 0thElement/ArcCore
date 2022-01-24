@@ -1,13 +1,14 @@
 using UnityEngine;
 using UnityEngine.UI;
-using ArcCore.Serialization;
+using ArcCore.UI.Data;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ArcCore.UI.SongSelection
 {
     public class SelectionMenu : ScrollRect
     {
-        public static MainMenu Instance;
+        public static SelectionMenu Instance;
         protected override void Awake()
         {
             base.Awake();
@@ -15,27 +16,28 @@ namespace ArcCore.UI.SongSelection
             GetData();
         }
         
-        private static const string lastSelectedPackPref = "LastSelectedPack";
-        private static const string lastSelectedSongPref = "LastSelectedLevel";
-        private static const string lastSelectedDiffPref = "LastSelectedDiff";
+        private const string lastSelectedPackPref = "LastSelectedPack";
+        private const string lastSelectedSongPref = "LastSelectedLevel";
+        private const string lastSelectedDiffPref = "LastSelectedDiff";
 
         [SerializeField] public LevelListDisplay levelList;
         [SerializeField] public PackListDisplay packList;
         [SerializeField] public DifficultyListDisplay diffList;
 
-        [HideFromInspector] public List<Level> levelsData;
-        [HideFromInspector] public List<Pack> packsData;
+        [HideInInspector] public List<Level> levelsData;
+        [HideInInspector] public List<Pack> packsData;
 
         private Level selectedLevel;
         private Pack selectedPack;
-        private Difficulty selectedDiff;
+        private DifficultyGroup selectedDiff;
 
-        public Pack selectedPack
+        public Pack SelectedPack
         {
             get => selectedPack;
             set {
                 selectedPack = value;
-                PlayerPrefs.SetString(lastSelectedPackPref, value);
+                //TODO FOR FLOOF:
+                //Save the last selected pack
                 Draw();
             }
         }
@@ -45,50 +47,43 @@ namespace ArcCore.UI.SongSelection
             get => selectedLevel;
             set {
                 selectedLevel = value;
-                PlayerPrefs.SetString(lastSelectedLevelPref, value);
-                selectedLevel.GetClosestChart(SelectedDiff);
+                //TODO FOR FLOOF:
+                //Save the last selected level (per pack)
                 Draw();
             }
         }
 
-        public Difficulty SelectedDiff
+        public DifficultyGroup SelectedDiff
         {
             get => selectedDiff;
             set {
                 selectedDiff = value;
-                PlayerPrefs.SetString(lastSelectedDiffPref, value);
+                //TODO FOR FLOOF:
+                //Save the last selected difficulty group (globally)
                 Draw();
             }
         }
 
         private void GetData()
         {
-            Difficulty pst = new Difficulty() {
+            DifficultyGroup pst = new DifficultyGroup() {
                 Color = new Color(),
                 Name = "Past",
-                LevelName = "PST",
-                IsPlus = true,
                 Precedence = 0
             };
-            Difficulty prs = new Difficulty() {
+            DifficultyGroup prs = new DifficultyGroup() {
                 Color = new Color(),
                 Name = "Present",
-                LevelName = "PRS",
-                IsPlus = true,
                 Precedence = 10
             };
-            Difficulty ftr = new Difficulty() {
+            DifficultyGroup ftr = new DifficultyGroup() {
                 Color = new Color(),
                 Name = "Future",
-                LevelName = "FTR",
-                IsPlus = true,
                 Precedence = 20
             };
-            Difficulty byd = new Difficulty() {
+            DifficultyGroup byd = new DifficultyGroup() {
                 Color = new Color(),
                 Name = "Beyond",
-                LevelName = "BYD",
-                IsPlus = true,
                 Precedence = 30
             };
             ChartSettings defaultSettings = new ChartSettings() {
@@ -112,14 +107,14 @@ namespace ArcCore.UI.SongSelection
                 new Level {
                     Charts = new Chart[] {
                         new Chart() {
-                            Difficulty = pst,
+                            DifficultyGroup = pst,
                             SongPath = "/data/test1/base.ogg",
                             ImagePath = "/data/test1/base.jpg",
                             Name = "Song1",
                             NameRomanized = "Song1",
                             Artist = "Artist1",
                             ArtistRomanized = "Artist1",
-                            Bpm = 100,
+                            Bpm = "100",
                             Constant = 4,
                             PbScore = 10000255,
                             PbGrade = ScoreCategory.PureMemory,
@@ -127,7 +122,7 @@ namespace ArcCore.UI.SongSelection
                             Charter = "Charter1"
                         },
                         new Chart() {
-                            Difficulty = prs,
+                            DifficultyGroup = prs,
                             SongPath = "/data/test1/base.ogg",
                             ImagePath = "/data/test1/base.jpg",
                             Name = "Song1",
@@ -142,7 +137,7 @@ namespace ArcCore.UI.SongSelection
                             Charter = "Charter2"
                         },
                         new Chart() {
-                            Difficulty = ftr,
+                            DifficultyGroup = ftr,
                             SongPath = "/data/test1/base.ogg",
                             ImagePath = "/data/test1/base.jpg",
                             Name = "Song1",
@@ -157,7 +152,7 @@ namespace ArcCore.UI.SongSelection
                             Charter = "Charter3"
                         },
                         new Chart() {
-                            Difficulty = byd,
+                            DifficultyGroup = byd,
                             SongPath = "/data/test1/remix.ogg",
                             ImagePath = "/data/test1/remix.jpg",
                             Name = "Song1 remix",
@@ -165,7 +160,7 @@ namespace ArcCore.UI.SongSelection
                             Artist = "Artist1 but cooler",
                             ArtistRomanized = "Artist1 but cooler",
                             Bpm = "150",
-                            Constant = 10.8,
+                            Constant = 10.8f,
                             PbScore = 9500000,
                             PbGrade = ScoreCategory.NormalClear,
                             Settings = defaultSettings,
@@ -177,14 +172,14 @@ namespace ArcCore.UI.SongSelection
                 new Level {
                     Charts = new Chart[] {
                         new Chart() {
-                            Difficulty = pst,
+                            DifficultyGroup = pst,
                             SongPath = "/data/test2/base.ogg",
                             ImagePath = "/data/test2/base.jpg",
                             Name = "Song2",
                             NameRomanized = "Song2",
                             Artist = "Artist2",
                             ArtistRomanized = "Artist2",
-                            Bpm = 100,
+                            Bpm = "100",
                             Constant = 4,
                             PbScore = 10000255,
                             PbGrade = ScoreCategory.PureMemory,
@@ -192,7 +187,7 @@ namespace ArcCore.UI.SongSelection
                             Charter = "Charter5"
                         },
                         new Chart() {
-                            Difficulty = prs,
+                            DifficultyGroup = prs,
                             SongPath = "/data/test1/base.ogg",
                             ImagePath = "/data/test1/base.jpg",
                             Name = "Song2",
@@ -207,7 +202,7 @@ namespace ArcCore.UI.SongSelection
                             Charter = "Charter6"
                         },
                         new Chart() {
-                            Difficulty = ftr,
+                            DifficultyGroup = ftr,
                             SongPath = "/data/test1/base.ogg",
                             ImagePath = "/data/test1/base.jpg",
                             Name = "Song2",
@@ -222,7 +217,7 @@ namespace ArcCore.UI.SongSelection
                             Charter = "Charter5"
                         },
                         new Chart() {
-                            Difficulty = byd,
+                            DifficultyGroup = byd,
                             SongPath = "/data/test1/remix.ogg",
                             ImagePath = "/data/test1/remix.jpg",
                             Name = "Song2 remix",
@@ -230,7 +225,7 @@ namespace ArcCore.UI.SongSelection
                             Artist = "Artist2 but cooler",
                             ArtistRomanized = "Artist2 but cooler",
                             Bpm = "150",
-                            Constant = 10.8,
+                            Constant = 10.8f,
                             PbScore = 9500000,
                             PbGrade = ScoreCategory.NormalClear,
                             Settings = defaultSettings,
@@ -244,24 +239,22 @@ namespace ArcCore.UI.SongSelection
 
         public void Display()
         {
-            //TODO: FIND A BETTER WAY TO STORE THIS SHIT AND STORE SELECTED LEVEL PER PACK
-            selectedLevel = PlayerPrefs.GetString(lastSelectedLevelPref);
-            selectedPack = PlayerPrefs.GetString(lastSelectedPackPref);
-            selectedDiff = PlayerPrefs.GetString(lastSelectedDiffPref);
+            //TODO FOR FLOOF
+            //Get the last selected pack, level, difficulty
             Draw();
         }
 
         private void Draw()
         {
-            packList.Display(packs, selectedPack);
+            packList.Display(packsData, levelsData, selectedPack);
 
             List<Level> levels = levelsData;
             if (selectedLevel != null) {
-                levels = levelsData.Where(level => level.Pack != null && level.Pack.PackPath == selectedPack.PackPath);
+                levels = levelsData.Where(level => level.Pack == null && level.Pack.Id == selectedPack.Id).ToList();
             }
             levelList.Display(levels, selectedLevel, selectedDiff);
 
-            List<Chart> charts = selectedLevel.Charts;
+            List<Chart> charts = selectedLevel.Charts.ToList();
             diffList.Display(charts, selectedDiff);
         }
     } 

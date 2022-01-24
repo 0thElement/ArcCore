@@ -2,6 +2,7 @@
 using ArcCore.UI.Data;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using ArcCore.Utitlities;
 
 namespace ArcCore.Serialization
 {
@@ -10,7 +11,7 @@ namespace ArcCore.Serialization
         public static readonly DifficultyGroup Past =
             new DifficultyGroup
             {
-                Color = ColorExtensions.FromHexcode("000000"),
+                Color = ColorExtensions.FromHexcode("#48D4D4"),
                 Name = "past",
                 Precedence = 0
             };
@@ -18,7 +19,7 @@ namespace ArcCore.Serialization
         public static readonly DifficultyGroup Present =
             new DifficultyGroup
             {
-                Color = ColorExtensions.FromHexcode("000000"),
+                Color = ColorExtensions.FromHexcode("#8CE75D"),
                 Name = "present",
                 Precedence = 100
             };
@@ -26,7 +27,7 @@ namespace ArcCore.Serialization
         public static readonly DifficultyGroup Future =
             new DifficultyGroup
             {
-                Color = ColorExtensions.FromHexcode("000000"),
+                Color = ColorExtensions.FromHexcode("#E05CF7"),
                 Name = "future",
                 Precedence = 200
             };
@@ -34,7 +35,7 @@ namespace ArcCore.Serialization
         public static readonly DifficultyGroup Beyond =
             new DifficultyGroup
             {
-                Color = ColorExtensions.FromHexcode("000000"),
+                Color = ColorExtensions.FromHexcode("#E10C0C"),
                 Name = "beyond",
                 Precedence = 300
             };

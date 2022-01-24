@@ -9,7 +9,7 @@ namespace ArcCore.Parsing.Data
         public int Timing
         {
             get => _timing;
-            set => _timing = UserSettings.Instance.GetSpeedModifiedTime(value);
+            set => _timing = Settings.GetSpeedModifiedTime(value);
         }
 
         public PosRot targetChange;
@@ -19,7 +19,7 @@ namespace ArcCore.Parsing.Data
         public int Duration
         {
             get => _duration;
-            set => _duration = UserSettings.Instance.GetSpeedModifiedTime(value);
+            set => _duration = Settings.GetSpeedModifiedTime(value);
         }
 
         public int EndTiming => Timing + Duration;
