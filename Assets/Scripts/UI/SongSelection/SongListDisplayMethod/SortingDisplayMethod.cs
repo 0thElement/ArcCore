@@ -32,7 +32,7 @@ namespace ArcCore.UI.SongSelection
                 Chart matchingChart = null;    
                 foreach (Chart chart in level.Charts)
                 {
-                    if (chart.DifficultyGroup.Precedence == selectedDiff.Precedence) {
+                    if (chart.DifficultyGroup == selectedDiff) {
                         matchingChart = chart;
                     }
                 }

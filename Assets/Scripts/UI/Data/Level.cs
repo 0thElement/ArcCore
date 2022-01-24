@@ -24,8 +24,12 @@ namespace ArcCore.UI.Data
 
             foreach (Chart chart in Charts)
             {
-                if (Math.Abs(chart.DifficultyGroup.Precedence - difficultyGroup.Precedence) < closestDifference)
+                float diff = Math.Abs(chart.DifficultyGroup.Precedence - difficultyGroup.Precedence);
+                if (diff < closestDifference)
+                {
                     result = chart;
+                    closestDifference = diff;
+                }
             }
 
             return result;

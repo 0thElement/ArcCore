@@ -18,19 +18,19 @@ namespace ArcCore.UI.SongSelection
                         .OrderBy(cell =>
                         {
                             float cc = cell.chart.Constant;
-                            (int diff, bool isPlus) = CcToDifficulty.Convert(cc);
+                            (int diff, bool isPlus) = Conversion.CcToDifficulty(cc);
                             return (isPlus ? diff + 0.1f : diff);
                         })
                         .ThenBy(cell => cell.chart.Name)
                         .ToList();
             
             //Sort to folders
-            (int cdiff, bool cisPlus) = CcToDifficulty.Convert(songCellDataList[0].chart.Constant);
+            (int cdiff, bool cisPlus) = Conversion.CcToDifficulty(songCellDataList[0].chart.Constant);
             folderCellDataList.Add(CreateFolder(cdiff, cisPlus));
 
             foreach (LevelCellData song in songCellDataList)
             {
-                (int diff, bool isPlus) = CcToDifficulty.Convert(songCellDataList[0].chart.Constant);
+                (int diff, bool isPlus) = Conversion.CcToDifficulty(songCellDataList[0].chart.Constant);
                 if (diff != cdiff || cisPlus != isPlus)
                 {
                     folderCellDataList.Add(CreateFolder(diff, isPlus));

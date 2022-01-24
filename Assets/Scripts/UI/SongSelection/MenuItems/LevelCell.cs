@@ -10,22 +10,18 @@ namespace ArcCore.UI.SongSelection
     public class LevelCell : CellBase, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
     {
         [SerializeField] private Text title;
-        [SerializeField] private Text difficulty;
-        [SerializeField] private Text isPlus;
+        [SerializeField] private DifficultyItem difficulty;
         [SerializeField] private Image image;
         [SerializeField] private Image hoverOverlay;
         private Level level;
-        private DifficultyItem diffItem;
+        private DifficultyItemData diffItem;
 
         public override void SetCellData(CellDataBase cellDataBase)
         {
             LevelCellData songData = cellDataBase as LevelCellData;
             level = songData.level;
             title.text = songData.chart.Name;
-
-            diffItem = new DifficultyItem(songData.chart);
-            difficulty.text = diffItem.Text;
-            isPlus.gameObject.SetActive(diffItem.IsPlus);
+            difficulty.Set(songData.chart);
         }
 
         protected override IEnumerator LoadCellFullyCoroutine(CellDataBase cellDataBase)

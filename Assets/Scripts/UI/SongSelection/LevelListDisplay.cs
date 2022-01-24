@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using Zeroth.HierarchyScroll;
-using ArcCore.Serialization;
+using ArcCore.Utilities;
 using ArcCore.UI.Data;
 
 namespace ArcCore.UI.SongSelection
@@ -32,14 +32,14 @@ namespace ArcCore.UI.SongSelection
 
             //Set selected level data
             if (selectedLevel == null) return;
-            Chart chart = selectedLevel.GetClosestChart(selectedDiff);
+            Chart chart = selectedLevel.GetExactChart(selectedDiff);
             //TODO: set img of selectedJacket
             selectedTitle.text = chart.Name;
             selectedArtist.text = chart.Artist;
             selectedIllustrator.text = chart.Illustrator;
             selectedBpm.text = "BPM: " + chart.Bpm;
             selectedCharter.text = "Charter: " + chart.Charter;
-            selectedScore.text = chart.PbScore.Value.ToString("D8");
+            selectedScore.text = Conversion.ScoreDisplay(chart.PbScore.Value);
             //TODO: set img of selectedGrade
 
             //if playanimation is true then animate the cell's scrolling to the new position

@@ -1,7 +1,6 @@
 
 using Zeroth.HierarchyScroll;
 using ArcCore.UI.Data;
-using System.Collections.Generic;
 
 namespace ArcCore.UI.SongSelection
 {
