@@ -314,6 +314,21 @@ namespace Zeroth.HierarchyScroll
             minX = corners[0].x - threshold;
             maxX = corners[2].x + threshold;
         }
+
+        protected override void SetTopAnchor(RectTransform rectTransform)
+        {
+            //Saving to reapply after anchoring. Width and height changes if anchoring is change. 
+            float width = rectTransform.rect.width;
+            float height = rectTransform.rect.height;
+
+            //Setting top anchor 
+            rectTransform.anchorMin = new Vector2(1, rectTransform.anchorMin.y);
+            rectTransform.anchorMax = new Vector2(1, rectTransform.anchorMax.y);
+            rectTransform.pivot = new Vector2(1, rectTransform.pivot.y);
+
+            //Reapply size
+            rectTransform.sizeDelta = new Vector2(width, height);
+        }
         #endregion
     }
 }

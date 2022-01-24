@@ -21,10 +21,12 @@ namespace ArcCore.UI.SongSelection
         {
             PackCellData packData = cellDataBase as PackCellData;
             this.pack = packData.pack;
-            packTitle.text = packData.pack.Name;
-            chartCount.text = packData.chartCount.ToString();
-            //TODO: set image
-            //others
+            if (pack != null) {
+                packTitle.text = packData.pack.Name;
+                chartCount.text = packData.chartCount.ToString();
+                //TODO: set image
+                //others
+            }
         }
 
         protected override IEnumerator LoadCellFullyCoroutine(CellDataBase cellDataBase)

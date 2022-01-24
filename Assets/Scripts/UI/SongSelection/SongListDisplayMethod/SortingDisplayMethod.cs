@@ -18,7 +18,7 @@ namespace ArcCore.UI.SongSelection
             };
         }
 
-        public List<CellDataBase> Convert(List<Level> toDisplay, GameObject folderPrefab, GameObject cellPrefab, DifficultyGroup selectedDiff)
+        public List<CellDataBase> Convert(List<Level> toDisplay, GameObject cellPrefab, GameObject folderPrefab, DifficultyGroup selectedDiff)
         {
             this.folderPrefab = folderPrefab;
 

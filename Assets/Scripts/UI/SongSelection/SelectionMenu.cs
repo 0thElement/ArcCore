@@ -6,22 +6,22 @@ using System.Linq;
 
 namespace ArcCore.UI.SongSelection
 {
-    public class SelectionMenu : ScrollRect
+    public class SelectionMenu : MonoBehaviour
     {
         public static SelectionMenu Instance;
-        protected override void Awake()
+        protected void Awake()
         {
-            base.Awake();
             Instance = this;
             GetData();
+            Draw();
         }
         
         private const string lastSelectedPackPref = "LastSelectedPack";
         private const string lastSelectedSongPref = "LastSelectedLevel";
         private const string lastSelectedDiffPref = "LastSelectedDiff";
 
-        [SerializeField] public LevelListDisplay levelList;
         [SerializeField] public PackListDisplay packList;
+        [SerializeField] public LevelListDisplay levelList;
         [SerializeField] public DifficultyListDisplay diffList;
 
         [HideInInspector] public List<Level> levelsData;
@@ -90,16 +90,17 @@ namespace ArcCore.UI.SongSelection
                 Offset = 0,
                 ChartSpeed = 1
             };
+            selectedDiff = pst;
 
             packsData = new List<Pack>() {
                 new Pack() {
-
+                    Name = "A"
                 },
                 new Pack() {
-
+                    Name = "B"
                 },
                 new Pack() {
-
+                    Name = "C"
                 }
             };
 
@@ -249,13 +250,15 @@ namespace ArcCore.UI.SongSelection
             packList.Display(packsData, levelsData, selectedPack);
 
             List<Level> levels = levelsData;
-            if (selectedLevel != null) {
-                levels = levelsData.Where(level => level.Pack == null && level.Pack.Id == selectedPack.Id).ToList();
+            if (SelectedPack != null) {
+                levels = levelsData.Where(level => level.Pack != null && level.Pack.Id == selectedPack.Id).ToList();
             }
             levelList.Display(levels, selectedLevel, selectedDiff);
 
-            List<Chart> charts = selectedLevel.Charts.ToList();
-            diffList.Display(charts, selectedDiff);
+            if (SelectedLevel != null) {
+                List<Chart> charts = selectedLevel.Charts.ToList();
+                diffList.Display(charts, selectedDiff);
+            }
         }
     } 
 }

@@ -11,6 +11,7 @@ namespace ArcCore.UI.SongSelection
     {
         protected override List<CellDataBase> SortCells(List<LevelCellData> songCellDataList)
         {
+            if (songCellDataList.Count == 0) return songCellDataList.ToList<CellDataBase>();
             List<CellDataBase> folderCellDataList = new List<CellDataBase>();
 
             songCellDataList = songCellDataList

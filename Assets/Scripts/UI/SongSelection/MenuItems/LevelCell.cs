@@ -11,7 +11,7 @@ namespace ArcCore.UI.SongSelection
     {
         [SerializeField] private Text title;
         [SerializeField] private Text difficulty;
-        [SerializeField] private Image isPlus;
+        [SerializeField] private Text isPlus;
         [SerializeField] private Image image;
         [SerializeField] private Image hoverOverlay;
         private Level level;
@@ -25,9 +25,7 @@ namespace ArcCore.UI.SongSelection
 
             diffItem = new DifficultyItem(songData.chart);
             difficulty.text = diffItem.Text;
-            if (diffItem.IsPlus) {
-                //TODO: enable isPlus img
-            }
+            isPlus.gameObject.SetActive(diffItem.IsPlus);
         }
 
         protected override IEnumerator LoadCellFullyCoroutine(CellDataBase cellDataBase)

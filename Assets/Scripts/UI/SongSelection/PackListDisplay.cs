@@ -18,7 +18,7 @@ namespace ArcCore.UI.SongSelection
             foreach (Pack pack in packs)
             {
                 IEnumerable<Level> levelsOfPack = levels;
-                if (selectedPack != null) levelsOfPack = levels.Where(level => level.Pack.Id == pack.Id);
+                if (pack != null) levelsOfPack = levels.Where(level => level.Pack != null && level.Pack.Id == pack.Id);
                 int count = 0;
                 int clear = 0;
                 int fr = 0;
@@ -54,7 +54,7 @@ namespace ArcCore.UI.SongSelection
                     pmCount = pm
                 });
             }
-            scrollRect.SetData(packCells);
+            // scrollRect.SetData(packCells);
         }
     }
 }

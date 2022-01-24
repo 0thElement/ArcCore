@@ -168,20 +168,7 @@ namespace Zeroth.HierarchyScroll
         /// Anchoring cell and content rect transforms to top preset. Makes repositioning easy.
         /// </summary>
         /// <param name="rectTransform"></param>
-        private void SetTopAnchor(RectTransform rectTransform)
-        {
-            //Saving to reapply after anchoring. Width and height changes if anchoring is change. 
-            float width = rectTransform.rect.width;
-            float height = rectTransform.rect.height;
-
-            //Setting top anchor 
-            rectTransform.anchorMin = new Vector2(0.5f, 1);
-            rectTransform.anchorMax = new Vector2(0.5f, 1);
-            rectTransform.pivot = new Vector2(0.5f, 1);
-
-            //Reapply size
-            rectTransform.sizeDelta = new Vector2(width, height);
-        }
+        protected abstract void SetTopAnchor(RectTransform rectTransform);
 
         ///<summary>
         ///Create a cell from object pool and initialize it with the corresponding data from <see cref="dataSource">
