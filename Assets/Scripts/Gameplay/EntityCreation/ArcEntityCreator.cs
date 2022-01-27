@@ -127,8 +127,8 @@ namespace ArcCore.Gameplay.EntityCreation
                 Material arcColorMaterialInstance             = Object.Instantiate(arcMaterial);
                 Material heightIndicatorColorMaterialInstance = Object.Instantiate(heightMaterial);
 
-                arcColorMaterialInstance            .SetColor(colorShaderId, Settings.Instance.GetArcColor(i));
-                heightIndicatorColorMaterialInstance.SetColor(colorShaderId, Settings.Instance.GetArcColor(i));
+                arcColorMaterialInstance            .SetColor(colorShaderId, Settings.GetArcColor(i));
+                heightIndicatorColorMaterialInstance.SetColor(colorShaderId, Settings.GetArcColor(i));
 
                 Material highlightMat = Object.Instantiate(arcColorMaterialInstance);
                 Material grayoutMat   = Object.Instantiate(arcColorMaterialInstance);

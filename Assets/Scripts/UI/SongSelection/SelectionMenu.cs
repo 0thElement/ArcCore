@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using ArcCore.UI.Data;
 using System.Collections.Generic;
 using System.Linq;
+using ArcCore.Serialization;
 
 namespace ArcCore.UI.SongSelection
 {
@@ -23,9 +24,6 @@ namespace ArcCore.UI.SongSelection
         [SerializeField] public PackListDisplay packList;
         [SerializeField] public LevelListDisplay levelList;
         [SerializeField] public DifficultyListDisplay diffList;
-
-        [HideInInspector] public List<Level> levelsData;
-        [HideInInspector] public List<Pack> packsData;
 
         private Level selectedLevel;
         private Pack selectedPack;
@@ -66,6 +64,7 @@ namespace ArcCore.UI.SongSelection
 
         private void GetData()
         {
+#if DUMMY_DATA
             DifficultyGroup pst = new DifficultyGroup() {
                 Color = new Color(),
                 Name = "Past",
@@ -236,26 +235,31 @@ namespace ArcCore.UI.SongSelection
                     Pack = null
                 }
             };
+#endif
         }
 
         public void Display()
         {
-            //TODO FOR FLOOF
+            //TODO: FOR FLOOF
             //Get the last selected pack, level, difficulty
+
+            //Stored in some place i dont remember where :)
             Draw();
         }
 
         private void Draw()
         {
-            packList.Display(packsData, levelsData, selectedPack);
+            packList.Display(FileManagement.packs, FileManagement.levels, selectedPack);
 
-            List<Level> levels = levelsData;
-            if (SelectedPack != null) {
-                levels = levelsData.Where(level => level.Pack != null && level.Pack.Id == selectedPack.Id).ToList();
+            List<Level> levels = FileManagement.levels;
+            if (SelectedPack != null) 
+            {
+                levels = levels.Where(level => level.Pack != null && level.Pack.Id == selectedPack.Id).ToList();
             }
             levelList.Display(levels, selectedLevel, selectedDiff);
 
-            if (SelectedLevel != null) {
+            if (SelectedLevel != null) 
+            {
                 List<Chart> charts = selectedLevel.Charts.ToList();
                 diffList.Display(charts, selectedDiff);
             }

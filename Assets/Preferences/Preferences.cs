@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
 using UnityEngine;
 
 namespace UnityPreferences
@@ -13,173 +11,381 @@ namespace UnityPreferences
     {
         private const string PreferencePrefix = "__prefs.";
 
-        private static string AsName(this string str) 
+        public delegate T Reader<T>(string name, T defaultValue = default);
+        public delegate void Writer<T>(string name, T value);
+
+        public delegate object Reader(string name, object defaultValue);
+        public delegate void Writer(string name, object value);
+        public delegate void Deleter(string name);
+
+        public static Reader AsSimple<T>(this Reader<T> reader)
+            => (n, o) => reader(n, (T)o);
+        public static Reader<T> AsGeneric<T>(this Reader reader)
+            => (n, o) => (T)reader(n, o);
+        public static Writer AsSimple<T>(this Writer<T> writer)
+            => (n, o) => writer(n, (T)o);
+        public static Writer<T> AsGeneric<T>(this Writer writer)
+            => (n, o) => writer(n, o);
+
+        private static Dictionary<Type, Reader> customReaders = new Dictionary<Type, Reader>();
+        private static Dictionary<Type, Writer> customWriters = new Dictionary<Type, Writer>();
+        private static Dictionary<Type, Deleter> customDeleters = new Dictionary<Type, Deleter>();
+
+        private static Dictionary<string, object> memoizedPrefs = new Dictionary<string, object>();
+
+        public static void RegisterType<T>(Reader<T> reader, Writer<T> writer, Deleter deleter)
+        {
+            customReaders.Add(typeof(T), reader.AsSimple());
+            customWriters.Add(typeof(T), writer.AsSimple());
+            customDeleters.Add(typeof(T), n => deleter(n));
+        }
+
+        private static string AsName(this string str)
             => PreferencePrefix + str;
 
-        public static int GetInt(string name, int or = default)
+        public static int ReadInt(string name, int or = default)
             => PlayerPrefs.GetInt(name.AsName(), or);
-        public static void SetInt(string name, int val)
+        public static void WriteInt(string name, int val)
             => PlayerPrefs.SetInt(name.AsName(), val);
-        public static float GetFloat(string name, float or = default)
+        public static float ReadFloat(string name, float or = default)
             => PlayerPrefs.GetFloat(name.AsName(), or);
-        public static void SetFloat(string name, float val)
+        public static void WriteFloat(string name, float val)
             => PlayerPrefs.SetFloat(name.AsName(), val);
-        public static string GetString(string name, string or = default)
+        public static string ReadString(string name, string or = default)
             => PlayerPrefs.GetString(name.AsName(), or);
-        public static void SetString(string name, string val)
+        public static void WriteString(string name, string val)
             => PlayerPrefs.SetString(name.AsName(), val);
-        public static bool GetBool(string name, bool or = default)
+        public static bool ReadBool(string name, bool or = default)
             => PlayerPrefs.GetInt(name.AsName(), or ? 1 : 0) == 1;
-        public static void SetBool(string name, bool val)
+        public static void WriteBool(string name, bool val)
             => PlayerPrefs.SetInt(name.AsName(), val ? 1 : 0);
-        public static long GetLong(string name, long or = default)
-            => long.Parse(GetString(name, or.ToString()));
-        public static void SetLong(string name, long value)
-            => SetString(name, value.ToString());
-        public static ulong GetULong(string name, ulong or = default)
-            => ulong.Parse(GetString(name, or.ToString()));
-        public static void SetULong(string name, ulong value)
-            => SetString(name, value.ToString());
-        public static Color32 GetColor(string name, Color32 or = default)
+        public static long ReadLong(string name, long or = default)
+            => long.Parse(ReadString(name, or.ToString()));
+        public static void WriteLong(string name, long value)
+            => ReadString(name, value.ToString());
+        public static ulong ReadULong(string name, ulong or = default)
+            => ulong.Parse(ReadString(name, or.ToString()));
+        public static void WriteULong(string name, ulong value)
+            => ReadString(name, value.ToString());
+        private static void DeleteSimple(string name)
+            => PlayerPrefs.DeleteKey(name.AsName());
+
+        public static Color32 ReadColor(string name, Color32 or = default)
             => new Color32(
-                (byte)GetInt(name + ".r", or.r),
-                (byte)GetInt(name + ".g", or.g),
-                (byte)GetInt(name + ".b", or.b), 
-                (byte)GetInt(name+ ".a", or.a)
+                (byte)ReadInt(name + ".r", or.r),
+                (byte)ReadInt(name + ".g", or.g),
+                (byte)ReadInt(name + ".b", or.b),
+                (byte)ReadInt(name + ".a", or.a)
             );
-        public static void SetColor(string name, Color32 value)
+        public static void WriteColor(string name, Color32 value)
         {
-            SetInt(name + ".r", value.r);
-            SetInt(name + ".g", value.g);
-            SetInt(name + ".b", value.b);
-            SetInt(name + ".a", value.a);
+            ReadInt(name + ".r", value.r);
+            ReadInt(name + ".g", value.g);
+            ReadInt(name + ".b", value.b);
+            ReadInt(name + ".a", value.a);
         }
-        public static T GetEnum<T>(string name, T or = default) where T : struct, Enum
+        private static void DeleteColor(string name)
         {
-            Enum.TryParse(GetString(name, or.ToString()), out T result);
-            return result;
+            DeleteSimple(name + ".r");
+            DeleteSimple(name + ".g");
+            DeleteSimple(name + ".b");
+            DeleteSimple(name + ".a");
         }
-        private static object GetEnum(Type enumT, string name, object or = default)
+
+        public static T? ReadNullable<T>(string name, T? or = null) where T : struct
+            => ReadNullable(typeof(T), name, or) as T?;
+        public static object ReadNullable(Type inner, string name, object or)
+            => ReadBool(name + ".exists", false) ? ReaderForType(inner)(name, or) : null;
+        public static void WriteNullable<T>(string name, T? value) where T: struct
+            => WriteNullable(typeof(T), name, value);
+        public static void WriteNullable(Type inner, string name, object value)
         {
-            return typeof(Preferences).GetMethod(nameof(GetEnum), BindingFlags.Public).MakeGenericMethod(enumT).Invoke(null, new object[] { name, or });
+            var hasValueProp = typeof(Nullable<>).MakeGenericType(inner).GetProperty("HasValue");
+            var valueProp = typeof(Nullable<>).MakeGenericType(inner).GetProperty("Value");
+
+            var hasValue = (bool)hasValueProp.GetValue(value);
+
+            WriteBool(name + ".exists", hasValue);
+            if (hasValue)
+            {
+                WriterForType(inner)(name, valueProp.GetValue(value));
+            }
         }
-        public static void SetEnum<T>(string name, T value) where T : struct, Enum
-            => SetString(name, value.ToString());
-        private static void SetEnum(Type enumT, string name, object value)
+        public static void DeleteNullable<T>(string name)
+            => DeleteNullable(typeof(T), name);
+        public static void DeleteNullable(Type inner, string name)
         {
-            typeof(Preferences).GetMethod(nameof(SetEnum), BindingFlags.Public).MakeGenericMethod(enumT).Invoke(null, new object[] { name, value });
+            DeleteSimple(name + ".exists");
+            DeleterForType(inner)(name);
         }
+
+        public static T ReadEnum<T>(string name, T or = default) where T : struct, Enum
+            => (T)ReadEnum(typeof(T), name, or);
+        public static object ReadEnum(Type t, string name, object or)
+            => Enum.Parse(t, ReadString(name));
+        public static void WriteEnum<T>(string name, T value) where T : struct, Enum
+            => WriteEnum(typeof(T), name, value);
+        public static void WriteEnum(Type t, string name, object value)
+            => WriteString(name, value.ToString());
+
+        private static Array ReadEnumerable(Type inner, string name, int count)
+        {
+            var arr = Array.CreateInstance(inner, count);
+
+            for (int i = 0; i < count; i++)
+            {
+                arr.SetValue(ReaderForType(inner)(name + "." + i, default), i);
+            }
+
+            return arr;
+        }
+        private static int Count(this IEnumerable enumerable)
+        {
+            int i = 0;
+            foreach(var _ in enumerable)
+            {
+                i++;
+            }
+            return i;
+        }
+        private static void WriteEnumerable(Type inner, string name, IEnumerable value, int originalLength)
+        {
+            var origLen = ReadInt(name + ".len", InvalidLen);
+
+            if (value != null)
+            {
+                int i = 0;
+                foreach(var item in value)
+                {
+                    WriterForType(inner)(name + "." + i, item);
+                    i++;
+                }
+            }
+
+            if (origLen != InvalidLen)
+            {
+                for (int i = value?.Count() ?? 0 - 1; i >= origLen; i--)
+                {
+                    PlayerPrefs.DeleteKey(name + "." + i);
+                }
+            }
+        }
+        private static void DeleteEnumerable(Type inner, string name, int len)
+        {
+            for (int i = 0; i < len; i++)
+            {
+                DeleterForType(inner)(name + "." + i);
+            }
+        }
+
         private const int InvalidLen = -2;
         private const int NullLen = -1;
-        public static T[] GetArray<T>(string name, T[] or = default)
+        public static T[] ReadArray<T>(string name, T[] or = default)
+            => (T[])ReadArray(typeof(T), name, or);
+        public static object ReadArray(Type inner, string name, object or)
         {
-            var count = GetInt(name + ".len", InvalidLen);
+            var count = ReadInt(name + ".len", InvalidLen);
 
             if (count == InvalidLen)
                 return or;
             if (count == NullLen)
                 return null;
 
-            T[] arr = new T[count];
-
-            for (int i = 0; i < count; i++)
-            {
-                arr[i] = GetterForType<T>()(name + "." + i, default);
-            }
-
-            return arr;
+            return ReadEnumerable(inner, name, count);
         }
-        private static object GetArray(Type arrayT, string name, object or = default)
+        public static void WriteArray<T>(string name, T[] value) 
+            => WriteArray(typeof(T), name, value);
+        public static void WriteArray(Type inner, string name, object value)
         {
-            return typeof(Preferences).GetMethod(nameof(GetArray), BindingFlags.Public).MakeGenericMethod(arrayT).Invoke(null, new object[] { name, or });
-        }
-        public static void SetArray<T>(string name, T[] value)
-        {
-            var origLen = GetInt(name + ".len", InvalidLen);
+            var origLen = ReadInt(name + ".len", InvalidLen);
+            Array arr = (Array)value;
 
-            if(value == null)
+            if (value == null)
             {
-                SetInt(name + ".len", NullLen);
+                WriteInt(name + ".len", NullLen);
             }
             else
             {
-                SetInt(name + ".len", value.Length);
-                for(int i = 0; i < value.Length; i++)
-                {
-                    SetterForType<T>()(name + "." + i, value[i]);
-                }
+                WriteInt(name + ".len", arr.Length);
             }
 
-            if (origLen != InvalidLen)
-            {
-                var len = value?.Length ?? 0;
-                for (int i = len - 1; i >= origLen; i--)
-                {
-                    PlayerPrefs.DeleteKey(name + "." + i);
-                }
-            }
+            WriteEnumerable(inner, name, arr, origLen);
         }
-        private static object SetArray(Type arrayT, string name, object value)
+        public static void DeleteArray<T>(string name)
+            => DeleteArray(typeof(T), name);
+        public static void DeleteArray(Type inner, string name)
         {
-            return typeof(Preferences).GetMethod(nameof(SetArray), BindingFlags.Public).MakeGenericMethod(arrayT).Invoke(null, new object[] { name, value });
+            var len = ReadInt(name + ".len", InvalidLen);
+            DeleteSimple(name + ".len");
+            DeleteEnumerable(inner, name, len);
+        }
+
+        public static Dictionary<K, V> ReadDictionary<K, V>(string name, Dictionary<K, V> or = default)
+            => (Dictionary<K,V>)ReadDictionary(typeof(K), typeof(V), name, or);
+        public static object ReadDictionary(Type key, Type value, string name, object or)
+        {
+            IDictionary val = (IDictionary)Activator.CreateInstance(typeof(Dictionary<,>).MakeGenericType(key, value));
+
+            ReadInt(name + ".len", val.Count);
+
+            IList keys = ReadEnumerable(key, name + ".keys", val.Count);
+            IList values = ReadEnumerable(value, name + ".values", val.Count);
+
+            for(int i = 0; i < keys.Count; i++)
+            {
+                val.Add(keys[i], values[i]);
+            }
+
+            return val;
+        }
+        public static void WriteDictionary<K, V>(string name, Dictionary<K, V> value)
+            => WriteDictionary(typeof(K), typeof(V), name, value);
+        public static void WriteDictionary(Type key, Type valueT, string name, object value)
+        {
+            var valueD = (IDictionary)value;
+
+            WriteInt(name + ".len", valueD.Count);
+
+            WriteEnumerable(key, name + ".keys", valueD.Keys, valueD.Count);
+            WriteEnumerable(valueT, name + ".values", valueD.Values, valueD.Count);
+        }
+        public static void DeleteDictionary(Type key, Type value, string name)
+        {
+            var len = ReadInt(name + ".len", InvalidLen);
+            DeleteSimple(name + ".len");
+            DeleteEnumerable(key, name + ".keys", len);
+            DeleteEnumerable(value, name + ".values", len);
+        }
+
+        public static T ReadCustom<T>(string name, T or = default)
+            => (T)ReadCustom(typeof(T), name, or);
+        public static object ReadCustom(Type t, string name, object or)
+        {
+            if (customReaders.ContainsKey(t))
+                return customReaders[t](name, or);
+
+            throw new NotImplementedException($"The type '{t}' is not a valid type for preferences.");
+        }
+        public static void WriteCustom<T>(string name, T value)
+            => WriteCustom(typeof(T), name, value);
+        public static void WriteCustom(Type t, string name, object value)
+        {
+            if (customWriters.ContainsKey(t))
+            {
+                customWriters[t](name, value);
+                return;
+            }
+
+            throw new NotImplementedException($"The type '{t}' is not a valid type for preferences.");
+        }
+        public static void DeleteCustom<T>(string name)
+            => DeleteCustom(typeof(T), name);
+        public static void DeleteCustom(Type t, string name)
+        {
+            if (customDeleters.ContainsKey(t))
+            {
+                customDeleters[t](name);
+                return;
+            }
+
+            throw new NotImplementedException($"The type '{t}' is not a valid type for preferences.");
         }
 
         private static T Pun<T>(this object val)
             => (T)val;
-        private static Func<string, T, T> GetterForType<T>()
+        private static Reader ReaderForType(Type t)
         {
-            var t = typeof(T);
-
             if (t == typeof(int))
-                return (n, o) => GetInt(n, o.Pun<int>()).Pun<T>();
+                return (n, o) => ReadInt(n, o.Pun<int>());
             if (t == typeof(float))
-                return (n, o) => GetFloat(n, o.Pun<float>()).Pun<T>();
+                return (n, o) => ReadFloat(n, o.Pun<float>());
             if (t == typeof(string))
-                return (n, o) => GetString(n, o.Pun<string>()).Pun<T>();
+                return (n, o) => ReadString(n, o.Pun<string>());
             if (t == typeof(bool))
-                return (n, o) => GetBool(n, o.Pun<bool>()).Pun<T>();
+                return (n, o) => ReadBool(n, o.Pun<bool>());
             if (t == typeof(long))
-                return (n, o) => GetLong(n, o.Pun<long>()).Pun<T>();
+                return (n, o) => ReadLong(n, o.Pun<long>());
             if (t == typeof(ulong))
-                return (n, o) => GetULong(n, o.Pun<ulong>()).Pun<T>();
-            if (t == typeof(Color32))
-                return (n, o) => GetColor(n, o.Pun<Color32>()).Pun<T>();
+                return (n, o) => ReadULong(n, o.Pun<ulong>());
+            if (t == typeof(Color32) || t == typeof(Color))
+                return (n, o) => ReadColor(n, o.Pun<Color32>());
+            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))
+                return (n, o) => ReadNullable(t.GenericTypeArguments[0], n, o);
             if (t.IsEnum)
-                return (n, o) => GetEnum(t, n, o).Pun<T>();
+                return (n, o) => ReadEnum(t, n, o);
             if (t.IsArray)
-                return (n, o) => GetArray(t, n, o).Pun<T>();
+                return (n, o) => ReadArray(t.GetElementType(), n, o);
+            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+                return (n, o) => ReadDictionary(t.GenericTypeArguments[0], t.GenericTypeArguments[1], n, o);
 
-            throw new NotImplementedException($"The type '{t}' is not a valid type for preferences.");
+            return (n, o) => ReadCustom(t, n, o);
         }
-        private static Action<string, T> SetterForType<T>()
+        private static Writer WriterForType(Type t)
         {
-            var t = typeof(T);
-
             if (t == typeof(int))
-                return (n, o) => SetInt(n, o.Pun<int>());
+                return (n, o) => WriteInt(n, o.Pun<int>());
             if (t == typeof(float))
-                return (n, o) => SetFloat(n, o.Pun<float>());
+                return (n, o) => WriteFloat(n, o.Pun<float>());
             if (t == typeof(string))
-                return (n, o) => SetString(n, o.Pun<string>());
+                return (n, o) => WriteString(n, o.Pun<string>());
             if (t == typeof(bool))
-                return (n, o) => SetBool(n, o.Pun<bool>());
+                return (n, o) => WriteBool(n, o.Pun<bool>());
             if (t == typeof(long))
-                return (n, o) => SetLong(n, o.Pun<long>());
+                return (n, o) => WriteLong(n, o.Pun<long>());
             if (t == typeof(ulong))
-                return (n, o) => SetULong(n, o.Pun<ulong>());
-            if (t == typeof(Color32))
-                return (n, o) => SetColor(n, o.Pun<Color32>());
+                return (n, o) => WriteULong(n, o.Pun<ulong>());
+            if (t == typeof(Color32) || t == typeof(Color))
+                return (n, o) => WriteColor(n, o.Pun<Color32>());
+            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))
+                return (n, o) => WriteNullable(t.GenericTypeArguments[0], n, o);
             if (t.IsEnum)
-                return (n, o) => SetEnum(t, n, o);
+                return (n, o) => WriteEnum(t, n, o);
             if (t.IsArray)
-                return (n, o) => SetArray(t, n, o);
+                return (n, o) => WriteArray(t.GetElementType(), n, o);
+            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+                return (n, o) => WriteDictionary(t.GenericTypeArguments[0], t.GenericTypeArguments[1], n, o);
 
-            throw new NotImplementedException($"The type '{t}' is not a valid type for preferences.");
+            return (n, o) => ReadCustom(t, n, o);
+        }
+        private static Deleter DeleterForType(Type t)
+        {
+            if (t == typeof(int) || t == typeof(long) || t == typeof(ulong) || t == typeof(float) || t == typeof(string) || t.IsEnum)
+                return DeleteSimple;
+            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))
+                return n => DeleteNullable(t.GenericTypeArguments[0], n);
+            if (t == typeof(Color32) || t == typeof(Color))
+                return n => DeleteColor(n);
+            if (t.IsArray)
+                return n => DeleteArray(t.GetElementType(), n);
+            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+                return n => DeleteDictionary(t.GenericTypeArguments[0], t.GenericTypeArguments[1], n);
+
+            return n => DeleteCustom(t, n);
         }
 
         public static bool HasPref(string name)
             => PlayerPrefs.HasKey(name.AsName());
-        public static void DeletePref(string name)
-            => PlayerPrefs.DeleteKey(name.AsName());
+
+        public static T Read<T>(string name, T or = default)
+            => (T)ReaderForType(typeof(T))(name, or);
+        public static void Write<T>(string name, T value)
+            => WriterForType(typeof(T))(name, value);
+        public static void Delete<T>(string name)
+            => DeleterForType(typeof(T))(name);
+
+        public static T Get<T>(string name, T or = default)
+        {
+            if(!memoizedPrefs.ContainsKey(name))
+            {
+                memoizedPrefs.Add(name, Read<T>(name, or));
+            }
+
+            return (T)memoizedPrefs[name];
+        }
+        public static void Set<T>(string name, T value)
+        {
+            memoizedPrefs[name] = value;
+            Write<T>(name, value);
+        }
     }
 }

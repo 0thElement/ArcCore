@@ -103,7 +103,7 @@ namespace ArcCore.Serialization
             {
                 using (var fs = File.OpenText(FileStatics.GlobalsMapPath))
                 {
-                    var serializer = JsonSerializer.Create(new JsonSerializerSettings {Converters = Converters.Levels});
+                    var serializer = JsonSerializer.Create();
                     var reader = new JsonTextReader(fs);
 
                     globalsMap = serializer.Deserialize<Dictionary<string, int>>(reader);
@@ -127,7 +127,7 @@ namespace ArcCore.Serialization
             {
                 using (var fs = File.OpenText(FileStatics.LevelsListPath))
                 {
-                    var serializer = JsonSerializer.Create(new JsonSerializerSettings {Converters = Converters.Levels});
+                    var serializer = JsonSerializer.Create();
                     var reader = new JsonTextReader(fs);
 
                     levels = serializer.Deserialize<List<Level>>(reader);
@@ -151,7 +151,7 @@ namespace ArcCore.Serialization
             {
                 using (var fs = File.OpenText(FileStatics.PacksListPath))
                 {
-                    var serializer = JsonSerializer.Create(new JsonSerializerSettings {Converters = Converters.Levels});
+                    var serializer = JsonSerializer.Create();
                     var reader = new JsonTextReader(fs);
 
                     packs = serializer.Deserialize<List<Pack>>(reader);

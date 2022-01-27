@@ -86,7 +86,7 @@ namespace ArcCore.Gameplay.Behaviours
         /// The full offset of the current chart, including user settings.
         /// </summary>
         [HideInInspector]
-        public int FullOffset => chartOffset + Settings.Instance.audioOffset;
+        public int FullOffset => chartOffset + Settings.AudioOffset;
 
         /// <summary>
         /// Perform all needed actions to play a song after a delay of <see cref="StartPlayOffset"/> seconds.
@@ -97,12 +97,12 @@ namespace ArcCore.Gameplay.Behaviours
             audioSource = GetComponent<AudioSource>();
 
             //Setup song speed: http://answers.unity.com/answers/1677904/view.html
-            audioSource.pitch = Settings.Instance.SongSpeed;
+            audioSource.pitch = Settings.SongSpeed;
             Debug.Log(audioSource.outputAudioMixerGroup.audioMixer);
-            audioSource.outputAudioMixerGroup.audioMixer.SetFloat("Pitch", 1 / Settings.Instance.SongSpeed);
+            audioSource.outputAudioMixerGroup.audioMixer.SetFloat("Pitch", 1 / Settings.SongSpeed);
             
             //Get song length
-            songLength = (uint)Mathf.Round(audioSource.clip.length / Settings.Instance.SongSpeed * 1000);
+            songLength = (uint)Mathf.Round(audioSource.clip.length / Settings.SongSpeed * 1000);
 
             //Set timing information
             dspStartPlayingTime = AudioSettings.dspTime + StartPlayOffset;
@@ -148,7 +148,7 @@ namespace ArcCore.Gameplay.Behaviours
         /// </summary>
         public void CalculateScrollSpeed()
         {
-            scrollSpeed = -Settings.Instance.chartSpeed / timingEventGroups[0][0].bpm * SpeedCalculationFactor;
+            scrollSpeed = -Settings.ChartSpeed / timingEventGroups[0][0].bpm * SpeedCalculationFactor;
         }
 
         /// <summary>

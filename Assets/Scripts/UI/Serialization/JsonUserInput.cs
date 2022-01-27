@@ -8,36 +8,36 @@ namespace ArcCore.Serialization
 {
     public static class JsonUserInput
     {
-        public static readonly DifficultyGroup Past =
-            new DifficultyGroup
+        public static DifficultyGroup Past
+            => new DifficultyGroup
             {
                 Color = ColorExtensions.FromHexcode("#48D4D4"),
                 Name = "past",
                 Precedence = 0
             };
 
-        public static readonly DifficultyGroup Present =
-            new DifficultyGroup
+        public static DifficultyGroup Present
+            => new DifficultyGroup
             {
                 Color = ColorExtensions.FromHexcode("#8CE75D"),
                 Name = "present",
                 Precedence = 100
             };
 
-        public static readonly DifficultyGroup Future =
-            new DifficultyGroup
+        public static DifficultyGroup Future
+            => new DifficultyGroup
             {
                 Color = ColorExtensions.FromHexcode("#E05CF7"),
                 Name = "future",
                 Precedence = 200
             };
 
-        public static readonly DifficultyGroup Beyond =
-            new DifficultyGroup
-            {
-                Color = ColorExtensions.FromHexcode("#E10C0C"),
+        public static DifficultyGroup Beyond 
+            => new DifficultyGroup 
+            { 
+                Color = ColorExtensions.FromHexcode("#E10C0C"), 
                 Name = "beyond",
-                Precedence = 300
+                Precedence = 300 
             };
 
         private static JToken DefaultReadJToken(JsonReader reader)
