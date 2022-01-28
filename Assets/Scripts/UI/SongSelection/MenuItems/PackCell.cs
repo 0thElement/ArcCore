@@ -19,14 +19,20 @@ namespace ArcCore.UI.SongSelection
 
         public override void SetCellData(CellDataBase cellDataBase)
         {
+            hoverOverlay.enabled = false;
             PackCellData packData = cellDataBase as PackCellData;
-            this.pack = packData.pack;
+            pack = packData.pack;
+
             if (pack != null) {
-                packTitle.text = packData.pack.Name;
-                chartCount.text = packData.chartCount.ToString();
+                packTitle.text = pack.Name;
                 //TODO: set image
                 //others
+            } 
+            else
+            {
+                packTitle.text = "All";
             }
+            chartCount.text = packData.chartCount.ToString();
         }
 
         protected override IEnumerator LoadCellFullyCoroutine(CellDataBase cellDataBase)

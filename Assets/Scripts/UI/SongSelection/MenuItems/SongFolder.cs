@@ -14,6 +14,7 @@ namespace ArcCore.UI.SongSelection
 
         public override void SetCellData(CellDataBase cellDataBase)
         {
+            hoverOverlay.enabled = false;
             SongFolderData folderData = cellDataBase as SongFolderData;
             title.text = folderData.title;
             count.text = cellDataBase.children.Count.ToString();

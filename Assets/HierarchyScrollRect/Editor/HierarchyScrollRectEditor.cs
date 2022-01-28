@@ -27,6 +27,7 @@ namespace Zeroth.HierarchyScroll
         SerializedProperty minY;
         SerializedProperty maxY;
         SerializedProperty recyclingThreshold;
+        SerializedProperty slantAngle;
 
         AnimBool m_ShowElasticity;
         AnimBool m_ShowDecelerationRate;
@@ -51,6 +52,7 @@ namespace Zeroth.HierarchyScroll
             minY = serializedObject.FindProperty("minY");
             maxY = serializedObject.FindProperty("maxY");
             recyclingThreshold = serializedObject.FindProperty("RecyclingThreshold");
+            slantAngle = serializedObject.FindProperty("SlantAngle");
 
             m_ShowElasticity = new AnimBool(Repaint);
             m_ShowDecelerationRate = new AnimBool(Repaint);
@@ -85,6 +87,7 @@ namespace Zeroth.HierarchyScroll
             EditorGUILayout.PropertyField(cellPoolSize);
             EditorGUILayout.PropertyField(loadCellsFullyMaxScrollVelocity);
             EditorGUILayout.PropertyField(recyclingThreshold);
+            EditorGUILayout.PropertyField(slantAngle);
 
             EditorGUILayout.Space();
 

@@ -22,13 +22,17 @@ namespace ArcCore.UI.SongSelection
         [SerializeField] private Text  selectedScore;
         [SerializeField] private Image selectedGrade;
 
+        private Level lastSelectedLevel;
+
         private ISongListDisplayMethod displayMethod = new SortByDifficultyDisplayMethod();
 
-        public void Display(List<Level> levels, Level selectedLevel, DifficultyGroup selectedDiff, bool playAnimation = false)
+        public void Display(List<Level> levels, Level selectedLevel, DifficultyGroup selectedDiff)
         {
             //Set scroll list data
             List<CellDataBase> displayCells = displayMethod.Convert(levels, cellPrefab, folderPrefab, selectedDiff);
             scrollRect.SetData(displayCells);
+            lastSelectedLevel = selectedLevel;
+            //TODO: jump to selected level in scrollrect
 
             //Set selected level data
             if (selectedLevel == null) return;

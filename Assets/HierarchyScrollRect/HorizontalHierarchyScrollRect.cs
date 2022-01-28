@@ -121,10 +121,10 @@ namespace Zeroth.HierarchyScroll
 
             //If there's not enough cells to fill the viewport then cut short content's size so user can't scroll
             float newContentSize = (totalCellsWidth < maxX - minX) ? ((totalCellsWidth < baseContentSize.x) ? baseContentSize.x : totalCellsWidth): totalCellsWidth;
-            print(totalCellsWidth + " " + baseContentSize.x + " " + (maxX - minX) + " -> " + newContentSize);
             content.sizeDelta = new Vector2(newContentSize, content.sizeDelta.y);
             
             LoadCellsFully();
+            UpdateAllCellSlant();
             isRecycling = false;
         }
 
@@ -317,17 +317,16 @@ namespace Zeroth.HierarchyScroll
 
         protected override void SetTopAnchor(RectTransform rectTransform)
         {
-            //Saving to reapply after anchoring. Width and height changes if anchoring is change. 
-            float width = rectTransform.rect.width;
-            float height = rectTransform.rect.height;
+            rectTransform.anchorMin = new Vector2(0, rectTransform.anchorMin.y);
+            rectTransform.anchorMax = new Vector2(0, rectTransform.anchorMax.y);
+            rectTransform.pivot = new Vector2(0, rectTransform.pivot.y);
+        }
 
-            //Setting top anchor 
-            rectTransform.anchorMin = new Vector2(1, rectTransform.anchorMin.y);
-            rectTransform.anchorMax = new Vector2(1, rectTransform.anchorMax.y);
-            rectTransform.pivot = new Vector2(1, rectTransform.pivot.y);
-
-            //Reapply size
-            rectTransform.sizeDelta = new Vector2(width, height);
+        protected override void UpdateCellSlant(RectTransform rectTransform)
+        {
+            Vector3 pos = rectTransform.TransformPoint(Vector3.zero) - viewport.TransformPoint(Vector3.zero);
+            float y = Mathf.Tan(SlantAngle) * pos.x;
+            rectTransform.anchoredPosition = new Vector2(rectTransform.anchoredPosition.x, y);
         }
         #endregion
     }

@@ -13,15 +13,18 @@ namespace ArcCore.UI.SongSelection
         [SerializeField] private DifficultyItem difficulty;
         [SerializeField] private Image image;
         [SerializeField] private Image hoverOverlay;
+        [SerializeField] private GameObject startOverlay;
         private Level level;
         private DifficultyItemData diffItem;
 
         public override void SetCellData(CellDataBase cellDataBase)
         {
+            hoverOverlay.enabled = false;
             LevelCellData songData = cellDataBase as LevelCellData;
             level = songData.level;
             title.text = songData.chart.Name;
             difficulty.Set(songData.chart);
+            startOverlay.SetActive(SelectionMenu.Instance.SelectedLevel?.Id == level.Id);
         }
 
         protected override IEnumerator LoadCellFullyCoroutine(CellDataBase cellDataBase)
@@ -42,7 +45,12 @@ namespace ArcCore.UI.SongSelection
 
         public void OnPointerClick(PointerEventData _)
         {
-            SelectionMenu.Instance.SelectedLevel = level;
+            if (SelectionMenu.Instance.SelectedLevel?.Id == level.Id)
+            {
+                print("Start");
+            }
+            else
+                SelectionMenu.Instance.SelectedLevel = level;
         }
     }
 }

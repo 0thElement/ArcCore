@@ -123,6 +123,7 @@ namespace Zeroth.HierarchyScroll
             content.sizeDelta = new Vector2(content.sizeDelta.x, newContentSize);
             
             LoadCellsFully();
+            UpdateAllCellSlant();
             isRecycling = false;
         }
 
@@ -315,17 +316,16 @@ namespace Zeroth.HierarchyScroll
 
         protected override void SetTopAnchor(RectTransform rectTransform)
         {
-            //Saving to reapply after anchoring. Width and height changes if anchoring is change. 
-            float width = rectTransform.rect.width;
-            float height = rectTransform.rect.height;
-
-            //Setting top anchor 
             rectTransform.anchorMin = new Vector2(rectTransform.anchorMin.x, 1);
-            rectTransform.anchorMax = new Vector2(rectTransform.anchorMin.x, 1);
+            rectTransform.anchorMax = new Vector2(rectTransform.anchorMax.x, 1);
             rectTransform.pivot = new Vector2(rectTransform.pivot.x, 1);
+        }
 
-            //Reapply size
-            rectTransform.sizeDelta = new Vector2(width, height);
+        protected override void UpdateCellSlant(RectTransform rectTransform)
+        {
+            Vector3 pos = rectTransform.TransformPoint(Vector3.zero) - viewport.TransformPoint(Vector3.zero);
+            float x = Mathf.Tan(SlantAngle) * pos.y;
+            rectTransform.anchoredPosition = new Vector2(x, rectTransform.anchoredPosition.y);
         }
         #endregion
     }

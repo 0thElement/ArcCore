@@ -1,3 +1,5 @@
+#define DUMMY_DATA
+
 using UnityEngine;
 using UnityEngine.UI;
 using ArcCore.UI.Data;
@@ -99,20 +101,24 @@ namespace ArcCore.UI.SongSelection
             };
             selectedDiff = pst;
 
-            packsData = new List<Pack>() {
+            FileManagement.packs = new List<Pack>() {
                 new Pack() {
+                    Id = 0,
                     Name = "A"
                 },
                 new Pack() {
+                    Id = 1,
                     Name = "B"
                 },
                 new Pack() {
+                    Id = 2,
                     Name = "C"
                 }
             };
 
-            levelsData = new List<Level>() {
+            FileManagement.levels = new List<Level>() {
                 new Level {
+                    Id = 1,
                     Charts = new Chart[] {
                         new Chart() {
                             DifficultyGroup = pst,
@@ -175,9 +181,10 @@ namespace ArcCore.UI.SongSelection
                             Charter = "Charter3"
                         }
                     },
-                    Pack = null
+                    Pack = FileManagement.packs[0]
                 },
                 new Level {
+                    Id = 0,
                     Charts = new Chart[] {
                         new Chart() {
                             DifficultyGroup = pst,
@@ -240,7 +247,7 @@ namespace ArcCore.UI.SongSelection
                             Charter = "Charter5"
                         }
                     },
-                    Pack = null
+                    Pack = FileManagement.packs[1]
                 }
             };
 #endif
@@ -255,7 +262,7 @@ namespace ArcCore.UI.SongSelection
             Draw();
         }
 
-        private void Draw()
+        private void Draw(bool refreshList = true)
         {
             packList.Display(FileManagement.packs, FileManagement.levels, selectedPack);
 
@@ -264,6 +271,22 @@ namespace ArcCore.UI.SongSelection
             {
                 levels = levels.Where(level => level.Pack != null && level.Pack.Id == selectedPack.Id).ToList();
             }
+
+            if (levels.Count == 0) throw new System.Exception("Level list is empty");
+
+            int min = int.MaxValue;
+            DifficultyGroup closestDiff = null;
+            foreach (Level level in levels)
+            {
+                DifficultyGroup diff = level.GetClosestChart(selectedDiff).DifficultyGroup;
+                if (diff.Precedence - selectedDiff.Precedence < min)
+                {
+                    min = diff.Precedence - selectedDiff.Precedence;
+                    closestDiff = diff;
+                }
+            }
+            selectedDiff = closestDiff;
+
             levelList.Display(levels, selectedLevel, selectedDiff);
 
             if (SelectedLevel != null) 

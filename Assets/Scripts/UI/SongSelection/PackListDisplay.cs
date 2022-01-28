@@ -15,6 +15,12 @@ namespace ArcCore.UI.SongSelection
         public void Display(List<Pack> packs, List<Level> levels, Pack selectedPack)
         {
             List<CellDataBase> packCells = new List<CellDataBase>();
+
+            int allCount = 0;
+            int allClear = 0;
+            int allFr = 0;
+            int allPm = 0;
+
             foreach (Pack pack in packs)
             {
                 IEnumerable<Level> levelsOfPack = levels;
@@ -27,19 +33,23 @@ namespace ArcCore.UI.SongSelection
                 foreach (Level level in levelsOfPack)
                 {
                     count += level.Charts.Length;
+                    allCount += level.Charts.Length;
                     foreach (Chart chart in level.Charts) {
                         switch (chart.PbGrade) {
                             case ScoreCategory.EasyClear:
                             case ScoreCategory.NormalClear:
                             case ScoreCategory.HardClear:
                                 clear++;
+                                allClear++;
                                 break;
                             case ScoreCategory.FullRecall:
                                 fr++;
+                                allFr++;
                                 break;
                             case ScoreCategory.PureMemory:
                             case ScoreCategory.Max:
                                 pm++;
+                                allPm++;
                                 break;
                         }
                     }
@@ -54,7 +64,18 @@ namespace ArcCore.UI.SongSelection
                     pmCount = pm
                 });
             }
-            // scrollRect.SetData(packCells);
+
+            packCells.Insert(0, new PackCellData {
+                prefab = packPrefab,
+                pack = null,
+                chartCount = allCount,
+                clearCount = allClear,
+                frCount = allFr,
+                pmCount = allPm
+            });
+
+            scrollRect.SetData(packCells);
+            //TODO: jump to selected pack in scrollrect
         }
     }
 }

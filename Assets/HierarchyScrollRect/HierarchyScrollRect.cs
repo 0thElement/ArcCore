@@ -10,6 +10,7 @@ namespace Zeroth.HierarchyScroll
         //OBJECT POOL
         [SerializeField] protected int CellPoolSize = 10;
         [SerializeField] protected float RecyclingThreshold = 1f;
+        [SerializeField] protected float SlantAngle = 10;
         private ResourceManager resourceManager => ResourceManager.Instance;
 
         //DATA SOURCES
@@ -72,7 +73,7 @@ namespace Zeroth.HierarchyScroll
         ///Reset the scroll rect with new data
         ///<param name="data">The list of parent cells. Each cell may or may not have children cells</param>
         ///</summary>
-        public void SetData(List<CellDataBase> data)
+        public void SetData(List<CellDataBase> data, bool backToStart = false)
         {
             dataSource = new List<CellDataBase>();
             hierarchy = new List<HierarchyCellData>();
@@ -81,7 +82,7 @@ namespace Zeroth.HierarchyScroll
                 AddCell(cellData);
             }
             Intitialize();
-            Refresh(true);
+            Refresh(backToStart);
         }
 
         private void Intitialize()
@@ -197,6 +198,22 @@ namespace Zeroth.HierarchyScroll
 
             resourceManager.ReturnObjectToPool(rect.gameObject);
         }
+        #endregion
+
+        #region Slant
+        private void Update()
+        {
+            UpdateAllCellSlant();
+        }
+        protected void UpdateAllCellSlant()
+        {
+            if (activeCells == null) return;
+            foreach (RectTransform cell in activeCells)
+            {
+                UpdateCellSlant(cell);
+            }
+        }
+        protected abstract void UpdateCellSlant(RectTransform rectTransform);
         #endregion
     }
 }
