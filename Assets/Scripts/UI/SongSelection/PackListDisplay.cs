@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using Zeroth.HierarchyScroll;
-using ArcCore.UI.Data;
+using ArcCore.Storage.Data;
 using System.Linq;
 
 namespace ArcCore.UI.SongSelection
@@ -12,7 +12,7 @@ namespace ArcCore.UI.SongSelection
         [SerializeField] private HierarchyScrollRect scrollRect;
         [SerializeField] private GameObject packPrefab;
 
-        public void Display(List<Pack> packs, List<Level> levels, Pack selectedPack)
+        public void Display(List<Pack> packs, List<Level> levels)
         {
             List<CellDataBase> packCells = new List<CellDataBase>();
 

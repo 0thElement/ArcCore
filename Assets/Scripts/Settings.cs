@@ -1,6 +1,6 @@
-﻿using ArcCore.Serialization;
-using ArcCore.UI.Data;
-using ArcCore.Utitlities;
+﻿using ArcCore.Storage;
+using ArcCore.Storage.Data;
+using ArcCore.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,13 +15,13 @@ namespace ArcCore
         {
             Preferences.RegisterType<Level>
             (
-                (n, o) => Preferences.HasPref(n) ? FileManagement.levels.First(p => p.Id == Preferences.Get<ulong>(n)) : o,
+                (n, o) => Preferences.HasPref(n) ? FileManagement.levels.First(p => p.Id == Preferences.Get<int>(n)) : o,
                 (n, v) => Preferences.Set(n, v.Id),
                 n => Preferences.Delete<ulong>(n)
             );
             Preferences.RegisterType<Pack>
             (
-                (n, o) => Preferences.HasPref(n) ? FileManagement.packs.First(p => p.Id == Preferences.Get<ulong>(n)) : o,
+                (n, o) => Preferences.HasPref(n) ? FileManagement.packs.First(p => p.Id == Preferences.Get<int>(n)) : o,
                 (n, v) => Preferences.Set(n, v.Id),
                 n => Preferences.Delete<ulong>(n)
             );
@@ -60,10 +60,10 @@ namespace ArcCore
         public static readonly Color32[] DefaultArcColors =
             new Color32[]
             {
-                ColorExtensions.FromHexcode("#0DDEEC"),
-                ColorExtensions.FromHexcode("#F422EB"),
-                ColorExtensions.FromHexcode("#33EF53"),
-                ColorExtensions.FromHexcode("#FFC231")
+                "#0DDEEC".ToColor(),
+                "#F422EB".ToColor(),
+                "#33EF53".ToColor(),
+                "#FFC231".ToColor()
             };
         public static Color32[] ArcColors
         {

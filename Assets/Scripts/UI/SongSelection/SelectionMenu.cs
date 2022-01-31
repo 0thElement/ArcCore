@@ -1,11 +1,11 @@
-#define DUMMY_DATA
+// #define DUMMY_DATA
 
 using UnityEngine;
 using UnityEngine.UI;
-using ArcCore.UI.Data;
+using ArcCore.Storage.Data;
 using System.Collections.Generic;
 using System.Linq;
-using ArcCore.Serialization;
+using ArcCore.Storage;
 
 namespace ArcCore.UI.SongSelection
 {
@@ -49,12 +49,10 @@ namespace ArcCore.UI.SongSelection
                 if (selectedPack != value)
                 {
                     selectedPack = value;
-                    //TODO FOR FLOOF:
-                    //Save the last selected pack
+                    //TODO: Save the last selected pack
                     if (OnPackChange != null) OnPackChange(value);
 
-                    //TODO FOR FLOOF:
-                    //Get the last selected level of the pack
+                    //TODO: Get the last selected level of the pack
                     SelectedLevel = null;
                     DrawLevels();
                 }
@@ -79,8 +77,7 @@ namespace ArcCore.UI.SongSelection
                         if (!diffIncluded) selectedDiff = value.GetClosestChart(selectedDiff).DifficultyGroup;
                     }
 
-                    //TODO FOR FLOOF:
-                    //Save the last selected level (per pack)
+                    //TODO: Save the last selected level (per pack)
                     if (OnLevelChange != null) OnLevelChange(value);
                     DrawDifficulties();
                     DrawInfo();
@@ -95,8 +92,7 @@ namespace ArcCore.UI.SongSelection
                 if (SelectedDiff != value)
                 {
                     selectedDiff = value;
-                    //TODO FOR FLOOF:
-                    //Save the last selected difficulty group (globally)
+                    //TODO: Save the last selected difficulty group (globally)
                     if (OnDifficultyChange != null) OnDifficultyChange(value);
                     DrawLevels();
                     DrawDifficulties();
@@ -273,7 +269,7 @@ namespace ArcCore.UI.SongSelection
                             Artist = "Artist2 but cooler",
                             ArtistRomanized = "Artist2 but cooler",
                             Bpm = "150",
-                            Constant = 10.8f,
+                            Constant = 10f,
                             PbScore = 9500000,
                             PbGrade = ScoreCategory.NormalClear,
                             Settings = defaultSettings,
@@ -283,15 +279,23 @@ namespace ArcCore.UI.SongSelection
                     Pack = FileManagement.packs[1]
                 }
             };
+#else
+            foreach (Pack pack in packsData)
+            {
+                print(pack.Name);
+            }
+            foreach (Level level in levelsData)
+            {
+                print(level.Pack);
+            }
 #endif
         }
 
         public void Display()
         {
-            //TODO: FOR FLOOF
-            //Get the last selected pack, level, difficulty
-
+            //TODO: Get the last selected pack, level, difficulty
             //Stored in some place i dont remember where :)
+
             DrawPacks();
             DrawLevels();
             DrawDifficulties();
@@ -299,10 +303,10 @@ namespace ArcCore.UI.SongSelection
 
         private void DrawPacks()
         {
-            packList.Display(packsData, levelsData, selectedPack);
+            packList.Display(packsData, levelsData);
         }
 
-        private void DrawLevels()
+        public void DrawLevels()
         {
 
             List<Level> levels = levelsData;
@@ -329,7 +333,7 @@ namespace ArcCore.UI.SongSelection
             levelList.Display(levels, selectedLevel, selectedDiff);
         }
 
-        private void DrawDifficulties()
+        public void DrawDifficulties()
         {
             if (SelectedLevel != null) 
             {
@@ -340,7 +344,7 @@ namespace ArcCore.UI.SongSelection
                 diffList.Reset();
         }
 
-        private void DrawInfo()
+        public void DrawInfo()
         {
             levelInfo.Display(selectedLevel, selectedDiff);
         }

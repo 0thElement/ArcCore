@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using Zeroth.HierarchyScroll;
 using ArcCore.Utilities;
-using ArcCore.UI.Data;
+using ArcCore.Storage.Data;
 
 namespace ArcCore.UI.SongSelection
 {
@@ -15,12 +15,10 @@ namespace ArcCore.UI.SongSelection
 
         private Level lastSelectedLevel;
 
-        private ISongListDisplayMethod displayMethod = new SortByDifficultyDisplayMethod();
-
         public void Display(List<Level> levels, Level selectedLevel, DifficultyGroup selectedDiff)
         {
             //Set scroll list data
-            List<CellDataBase> displayCells = displayMethod.Convert(levels, cellPrefab, folderPrefab, selectedDiff);
+            List<CellDataBase> displayCells = SortingMethodSelect.Convert(levels, selectedDiff, cellPrefab, folderPrefab);
             scrollRect.SetData(displayCells);
             lastSelectedLevel = selectedLevel;
             //TODO: jump to selected level in scrollrect

@@ -3,7 +3,7 @@
 namespace ArcCore.Parsing
 {
     using ArcCore.Gameplay.Behaviours;
-    using ArcCore.Serialization;
+    using ArcCore.Storage;
     using ArcCore.Utilities;
     using Data;
     using System.IO;
@@ -253,7 +253,9 @@ namespace ArcCore.Parsing
         {
             var name = GetValue("identifier");
             var opath = GetValue("path");
-            var path = FileManagement.GetRealPathFromUserInput(opath) + ".png";
+            //WARNING: THIS IS A RELATIVE PATH
+            //FUCKING FIX THIS SHIT PLEASE
+            var path = FileStorage.GetFilePath(opath);
 
             Texture2D tex = new Texture2D(2,2);
 

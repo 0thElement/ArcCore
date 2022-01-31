@@ -1,11 +1,11 @@
 ﻿using System;
 using UnityEngine;
 
-namespace ArcCore.Utitlities
+namespace ArcCore.Utilities
 {
     public static class ColorExtensions
     {
-        public static Color FromHexcode(string hexcode)
+        public static Color ToColor(this string hexcode)
         {
             if (hexcode[0] != '#')
             {
