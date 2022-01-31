@@ -51,5 +51,13 @@ namespace ArcCore.UI.SongSelection
 
             //TODO: Animation
         }
+        public void Reset()
+        {
+            foreach (DifficultyItem subitem in subItems)
+            {
+                subitem.Reset();
+            }
+            mainItem.Reset();
+        }
     }
 }

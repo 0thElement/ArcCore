@@ -566,6 +566,57 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 100449969}
   m_CullTransparentMesh: 0
+--- !u!1 &188198794
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 188198795}
+  - component: {fileID: 188198796}
+  m_Layer: 0
+  m_Name: LevelInfo
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &188198795
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 188198794}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1508767040}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &188198796
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 188198794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6499fb40df12b85499c4e7b8cbe64a7d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  selectedJacket: {fileID: 409006448}
+  selectedTitle: {fileID: 1242373893}
+  selectedArtist: {fileID: 1859436817}
+  selectedIllustrator: {fileID: 1232155114}
+  selectedCharter: {fileID: 920582425}
+  selectedBpm: {fileID: 1579785254}
+  selectedScore: {fileID: 1577589103}
+  selectedGrade: {fileID: 0}
 --- !u!1 &229947056
 GameObject:
   m_ObjectHideFlags: 0
@@ -1117,7 +1168,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.41852084, g: 0.80770206, b: 0.9339623, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -3944,6 +3995,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   packList: {fileID: 410974279}
   levelList: {fileID: 1710488682}
+  levelInfo: {fileID: 188198796}
   diffList: {fileID: 2081795550}
 --- !u!224 &1508767040
 RectTransform:
@@ -3958,6 +4010,7 @@ RectTransform:
   m_Children:
   - {fileID: 410974280}
   - {fileID: 1710488683}
+  - {fileID: 188198795}
   - {fileID: 2081795551}
   m_Father: {fileID: 0}
   m_RootOrder: 3
@@ -4431,14 +4484,6 @@ MonoBehaviour:
     type: 3}
   folderPrefab: {fileID: 9173037490880854420, guid: 7fbf4d5f15bf6d94a984d1a2cdf46efe,
     type: 3}
-  selectedJacket: {fileID: 409006448}
-  selectedTitle: {fileID: 1242373893}
-  selectedArtist: {fileID: 1859436817}
-  selectedIllustrator: {fileID: 1232155114}
-  selectedCharter: {fileID: 920582425}
-  selectedBpm: {fileID: 1579785254}
-  selectedScore: {fileID: 1577589103}
-  selectedGrade: {fileID: 0}
 --- !u!4 &1710488683
 Transform:
   m_ObjectHideFlags: 0
@@ -5672,5 +5717,5 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1508767040}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

@@ -16,7 +16,7 @@ namespace ArcCore.UI.SongSelection
         {
             Instance = this;
             GetData();
-            Draw();
+            Display();
         }
         
         private const string lastSelectedPackPref = "LastSelectedPack";
@@ -25,20 +25,39 @@ namespace ArcCore.UI.SongSelection
 
         [SerializeField] public PackListDisplay packList;
         [SerializeField] public LevelListDisplay levelList;
+        [SerializeField] public LevelInfoDisplay levelInfo;
         [SerializeField] public DifficultyListDisplay diffList;
+
+        private List<Pack> packsData => FileManagement.packs;
+        private List<Level> levelsData => FileManagement.levels;
 
         private Level selectedLevel;
         private Pack selectedPack;
         private DifficultyGroup selectedDiff;
 
+        public delegate void OnPackChangeDelegate(Pack pack);
+        public OnPackChangeDelegate OnPackChange;
+        public delegate void OnLevelChangeDelegate(Level level);
+        public OnLevelChangeDelegate OnLevelChange;
+        public delegate void OnDifficultyChangeDelegate(DifficultyGroup difficultyGroup);
+        public OnDifficultyChangeDelegate OnDifficultyChange;
+
         public Pack SelectedPack
         {
             get => selectedPack;
             set {
-                selectedPack = value;
-                //TODO FOR FLOOF:
-                //Save the last selected pack
-                Draw();
+                if (selectedPack != value)
+                {
+                    selectedPack = value;
+                    //TODO FOR FLOOF:
+                    //Save the last selected pack
+                    if (OnPackChange != null) OnPackChange(value);
+
+                    //TODO FOR FLOOF:
+                    //Get the last selected level of the pack
+                    SelectedLevel = null;
+                    DrawLevels();
+                }
             }
         }
 
@@ -46,18 +65,26 @@ namespace ArcCore.UI.SongSelection
         {
             get => selectedLevel;
             set {
-                selectedLevel = value;
-
-                bool diffIncluded = false;
-                foreach (Chart chart in value.Charts)
+                if (selectedLevel != value)
                 {
-                    if (chart.DifficultyGroup == selectedDiff) diffIncluded = true;
-                }
-                if (!diffIncluded) selectedDiff = value.GetClosestChart(selectedDiff).DifficultyGroup;
+                    selectedLevel = value;
 
-                //TODO FOR FLOOF:
-                //Save the last selected level (per pack)
-                Draw();
+                    if (SelectedLevel != null)
+                    {
+                        bool diffIncluded = false;
+                        foreach (Chart chart in value.Charts)
+                        {
+                            if (chart.DifficultyGroup == selectedDiff) diffIncluded = true;
+                        }
+                        if (!diffIncluded) selectedDiff = value.GetClosestChart(selectedDiff).DifficultyGroup;
+                    }
+
+                    //TODO FOR FLOOF:
+                    //Save the last selected level (per pack)
+                    if (OnLevelChange != null) OnLevelChange(value);
+                    DrawDifficulties();
+                    DrawInfo();
+                }
             }
         }
 
@@ -65,10 +92,16 @@ namespace ArcCore.UI.SongSelection
         {
             get => selectedDiff;
             set {
-                selectedDiff = value;
-                //TODO FOR FLOOF:
-                //Save the last selected difficulty group (globally)
-                Draw();
+                if (SelectedDiff != value)
+                {
+                    selectedDiff = value;
+                    //TODO FOR FLOOF:
+                    //Save the last selected difficulty group (globally)
+                    if (OnDifficultyChange != null) OnDifficultyChange(value);
+                    DrawLevels();
+                    DrawDifficulties();
+                    DrawInfo();
+                }
             }
         }
 
@@ -259,14 +292,20 @@ namespace ArcCore.UI.SongSelection
             //Get the last selected pack, level, difficulty
 
             //Stored in some place i dont remember where :)
-            Draw();
+            DrawPacks();
+            DrawLevels();
+            DrawDifficulties();
         }
 
-        private void Draw(bool refreshList = true)
+        private void DrawPacks()
         {
-            packList.Display(FileManagement.packs, FileManagement.levels, selectedPack);
+            packList.Display(packsData, levelsData, selectedPack);
+        }
 
-            List<Level> levels = FileManagement.levels;
+        private void DrawLevels()
+        {
+
+            List<Level> levels = levelsData;
             if (SelectedPack != null) 
             {
                 levels = levels.Where(level => level.Pack != null && level.Pack.Id == selectedPack.Id).ToList();
@@ -288,12 +327,22 @@ namespace ArcCore.UI.SongSelection
             selectedDiff = closestDiff;
 
             levelList.Display(levels, selectedLevel, selectedDiff);
+        }
 
+        private void DrawDifficulties()
+        {
             if (SelectedLevel != null) 
             {
                 List<Chart> charts = selectedLevel.Charts.ToList();
                 diffList.Display(charts, selectedDiff);
             }
+            else
+                diffList.Reset();
+        }
+
+        private void DrawInfo()
+        {
+            levelInfo.Display(selectedLevel, selectedDiff);
         }
 
         public void CycleDifficulty()

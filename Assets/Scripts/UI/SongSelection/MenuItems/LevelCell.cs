@@ -14,8 +14,17 @@ namespace ArcCore.UI.SongSelection
         [SerializeField] private Image image;
         [SerializeField] private Image hoverOverlay;
         [SerializeField] private GameObject startOverlay;
+        [SerializeField] private GameObject difficultyItemPrefab;
         private Level level;
         private DifficultyItemData diffItem;
+
+        private void Awake()
+        {
+            SelectionMenu.Instance.OnLevelChange += (level) =>
+            {
+                startOverlay.SetActive(this.level != null && level != null && level.Id == this.level.Id);
+            };
+        }
 
         public override void SetCellData(CellDataBase cellDataBase)
         {
@@ -25,6 +34,22 @@ namespace ArcCore.UI.SongSelection
             title.text = songData.chart.Name;
             difficulty.Set(songData.chart);
             startOverlay.SetActive(SelectionMenu.Instance.SelectedLevel?.Id == level.Id);
+
+            float x = difficultyItemPrefab.GetComponent<RectTransform>().anchoredPosition.x;
+            RectTransform thisRect = GetComponent<RectTransform>();
+            foreach (Chart chart in songData.level.Charts)
+            {
+                if (chart.DifficultyGroup != songData.chart.DifficultyGroup)
+                {
+                    GameObject obj = Instantiate(difficultyItemPrefab, thisRect);
+                    RectTransform rect = obj.GetComponent<RectTransform>();
+                    rect.anchoredPosition = new Vector2(x, rect.anchoredPosition.y);
+                    x += rect.sizeDelta.x;
+
+                    Image img = obj.GetComponent<Image>();
+                    img.color = chart.DifficultyGroup.Color;
+                }
+            }
         }
 
         protected override IEnumerator LoadCellFullyCoroutine(CellDataBase cellDataBase)
