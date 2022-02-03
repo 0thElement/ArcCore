@@ -1,4 +1,5 @@
-﻿namespace ArcCore.Gameplay
+﻿using ArcCore.Utilities;
+namespace ArcCore.Gameplay
 {
 
     public static class JudgeManage

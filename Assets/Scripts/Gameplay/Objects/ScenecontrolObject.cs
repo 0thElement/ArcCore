@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
-using ArcCore.Parsing.Data;
+using ArcCore.Gameplay.Parsing;
+using ArcCore.Gameplay.Parsing.Data;
 using ArcCore.Utilities;
 using Unity.Mathematics;
 

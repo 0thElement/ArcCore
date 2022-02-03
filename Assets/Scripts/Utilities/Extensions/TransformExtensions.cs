@@ -1,20 +1,20 @@
-﻿using ArcCore.Mathematics;
+﻿using Unity.Mathematics;
 using UnityEngine;
 
 namespace ArcCore.Utilities.Extensions
 {
     public static class TransformExtensions
     {
-        public static void SetPositionAndRotation(this Transform transform, PosRot posRot)
+        public static void SetPositionAndRotation(this Transform transform, float3 pos, float3 rot)
         {
-            transform.position = posRot.position;
-            transform.rotation = Quaternion.Euler(posRot.rotation);
+            transform.position = pos;
+            transform.rotation = Quaternion.Euler(rot);
         }
 
-        public static void SetLocalPositionAndRotation(this Transform transform, PosRot posRot)
+        public static void SetLocalPositionAndRotation(this Transform transform, float3 pos, float3 rot)
         {
-            transform.localPosition = posRot.position;
-            transform.localRotation = Quaternion.Euler(posRot.rotation);
+            transform.localPosition = pos;
+            transform.localRotation = Quaternion.Euler(rot);
         }
     }
 }

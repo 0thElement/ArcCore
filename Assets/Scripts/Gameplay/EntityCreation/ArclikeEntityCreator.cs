@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Unity.Mathematics;
-using ArcCore.Parsing.Data;
+using ArcCore.Gameplay.Parsing.Data;
 using ArcCore.Gameplay.Data;
 
 namespace ArcCore.Gameplay.EntityCreation

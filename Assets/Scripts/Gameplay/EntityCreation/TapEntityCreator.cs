@@ -3,9 +3,10 @@ using Unity.Transforms;
 using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Gameplay.Components;
-using ArcCore.Parsing.Data;
+using ArcCore.Gameplay.Parsing.Data;
+using ArcCore.Gameplay.Parsing;
+using ArcCore.Utilities;
 using ArcCore.Utilities.Extensions;
-using ArcCore.Parsing;
 
 namespace ArcCore.Gameplay.EntityCreation
 {

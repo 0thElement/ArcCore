@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Base62
+namespace ArcCore.Utilities
 {
     /// <summary>
     /// Utility that read and write bits in byte array

@@ -1,0 +1,17 @@
+{
+    "name": "ArcCore",
+    "references": [
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:191478108d8919440846a43a6b42ac49",
+        "GUID:536aef6c3f5596845b4973354bcef9f6"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

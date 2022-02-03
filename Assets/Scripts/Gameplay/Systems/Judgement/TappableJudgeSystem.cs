@@ -3,7 +3,8 @@ using ArcCore.Gameplay.Components.Tags;
 using Unity.Entities;
 using ArcCore.Gameplay.Data;
 using Unity.Mathematics;
-using ArcCore.Mathematics;
+using ArcCore.Gameplay.Mathematics;
+using ArcCore.Utilities;
 using ArcCore.Utilities.Extensions;
 
 namespace ArcCore.Gameplay.Systems

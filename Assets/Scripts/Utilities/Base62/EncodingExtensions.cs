@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace Base62
+namespace ArcCore.Utilities
 {
     public static class EncodingExtensions
     {

@@ -2,6 +2,7 @@ using ArcCore.Gameplay.Data;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Tags;
 using Unity.Entities;
+using ArcCore.Utilities;
 
 namespace ArcCore.Gameplay.Systems
 {

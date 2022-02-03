@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
-using ArcCore.Parsing.Data;
+using ArcCore.Gameplay.Parsing.Data;
 using Unity.Mathematics;
-using ArcCore.Mathematics;
+using ArcCore.Gameplay.Mathematics;
 using ArcCore.Utilities.Extensions;
-using ArcCore.Parsing;
+using ArcCore.Gameplay.Parsing;
 
 namespace ArcCore.Gameplay.Behaviours
 {
@@ -90,7 +90,7 @@ namespace ArcCore.Gameplay.Behaviours
             innerCam.farClipPlane = 5000;
 
             Reset();
-            transform.SetPositionAndRotation(accumulate);
+            transform.SetPositionAndRotation(accumulate.position, accumulate.rotation);
 
             activeIndices = new List<int>();
         }
@@ -100,7 +100,7 @@ namespace ArcCore.Gameplay.Behaviours
             if (!PlayManager.IsUpdating) return;
 
             if (cameraMovements.Length > 0) UpdateMove();
-            transform.SetPositionAndRotation(accumulate);
+            transform.SetPositionAndRotation(accumulate.position, accumulate.rotation);
 
             if (isReset) UpdateTilt();
         }

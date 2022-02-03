@@ -4,11 +4,13 @@ using Unity.Transforms;
 using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Gameplay.Components;
-using ArcCore.Parsing.Data;
-using ArcCore.Utilities.Extensions;
-using ArcCore.Parsing;
+using ArcCore.Gameplay.Parsing.Data;
+using ArcCore.Gameplay.Parsing;
 using ArcCore.Gameplay.Objects.Particle;
 using ArcCore.Gameplay.Data;
+using ArcCore.Utilities;
+using ArcCore.Utilities.Extensions;
+using Unity.Entities.Serialization;
 
 namespace ArcCore.Gameplay.EntityCreation
 {
@@ -30,9 +32,9 @@ namespace ArcCore.Gameplay.EntityCreation
 
             this.traceApproachIndicatorPrefab = traceApproachIndicatorPrefab;
 
-            traceNoteEntityPrefab     = gocs.ConvertToNote(traceNotePrefab, em);
-            traceShadowEntityPrefab   = gocs.ConvertToNote(traceShadowPrefab, em);
-            headTraceNoteEntityPrefab = gocs.ConvertToNote(headTraceNotePrefab, em);
+            // traceNoteEntityPrefab     = gocs.ConvertToNote(traceNotePrefab, em);
+            // traceShadowEntityPrefab   = gocs.ConvertToNote(traceShadowPrefab, em);
+            // headTraceNoteEntityPrefab = gocs.ConvertToNote(headTraceNotePrefab, em);
 
             em.ExposeLocalToWorld(traceNoteEntityPrefab);
             em.ExposeLocalToWorld(traceShadowEntityPrefab);

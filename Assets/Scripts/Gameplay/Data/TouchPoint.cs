@@ -1,4 +1,4 @@
-﻿using ArcCore.Mathematics;
+﻿using ArcCore.Gameplay.Mathematics;
 using Unity.Mathematics;
 
 namespace ArcCore.Gameplay.Data

@@ -1,11 +1,8 @@
-using Unity.Burst;
-using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
-using ArcCore.Gameplay;
 using ArcCore.Gameplay.Components;
-using ArcCore.Gameplay.Behaviours;
 using ArcCore.Gameplay.Components.Tags;
+using ArcCore.Utilities;
 
 namespace ArcCore.Gameplay.Systems
 {

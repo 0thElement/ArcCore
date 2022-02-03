@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.Mathematics;
+using ArcCore.Utilities;
 
 namespace ArcCore.Gameplay.Behaviours
 {

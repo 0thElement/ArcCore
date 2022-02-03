@@ -1,0 +1,18 @@
+{
+    "name": "ArcCore.Storage",
+    "references": [
+        "GUID:7dc54619463f16448b1417f0ca89e83a"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "LiteDB.dll",
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

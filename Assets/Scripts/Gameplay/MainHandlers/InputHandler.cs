@@ -3,7 +3,7 @@
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
-using ArcCore.Mathematics;
+using ArcCore.Gameplay.Mathematics;
 using ArcCore.Gameplay.Data;
 using System.Collections.Generic;
 using System.Collections;

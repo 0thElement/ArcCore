@@ -2,6 +2,7 @@ using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Tags;
 using Unity.Entities;
 using Unity.Rendering;
+using ArcCore.Utilities;
 using Unity.Transforms;
 
 namespace ArcCore.Gameplay.Systems

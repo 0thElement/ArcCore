@@ -5,6 +5,7 @@ using Unity.Entities;
 using ArcCore.Gameplay.Data;
 using Unity.Mathematics;
 using UnityEngine;
+using ArcCore.Utilities;
 
 namespace ArcCore.Gameplay.Systems
 {
