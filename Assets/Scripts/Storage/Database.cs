@@ -8,13 +8,18 @@ namespace ArcCore.Storage
     {
         public static LiteDatabase Current { get; private set; }
 
-        public static void Initialize()
+        public static void Initialize(string path = null)
         {
             BsonMapper.Global.RegisterType<Color>(
                 serialize: (color) => color.ToHexcode(),
                 deserialize: (value) => ((string)value).ToColor()
             );
-            Current = new LiteDatabase(FileStatics.DatabasePath);
+            Current = Current ?? new LiteDatabase(path ?? FileStatics.DatabasePath);
         }
+
+        public static void Dispose()
+        {
+            Database.Current?.Dispose();
+        } 
     }
 }

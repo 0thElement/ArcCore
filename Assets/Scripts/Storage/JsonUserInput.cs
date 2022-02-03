@@ -13,7 +13,7 @@ namespace ArcCore.Storage
             => new DifficultyGroup
             {
                 Color = "#48D4D4".ToColor(),
-                Name = "past",
+                Name = "Past",
                 Precedence = 0
             };
 
@@ -21,7 +21,7 @@ namespace ArcCore.Storage
             => new DifficultyGroup
             {
                 Color = "#8CE75D".ToColor(),
-                Name = "present",
+                Name = "Present",
                 Precedence = 100
             };
 
@@ -29,7 +29,7 @@ namespace ArcCore.Storage
             => new DifficultyGroup
             {
                 Color = "#E05CF7".ToColor(),
-                Name = "future",
+                Name = "Future",
                 Precedence = 200
             };
 
@@ -37,9 +37,26 @@ namespace ArcCore.Storage
             => new DifficultyGroup 
             { 
                 Color = "#E10C0C".ToColor(), 
-                Name = "beyond",
+                Name = "Beyond",
                 Precedence = 300 
             };
+
+        public static DifficultyGroup FromPreset(string preset)
+        {
+            switch (preset)
+            {
+                case "past":
+                    return Past;
+                case "present":
+                    return Present;
+                case "future":
+                    return Future;
+                case "beyond":
+                    return Beyond;
+                default:
+                    throw new JsonReaderException($"Invalid difficulty group '{preset}'.");
+            }
+        }
 
         private static JToken DefaultReadJToken(JsonReader reader)
         {
@@ -55,19 +72,7 @@ namespace ArcCore.Storage
             if (obj.Type == JTokenType.String)
             {
                 var preset = (string)obj;
-                switch (preset)
-                {
-                    case "past":
-                        return Past;
-                    case "present":
-                        return Present;
-                    case "future":
-                        return Future;
-                    case "beyond":
-                        return Beyond;
-                    default:
-                        throw new JsonReaderException($"Invalid difficulty group '{preset}'.");
-                }
+                return FromPreset(preset);
             }
 
             return new DifficultyGroup
@@ -82,19 +87,8 @@ namespace ArcCore.Storage
         {
             var obj = DefaultReadJToken(reader);
             var name = (string)obj;
-            var isPlus = false;
 
-            if (name.EndsWith("+") && name.Length > 1)
-            {
-                name = name.Substring(0, name.Length - 1);
-                isPlus = true;
-            }
-
-            return new Difficulty
-            {
-                Name = name,
-                IsPlus = isPlus,
-            };
+            return new Difficulty(name);
         }
 
         public static Chart ReadChartJson(JsonReader reader)

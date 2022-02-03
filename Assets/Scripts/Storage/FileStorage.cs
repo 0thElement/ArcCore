@@ -12,8 +12,7 @@ namespace ArcCore.Storage
 {
     public class FileStorage
     {
-        private static readonly string storagePath = Path.Combine(Application.dataPath, "_storage");
-
+        public static string StoragePath => FileStatics.FileStoragePath;
         private static ILiteCollection<FileReference> collection;
         public static ILiteCollection<FileReference> Collection
         {
@@ -45,12 +44,14 @@ namespace ArcCore.Storage
 
         private static byte[] ComputeHash(FileStream stream)
         {
-            using (SHA512 sha = SHA512Managed.Create())
+            using (SHA256 sha = SHA256Managed.Create())
                 return sha.ComputeHash(stream);
         }
 
         public static void ImportFile(string filePath, string virtualPath)
         {
+            if (Collection.FindById(virtualPath) != null)
+                throw new Exception("Duplicate virtual path");
             //Read file content
             using (FileStream stream = File.OpenRead(filePath))
             {
@@ -59,40 +60,46 @@ namespace ArcCore.Storage
                 string hash = hashBytes.ToBase62();
 
                 string ext = Path.GetExtension(filePath);
-                string correctHashPath = Path.Combine(hash, ext);
+                string correctHashPath = hash + ext;
                 
                 //Resolve collision
                 bool shouldStoreFile = true;
 
                 string path = correctHashPath;
                 //If file with same hash already exists
-                while (File.Exists(path))
+                while (File.Exists(Path.Combine(StoragePath, path)))
                 {
-                    FileStream sameHashStream = File.OpenRead(Path.Combine(hash, ext));
-
-                    //Check if file contents are the same
-                    if (stream.Length == sameHashStream.Length)
+                    using (FileStream sameHashStream = File.OpenRead(Path.Combine(StoragePath, hash + ext)))
                     {
-                        //Reset position for re-reading
-                        stream.Position = 0;
-                        int b;
-                        while ((b = stream.ReadByte()) == sameHashStream.ReadByte() && b != -1);
-
-                        //EOF. Files are the same
-                        if (b == -1)
+                        //Check if file contents are the same
+                        if (stream.Length == sameHashStream.Length)
                         {
-                            shouldStoreFile = false;
-                            break;
+                            //Reset position for re-reading
+                            stream.Position = 0;
+                            int b;
+                            while ((b = stream.ReadByte()) == sameHashStream.ReadByte() && b != -1);
+
+                            //EOF. Files are the same
+                            if (b == -1)
+                            {
+                                shouldStoreFile = false;
+                                break;
+                            }
                         }
                     }
 
                     //Files are different. This is a collision
                     IncrementOneBit(ref hashBytes);
-                    path = Path.Combine(hashBytes.ToBase62(), ext);
+                    path = hashBytes.ToBase62() + ext;
                 }
 
                 //Hash should now be unique. Copy the file (unless a file with the same content already exists).
-                if (shouldStoreFile) File.Copy(filePath, path);
+                path = Path.Combine(StoragePath, path);
+                if (shouldStoreFile)
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(path));
+                    File.Copy(filePath, path);
+                }
 
                 //Store file content into DB
                 Collection.Insert(new FileReference {
@@ -101,8 +108,8 @@ namespace ArcCore.Storage
                     CorrectHashPath = correctHashPath
                 });
 
-                File.Delete(filePath);
             }
+            File.Delete(filePath);
         }
 
         public static string GetFilePath(string virtualPath)
@@ -110,15 +117,9 @@ namespace ArcCore.Storage
             return Collection.FindById(virtualPath).RealPath;
         }
 
-        public static FileReference UpdateReference(FileReference refr, string path)
-        {
-            refr.RealPath = path;
-            return refr;
-        }
-
         public static void DeleteReference(string referenceId)
         {
-            FileReference reference = Collection.FindOne(referenceId);
+            FileReference reference = Collection.FindById(referenceId);
             //Find other references pointing to the same file
             IEnumerable<FileReference> sameRealPath = Collection.Find(refr => refr.RealPath == reference.RealPath);
 
@@ -138,16 +139,33 @@ namespace ArcCore.Storage
                             maxHash = refr.RealPath;
                     }
 
-                    //Replace max hash file with the deleted file
-                    File.Copy(maxHash, reference.RealPath);
-                    File.Delete(maxHash);
+                    //Replace deleted file with max hash file
+                    if (maxHash != reference.RealPath)
+                    {
+                        File.Copy(maxHash, reference.RealPath, true);
 
-                    //Update references that uses maxHash to the new path
-                    Collection.UpdateMany(refr => UpdateReference(refr, reference.RealPath), refr => refr.RealPath == maxHash );
+                        //Update references that uses maxHash to the new path
+                        Collection.UpdateMany(refr => new FileReference {
+                            VirtualPath = refr.VirtualPath,
+                            RealPath = reference.RealPath,
+                            CorrectHashPath = refr.CorrectHashPath
+                        }, refr => refr.RealPath == maxHash );
+                    }
+
+                    File.Delete(maxHash);
                 }
             }
 
             Collection.Delete(reference.VirtualPath);
+        }
+
+        public static void Clear()
+        {
+            if (!Directory.Exists(StoragePath)) return;
+            DirectoryInfo dir = new DirectoryInfo(StoragePath);
+            dir.Delete(true);
+            dir.Create();
+            Collection.DeleteAll();
         }
     }
 }
