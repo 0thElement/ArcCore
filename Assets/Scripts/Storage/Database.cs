@@ -1,6 +1,7 @@
 using LiteDB;
 using UnityEngine;
 using ArcCore.Utilities;
+using System.IO;
 
 namespace ArcCore.Storage
 {
@@ -14,12 +15,27 @@ namespace ArcCore.Storage
                 serialize: (color) => color.ToHexcode(),
                 deserialize: (value) => ((string)value).ToColor()
             );
-            Current = Current ?? new LiteDatabase(path ?? FileStatics.DatabasePath);
+            path = path ?? FileStatics.DatabasePath;
+            if (Current == null)
+            {
+                if (!Directory.Exists(Path.GetDirectoryName(path)))
+                    Directory.CreateDirectory(Path.GetDirectoryName(path));
+                Current = new LiteDatabase(path);
+            }
         }
 
         public static void Dispose()
         {
             Database.Current?.Dispose();
+            Current = null;
         } 
+
+        public static void Clear()
+        {
+            foreach (string colNames in Current.GetCollectionNames())
+            {
+                Current.DropCollection(colNames);
+            }
+        }
     }
 }

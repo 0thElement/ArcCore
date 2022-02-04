@@ -11,6 +11,7 @@ namespace ArcCore.Storage.Data
         string VirtualPathPrefix();
         int Id { get; set; }
         string ExternalId { get; set; }
+        List<string> FileReferences { get; set; }
         int Insert();
         void Delete();
         int Update(IArccoreInfo other);

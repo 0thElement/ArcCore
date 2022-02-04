@@ -35,22 +35,22 @@ namespace ArcCore.Storage.Data
 
         public int Insert()
         {
-            return Database.Current.GetCollection<Pack>().Insert(this);
+            return Id = Database.Current.GetCollection<Pack>().Insert(this);
         }
 
         public void Delete()
         {
             foreach (string refr in FileReferences)
-                FileStorage.DeleteReference(refr);
+                FileStorage.DeleteReference(Path.Combine(VirtualPathPrefix(), refr));
             Database.Current.GetCollection<Pack>().Delete(Id);
         }
 
         public int Update(IArccoreInfo info)
         {
-            Pack newLevel = info as Pack;
-            newLevel.Id = Id;
-            Delete();
-            newLevel.Insert();
+            foreach (string refr in FileReferences)
+                FileStorage.DeleteReference(Path.Combine(VirtualPathPrefix(), refr));
+            Pack newPack = info as Pack;
+            Database.Current.GetCollection<Pack>().Update(Id, newPack);
             return Id;
         }
 

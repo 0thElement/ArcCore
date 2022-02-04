@@ -7,15 +7,7 @@ namespace ArcCore.Storage.Data
     public static class LevelQuery
     {
         private static ILiteCollection<Level> collection;
-        private static ILiteCollection<Level> Collection 
-        {
-            get
-            {
-                if (collection == null)
-                    collection = Database.Current.GetCollection<Level>();
-                return collection;
-            }
-        }
+        private static ILiteCollection<Level> Collection => Database.Current.GetCollection<Level>();
 
         public static Level Get(int id)
         {
@@ -38,6 +30,11 @@ namespace ArcCore.Storage.Data
                     level.Pack = PackQuery.Get(level.PackId);
             }
             return levels;
+        }
+
+        public static void Clear()
+        {
+            Collection.DeleteAll();
         }
     }
 }

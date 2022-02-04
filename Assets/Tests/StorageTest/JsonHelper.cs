@@ -165,7 +165,7 @@ namespace Tests.StorageTests
             (_, string packJson) = GeneratePack(pack.Name, pack.ImagePath);
             return $@"
             {{
-                ""type"": ""level"",
+                ""type"": ""pack"",
                 ""external_id"": ""{exid}"",
                 ""data"": {packJson}
             }}";

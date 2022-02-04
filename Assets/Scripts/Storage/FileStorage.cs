@@ -13,15 +13,7 @@ namespace ArcCore.Storage
     public class FileStorage
     {
         public static string StoragePath => FileStatics.FileStoragePath;
-        private static ILiteCollection<FileReference> collection;
-        public static ILiteCollection<FileReference> Collection
-        {
-            get
-            {
-                if (collection == null) collection = Database.Current.GetCollection<FileReference>();
-                return collection;
-            }
-        }
+        public static ILiteCollection<FileReference> Collection => Database.Current.GetCollection<FileReference>();
 
         private static void IncrementOneBit(ref byte[] bytes)
         {
@@ -165,7 +157,6 @@ namespace ArcCore.Storage
             DirectoryInfo dir = new DirectoryInfo(StoragePath);
             dir.Delete(true);
             dir.Create();
-            Collection.DeleteAll();
         }
     }
 }

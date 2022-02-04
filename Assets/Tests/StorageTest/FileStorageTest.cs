@@ -12,16 +12,12 @@ namespace Tests.StorageTests
         private static readonly string backupPath = Path.Combine(Application.dataPath, "_storagebackup");
         private void CopyFolder(string sourcePath, string destPath)
         {
+            if (Directory.Exists(destPath)) Directory.CreateDirectory(destPath);
             foreach (string dirPath in Directory.GetDirectories(sourcePath, "", SearchOption.AllDirectories))
                 Directory.CreateDirectory(dirPath.Replace(sourcePath, destPath));
 
             foreach (string newPath in Directory.GetFiles(sourcePath, ".*",SearchOption.AllDirectories))
                 File.Copy(newPath, newPath.Replace(sourcePath, destPath), true);
-        }
-
-        private void ClearFiles()
-        {
-            FileStorage.Clear();
         }
 
         private void CreateFile(string path, string content)
@@ -45,22 +41,22 @@ namespace Tests.StorageTests
         [SetUp]
         public void SetupFiles()
         {
-            Database.Initialize();
             if (Directory.Exists(FileStatics.RootPath))
-            {
                 CopyFolder(FileStatics.RootPath, backupPath);
-                ClearFiles();
-            }
+            if (!Directory.Exists(FileStatics.TempPath))
+                Directory.CreateDirectory(FileStatics.TempPath);
+            Database.Initialize();
+            Database.Clear();
+            FileStorage.Clear();
         }
 
         [TearDown]
         public void TeardownFiles()
         {
-            ClearFiles();
+            Database.Dispose();
+            (new DirectoryInfo(FileStatics.RootPath)).Delete(true);
             if (Directory.Exists(backupPath))
-            {
                 CopyFolder(backupPath, FileStatics.RootPath);
-            }
         }
 
         [Test]
