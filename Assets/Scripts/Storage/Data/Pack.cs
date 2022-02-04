@@ -33,9 +33,9 @@ namespace ArcCore.Storage.Data
             return ExternalId;
         }
 
-        public void Insert()
+        public int Insert()
         {
-            Database.Current.GetCollection<Pack>().Insert(this);
+            return Database.Current.GetCollection<Pack>().Insert(this);
         }
 
         public void Delete()
@@ -45,12 +45,13 @@ namespace ArcCore.Storage.Data
             Database.Current.GetCollection<Pack>().Delete(Id);
         }
 
-        public void Update(IArccoreInfo info)
+        public int Update(IArccoreInfo info)
         {
             Pack newLevel = info as Pack;
             newLevel.Id = Id;
             Delete();
             newLevel.Insert();
+            return Id;
         }
 
         public List<IArccoreInfo> ConflictingExternalIdentifier()

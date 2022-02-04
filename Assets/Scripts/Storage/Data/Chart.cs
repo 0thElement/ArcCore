@@ -34,14 +34,13 @@ namespace ArcCore.Storage.Data
 
         public string ChartPath { get; set; }
 
-        public List<string> TryApplyReferences(List<string> availableAssets, out string missing)
+        public void TryApplyReferences(List<string> availableAssets, out string missing)
         {
-            if (!availableAssets.Contains(SongPath)) { missing = SongPath; return null; }
-            if (!availableAssets.Contains(ImagePath)) { missing = ImagePath; return null; }
-            if (!availableAssets.Contains(ChartPath)) { missing = ChartPath; return null; }
-            if (!availableAssets.Contains(Background)) { missing = Background; return null; }
+            if (!availableAssets.Contains(SongPath)) { missing = SongPath; return; }
+            if (!availableAssets.Contains(ImagePath)) { missing = ImagePath; return; }
+            if (!availableAssets.Contains(ChartPath)) { missing = ChartPath; return; }
+            if (!availableAssets.Contains(Background)) { missing = Background; return; }
             missing = null;
-            return new List<string>{ SongPath, ImagePath, ChartPath, Background };
         }
     }
 }

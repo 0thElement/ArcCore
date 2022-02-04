@@ -26,5 +26,10 @@ namespace ArcCore.Storage
 
             throw new JsonReaderException($"Expected a property named '{name}'.");
         }
+
+        public static JsonReader ExtractProperty(JObject obj, string property)
+        {
+            return obj[property].CreateReader();
+        }
     }
 }

@@ -18,15 +18,13 @@ namespace ArcCore.Storage
         //Because this might be run on startup and MonoBehaviours are not yet instantiated
         //These properties are stored in case there are errors or conflicts that need user's confirmation
         private static DirectoryInfo currentDir;
-        private static List<Level> importingLevel;
-        private static List<Pack> importingPack;
         private static List<IArccoreInfo> importingData;
-        private static List<string> importingFiles;
+        private static List<(string virtualPath, string realPath)> importingFiles;
         private static Dictionary<string, IArccoreInfo> externalIdToData;
         private static List<(IArccoreInfo, IArccoreInfo)> toReplace;
         private static List<IArccoreInfo> toStore;
         public static string importError;
-        public static Dictionary<string, List<IArccoreInfo>> pendingConflicts;
+        private static Dictionary<string, List<IArccoreInfo>> pendingConflicts;
         //though is this really the best way to do this wtf
         #endregion
 
@@ -62,15 +60,17 @@ namespace ArcCore.Storage
         public static void ImportDirectory(DirectoryInfo dir)
         {
             currentDir = dir;
-            importingLevel = new List<Level>();
-            importingPack = new List<Pack>();
             importingData = new List<IArccoreInfo>();
+            pendingConflicts = new Dictionary<string, List<IArccoreInfo>>();
+            externalIdToData = new Dictionary<string, IArccoreInfo>();
+            toStore = new List<IArccoreInfo>();
+            toReplace = new List<(IArccoreInfo, IArccoreInfo)>();
 
             (_, importingFiles) = ReadItem(dir, ArccoreInfoType.All);
 
             CheckForMissingPackReferences();
             CheckForDuplicateExternalIdWithinPackage();
-            if (!CheckForExternalIdentifierConflicts())
+            if (CheckForExternalIdentifierConflicts())
                 FinalizeImport();
         }
         #endregion
@@ -78,14 +78,11 @@ namespace ArcCore.Storage
         #region Validate
         private static void CheckForMissingPackReferences()
         {
-            //No need to worry about duplicate pack external ids for now. User will select one of the existing packs
-            //This just ensures there will be 0 errors 
-            HashSet<string> packIds = new HashSet<string>(importingPack.Select(p => p.ExternalId));
-            packIds.UnionWith( Database.Current.GetCollection<Pack>().FindAll().Select(p => p.ExternalId) );
+            HashSet<string> packIds = new HashSet<string>(importingData.Where(p => p is Pack).Select(p => p.ExternalId));
 
-            foreach (Level level in importingLevel)
+            foreach (Level level in importingData.Where(l => l is Level))
             {
-                if (!packIds.Contains(level.PackExternalId))
+                if (level.PackExternalId != null && !packIds.Contains(level.PackExternalId))
                     throw new FileLoadException($"Cannot import level {level.ExternalId}. Pack {level.PackExternalId} not found.");
             }
         }
@@ -93,13 +90,10 @@ namespace ArcCore.Storage
         private static void CheckForDuplicateExternalIdWithinPackage()
         {
             HashSet<string> ids = new HashSet<string>();
-            List<IArccoreInfo> importing = new List<IArccoreInfo>(importingLevel);
-            importing.AddRange(importingPack);
-            importing.AddRange(importingData);
 
-            foreach (IArccoreInfo item in importing)
+            foreach (IArccoreInfo item in importingData)
             {
-                string id = item.ExternalIdentifier();
+                string id = item.ExternalId;
                 if (ids.Contains(id))
                     throw new FileLoadException($"Duplicate external ids deteced within the same package: {id}");
                 ids.Add(id);
@@ -108,30 +102,15 @@ namespace ArcCore.Storage
 
         private static bool CheckForExternalIdentifierConflicts()
         {
-            pendingConflicts = new Dictionary<string, List<IArccoreInfo>>();
-            externalIdToData = new Dictionary<string, IArccoreInfo>();
 
             foreach (IArccoreInfo data in importingData)
             {
                 List<IArccoreInfo> conflicts = data.ConflictingExternalIdentifier();
-                if (conflicts.Count > 0) pendingConflicts.Add(data.ExternalIdentifier(), conflicts);
-                externalIdToData.Add(data.ExternalIdentifier(), data);
+                if (conflicts.Count > 0) pendingConflicts.Add(data.ExternalId, conflicts);
+                externalIdToData.Add(data.ExternalId, data);
                 toStore.Add(data);
             }
-            foreach (Pack pack in importingPack)
-            {
-                List<IArccoreInfo> conflicts = pack.ConflictingExternalIdentifier();
-                if (conflicts.Count > 0) pendingConflicts.Add(pack.ExternalIdentifier(), conflicts);
-                externalIdToData.Add(pack.ExternalIdentifier(), pack);
-                toStore.Add(pack);
-            }
-            foreach (Level level in importingLevel)
-            {
-                List<IArccoreInfo> conflicts = level.ConflictingExternalIdentifier();
-                if (conflicts.Count > 0) pendingConflicts.Add(level.ExternalIdentifier(), conflicts);
-                externalIdToData.Add(level.ExternalIdentifier(), level);
-                toStore.Add(level);
-            }
+
             return pendingConflicts.Count == 0;
         }
         #endregion
@@ -145,7 +124,7 @@ namespace ArcCore.Storage
 
         public static void Replace(IArccoreInfo replaced)
         {
-            IArccoreInfo replaceWith = externalIdToData[replaced.ExternalIdentifier()];
+            IArccoreInfo replaceWith = externalIdToData[replaced.ExternalId];
             toReplace.Add((replaced, replaceWith));
             toStore.Remove(replaceWith);
         }
@@ -153,14 +132,33 @@ namespace ArcCore.Storage
         //Called after all conflicts are resolved
         public static void FinalizeImport()
         {
+            Dictionary<string, int> packInternalId = new Dictionary<string, int>();
+
             //There should be no issues importing now
             foreach ((IArccoreInfo replaced, IArccoreInfo replaceWith) in toReplace)
-                replaced.Update(replaceWith);
+            {
+                int id = replaced.Update(replaceWith);
+                if (replaceWith is Pack) packInternalId.Add(replaceWith.ExternalId, id);
+            }
+
             foreach (IArccoreInfo item in toStore) 
             {
+                if (item is Pack pack)
+                {
+                    int id = pack.Insert();
+                    packInternalId.Add(pack.ExternalId, id);
+                }
+            }
+
+            foreach (IArccoreInfo item in toStore) 
+            {
+                UnityEngine.Debug.Log(item.ExternalId);
                 if (item is Level level)
                 {
-                    level.Pack = externalIdToData[level.PackExternalId] as Pack;
+                    if (level.PackExternalId == null)
+                        level.PackId = -1;
+                    else
+                        level.PackId = packInternalId[level.PackExternalId];
                     level.Insert();
                 }
                 else
@@ -173,8 +171,6 @@ namespace ArcCore.Storage
         public static void Cleanup()
         {
             Directory.Delete(FileStatics.TempPath, true);
-            importingLevel = null;
-            importingPack = null;
             importingData = null;
             importingFiles = null;
             toReplace = null;
@@ -187,9 +183,9 @@ namespace ArcCore.Storage
         #region Storage
         private static void ImportFiles()
         {
-            foreach(string path in importingFiles)
+            foreach ((string virtualPath, string realPath) in importingFiles)
             {
-                FileStorage.ImportFile(Path.Combine(currentDir.FullName, path), path);
+                FileStorage.ImportFile(Path.Combine(currentDir.FullName, realPath), virtualPath);
             }
         }
 
@@ -198,7 +194,7 @@ namespace ArcCore.Storage
         ///Recursively reads the directory and add detected item to importingLevel and importingData;
         ///</summary>
         ///<returns>List of all files present and list of files referenced by IArccoreInfo defined assets</returnx>
-        public static (List<string> allFiles, List<string> referencedFiles)
+        public static (List<string> allFiles, List<(string virtualPath, string realPath)> referencedFiles)
             ReadItem(DirectoryInfo sourceDirectory, ArccoreInfoType allowedTypes, string sourceDirectoryRelative = "")
         {
             // Get all files
@@ -206,12 +202,12 @@ namespace ArcCore.Storage
                 sourceDirectory.EnumerateFiles()
                                .Where(f => f.Name != FileStatics.SettingsJson && FileStatics.SupportedFileExtensions.Contains(f.Extension))
                                .Select(f => Path.Combine(sourceDirectoryRelative, f.Name)).ToList();
-            List<string> referencedFiles = new List<string>();
+            List<(string, string)> referencedFiles = new List<(string, string)>();
 
             //Recursion
             foreach(DirectoryInfo dir in sourceDirectory.EnumerateDirectories())
             {
-                (List<string> subdirAll, List<string> subdirReferenced)
+                (List<string> subdirAll, List<(string,string)> subdirReferenced)
                     = ReadItem(dir, allowedTypes, Path.Combine(sourceDirectoryRelative, dir.Name));
 
                 allFiles.AddRange(subdirAll);
@@ -233,11 +229,8 @@ namespace ArcCore.Storage
             }
 
             var type = jObj.Get<string>("type");
-            var ids = jObj.Get<string>("external_id");
-            var data = jObj.Get<JObject>("data");
-
-            // Read correct info
-            var dataReader = data.CreateReader();
+            var exid = jObj.Get<string>("external_id");
+            var dataReader = JsonUtils.ExtractProperty(jObj, "data");
 
             try
             {
@@ -248,8 +241,9 @@ namespace ArcCore.Storage
                             throw new JsonReaderException("Levels are dissallowed in the current context.");
 
                         Level level = JsonUserInput.ReadLevelJson(dataReader);
+                        level.ExternalId = exid;
                         referencedFiles.AddRange(ApplyReference(level, allFiles));
-                        importingLevel.Add(level);
+                        importingData.Add(level);
                         break;
 
                     case "pack":
@@ -257,12 +251,11 @@ namespace ArcCore.Storage
                             throw new JsonReaderException("Packs are dissallowed in the current context.");
 
                         Pack pack = JsonUserInput.ReadPackJson(dataReader);
+                        pack.ExternalId = exid;
                         referencedFiles.AddRange(ApplyReference(pack, allFiles));
-                        importingPack.Add(pack);
+                        importingData.Add(pack);
                         break;
 
-                    case "partner":
-                        throw new NotImplementedException();
                     default: 
                         throw new JsonReaderException($"Unknown data type '{type}'.");
                 }
@@ -274,14 +267,14 @@ namespace ArcCore.Storage
             return (allFiles, referencedFiles);
         }
 
-        private static IEnumerable<string> ApplyReference(IArccoreInfo aInfo, List<string> files)
+        private static IEnumerable<(string, string)> ApplyReference(IArccoreInfo aInfo, List<string> files)
         {
             List<string> optimized = aInfo.TryApplyReferences(files, out string missing);
-            if (missing == null) throw new JsonReaderException($"Referenced {missing} file does not exist");
+            if (missing != null) throw new JsonReaderException($"Referenced {missing} file does not exist");
 
             string prefix = aInfo.VirtualPathPrefix();
 
-            return optimized.Select(path => Path.Combine(prefix, path));
+            return optimized.Select(path => (Path.Combine(prefix, path), path));
         }
         #endregion
     }

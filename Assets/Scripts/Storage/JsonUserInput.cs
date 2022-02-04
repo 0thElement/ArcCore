@@ -57,6 +57,18 @@ namespace ArcCore.Storage
                     throw new JsonReaderException($"Invalid difficulty group '{preset}'.");
             }
         }
+        public static string GetChartPathFromPresetGroup(DifficultyGroup group)
+        {
+            if (group == Past)
+                return "0.arc";
+            else if (group == Present)
+                return "1.arc";
+            else if (group == Future)
+                return "2.arc";
+            else if (group == Beyond)
+                return "3.arc";
+            throw new System.Exception("Unknown difficulty group");
+        }
 
         private static JToken DefaultReadJToken(JsonReader reader)
         {
@@ -91,6 +103,7 @@ namespace ArcCore.Storage
             return new Difficulty(name);
         }
 
+
         public static Chart ReadChartJson(JsonReader reader)
         {
             var jtoken = DefaultReadJToken(reader);
@@ -99,18 +112,19 @@ namespace ArcCore.Storage
 
             var chart = new Chart
             {
-                DifficultyGroup = ReadDifficultyGroupJson(reader),
-                Difficulty = ReadDifficultyJson(reader),
+                DifficultyGroup = ReadDifficultyGroupJson(JsonUtils.ExtractProperty(obj, "difficulty_group")),
+                Difficulty = ReadDifficultyJson(JsonUtils.ExtractProperty(obj, "difficulty")),
+                Constant = obj.Get<float>("constant"),
 
                 SongPath = obj.TryGet<string>("song_path") ?? "base.ogg",
                 ImagePath = obj.TryGet<string>("image_path") ?? "base.jpg",
 
                 Name = obj.Get<string>("name"),
-
                 Artist = obj.Get<string>("artist"),
+                Bpm = obj.Get<string>("bpm"),
 
-                Illustrator = obj.TryGet<string>("illustrator") ?? "",
-                Charter = obj.TryGet<string>("charter") ?? "",
+                Illustrator = obj.TryGet<string>("illustrator"),
+                Charter = obj.TryGet<string>("charter"),
 
                 Background = obj.Get<string>("background"),
                 Style = obj.Get<Style>("style"),
@@ -122,20 +136,9 @@ namespace ArcCore.Storage
             chart.ArtistRomanized = obj.TryGet<string>("artist_romanized") ?? chart.Artist;
 
             if (obj.TryGet<string>("chart_path") is var chartPath && chartPath != null)
-            {
                 chart.ChartPath = chartPath;
-            }
             else
-            {
-                if (chart.DifficultyGroup == Past)
-                    chart.ChartPath = "0.arc";
-                else if (chart.DifficultyGroup == Present)
-                    chart.ChartPath = "1.arc";
-                else if (chart.DifficultyGroup == Future)
-                    chart.ChartPath = "2.arc";
-                else if (chart.DifficultyGroup == Beyond)
-                    chart.ChartPath = "3.arc";
-            }
+                chart.ChartPath = GetChartPathFromPresetGroup(chart.DifficultyGroup);
 
             return chart;
         }
@@ -147,12 +150,15 @@ namespace ArcCore.Storage
                 throw new JsonReaderException("Expected an object.");
 
             string pack = obj.TryGet<string>("pack");
-            var chartsobj = obj.TryGet<JObject>("charts");
+            var chartsReader = JsonUtils.ExtractProperty(obj, "charts");
 
             var charts = new List<Chart>();
 
-            if (!(DefaultReadJToken(chartsobj.CreateReader()) is JArray chartsJson))
+            if (!(DefaultReadJToken(chartsReader) is JArray chartsJson))
                 throw new JsonReaderException("Expected an array.");
+
+            if (chartsJson.Count == 0)
+                throw new JsonReaderException("Level must contain charts");
 
             foreach (var chartJson in chartsJson)
             {
@@ -162,6 +168,7 @@ namespace ArcCore.Storage
 
             return new Level
             {
+                PackExternalId = pack,
                 Charts = charts.ToArray()
             };
         }
@@ -174,8 +181,8 @@ namespace ArcCore.Storage
 
             var pack = new Pack
             {
-                ImagePath = obj.TryGet<string>("image_path"),
-                Name = obj.TryGet<string>("name"),
+                ImagePath = obj.Get<string>("image_path"),
+                Name = obj.Get<string>("name"),
             };
 
             pack.NameRomanized = obj.TryGet<string>("name_romanized") ?? pack.Name;

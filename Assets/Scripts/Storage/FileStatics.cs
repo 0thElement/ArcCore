@@ -19,18 +19,18 @@ namespace ArcCore.Storage
 
         public static HashSet<string> SupportedFileExtensions => new HashSet<string>
         {
-            "arc",
-            "png",
-            "jpg",
-            "jpeg",
-            "ogg",
-            "mp3"
+            ".arc",
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".ogg",
+            ".mp3"
         };
 
 #if UNITY_EDITOR
-        private static string RootPath = Path.Combine(Application.dataPath, ".imported");
+        public static readonly string RootPath = Path.Combine(Application.dataPath, ".imported");
 #else
-        private static string RootPath = Application.persistentDataPath;
+        public static readonly string RootPath = Application.persistentDataPath;
 #endif
 
         public static readonly string

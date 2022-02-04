@@ -9,10 +9,11 @@ namespace ArcCore.Storage.Data
         ///</summary>
         List<string> TryApplyReferences(List<string> availableAssets, out string missing);
         string VirtualPathPrefix();
-        string ExternalIdentifier();
-        void Insert();
+        int Id { get; set; }
+        string ExternalId { get; set; }
+        int Insert();
         void Delete();
-        void Update(IArccoreInfo other);
+        int Update(IArccoreInfo other);
         List<IArccoreInfo> ConflictingExternalIdentifier();
     }
 }

@@ -48,15 +48,13 @@ namespace ArcCore.Storage.Data
 
         public List<string> TryApplyReferences(List<string> availableAssets, out string missing)
         {
-            HashSet<string> requires = new HashSet<string>();
             foreach (Chart chart in Charts)
             {
-                requires.UnionWith(chart.TryApplyReferences(availableAssets, out string chartMissing));
+                chart.TryApplyReferences(availableAssets, out string chartMissing);
                 if (chartMissing != null) { missing = chartMissing; return null; }
             }
-            requires.UnionWith(availableAssets.Where(l => Path.GetPathRoot(l) == "persistent"));
+            FileReferences = availableAssets;
             missing = null;
-            FileReferences = requires.ToList();
             return FileReferences;
         }
 
@@ -70,9 +68,9 @@ namespace ArcCore.Storage.Data
             return ExternalId;
         }
 
-        public void Insert()
+        public int Insert()
         {
-            Database.Current.GetCollection<Level>().Insert(this);
+            return Database.Current.GetCollection<Level>().Insert(this);
         }
 
         public void Delete()
@@ -82,12 +80,13 @@ namespace ArcCore.Storage.Data
             Database.Current.GetCollection<Level>().Delete(Id);
         }
 
-        public void Update(IArccoreInfo info)
+        public int Update(IArccoreInfo info)
         {
             Level newLevel = info as Level;
             newLevel.Id = Id;
             Delete();
             newLevel.Insert();
+            return Id;
         }
 
         public List<IArccoreInfo> ConflictingExternalIdentifier()

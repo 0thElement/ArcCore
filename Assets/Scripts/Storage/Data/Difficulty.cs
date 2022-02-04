@@ -17,6 +17,7 @@ namespace ArcCore.Storage.Data
                 Name = name.Substring(0, name.Length - 1);
                 IsPlus = true;
             }
+            Name = name;
         }
     }
 }

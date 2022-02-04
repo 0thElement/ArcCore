@@ -46,9 +46,9 @@ namespace Tests.StorageTests
         public void SetupFiles()
         {
             Database.Initialize();
-            if (Directory.Exists(FileStorage.StoragePath))
+            if (Directory.Exists(FileStatics.RootPath))
             {
-                CopyFolder(FileStorage.StoragePath, backupPath);
+                CopyFolder(FileStatics.RootPath, backupPath);
                 ClearFiles();
             }
         }
@@ -59,7 +59,7 @@ namespace Tests.StorageTests
             ClearFiles();
             if (Directory.Exists(backupPath))
             {
-                CopyFolder(backupPath, FileStorage.StoragePath);
+                CopyFolder(backupPath, FileStatics.RootPath);
             }
         }
 

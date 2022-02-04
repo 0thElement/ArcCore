@@ -35,10 +35,17 @@ namespace Tests.StorageTests
         )]
         [TestCase(
             "1", 1,
-            null, null, null,
+            null, null, "testbg",
             "testsong", null, "testartist", null,
             "100", null, null,
             null, "conflict"
+        )]
+        [TestCase(
+            "1", 1,
+            "testaudio", "testimg", "testbg",
+            "testsong", "testnamer", "testartist", "testartistr",
+            "100", "testcharter", "testillustrator",
+            "testchart", "nonexistent_style"
         )]
         public void ChartParse_Successful(
             string d, float constant,
@@ -58,7 +65,8 @@ namespace Tests.StorageTests
 
             Assert.That(
                 actual.DifficultyGroup == chart.DifficultyGroup
-                && actual.Difficulty == chart.Difficulty
+                && actual.Difficulty.Name == chart.Difficulty.Name
+                && actual.Difficulty.IsPlus == chart.Difficulty.IsPlus
                 && actual.SongPath == chart.SongPath
                 && actual.ImagePath == chart.ImagePath
                 && actual.Name == chart.Name
@@ -72,7 +80,7 @@ namespace Tests.StorageTests
                 && actual.Background == chart.Background
                 && actual.Style == chart.Style
                 && actual.ChartPath == chart.ChartPath
-                , json);
+                , json + "\n" + JsonHelper.GetJson(chart));
         }
 
         [TestCase(
@@ -88,13 +96,6 @@ namespace Tests.StorageTests
             "testsong", "testnamer", null, "testartistr",
             "100", "testcharter", "testillustrator",
             "testchart", "conflict"
-        )]
-        [TestCase(
-            "1", 1,
-            "testaudio", "testimg", "testbg",
-            "testsong", "testnamer", "testartist", "testartistr",
-            "100", "testcharter", "testillustrator",
-            "testchart", "nonexistent_style"
         )]
         public void ChartParse_WithMissingValues_ThrowsError(
             string d, float constant,
@@ -171,14 +172,14 @@ namespace Tests.StorageTests
         }
 
         [Test]
-        public void LevelParse_NoPacks_ThrowsError()
+        public void LevelParse_NoPacks_Success()
         {
             (Level actual, string json) = JsonHelper.GenerateLevel(null, new Chart[] { getDummyChart() });
 
-            Assert.Throws<JsonReaderException>(() => {
-                JObject jobj = JObject.Parse(json);
-                Level level = JsonUserInput.ReadLevelJson(jobj.CreateReader());
-            });
+            JObject jobj = JObject.Parse(json);
+            Level level = JsonUserInput.ReadLevelJson(jobj.CreateReader());
+
+            Assert.IsNull(level.PackExternalId);
         }
 
         [Test]

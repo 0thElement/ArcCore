@@ -1,5 +1,6 @@
 using ArcCore.Utilities;
 using ArcCore.Storage.Data;
+using ArcCore.Storage;
 
 namespace Tests.StorageTests
 {
@@ -45,7 +46,7 @@ namespace Tests.StorageTests
                 {PropertyOrNone("charter", c.Charter)}
                 {PropertyOrNone("illustrator", c.Illustrator)}
                 {PropertyOrNone("chart_path", c.ChartPath)}
-                {PropertyOrNone("style", c.Style, false)}
+                {PropertyOrNone("style", c.Style.ToString().ToLower(), false)}
             }}";
         }
         public static string GetJson(Chart c, string difficulty_short)
@@ -66,7 +67,7 @@ namespace Tests.StorageTests
                 {PropertyOrNone("charter", c.Charter)}
                 {PropertyOrNone("illustrator", c.Illustrator)}
                 {PropertyOrNone("chart_path", c.ChartPath)}
-                {PropertyOrNone("style", c.Style, false)}
+                {PropertyOrNone("style", c.Style.ToString().ToLower(), false)}
             }}";
         }
 
@@ -79,14 +80,14 @@ namespace Tests.StorageTests
         )
         {
             Style s;
-            switch (style)
+            switch (style.ToLower())
             {
-                case "light":
-                    s = Style.Light;
-                    break;
                 case "conflict":
-                default:
                     s =  Style.Conflict;
+                    break;
+                case "light":
+                default:
+                    s = Style.Light;
                     break;
             }
 
@@ -95,17 +96,17 @@ namespace Tests.StorageTests
                 DifficultyGroup = dg,
                 Difficulty = new Difficulty(d),
                 Constant = constant,
-                SongPath = song,
-                ImagePath = img,
-                Background = bg,
+                SongPath = song ?? "base.ogg",
+                ImagePath = img ?? "base.jpg",
+                Background = bg ?? "bg.jpg",
                 Name = name,
-                NameRomanized = namer,
+                NameRomanized = namer ?? name,
                 Artist = artist,
-                ArtistRomanized = artistr,
+                ArtistRomanized = artistr ?? artist,
                 Bpm = bpm,
                 Charter = charter,
                 Illustrator = illust,
-                ChartPath = chartpath,
+                ChartPath = chartpath ?? JsonUserInput.GetChartPathFromPresetGroup(dg),
                 Style = s
             };
             return (chart, GetJson(chart));
@@ -146,6 +147,28 @@ namespace Tests.StorageTests
                 {PropertyOrNone("image_path", img, false)}
             }}";
             return (pack, json);
+        }
+
+        public static string GenerateSettingsJson(Level level, string exid)
+        {
+            (_, string levelJson) = GenerateLevel(level.PackExternalId, level.Charts);
+            return $@"
+            {{
+                ""type"": ""level"",
+                ""external_id"": ""{exid}"",
+                ""data"": {levelJson}
+            }}";
+        }
+
+        public static string GenerateSettingsJson(Pack pack, string exid)
+        {
+            (_, string packJson) = GeneratePack(pack.Name, pack.ImagePath);
+            return $@"
+            {{
+                ""type"": ""level"",
+                ""external_id"": ""{exid}"",
+                ""data"": {packJson}
+            }}";
         }
     }
 }
