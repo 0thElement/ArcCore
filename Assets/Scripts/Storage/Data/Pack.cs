@@ -59,5 +59,10 @@ namespace ArcCore.Storage.Data
             return Database.Current.GetCollection<Pack>().Find(l => l.ExternalId == this.ExternalId)
                                    .ToList<IArccoreInfo>();
         }
+
+        public string GetRealPath(string path)
+        {
+            return FileStorage.GetFilePath(Path.Combine(VirtualPathPrefix(), path));
+        }
     }
 }

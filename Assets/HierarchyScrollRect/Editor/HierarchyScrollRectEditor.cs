@@ -1,3 +1,5 @@
+#if UNITY_EDITOR
+
 using UnityEngine.UI;
 using UnityEditor.AnimatedValues;
 using UnityEditor;
@@ -123,3 +125,5 @@ namespace Zeroth.HierarchyScroll
         }
     }
 }
+
+#endif

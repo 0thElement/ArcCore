@@ -1,5 +1,3 @@
-// #define DUMMY_DATA
-
 using UnityEngine;
 using UnityEngine.UI;
 using ArcCore.Storage.Data;
@@ -15,7 +13,6 @@ namespace ArcCore.UI.SongSelection
         protected void Awake()
         {
             Instance = this;
-            GetData();
             Display();
         }
         
@@ -28,12 +25,9 @@ namespace ArcCore.UI.SongSelection
         [SerializeField] public LevelInfoDisplay levelInfo;
         [SerializeField] public DifficultyListDisplay diffList;
 
-        private List<Pack> packsData => FileManagement.packs;
-        private List<Level> levelsData => FileManagement.levels;
-
         private Level selectedLevel;
         private Pack selectedPack;
-        private DifficultyGroup selectedDiff;
+        private DifficultyGroup selectedDiff = new DifficultyGroup { Precedence = 0 };
 
         public delegate void OnPackChangeDelegate(Pack pack);
         public OnPackChangeDelegate OnPackChange;
@@ -41,6 +35,9 @@ namespace ArcCore.UI.SongSelection
         public OnLevelChangeDelegate OnLevelChange;
         public delegate void OnDifficultyChangeDelegate(DifficultyGroup difficultyGroup);
         public OnDifficultyChangeDelegate OnDifficultyChange;
+
+        private List<Pack> packsData => PackQuery.List().ToList();
+        private List<Level> levelsData => LevelQuery.List().ToList();
 
         public Pack SelectedPack
         {
@@ -99,196 +96,6 @@ namespace ArcCore.UI.SongSelection
                     DrawInfo();
                 }
             }
-        }
-
-        private void GetData()
-        {
-#if DUMMY_DATA
-            DifficultyGroup pst = new DifficultyGroup() {
-                Color = Color.cyan,
-                Name = "Past",
-                Precedence = 0
-            };
-            DifficultyGroup prs = new DifficultyGroup() {
-                Color = Color.green,
-                Name = "Present",
-                Precedence = 10
-            };
-            DifficultyGroup ftr = new DifficultyGroup() {
-                Color = new Color(1,0,1,1),
-                Name = "Future",
-                Precedence = 20
-            };
-            DifficultyGroup byd = new DifficultyGroup() {
-                Color = Color.red,
-                Name = "Beyond",
-                Precedence = 30
-            };
-            ChartSettings defaultSettings = new ChartSettings() {
-                Offset = 0,
-                ChartSpeed = 1
-            };
-            selectedDiff = pst;
-
-            FileManagement.packs = new List<Pack>() {
-                new Pack() {
-                    Id = 0,
-                    Name = "A"
-                },
-                new Pack() {
-                    Id = 1,
-                    Name = "B"
-                },
-                new Pack() {
-                    Id = 2,
-                    Name = "C"
-                }
-            };
-
-            FileManagement.levels = new List<Level>() {
-                new Level {
-                    Id = 1,
-                    Charts = new Chart[] {
-                        new Chart() {
-                            DifficultyGroup = pst,
-                            SongPath = "/data/test1/base.ogg",
-                            ImagePath = "/data/test1/base.jpg",
-                            Name = "Song1",
-                            NameRomanized = "Song1",
-                            Artist = "Artist1",
-                            ArtistRomanized = "Artist1",
-                            Bpm = "100",
-                            Constant = 4,
-                            PbScore = 10000255,
-                            PbGrade = ScoreCategory.PureMemory,
-                            Settings = defaultSettings,
-                            Charter = "Charter1"
-                        },
-                        new Chart() {
-                            DifficultyGroup = prs,
-                            SongPath = "/data/test1/base.ogg",
-                            ImagePath = "/data/test1/base.jpg",
-                            Name = "Song1",
-                            NameRomanized = "Song1",
-                            Artist = "Artist1",
-                            ArtistRomanized = "Artist1",
-                            Bpm = "100",
-                            Constant = 6,
-                            PbScore = 9986051,
-                            PbGrade = ScoreCategory.FullRecall,
-                            Settings = defaultSettings,
-                            Charter = "Charter2"
-                        },
-                        new Chart() {
-                            DifficultyGroup = ftr,
-                            SongPath = "/data/test1/base.ogg",
-                            ImagePath = "/data/test1/base.jpg",
-                            Name = "Song1",
-                            NameRomanized = "Song1",
-                            Artist = "Artist1",
-                            ArtistRomanized = "Artist1",
-                            Bpm = "100",
-                            Constant = 8,
-                            PbScore = 9800000,
-                            PbGrade = ScoreCategory.NormalClear,
-                            Settings = defaultSettings,
-                            Charter = "Charter3"
-                        },
-                        new Chart() {
-                            DifficultyGroup = byd,
-                            SongPath = "/data/test1/remix.ogg",
-                            ImagePath = "/data/test1/remix.jpg",
-                            Name = "Song1 remix",
-                            NameRomanized = "Song1 remix",
-                            Artist = "Artist1 but cooler",
-                            ArtistRomanized = "Artist1 but cooler",
-                            Bpm = "150",
-                            Constant = 10.8f,
-                            PbScore = 9500000,
-                            PbGrade = ScoreCategory.NormalClear,
-                            Settings = defaultSettings,
-                            Charter = "Charter3"
-                        }
-                    },
-                    Pack = FileManagement.packs[0]
-                },
-                new Level {
-                    Id = 0,
-                    Charts = new Chart[] {
-                        new Chart() {
-                            DifficultyGroup = pst,
-                            SongPath = "/data/test2/base.ogg",
-                            ImagePath = "/data/test2/base.jpg",
-                            Name = "Song2",
-                            NameRomanized = "Song2",
-                            Artist = "Artist2",
-                            ArtistRomanized = "Artist2",
-                            Bpm = "100",
-                            Constant = 4,
-                            PbScore = 10000255,
-                            PbGrade = ScoreCategory.PureMemory,
-                            Settings = defaultSettings,
-                            Charter = "Charter5"
-                        },
-                        new Chart() {
-                            DifficultyGroup = prs,
-                            SongPath = "/data/test1/base.ogg",
-                            ImagePath = "/data/test1/base.jpg",
-                            Name = "Song2",
-                            NameRomanized = "Song2",
-                            Artist = "Artist2",
-                            ArtistRomanized = "Artist2",
-                            Bpm = "100",
-                            Constant = 6,
-                            PbScore = 9986051,
-                            PbGrade = ScoreCategory.FullRecall,
-                            Settings = defaultSettings,
-                            Charter = "Charter6"
-                        },
-                        new Chart() {
-                            DifficultyGroup = ftr,
-                            SongPath = "/data/test1/base.ogg",
-                            ImagePath = "/data/test1/base.jpg",
-                            Name = "Song2",
-                            NameRomanized = "Song2",
-                            Artist = "Artist2",
-                            ArtistRomanized = "Artist2",
-                            Bpm = "100",
-                            Constant = 8,
-                            PbScore = 9800000,
-                            PbGrade = ScoreCategory.NormalClear,
-                            Settings = defaultSettings,
-                            Charter = "Charter5"
-                        },
-                        new Chart() {
-                            DifficultyGroup = byd,
-                            SongPath = "/data/test1/remix.ogg",
-                            ImagePath = "/data/test1/remix.jpg",
-                            Name = "Song2 remix",
-                            NameRomanized = "Song2 remix",
-                            Artist = "Artist2 but cooler",
-                            ArtistRomanized = "Artist2 but cooler",
-                            Bpm = "150",
-                            Constant = 10f,
-                            PbScore = 9500000,
-                            PbGrade = ScoreCategory.NormalClear,
-                            Settings = defaultSettings,
-                            Charter = "Charter5"
-                        }
-                    },
-                    Pack = FileManagement.packs[1]
-                }
-            };
-#else
-            foreach (Pack pack in packsData)
-            {
-                print(pack.Name);
-            }
-            foreach (Level level in levelsData)
-            {
-                print(level.Pack);
-            }
-#endif
         }
 
         public void Display()

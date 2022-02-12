@@ -4,16 +4,17 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections;
 using ArcCore.Storage.Data;
+using ArcCore.Utilities;
+using UnityEngine.Networking;
 
 namespace ArcCore.UI.SongSelection
 {
     public class PackCell : CellBase, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
     {
         [SerializeField] private Text packTitle;
-        [SerializeField] private Image packImage;
+        [SerializeField] private Image image;
         [SerializeField] private Text chartCount;
         [SerializeField] private Image hoverOverlay;
-        //others
 
         private Pack pack;
 
@@ -23,10 +24,10 @@ namespace ArcCore.UI.SongSelection
             PackCellData packData = cellDataBase as PackCellData;
             pack = packData.pack;
 
+            image.sprite = null;
+
             if (pack != null) {
                 packTitle.text = pack.Name;
-                //TODO: set image
-                //others
             } 
             else
             {
@@ -37,7 +38,14 @@ namespace ArcCore.UI.SongSelection
 
         protected override IEnumerator LoadCellFullyCoroutine(CellDataBase cellDataBase)
         {
-            yield return null;
+            if (pack == null) yield break;
+
+            string path = pack.GetRealPath(pack.ImagePath);
+            UnityWebRequest www = UnityWebRequestTexture.GetTexture("file://" + path);
+            yield return www.SendWebRequest();
+
+            Texture2D tex = DownloadHandlerTexture.GetContent(www);
+            image.sprite = SpriteUtils.CreateCentered(tex);
         }
 
         public void OnPointerDown(PointerEventData _)

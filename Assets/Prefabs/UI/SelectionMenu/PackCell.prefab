@@ -167,7 +167,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scrollRect: {fileID: 0}
   packTitle: {fileID: 2240793454626659767}
-  packImage: {fileID: 0}
+  image: {fileID: 2240793453383302890}
   chartCount: {fileID: 5581557676395083957}
   hoverOverlay: {fileID: 1351112555460706376}
 --- !u!1 &2240793454626659761

@@ -32,9 +32,9 @@ namespace ArcCore.Gameplay.EntityCreation
 
             this.traceApproachIndicatorPrefab = traceApproachIndicatorPrefab;
 
-            // traceNoteEntityPrefab     = gocs.ConvertToNote(traceNotePrefab, em);
-            // traceShadowEntityPrefab   = gocs.ConvertToNote(traceShadowPrefab, em);
-            // headTraceNoteEntityPrefab = gocs.ConvertToNote(headTraceNotePrefab, em);
+            traceNoteEntityPrefab     = gocs.ConvertToNote(traceNotePrefab, em);
+            traceShadowEntityPrefab   = gocs.ConvertToNote(traceShadowPrefab, em);
+            headTraceNoteEntityPrefab = gocs.ConvertToNote(headTraceNotePrefab, em);
 
             em.ExposeLocalToWorld(traceNoteEntityPrefab);
             em.ExposeLocalToWorld(traceShadowEntityPrefab);

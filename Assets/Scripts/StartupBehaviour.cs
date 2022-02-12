@@ -1,16 +1,16 @@
-// using UnityEngine;
-// using ArcCore.UI;
-// using ArcCore.Storage;
+using UnityEngine;
+using ArcCore.UI;
+using ArcCore.Storage;
 
-// namespace ArcCore
-// {
-//     public class StartupBehaviour
-//     {
-//         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
-//         public static void OnAppStart()
-//         {
-//             //Setup files.
-//             FileManagement.OnAppStart();
-//         }
-//     }
-// }
+namespace ArcCore
+{
+    public class StartupBehaviour : MonoBehaviour
+    {
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+        public static void OnAppStart()
+        {
+            //Setup files.
+            FileManagement.OnAppStart();
+        }
+    }
+}

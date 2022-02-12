@@ -1,3 +1,13 @@
-﻿{
-	"name": "Zeroth.HierarchyScrollRect"
+{
+    "name": "Zeroth.HierarchyScrollRect",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

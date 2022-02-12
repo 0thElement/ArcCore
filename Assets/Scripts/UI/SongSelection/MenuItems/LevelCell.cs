@@ -2,8 +2,10 @@ using Zeroth.HierarchyScroll;
 using UnityEngine;
 using UnityEngine.UI;
 using ArcCore.Storage.Data;
+using ArcCore.Utilities;
 using System.Collections;
 using UnityEngine.EventSystems;
+using UnityEngine.Networking;
 
 namespace ArcCore.UI.SongSelection
 {
@@ -16,6 +18,7 @@ namespace ArcCore.UI.SongSelection
         [SerializeField] private GameObject startOverlay;
         [SerializeField] private GameObject difficultyItemPrefab;
         private Level level;
+        private Chart chart;
         private DifficultyItemData diffItem;
 
         private void Awake()
@@ -31,13 +34,16 @@ namespace ArcCore.UI.SongSelection
             hoverOverlay.enabled = false;
             LevelCellData songData = cellDataBase as LevelCellData;
             level = songData.level;
-            title.text = songData.chart.Name;
-            difficulty.Set(songData.chart);
+            chart = songData.chart;
+            image.sprite = null;
+
+            title.text = chart.Name;
+            difficulty.Set(chart);
             startOverlay.SetActive(SelectionMenu.Instance.SelectedLevel?.Id == level.Id);
 
             float x = difficultyItemPrefab.GetComponent<RectTransform>().anchoredPosition.x;
             RectTransform thisRect = GetComponent<RectTransform>();
-            foreach (Chart chart in songData.level.Charts)
+            foreach (Chart chart in level.Charts)
             {
                 if (chart.DifficultyGroup != songData.chart.DifficultyGroup)
                 {
@@ -54,8 +60,12 @@ namespace ArcCore.UI.SongSelection
 
         protected override IEnumerator LoadCellFullyCoroutine(CellDataBase cellDataBase)
         {
-            //TODO: Set image
-            yield return null;
+            string path = level.GetRealPath(chart.ImagePath);
+            UnityWebRequest www = UnityWebRequestTexture.GetTexture("file://" + path);
+            yield return www.SendWebRequest();
+
+            Texture2D tex = DownloadHandlerTexture.GetContent(www);
+            image.sprite = SpriteUtils.CreateCentered(tex);
         }
 
         public void OnPointerDown(PointerEventData _)

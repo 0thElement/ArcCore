@@ -6,6 +6,7 @@ using System.Linq;
 using System.IO.Compression;
 using ArcCore.Storage.Data;
 using Newtonsoft.Json.Linq;
+using UnityEngine;
 
 namespace ArcCore.Storage
 {
@@ -19,7 +20,7 @@ namespace ArcCore.Storage
         //These properties are stored in case there are errors or conflicts that need user's confirmation
         private static DirectoryInfo currentDir;
         private static List<IArccoreInfo> importingData;
-        private static Dictionary<string, string> importingFileReferences;
+        private static Dictionary<(IArccoreInfo, string), string> importingFileReferences;
         private static Dictionary<string, IArccoreInfo> externalIdToData;
         private static List<(IArccoreInfo, IArccoreInfo)> toReplace;
         private static List<IArccoreInfo> toStore;
@@ -34,10 +35,22 @@ namespace ArcCore.Storage
             //IMPORT DEFAULT ARCCOREPKG IF DB DOES NOT EXIST
             if (!File.Exists(FileStatics.DatabasePath))
             {
-                Directory.Delete(FileStatics.FileStoragePath);
+                if (Directory.Exists(FileStatics.FileStoragePath)) Directory.Delete(FileStatics.FileStoragePath, true);
+                Database.Initialize();
+#if UNITY_ANDROID && !UNITY_EDITOR
                 //this is complicated... we should put the pkg in a streaming asset but android is really fussy about it
+                //let's worry about this later
+#else
+                //Temporary
+                Debug.Log("Importing from " + Application.streamingAssetsPath);
+                ImportDirectory(new DirectoryInfo(Application.streamingAssetsPath));
+#endif
             }
-            Database.Initialize();
+            else
+            {
+                Debug.Log("db file exists at " + FileStatics.DatabasePath);
+                Database.Initialize();
+            }
         }
 
         public static void AddLevelArchive(ZipArchive archive)
@@ -187,7 +200,7 @@ namespace ArcCore.Storage
                 foreach (string rawVirtualPath in data.FileReferences)
                 {
                     string virtualPath = Path.Combine(data.VirtualPathPrefix(), rawVirtualPath);
-                    string realPath = Path.Combine(currentDir.FullName, importingFileReferences[rawVirtualPath]);
+                    string realPath = Path.Combine(currentDir.FullName, importingFileReferences[(data, rawVirtualPath)]);
                     FileStorage.ImportFile(realPath, virtualPath);
                 }
             }
@@ -198,18 +211,18 @@ namespace ArcCore.Storage
             return files.Select(f => Path.Combine(dir, f)).ToList();
         }
 
-        private static Dictionary<string, string> CombineWithDirectory(Dictionary<string, string> files, string dir)
+        private static Dictionary<(IArccoreInfo, string), string> CombineWithDirectory(Dictionary<(IArccoreInfo, string), string> files, string dir)
         {
-            List<string> keys = files.Select(pair => pair.Key).ToList();
-            foreach (string key in keys)
-                files[key] = Path.Combine(dir, files[key]);
+            List<(IArccoreInfo, string)> keys = files.Select(pair => pair.Key).ToList();
+            foreach ((IArccoreInfo item, string refPath) in keys)
+                files[(item, refPath)] = Path.Combine(dir, files[(item, refPath)]);
             return files;
         }
 
-        private static void CombineDictionaries(Dictionary<string, string> dict, Dictionary<string, string> other)
+        private static void CombineDictionaries(Dictionary<(IArccoreInfo, string), string> dict, Dictionary<(IArccoreInfo, string), string> other)
         {
-            foreach (string key in other.Keys)
-                dict.Add(key, other[key]);
+            foreach ((IArccoreInfo item, string refPath) in other.Keys)
+                dict.Add((item, refPath), other[(item, refPath)]);
         }
 
         // 0th: I have no idea what to do with allowedTypes so i'll just keep it as All
@@ -217,7 +230,7 @@ namespace ArcCore.Storage
         ///Recursively reads the directory and add detected item to importingLevel and importingData;
         ///</summary>
         ///<returns>List of all files present and list of files referenced by IArccoreInfo defined assets</returnx>
-        public static (List<string> allFiles, Dictionary<string, string> fileReferences)
+        public static (List<string> allFiles, Dictionary<(IArccoreInfo, string), string> fileReferences)
             ReadItem(DirectoryInfo sourceDirectory, ArccoreInfoType allowedTypes, string sourceDirectoryRelative = "")
         {
             // Get all files
@@ -225,19 +238,16 @@ namespace ArcCore.Storage
                 sourceDirectory.EnumerateFiles()
                                .Where(f => f.Name != FileStatics.SettingsJson && FileStatics.SupportedFileExtensions.Contains(f.Extension))
                                .Select(f => f.Name).ToList();
-            Dictionary<string, string> fileReferences = new Dictionary<string, string>();
+            Dictionary<(IArccoreInfo, string), string> fileReferences = new Dictionary<(IArccoreInfo, string), string>();
 
             //Recursion
             foreach(DirectoryInfo dir in sourceDirectory.EnumerateDirectories())
             {
-                (List<string> subdirAll, Dictionary<string, string> subdirReferenced)
+                (List<string> subdirAll, Dictionary<(IArccoreInfo, string), string> subdirReferenced)
                     = ReadItem(dir, allowedTypes, Path.Combine(sourceDirectoryRelative, dir.Name));
 
                 allFiles.AddRange(subdirAll);
-                foreach (string v in subdirReferenced.Keys)
-                {
-                    fileReferences.Add(v, subdirReferenced[v]);
-                }
+                CombineDictionaries(fileReferences, subdirReferenced);
             }
 
             //If settings file doesn't exists then just grab all the files available and quit
@@ -294,14 +304,12 @@ namespace ArcCore.Storage
             return (CombineWithDirectory(allFiles, sourceDirectoryRelative), CombineWithDirectory(fileReferences, sourceDirectoryRelative));
         }
 
-        private static Dictionary<string, string> ApplyReference(IArccoreInfo aInfo, List<string> files)
+        private static Dictionary<(IArccoreInfo, string), string> ApplyReference(IArccoreInfo aInfo, List<string> files)
         {
             List<string> optimized = aInfo.TryApplyReferences(files, out string missing);
             if (missing != null) throw new JsonReaderException($"Referenced {missing} file does not exist");
-            string prefix = aInfo.VirtualPathPrefix();
 
-            // return optimized.Select(path => (Path.Combine(prefix, path), path));
-            return optimized.ToDictionary(path => path);
+            return optimized.ToDictionary(path => (aInfo, path));
         }
         #endregion
     }

@@ -82,7 +82,6 @@ namespace ArcCore.Storage.Data
 
         public int Update(IArccoreInfo info)
         {
-            UnityEngine.Debug.Log(Id);
             foreach (string refr in FileReferences)
                 FileStorage.DeleteReference(Path.Combine(VirtualPathPrefix(), refr));
             Level newLevel = info as Level;
@@ -94,6 +93,11 @@ namespace ArcCore.Storage.Data
         {
             return Database.Current.GetCollection<Level>().Find(l => l.ExternalId == this.ExternalId)
                                    .ToList<IArccoreInfo>();
+        }
+
+        public string GetRealPath(string path)
+        {
+            return FileStorage.GetFilePath(Path.Combine(VirtualPathPrefix(), path));
         }
     }
 }

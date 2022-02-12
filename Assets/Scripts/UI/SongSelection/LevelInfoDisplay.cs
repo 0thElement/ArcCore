@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using ArcCore.Storage.Data;
 using ArcCore.Utilities;
+using System.Collections;
+using UnityEngine.Networking;
 
 namespace ArcCore.UI.SongSelection
 {
@@ -23,20 +25,32 @@ namespace ArcCore.UI.SongSelection
             else
             {
                 Chart chart = selectedLevel.GetExactChart(selectedDiff);
-                //TODO: set img of selectedJacket
+
                 selectedTitle.text = chart.Name;
                 selectedArtist.text = chart.Artist;
                 selectedIllustrator.text = chart.Illustrator;
                 selectedBpm.text = "BPM: " + chart.Bpm;
                 selectedCharter.text = "Charter: " + chart.Charter;
-                selectedScore.text = Conversion.ScoreDisplay(chart.PbScore.Value);
+                selectedScore.text = Conversion.ScoreDisplay(chart.PbScore.GetValueOrDefault());
                 //TODO: set img of selectedGrade
+
+                string jacketPath = selectedLevel.GetRealPath(chart.ImagePath);
+                StartCoroutine(SetJacketCoroutine(jacketPath));
             }
+        }
+
+        public IEnumerator SetJacketCoroutine(string path)
+        {
+            UnityWebRequest www = UnityWebRequestTexture.GetTexture("file://" + path);
+            yield return www.SendWebRequest();
+
+            Texture2D tex = DownloadHandlerTexture.GetContent(www);
+            selectedJacket.sprite = SpriteUtils.CreateCentered(tex);
         }
 
         public void Reset()
         {
-            //TODO: set img of selectedJacket
+            selectedJacket.sprite = null; //todo: default jacket
             selectedTitle.text = "";
             selectedArtist.text = "";
             selectedIllustrator.text = "";
