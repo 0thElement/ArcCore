@@ -40,10 +40,14 @@ namespace ArcCore.Storage
 #if UNITY_ANDROID && !UNITY_EDITOR
                 //this is complicated... we should put the pkg in a streaming asset but android is really fussy about it
                 //let's worry about this later
+                throw new Error("fuck android");
 #else
                 //Temporary
-                Debug.Log("Importing from " + Application.streamingAssetsPath);
-                ImportDirectory(new DirectoryInfo(Application.streamingAssetsPath));
+                using (FileStream fs = File.OpenRead(FileStatics.DefaultPackagePath))
+                {
+                    Debug.Log("Importing from " + FileStatics.DefaultPackagePath);
+                    AddLevelArchive(new ZipArchive(fs));
+                }
 #endif
             }
             else
@@ -67,6 +71,7 @@ namespace ArcCore.Storage
             {
                 Directory.Delete(FileStatics.TempPath, true);
                 importError = e.ToString();
+                throw e;
             }
         }
         

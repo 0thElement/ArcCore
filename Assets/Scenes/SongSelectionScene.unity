@@ -5526,7 +5526,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   CellPoolSize: 10
-  RecyclingThreshold: 0.2
+  RecyclingThreshold: 1.5
   SlantAngle: 0.3
   LoadCellsFullyMaxScrollVelocity: 50
 --- !u!1 &1945355800

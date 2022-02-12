@@ -18,6 +18,12 @@ namespace ArcCore.UI.SongSelection
 
         public void Display(List<Chart> charts, DifficultyGroup selectedDiff, bool playAnimation = false)
         {
+            if (charts.Count == 0)
+            {
+                Reset();
+                return;
+            }
+
             charts.OrderBy(chart => chart.DifficultyGroup.Precedence);
             int diffIndex = 0;
             for (int i = 0; i < charts.Count; i++)
@@ -42,7 +48,7 @@ namespace ArcCore.UI.SongSelection
                 item.Set(charts[j]);
             }
 
-            for (int i = charts.Count; i < subItems.Count; i++)
+            for (int i = charts.Count - 1; i < subItems.Count; i++)
             {
                 subItems[i].Reset();
             }

@@ -6,6 +6,7 @@ using ArcCore.Utilities;
 using System.Collections;
 using UnityEngine.EventSystems;
 using UnityEngine.Networking;
+using System.Collections.Generic;
 
 namespace ArcCore.UI.SongSelection
 {
@@ -20,6 +21,8 @@ namespace ArcCore.UI.SongSelection
         private Level level;
         private Chart chart;
         private DifficultyItemData diffItem;
+
+        private List<GameObject> diffItemObjects = new List<GameObject>();
 
         private void Awake()
         {
@@ -43,6 +46,13 @@ namespace ArcCore.UI.SongSelection
 
             float x = difficultyItemPrefab.GetComponent<RectTransform>().anchoredPosition.x;
             RectTransform thisRect = GetComponent<RectTransform>();
+
+            foreach (GameObject obj in diffItemObjects)
+            {
+                Destroy(obj);
+            }
+            diffItemObjects.Clear();
+
             foreach (Chart chart in level.Charts)
             {
                 if (chart.DifficultyGroup != songData.chart.DifficultyGroup)
@@ -54,6 +64,8 @@ namespace ArcCore.UI.SongSelection
 
                     Image img = obj.GetComponent<Image>();
                     img.color = chart.DifficultyGroup.Color;
+
+                    diffItemObjects.Add(obj);
                 }
             }
         }

@@ -10,11 +10,12 @@ namespace ArcCore.Storage
     public static class FileStatics
     {
         public const string 
-            Database = "arccore.db",
+            Database = "arccore.litedb",
             FileStorage = "storage",
             SettingsJson = "__settings.json",
             Level = "level",
             Pack = "pack",
+            DefaultPackage = "default.arccorepkg",
             Temp = "__temp";
 
         public static HashSet<string> SupportedFileExtensions => new HashSet<string>
@@ -36,6 +37,7 @@ namespace ArcCore.Storage
         public static readonly string
             DatabasePath = Path.Combine(RootPath, Database),
             FileStoragePath = Path.Combine(RootPath, FileStorage),
+            DefaultPackagePath = Path.Combine(Application.streamingAssetsPath, DefaultPackage),
             TempPath = Application.temporaryCachePath;
     }
 }

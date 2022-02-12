@@ -129,7 +129,13 @@ namespace ArcCore.Storage
                 Background = obj.Get<string>("background"),
                 Style = obj.Get<Style>("style"),
 
-                ChartPath = obj.TryGet<string>("chart_path")
+                ChartPath = obj.TryGet<string>("chart_path"),
+
+                Source = obj.TryGet<string>("source"),
+                SourceUrl = obj.TryGet<string>("source_url"),
+
+                PreviewStart = (int)obj.TryGetStruct<float>("preview_start").GetValueOrDefault(),
+                PreviewEnd = (int)obj.TryGetStruct<float>("preview_end").GetValueOrDefault(20000)
             };
 
             chart.NameRomanized = obj.TryGet<string>("name_romanized") ?? chart.Name;
@@ -139,6 +145,8 @@ namespace ArcCore.Storage
                 chart.ChartPath = chartPath;
             else
                 chart.ChartPath = GetChartPathFromPresetGroup(chart.DifficultyGroup);
+
+            if (chart.PreviewEnd <= chart.PreviewStart) chart.PreviewEnd = chart.PreviewStart + 20000;
 
             return chart;
         }

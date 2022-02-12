@@ -33,6 +33,10 @@ namespace ArcCore.Storage.Data
         public Style Style { get; set; }
 
         public string ChartPath { get; set; }
+        public string Source { get; set; }
+        public string SourceUrl { get; set; }
+        public int PreviewStart { get; set; }
+        public int PreviewEnd { get; set; }
 
         public void TryApplyReferences(List<string> availableAssets, out string missing)
         {

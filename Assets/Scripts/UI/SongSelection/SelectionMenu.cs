@@ -27,7 +27,7 @@ namespace ArcCore.UI.SongSelection
 
         private Level selectedLevel;
         private Pack selectedPack;
-        private DifficultyGroup selectedDiff = new DifficultyGroup { Precedence = 0 };
+        private DifficultyGroup selectedDiff;
 
         public delegate void OnPackChangeDelegate(Pack pack);
         public OnPackChangeDelegate OnPackChange;
@@ -71,7 +71,11 @@ namespace ArcCore.UI.SongSelection
                         {
                             if (chart.DifficultyGroup == selectedDiff) diffIncluded = true;
                         }
-                        if (!diffIncluded) selectedDiff = value.GetClosestChart(selectedDiff).DifficultyGroup;
+                        if (!diffIncluded)
+                        {
+                            selectedDiff = value.GetClosestChart(selectedDiff).DifficultyGroup;
+                            DrawLevels();
+                        }
                     }
 
                     //TODO: Save the last selected level (per pack)
@@ -91,8 +95,8 @@ namespace ArcCore.UI.SongSelection
                     selectedDiff = value;
                     //TODO: Save the last selected difficulty group (globally)
                     if (OnDifficultyChange != null) OnDifficultyChange(value);
-                    DrawLevels();
                     DrawDifficulties();
+                    DrawLevels();
                     DrawInfo();
                 }
             }
@@ -124,18 +128,23 @@ namespace ArcCore.UI.SongSelection
 
             if (levels.Count == 0) throw new System.Exception("Level list is empty");
 
-            int min = int.MaxValue;
-            DifficultyGroup closestDiff = null;
-            foreach (Level level in levels)
+            if (object.ReferenceEquals(selectedDiff, null))
             {
-                DifficultyGroup diff = level.GetClosestChart(selectedDiff).DifficultyGroup;
-                if (diff.Precedence - selectedDiff.Precedence < min)
+                int min = int.MaxValue;
+                DifficultyGroup closestDiff = null;
+                DifficultyGroup dummyGroup = new DifficultyGroup { Precedence = 0 };
+
+                foreach (Level level in levels)
                 {
-                    min = diff.Precedence - selectedDiff.Precedence;
-                    closestDiff = diff;
+                    DifficultyGroup diff = level.GetClosestChart(dummyGroup).DifficultyGroup;
+                    if (diff.Precedence < min)
+                    {
+                        min = diff.Precedence;
+                        closestDiff = diff;
+                    }
                 }
+                selectedDiff = closestDiff;
             }
-            selectedDiff = closestDiff;
 
             levelList.Display(levels, selectedLevel, selectedDiff);
         }
