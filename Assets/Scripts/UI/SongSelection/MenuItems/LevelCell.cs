@@ -94,7 +94,7 @@ namespace ArcCore.UI.SongSelection
         {
             if (SelectionMenu.Instance.SelectedLevel?.Id == level.Id)
             {
-                print("Start");
+                SelectionMenu.Instance.SelectChart(level, chart);
             }
             else
                 SelectionMenu.Instance.SelectedLevel = level;

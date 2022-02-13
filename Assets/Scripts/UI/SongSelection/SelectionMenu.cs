@@ -1,9 +1,9 @@
 using UnityEngine;
-using UnityEngine.UI;
 using ArcCore.Storage.Data;
 using System.Collections.Generic;
 using System.Linq;
-using ArcCore.Storage;
+using ArcCore.Scenes;
+using ArcCore.Gameplay;
 
 namespace ArcCore.UI.SongSelection
 {
@@ -13,7 +13,6 @@ namespace ArcCore.UI.SongSelection
         protected void Awake()
         {
             Instance = this;
-            Display();
         }
         
         private const string lastSelectedPackPref = "LastSelectedPack";
@@ -169,6 +168,21 @@ namespace ArcCore.UI.SongSelection
         {
             DifficultyGroup nextGroup = diffList.NextGroup;
             SelectedDiff = nextGroup;
+        }
+
+        public void SelectChart(Level level, Chart chart)
+        {
+            SceneTransitionManager.Instance.SwitchToPlayScene(level, chart,
+                (playResult) => {
+                    //Return back to this scene after result screen
+                    //No use for playResult here
+                    SceneTransitionManager.Instance.SwitchScene(SceneNames.selectionScene);
+                },
+                (sceneRepresentative) => {
+                    PlaySceneRepresentative playScene = sceneRepresentative as PlaySceneRepresentative;
+                    playScene.LoadChart(chart);
+                }
+            );
         }
     } 
 }

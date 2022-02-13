@@ -1,6 +1,4 @@
-﻿#define DEFAULT_CHART
-
-using ArcCore.Gameplay.Behaviours;
+﻿using ArcCore.Gameplay.Behaviours;
 using ArcCore.Gameplay.Data;
 using ArcCore.Gameplay.Objects.Particle;
 using Unity.Entities;
@@ -99,7 +97,7 @@ namespace ArcCore.Gameplay
             get => instance.isUpdating;
             set => instance.isUpdating = value;
         }
-        public static bool IsUpdatingAndActive => IsUpdating && IsActive;
+        public static bool IsUpdatingAndActive => IsActive && IsUpdating;
 
         public static ParticleBuffer ParticleBuffer => instance.particleBuffer;
     

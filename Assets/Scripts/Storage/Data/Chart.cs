@@ -27,7 +27,6 @@ namespace ArcCore.Storage.Data
         public ChartSettings Settings { get; set; }
 
         public string Charter { get; set; }
-        public string Illustrator { get; set; }
 
         public string Background { get; set; }
         public Style Style { get; set; }

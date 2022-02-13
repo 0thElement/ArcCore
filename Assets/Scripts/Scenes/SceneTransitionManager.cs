@@ -4,6 +4,9 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System;
 using ArcCore.Storage.Data;
+using UnityEngine.Networking;
+using ArcCore.Utilities;
+using System.IO;
 
 namespace ArcCore.Scenes
 {
@@ -21,6 +24,7 @@ namespace ArcCore.Scenes
         private void Awake()
         {
             Instance = this;
+            LoadDefaultScene();
         }
 
         [SerializeField] private GameObject shutterCanvasObject;
@@ -124,12 +128,20 @@ namespace ArcCore.Scenes
             shutterCanvasObject.SetActive(false);
         }
 
-        private void SetInfo(Chart chart)
+        private void SetInfo(Level level, Chart chart)
         {
             title.text = chart.Name;
             artist.text = chart.Artist;
             illustrator.text = chart.Illustrator;
             charter.text = chart.Charter;
+
+            //No www here because that would requires yielding
+            string path = level.GetRealPath(chart.ImagePath);
+            byte[] data = File.ReadAllBytes(path);
+            Texture2D tex = new Texture2D(2, 2);
+            tex.LoadImage(data);
+
+            jacketArt.sprite = SpriteUtils.CreateCentered(tex);
 
             illustratorLabel.SetActive(chart.Illustrator != null);
             charterLabel.SetActive(chart.Charter != null);
@@ -164,14 +176,14 @@ namespace ArcCore.Scenes
         {
             passDataToNewScene?.Invoke(rep);
 
-            currentSceneRepresentative.OnUnloadScene();
-            SceneManager.UnloadSceneAsync(currentScene);
+            currentSceneRepresentative?.OnUnloadScene();
+            if (currentScene != null) SceneManager.UnloadSceneAsync(currentScene);
 
             currentScene = loadingScene;
             currentSceneRepresentative = rep;
 
             transitionState = TransitionState.ReadyToOpen;
-            loadingProgress.text = "$Click to start";
+            loadingProgress.text = "Click to start";
         }
 
         public void SwitchScene(string sceneName, Action<SceneRepresentative> passData = null)
@@ -185,7 +197,7 @@ namespace ArcCore.Scenes
             StartCoroutine(CloseShutterCoroutine());
         }
 
-        public void SwitchToPlayScene(Chart chart, Action<PlayResult> onPlayResult, Action<SceneRepresentative> passData = null)
+        public void SwitchToPlayScene(Level level, Chart chart, Action<PlayResult> onPlayResult, Action<SceneRepresentative> passData = null)
         {
 
             this.passDataToNewScene = passData;
@@ -196,13 +208,19 @@ namespace ArcCore.Scenes
                 StartCoroutine(LoadSceneCoroutine(SceneNames.playScene));
             };
 
-            SetInfo(chart);
+            SetInfo(level, chart);
             StartCoroutine(CloseShutterCoroutine(true));
         }
 
         public void ReturnFromResultScene(PlayResult result)
         {
             onPlayResult.Invoke(result);
+        }
+
+        private void LoadDefaultScene()
+        {
+            loadingScene = SceneNames.greetingScene;
+            SceneManager.LoadScene(SceneNames.greetingScene, LoadSceneMode.Additive);
         }
         #endregion
     }

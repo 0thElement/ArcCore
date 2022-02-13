@@ -7,7 +7,7 @@ namespace ArcCore.Gameplay.Systems
         protected virtual bool DoParticle => false;
         protected sealed override void OnUpdate()
         {
-            if (!PlayManager.IsActive) return;
+            if (!PlayManager.IsUpdatingAndActive) return;
 
             PlayManager.PlaybackBuffer();
             if (DoParticle)

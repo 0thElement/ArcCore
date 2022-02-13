@@ -324,7 +324,7 @@ namespace Zeroth.HierarchyScroll
         protected override void UpdateCellSlant(RectTransform rectTransform)
         {
             Vector3 pos = rectTransform.TransformPoint(Vector3.zero) - viewport.TransformPoint(Vector3.zero);
-            float x = Mathf.Tan(SlantAngle) * pos.y;
+            float x = SlantAngle * pos.y / Screen.height;
             rectTransform.anchoredPosition = new Vector2(x, rectTransform.anchoredPosition.y);
         }
         #endregion
