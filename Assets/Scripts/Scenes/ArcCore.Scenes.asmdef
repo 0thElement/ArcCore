@@ -1,0 +1,16 @@
+{
+    "name": "ArcCore.Scenes",
+    "references": [
+        "GUID:191478108d8919440846a43a6b42ac49",
+        "GUID:d8fa562e860a0fc41a1dd6424ddd6fd4"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
