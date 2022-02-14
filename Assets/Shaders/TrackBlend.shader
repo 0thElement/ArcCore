@@ -1,11 +1,12 @@
-﻿Shader "Arcade/Track"
+﻿Shader "Arcade/Blend/Track"
 {
 	Properties
 	{
-		_MainTex ("Texture", 2D) = "white" {}
+        _LightTex ("Light Texture", 2D) = "white" {}
+        _ConflictTex ("Conflict Texture", 2D) = "white" {}
+        _BlendStyle ("Blend", Float) = 0
 		_Offset ("Offset", Float) = 1
 		_Color ("Color", Color) = (1,1,1,1)
-		_Segment ("Segment", Float) = 1
 	}
 	SubShader
 	{
@@ -34,8 +35,10 @@
 				float2 uv : TEXCOORD0;
 			};
 
-			float _Offset, _Segment;
-			sampler2D _MainTex;
+			float _Offset;
+            sampler2D _LightTex;
+            sampler2D _ConflictTex;
+			float _BlendStyle;
 			float4 _Color;
 
 			v2f vert (appdata v)
@@ -49,9 +52,8 @@
 			half4 frag (v2f i) : SV_Target
 			{
 			    float2 p = i.uv;
-				p.y = p.y * _Segment;
 				p.y = p.y + _Offset; 
-				float4 c = tex2D(_MainTex,p);
+				float4 c = tex2D(_LightTex, p) * (1 - _BlendStyle) + tex2D(_ConflictTex, p) * _BlendStyle;
 				c.a = _Color.a;
 				return c;
 			}

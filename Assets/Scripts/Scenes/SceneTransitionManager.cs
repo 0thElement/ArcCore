@@ -135,14 +135,7 @@ namespace ArcCore.Scenes
             illustrator.text = chart.Illustrator;
             charter.text = chart.Charter;
 
-            //No www here because that would requires yielding
-            string path = level.GetRealPath(chart.ImagePath);
-            byte[] data = File.ReadAllBytes(path);
-            Texture2D tex = new Texture2D(2, 2);
-            tex.LoadImage(data);
-
-            jacketArt.sprite = SpriteUtils.CreateCentered(tex);
-
+            jacketArt.sprite = level.GetSprite(chart.ImagePath);
             illustratorLabel.SetActive(chart.Illustrator != null);
             charterLabel.SetActive(chart.Charter != null);
         }

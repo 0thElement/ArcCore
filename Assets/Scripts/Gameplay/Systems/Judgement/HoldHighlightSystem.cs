@@ -13,9 +13,9 @@ namespace ArcCore.Gameplay.Systems
         protected override void OnUpdate()
         {
             if (!PlayManager.IsUpdatingAndActive) return;
-            RenderMesh initialRenderMesh = PlayManager.HoldInitialRenderMesh;
-            RenderMesh highlightRenderMesh = PlayManager.HoldHighlightRenderMesh;
-            RenderMesh grayoutRenderMesh = PlayManager.HoldGrayoutRenderMesh;
+            RenderMesh initialRenderMesh = Skin.Instance.holdInitialRenderMesh;
+            RenderMesh highlightRenderMesh = Skin.Instance.holdHighlightRenderMesh;
+            RenderMesh grayoutRenderMesh = Skin.Instance.holdGrayoutRenderMesh;
             int currentTime = PlayManager.ReceptorTime;
             var tracksHeld = PlayManager.InputHandler.tracksHeld;
 

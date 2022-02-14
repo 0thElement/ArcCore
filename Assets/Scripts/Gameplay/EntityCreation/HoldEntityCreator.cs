@@ -4,7 +4,6 @@ using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Parsing.Data;
-using Unity.Rendering;
 using ArcCore.Gameplay.Parsing;
 using ArcCore.Utilities;
 using ArcCore.Utilities.Extensions;
@@ -22,29 +21,6 @@ namespace ArcCore.Gameplay.EntityCreation
             var gocs = GameObjectConversionSettings.FromWorld(world, null);
 
             holdNoteEntityPrefab = gocs.ConvertToNote(holdNotePrefab, em);
-        }
-
-        public void CreateEntitiesAndGetMeshes(IChartParser parser, out RenderMesh highlight, out RenderMesh grayout, out RenderMesh initial)
-        {
-            GetRenderMeshes(out highlight, out grayout, out initial);
-            CreateEntities(parser);
-        }
-
-        public void GetRenderMeshes(out RenderMesh highlight, out RenderMesh grayout, out RenderMesh initial)
-        {
-            RenderMesh holdRenderMesh = em.GetSharedComponentData<RenderMesh>(holdNoteEntityPrefab);
-
-            Material highlightMaterial = Object.Instantiate(holdRenderMesh.material);
-            Material grayoutMaterial   = Object.Instantiate(holdRenderMesh.material);
-
-            var highlightShaderID = Shader.PropertyToID("_Highlight");
-
-            highlightMaterial.SetFloat(highlightShaderID, 1);
-            grayoutMaterial  .SetFloat(highlightShaderID, -1);
-
-            initial = holdRenderMesh;
-            highlight = new RenderMesh { mesh = holdRenderMesh.mesh, material = highlightMaterial };
-            grayout   = new RenderMesh { mesh = holdRenderMesh.mesh, material = grayoutMaterial };
         }
 
         public void CreateEntities(IChartParser parser)
@@ -82,6 +58,8 @@ namespace ArcCore.Gameplay.EntityCreation
                 em.SetComponentData(holdEntity, new ChartLane(hold.track));
                 em.SetComponentData(holdEntity, new AppearTime(appearTime));
                 em.SetComponentData(holdEntity, new DestroyOnTiming(hold.endTiming + Constants.FarWindow));
+
+                em.SetSharedComponentData(holdEntity, Skin.Instance.holdInitialRenderMesh);
 
                 float startBpm = PlayManager.Conductor.GetTimingEventFromTiming(hold.timing, hold.timingGroup).bpm;
                 em.SetComponentData(holdEntity, ChartIncrTime.FromBpm(hold.timing, hold.endTiming, startBpm, out int comboCount));

@@ -6,9 +6,12 @@ using UnityEngine;
 using System.Collections.Generic;
 using ArcCore.Gameplay.EntityCreation;
 using ArcCore.Gameplay.Parsing;
-using Unity.Rendering;
 using Unity.Collections;
 using ArcCore.Utilities;
+using UnityEngine.UI;
+using ArcCore.Storage.Data;
+using ArcCore.Storage;
+using System.IO;
 
 namespace ArcCore.Gameplay
 {
@@ -29,6 +32,13 @@ namespace ArcCore.Gameplay
         public static InputHandler InputHandler => instance.inputHandler;
         public static GameplayCamera GameplayCamera => instance.gameplayCamera;
         public static ParticlePool ParticlePool => instance.particlePool;
+
+        [Header("Chart")]
+        public Image background; 
+        public Image jacket; 
+        public Text title;
+        public Text difficulty;
+        public Image difficultyFill;
 
 
         [Header("Beatline Creation Information")]
@@ -79,12 +89,6 @@ namespace ArcCore.Gameplay
         public GameObject traceShadowPrefab;
         public GameObject traceApproachIndicatorPrefab;
 
-        private IndicatorHandler arcIndicatorHandler = new IndicatorHandler();
-        private IndicatorHandler traceIndicatorHandler = new IndicatorHandler();
-
-        public static IndicatorHandler ArcIndicatorHandler => instance.arcIndicatorHandler;
-        public static IndicatorHandler TraceIndicatorHandler => instance.traceIndicatorHandler;
-
         public TraceEntityCreator GetTraceEntityCreator()
             => new TraceEntityCreator(
                 world, traceNotePrefab, headTraceNotePrefab,
@@ -100,50 +104,21 @@ namespace ArcCore.Gameplay
         public static bool IsUpdatingAndActive => IsActive && IsUpdating;
 
         public static ParticleBuffer ParticleBuffer => instance.particleBuffer;
-    
-        //TODO: MAYBE MOVE THIS TO A SEPARATE SKIN OBJECT?
-        //Hold skin data
-        public static RenderMesh HoldHighlightRenderMesh => instance.holdHighlightRenderMesh;
-        public static RenderMesh HoldGrayoutRenderMesh => instance.holdGrayoutRenderMesh;
-        public static RenderMesh HoldInitialRenderMesh => instance.holdInitialRenderMesh;
-
         private ParticleBuffer particleBuffer;
-        private RenderMesh holdHighlightRenderMesh;
-        private RenderMesh holdGrayoutRenderMesh;
-        private RenderMesh holdInitialRenderMesh;
 
-        private NativeArray<GroupState> arcGroupHeldState;
-        private List<ArcColorFSM> arcColorFsm;
+        public static int MaxArcColor => instance.maxArcColor;
         private int maxArcColor;
 
         public static NativeArray<GroupState> ArcGroupHeldState => instance.arcGroupHeldState;
         public static List<ArcColorFSM> ArcColorFsm => instance.arcColorFsm;
-        public static int MaxArcColor => instance.maxArcColor;
+        private NativeArray<GroupState> arcGroupHeldState;
+        private List<ArcColorFSM> arcColorFsm;
 
-        //Arc skin data
-        public static (RenderMesh, RenderMesh, RenderMesh, RenderMesh, RenderMesh) GetRenderMeshVariants(int color)
-            => (instance.arcInitialRenderMeshes[color],
-                instance.arcHighlightRenderMeshes[color],
-                instance.arcGrayoutRenderMeshes[color],
-                instance.archeadRenderMeshes[color],
-                instance.arcHeightRenderMeshes[color]);
+        private IndicatorHandler arcIndicatorHandler = new IndicatorHandler();
+        private IndicatorHandler traceIndicatorHandler = new IndicatorHandler();
 
-        public static List<RenderMesh> ArcInitialRenderMeshes => instance.arcInitialRenderMeshes;
-        public static List<RenderMesh> ArcHighlightRenderMeshes => instance.arcHighlightRenderMeshes;
-        public static List<RenderMesh> ArcGrayoutRenderMeshes => instance.arcGrayoutRenderMeshes;
-        public static List<RenderMesh> ArcheadRenderMeshes => instance.archeadRenderMeshes;
-        public static List<RenderMesh> ArcHeightRenderMeshes => instance.arcHeightRenderMeshes;
-        private List<RenderMesh> arcInitialRenderMeshes = new List<RenderMesh>();
-        private List<RenderMesh> arcHighlightRenderMeshes = new List<RenderMesh>();
-        private List<RenderMesh> arcGrayoutRenderMeshes = new List<RenderMesh>();
-        private List<RenderMesh> archeadRenderMeshes = new List<RenderMesh>();
-        private List<RenderMesh> arcHeightRenderMeshes = new List<RenderMesh>();
-
-        public static RenderMesh ArcShadowRenderMesh => instance.arcShadowRenderMesh;
-        public static RenderMesh ArcShadowGrayoutRenderMesh => instance.arcShadowGrayoutRenderMesh;
-
-        private RenderMesh arcShadowRenderMesh;
-        private RenderMesh arcShadowGrayoutRenderMesh;
+        public static IndicatorHandler ArcIndicatorHandler => instance.arcIndicatorHandler;
+        public static IndicatorHandler TraceIndicatorHandler => instance.traceIndicatorHandler;
 
         public static EntityCommandBuffer CommandBuffer => instance.commandBuffer;
         private EntityCommandBuffer commandBuffer;
@@ -155,22 +130,21 @@ namespace ArcCore.Gameplay
         public static UnityEngine.UI.Text DebugText => instance.debugText;
 
         private bool isUpdating;
-        public void Start()
+        public float blendStyle;
+
+        public void Awake()
         {
             instance = this;
             isUpdating = false;
-
-#if DEFAULT_CHART
-            LoadChart(Constants.GetDefaultArcChart());
-            PlayMusic();
-#endif
         }
 
-        public static void LoadChart(string chart) => instance.LoadChartInstance(chart);
-        private void LoadChartInstance(string chart)
+        #region IO
+        private void ReadChart(string chart, Style style)
         {
             var parser = new ArcParser(chart.Split('\n'));
             parser.Execute();
+
+            Skin.Instance.ApplyStyle(style, parser.MaxArcColor, Settings.ArcColors);
 
             world = World.DefaultGameObjectInjectionWorld;
 
@@ -180,24 +154,8 @@ namespace ArcCore.Gameplay
             scenecontrolHandler.CreateObjects(parser);
 
             int arcGroupCount = 0;
-            GetArcEntityCreator().CreateEntitiesAndGetData(
-                parser,
-                out arcInitialRenderMeshes,
-                out arcHighlightRenderMeshes,
-                out arcGrayoutRenderMeshes,
-                out archeadRenderMeshes,
-                out arcHeightRenderMeshes,
-                out arcShadowRenderMesh,
-                out arcShadowGrayoutRenderMesh,
-                out arcGroupCount
-            );
-            GetHoldEntityCreator().CreateEntitiesAndGetMeshes(
-                parser,
-                out holdHighlightRenderMesh,
-                out holdGrayoutRenderMesh,
-                out holdInitialRenderMesh
-            );
-
+            GetArcEntityCreator().CreateEntities(parser, out arcGroupCount);
+            GetHoldEntityCreator().CreateEntities(parser);
             GetBeatlineEntityCreator().CreateEntities(parser);
             GetTapEntityCreator().CreateEntities(parser);
             GetTraceEntityCreator().CreateEntities(parser);
@@ -213,6 +171,29 @@ namespace ArcCore.Gameplay
             }
         }
 
+        public static void ApplyChart(Level level, Chart chart) => instance.ApplyChartInstance(level, chart);
+        public void ApplyChartInstance(Level level, Chart chart)
+        {
+            // Set information
+            jacket.sprite = level.GetSprite(chart.ImagePath);
+            background.sprite = level.GetSprite(chart.Background);
+            title.text = chart.Name;
+            difficulty.text = $"{chart.DifficultyGroup.Name}{(chart.DifficultyGroup.Name == "" ? "" : " ")}{chart.Difficulty}";
+            difficultyFill.color = chart.DifficultyGroup.Color;
+
+            // Read chart file
+            string chartData = File.ReadAllText(level.GetRealPath(chart.ChartPath));
+            ReadChart(chartData, chart.Style);
+        }
+
+        public static void LoadDefaultChart() => instance.LoadDefaultChartInstance();
+        private void LoadDefaultChartInstance()
+        {
+            ReadChart(Constants.GetDefaultArcChart(), Style.Blend);
+        }
+        #endregion
+
+        #region Play/Pause
         public static void Pause() {}
         public static void Resume() {}
         public static void PlayMusic(int startTime = 0) => instance.PlayMusicInstance();
@@ -222,7 +203,9 @@ namespace ArcCore.Gameplay
 
             IsUpdating = true;
         }
+        #endregion
 
+        #region Buffers
         public static void CreateBuffer() => instance.CreateBufferInstance();
         private void CreateBufferInstance()
         {
@@ -255,11 +238,17 @@ namespace ArcCore.Gameplay
                 particleBuffer.Dispose();
             }
         }
+        #endregion
 
         void OnDestroy()
         {
             instance = null;
             arcGroupHeldState.Dispose();
+        }
+
+        void Update()
+        {
+            Skin.Instance.BlendAll(blendStyle);
         }
     }
 }

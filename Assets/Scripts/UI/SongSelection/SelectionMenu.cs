@@ -180,7 +180,7 @@ namespace ArcCore.UI.SongSelection
                 },
                 (sceneRepresentative) => {
                     PlaySceneRepresentative playScene = sceneRepresentative as PlaySceneRepresentative;
-                    playScene.LoadChart(chart);
+                    playScene.LoadChart(level, chart);
                 }
             );
         }

@@ -4,7 +4,7 @@ namespace ArcCore.UI.SongSelection
 {
     public class SelectionSceneRepresentative : SceneRepresentative
     {
-        public override void OnSceneLoad()
+        protected override void OnSceneLoad()
         {
             SelectionMenu.Instance.Display();
         }

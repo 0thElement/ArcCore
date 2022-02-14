@@ -1,9 +1,11 @@
-﻿Shader "Unlit/Hold"
+﻿Shader "Unlit/Blend/Hold"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
-        _HighlightTex ("Highlight Texture", 2D) = "white" {}
+        _LightTex ("Light Texture", 2D) = "white" {}
+        _ConflictTex ("Conflict Texture", 2D) = "white" {}
+        _LightHighlightTex ("Light Highlight Texture", 2D) = "white" {}
+        _ConflictHighlightTex ("Conflict Highlight Texture", 2D) = "white" {}
         _OverlayTex ("Overlay Texture", 2D) = "white" {}
 
         _Highlight("Highlight", Float) = 0
@@ -39,15 +41,17 @@
                 float4 worldpos : TEXCOORD1;
             };
 
-            sampler2D _MainTex,_HighlightTex,_OverlayTex;
-            float4 _MainTex_ST;
+            sampler2D _LightTex,_ConflictTex;
+            sampler2D _LightHighlightTex,_ConflictHighlightTex,_OverlayTex;
+            float4 _LightTex_ST;
+            float _BlendStyle;
             float _Highlight;
 
             v2f vert (appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                o.uv = TRANSFORM_TEX(v.uv, _LightTex);
                 o.worldpos = mul(unity_ObjectToWorld, v.vertex);
                 return o;
             }
@@ -61,7 +65,9 @@
 
 				if(zcoord < -124.25 || zcoord > 124.25) return 0;
 
-                fixed4 col = (_Highlight > 0) ? tex2D(_HighlightTex, i.uv) : tex2D(_MainTex, i.uv);
+                fixed4 col = (_Highlight > 0) ?
+                             (tex2D(_LightHighlightTex, i.uv) * (1 - _BlendStyle) + tex2D(_ConflictHighlightTex, i.uv) * _BlendStyle) :
+                             (tex2D(_LightTex, i.uv) * (1 - _BlendStyle) + tex2D(_ConflictTex, i.uv) * _BlendStyle);
 
                 if (_Highlight < 0)
                 {

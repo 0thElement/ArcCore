@@ -132,6 +132,14 @@ namespace ArcCore.Gameplay.Behaviours
             SetupPoolArray(ref tapParticlePool, tapParticlePoolSize, tapParticleBase);
         }
 
+        public void ApplyTapParticleMaterial(Material material)
+        {
+            foreach (GameObject tap in tapParticlePool)
+            {
+                tap.GetComponent<Renderer>().material = material;
+            }
+        }
+
         /// <summary>
         /// Create a tap particle at the given position.
         /// </summary>

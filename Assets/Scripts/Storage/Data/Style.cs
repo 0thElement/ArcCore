@@ -3,6 +3,7 @@
     public enum Style
     {
         Light,
-        Conflict
+        Conflict,
+        Blend
     }
 }

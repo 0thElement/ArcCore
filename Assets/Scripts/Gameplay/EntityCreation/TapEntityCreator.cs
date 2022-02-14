@@ -1,6 +1,7 @@
 ﻿using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
+using Unity.Rendering;
 using UnityEngine;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Parsing.Data;
@@ -101,6 +102,8 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(tapEntity, new ChartTime(tap.timing));
             em.SetComponentData(tapEntity, new ChartLane(tap.track));
 
+            em.SetSharedComponentData(tapEntity, Skin.Instance.tapRenderMesh);
+
             PlayManager.ScoreHandler.tracker.noteCount++;
             
             return tapEntity;
@@ -126,6 +129,8 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(tapEntity, new AppearTime(appearTime));
             em.SetComponentData(tapEntity, new ChartTime(arctap.timing));
             em.SetComponentData(tapEntity, new ChartPosition(Conversion.GetWorldPos(arctap.position)));
+
+            em.SetSharedComponentData(tapEntity, Skin.Instance.arctapRenderMesh);
 
             Entity shadowEntity = em.Instantiate(shadowEntityPrefab);
             em.SetComponentData(tapEntity, new ArcTapShadowReference(shadowEntity));
@@ -162,6 +167,8 @@ namespace ArcCore.Gameplay.EntityCreation
             em.AddComponentData(lineEntity, new FloorPosition(floorpos));
             em.SetComponentData(lineEntity, new TimingGroup(arctap.timingGroup));
             em.SetComponentData(lineEntity, new AppearTime(appearTime));
+
+            em.SetSharedComponentData(lineEntity, Skin.Instance.connectionLineRenderMesh);
 
             em.SetComponentData(tapEntity, new ConnectionReference(lineEntity));
             em.SetComponentData(arcTapEntity, new ConnectionReference(lineEntity));

@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using LiteDB;
+using UnityEngine;
+using ArcCore.Utilities;
 
 namespace ArcCore.Storage.Data
 {
@@ -44,6 +46,16 @@ namespace ArcCore.Storage.Data
                     return chart;
             }
             return null;
+        }
+
+        public Sprite GetSprite(string path)
+        {
+            string realPath = GetRealPath(path);
+            byte[] data = File.ReadAllBytes(realPath);
+            Texture2D tex = new Texture2D(2, 2);
+            tex.LoadImage(data);
+
+            return SpriteUtils.CreateCentered(tex);
         }
 
         public List<string> TryApplyReferences(List<string> availableAssets, out string missing)

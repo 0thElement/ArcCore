@@ -1,8 +1,10 @@
-﻿Shader "Unlit/Arctap"
+﻿Shader "Unlit/Blend/Arctap"
 {
 	Properties
 	{
-		_MainTex ("Texture", 2D) = "white" {}
+		_LightTex ("Light Texture", 2D) = "white" {}
+		_ConflictTex ("Conflict Texture", 2D) = "white" {}
+		_BlendStyle ("Blend", Float) = 0
 	}
 	SubShader
 	{
@@ -35,14 +37,16 @@
 				float4 worldpos : TEXCOORD1;
 			};
 
-			sampler2D _MainTex;
-            float4 _MainTex_ST;
+			sampler2D _LightTex;
+			sampler2D _ConflictTex;
+            float4 _LightTex_ST;
+			float _BlendStyle;
 
 			v2f vert (appdata v)
 			{
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
-				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+				o.uv = TRANSFORM_TEX(v.uv, _LightTex);
 				o.worldpos = mul(unity_ObjectToWorld, v.vertex);
 				return o;
 			}
@@ -51,8 +55,13 @@
 			{
 				float farCut = -124.25 + i.worldpos.y * 6;
 				if(i.worldpos.z <= farCut) return 0;
-				float4 c = tex2D(_MainTex, i.uv);
+
+				float4 light = tex2D(_LightTex, i.uv);
+				float4 conflict = tex2D(_ConflictTex, i.uv);
+
+				float4 c = conflict * _BlendStyle + light * (1 - _BlendStyle);
 				c.a *= alpha_from_pos(i.worldpos.z);
+
 				return c;
 			}
 			ENDCG
