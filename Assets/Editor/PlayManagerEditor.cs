@@ -30,7 +30,7 @@ public class ConductorEditor : Editor
         GUILayout.BeginHorizontal();
         GUILayout.Label("Jump to timing");
         timing = EditorGUILayout.IntField(timing);
-        if (GUILayout.Button("Go")) PlayManager.PlayMusic(timing);
+        if (GUILayout.Button("Go")) PlayManager.PlayMusic(timing / 1000f);
         GUILayout.EndHorizontal();
         
         DrawDefaultInspector();

@@ -49,7 +49,7 @@ namespace ArcCore.Gameplay.Behaviours
         public void Update()
         {
             currentScore = tracker.Score;
-            currentScoreDisplay += math.ceil((currentScore - currentScoreDisplay) / 1.8f);
+            currentScoreDisplay += math.ceil((currentScore - currentScoreDisplay) * Time.deltaTime * 10);
 
             int first2digits = (int)currentScoreDisplay / 1000000;
             int middle3digits = ((int)currentScoreDisplay % 1000000) / 1000;

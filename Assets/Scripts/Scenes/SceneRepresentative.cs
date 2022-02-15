@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections;
 using System;
 
@@ -12,6 +13,8 @@ namespace ArcCore.Scenes
             if (SceneTransitionManager.Instance == null)
             {
                 StartCoroutine(EndOfFrame(OnNoBootScene));
+                StartCoroutine(EndOfFrame(() => SceneManager.LoadSceneAsync(SceneNames.bootScene, LoadSceneMode.Additive)));
+                SceneTransitionManager.StartBootSceneDev(this);
                 return;
             }
             SceneTransitionManager.Instance.LoadSceneComplete(this);

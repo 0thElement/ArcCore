@@ -51,7 +51,7 @@
             fixed4 frag (v2f i) : SV_Target
             {
                 if(i.worldpos.z <= -100) discard;
-                return _LightColor * _BlendStyle + _ConflictColor * (1 - _BlendStyle);
+                return _LightColor * (1 - _BlendStyle) + _ConflictColor * _BlendStyle;
             }
             ENDCG
         }

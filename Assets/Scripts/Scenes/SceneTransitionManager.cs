@@ -16,6 +16,7 @@ namespace ArcCore.Scenes
         Closing,
         ReadyToOpen,
         Waiting,
+        ExtendedWait
     }
 
     public class SceneTransitionManager : MonoBehaviour
@@ -24,7 +25,8 @@ namespace ArcCore.Scenes
         private void Awake()
         {
             Instance = this;
-            LoadDefaultScene();
+            if (SceneManager.sceneCount == 1)
+                LoadDefaultScene();
         }
 
         [SerializeField] private GameObject shutterCanvasObject;
@@ -47,6 +49,11 @@ namespace ArcCore.Scenes
         [SerializeField] private GameObject illustratorLabel;
         [SerializeField] private Text charter;
         [SerializeField] private GameObject charterLabel;
+
+        public string LoadingText
+        {
+            set => loadingProgress.text = value;
+        }
 
         #region Delegates
         public delegate void OnShutterCloseDelegate();
@@ -128,6 +135,12 @@ namespace ArcCore.Scenes
             shutterCanvasObject.SetActive(false);
         }
 
+        public void CloseShutterWithoutSwitchingScene()
+        {
+            StartCoroutine(CloseShutterCoroutine());
+            OnShutterClose += () => transitionState = TransitionState.ReadyToOpen;
+        } 
+
         private void SetInfo(Level level, Chart chart)
         {
             title.text = chart.Name;
@@ -151,8 +164,8 @@ namespace ArcCore.Scenes
         #region Scene Management
         private Action<SceneRepresentative> passDataToNewScene;
         private Action<PlayResult> onPlayResult;
-        private SceneRepresentative currentSceneRepresentative;
-        private string currentScene;
+        private static SceneRepresentative currentSceneRepresentative;
+        private static string currentScene;
         private string loadingScene;
 
         private IEnumerator LoadSceneCoroutine(string sceneName)
@@ -175,6 +188,17 @@ namespace ArcCore.Scenes
             currentScene = loadingScene;
             currentSceneRepresentative = rep;
 
+            if (transitionState != TransitionState.ExtendedWait)
+                ReadyToOpenShutter();
+        }
+
+        public void KeepShutterClosed()
+        {
+            transitionState = TransitionState.ExtendedWait;
+        }
+
+        public void ReadyToOpenShutter()
+        {
             transitionState = TransitionState.ReadyToOpen;
             loadingProgress.text = "Click to start";
         }
@@ -205,15 +229,21 @@ namespace ArcCore.Scenes
             StartCoroutine(CloseShutterCoroutine(true));
         }
 
-        public void ReturnFromResultScene(PlayResult result)
+        public void ReturnFromPlayScene(PlayResult result)
         {
-            onPlayResult.Invoke(result);
+            onPlayResult?.Invoke(result);
         }
 
         private void LoadDefaultScene()
         {
             loadingScene = SceneNames.greetingScene;
             SceneManager.LoadScene(SceneNames.greetingScene, LoadSceneMode.Additive);
+        }
+
+        public static void StartBootSceneDev(SceneRepresentative rep)
+        {
+            currentSceneRepresentative = rep;
+            currentScene = SceneManager.GetActiveScene().name;
         }
         #endregion
     }

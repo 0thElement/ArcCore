@@ -13,7 +13,7 @@ namespace ArcCore.Gameplay
 
         protected override void OnShutterOpen()
         {
-            PlayManager.PlayMusic();
+            PlayManager.ReadyToPlay = true;
         }
 
         protected override void OnNoBootScene()

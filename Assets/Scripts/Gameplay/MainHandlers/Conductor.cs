@@ -52,11 +52,6 @@ namespace ArcCore.Gameplay.Behaviours
         /// </summary>
         [HideInInspector]
         public int receptorTime;
-        /// <summary>
-        /// The time of the last audio mix, accessed through <see cref="TimeUtils.Ticks"/>
-        /// </summary>
-        [HideInInspector]
-        public long timeOfLastMix;
 
         /// <summary>
         /// The length of the current song in milliseconds.
@@ -90,52 +85,79 @@ namespace ArcCore.Gameplay.Behaviours
         public int FullOffset => chartOffset + Settings.AudioOffset;
 
         /// <summary>
+        /// Whether to update receptorTime before music begins
+        /// </summary>
+        private bool stationaryBeforeStartPlaying;
+
+        private float startTime, lastPauseTime;
+
+        private void Awake()
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
+
+        /// <summary>
         /// Perform all needed actions to play a song after a delay of <see cref="StartPlayOffset"/> seconds.
         /// </summary>
-        public void PlayMusic()
+        public void PlayMusic(float startTime = 0)
         {
             //Find the audio source
-            audioSource = GetComponent<AudioSource>();
+            stationaryBeforeStartPlaying = false;
+            this.startTime = startTime;
 
             //Setup song speed: http://answers.unity.com/answers/1677904/view.html
             audioSource.pitch = Settings.SongSpeed;
-            Debug.Log(audioSource.outputAudioMixerGroup.audioMixer);
             audioSource.outputAudioMixerGroup.audioMixer.SetFloat("Pitch", 1 / Settings.SongSpeed);
+
+            audioSource.time = startTime;
             
             //Get song length
             songLength = (uint)Mathf.Round(audioSource.clip.length / Settings.SongSpeed * 1000);
 
             //Set timing information
-            dspStartPlayingTime = AudioSettings.dspTime + StartPlayOffset;
-            timeOfLastMix = DateTimeOffset.Now.Ticks;
+            dspStartPlayingTime = AudioSettings.dspTime;
 
             //Schedule playing of song
-            audioSource.PlayScheduled(dspStartPlayingTime);
+            audioSource.PlayScheduled(dspStartPlayingTime + StartPlayOffset);
+        }
+
+        public void Initialize(AudioClip clip, float startTime)
+        {
+            audioSource.clip = clip;
+            receptorTime = Mathf.RoundToInt((float)(startTime - StartPlayOffset) * 1000) - FullOffset;
+        }
+
+        public void PauseMusic()
+        {
+            lastPauseTime = (float)(AudioSettings.dspTime - dspStartPlayingTime + startTime - StartPlayOffset);
+            lastPauseTime = Mathf.Max(0, lastPauseTime);
+            audioSource.Stop();
+        }
+
+        public void ResumeMusic()
+        {
+            PlayMusic(lastPauseTime);
+            stationaryBeforeStartPlaying = true;
         }
 
         public void Update()
         {
-            if (!PlayManager.IsUpdating) return;
+            if (!PlayManager.IsUpdating || !audioSource.isPlaying) return;
 
+            float dspTime = (float)AudioSettings.dspTime;
+
+            //Resuming
+            if (stationaryBeforeStartPlaying && dspTime < (dspStartPlayingTime + StartPlayOffset))
+                receptorTime = Mathf.RoundToInt(lastPauseTime * 1000) - FullOffset;
             //Calculate the current time
-            receptorTime = 
-                Mathf.RoundToInt( 
-                    (float)(
-                        AudioSettings.dspTime - dspStartPlayingTime + 
-                        TimeUtils.TicksToSec(DateTimeOffset.Now.Ticks - timeOfLastMix)
-                    ) * 1000
-                ) - FullOffset;
+            else
+                receptorTime = 
+                    Mathf.RoundToInt( 
+                        (float)(dspTime - dspStartPlayingTime + startTime - StartPlayOffset) * 1000
+                    ) - FullOffset;
 
             //Update floor positions
             UpdateCurrentFloorPosition();
-        }
-
-        public void OnAudioFilterRead(float[] _data, int _channels)
-        {
-            if (!PlayManager.IsUpdating) return;
-
-            //Get time of last mix using audio filter hook
-            timeOfLastMix = DateTimeOffset.Now.Ticks;
         }
 
         public void OnDestroy()

@@ -39,7 +39,7 @@ namespace ArcCore.Gameplay.EntityCreation
                                 
                 if (distanceBetweenTwoLine != 0)
                 {
-                    for (float timing = start; timing < 0; timing+=distanceBetweenTwoLine)
+                    for (float timing = 0; timing >= start; timing -= distanceBetweenTwoLine)
                     {
                         CreateLineAt(firstTiming, timing);
                     }
@@ -56,7 +56,7 @@ namespace ArcCore.Gameplay.EntityCreation
 
                 if (distanceBetweenTwoLine == 0) continue;
                 
-                for (float timing = currentTiming.timing; timing < limit; timing+=distanceBetweenTwoLine)
+                for (float timing = currentTiming.timing; timing < limit; timing += distanceBetweenTwoLine)
                 {
                     CreateLineAt(currentTiming, timing);
                 }
@@ -72,7 +72,7 @@ namespace ArcCore.Gameplay.EntityCreation
 
                 if (distanceBetweenTwoLine == 0) return;
                 
-                for (float timing = lastTiming.timing; timing < limit; timing+=distanceBetweenTwoLine)
+                for (float timing = lastTiming.timing; timing < limit; timing += distanceBetweenTwoLine)
                 {
                     CreateLineAt(lastTiming, timing);
                 }

@@ -45,7 +45,7 @@ namespace ArcCore.Gameplay.Data
         public int PureCount => maxPureCount + earlyPureCount + latePureCount;
         public int FarCount => earlyFarCount + lateFarCount;
 
-        public float Score => ((PureCount + 0.5f * FarCount) / noteCount * MaxBaseScore) + maxPureCount;
+        public float Score => ((PureCount + 0.5f * FarCount) / System.Math.Max(noteCount, 1) * MaxBaseScore) + maxPureCount;
 
         public bool IsMaxPureMem => (maxPureCount == noteCount);
         public bool IsPureMem => (PureCount == noteCount);

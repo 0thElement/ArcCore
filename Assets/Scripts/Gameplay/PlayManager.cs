@@ -12,6 +12,10 @@ using UnityEngine.UI;
 using ArcCore.Storage.Data;
 using ArcCore.Storage;
 using System.IO;
+using ArcCore.Gameplay.Components;
+using ArcCore.Scenes;
+using UnityEngine.Networking;
+using System.Collections;
 
 namespace ArcCore.Gameplay
 {
@@ -101,6 +105,12 @@ namespace ArcCore.Gameplay
             get => instance.isUpdating;
             set => instance.isUpdating = value;
         }
+        public static bool ReadyToPlay 
+        {
+            get => instance.readyToPlay;
+            set => instance.readyToPlay = value;
+        }
+        private bool readyToPlay;
         public static bool IsUpdatingAndActive => IsActive && IsUpdating;
 
         public static ParticleBuffer ParticleBuffer => instance.particleBuffer;
@@ -125,6 +135,9 @@ namespace ArcCore.Gameplay
 
         private World world;
 
+        [Header("Resuming")]
+        public PlayPauseHandler playPauseHandler;
+
         [Header("Debug")]
         [SerializeField] private UnityEngine.UI.Text debugText;
         public static UnityEngine.UI.Text DebugText => instance.debugText;
@@ -132,10 +145,15 @@ namespace ArcCore.Gameplay
         private bool isUpdating;
         public float blendStyle;
 
+        private Level currentLevel;
+        private Chart currentChart;
+
         public void Awake()
         {
             instance = this;
             isUpdating = false;
+            readyToPlay = false;
+            scoreHandler.ResetScores();
         }
 
         #region IO
@@ -171,9 +189,23 @@ namespace ArcCore.Gameplay
             }
         }
 
+        private void Clear()
+        {
+            scoreHandler.ResetScores();
+            EntityManager em = world.EntityManager;
+            em.DestroyEntity(em.UniversalQuery);
+            arcGroupHeldState.Dispose();
+            arcIndicatorHandler.Destroy();
+            traceIndicatorHandler.Destroy();
+            readyToPlay = false;
+        }
+
         public static void ApplyChart(Level level, Chart chart) => instance.ApplyChartInstance(level, chart);
         public void ApplyChartInstance(Level level, Chart chart)
         {
+            currentChart = chart;
+            currentLevel = level;
+
             // Set information
             jacket.sprite = level.GetSprite(chart.ImagePath);
             background.sprite = level.GetSprite(chart.Background);
@@ -183,7 +215,36 @@ namespace ArcCore.Gameplay
 
             // Read chart file
             string chartData = File.ReadAllText(level.GetRealPath(chart.ChartPath));
-            ReadChart(chartData, chart.Style);
+
+            StartCoroutine(LoadAudioAndChart(level.GetRealPath(chart.SongPath), chartData, chart.Style));
+        }
+
+        private IEnumerator LoadAudioAndChart(string path, string chartData, Style chartStyle, float startTime = 0)
+        {
+            SceneTransitionManager.Instance.LoadingText = "Loading audio file";
+            SceneTransitionManager.Instance.KeepShutterClosed();
+
+            using (UnityWebRequest req = UnityWebRequestMultimedia.GetAudioClip("file://" + path, AudioType.OGGVORBIS))
+            {
+                yield return req.SendWebRequest();
+                if (!string.IsNullOrWhiteSpace(req.error))
+                {
+                    throw new System.Exception($"Cannot load audio file at {path}");
+                }
+                AudioClip clip = DownloadHandlerAudioClip.GetContent(req);
+                conductor.Initialize(clip, startTime);
+            }
+
+            SceneTransitionManager.Instance.LoadingText = "Loading chart file";
+
+            ReadChart(chartData, chartStyle);
+            conductor.UpdateCurrentFloorPosition();
+
+            SceneTransitionManager.Instance.ReadyToOpenShutter();
+            isUpdating = true;
+
+            while (!readyToPlay) yield return null;
+            PlayMusicInstance(startTime);
         }
 
         public static void LoadDefaultChart() => instance.LoadDefaultChartInstance();
@@ -194,14 +255,72 @@ namespace ArcCore.Gameplay
         #endregion
 
         #region Play/Pause
-        public static void Pause() {}
-        public static void Resume() {}
-        public static void PlayMusic(int startTime = 0) => instance.PlayMusicInstance();
-        private void PlayMusicInstance()
+        public static void Pause() => instance.PauseInstance();
+        public static void Resume() => instance.ResumeInstance();
+        public static void Restart() => instance.RestartInstance();
+        public static void Quit() => instance.QuitInstance();
+        public static void PlayMusic(float startTime = 0) => instance.PlayMusicInstance(startTime);
+        private void PlayMusicInstance(float startTime)
         {
-            conductor.PlayMusic();
+            conductor.PlayMusic(startTime);
+            isUpdating = true;
+        }
 
-            IsUpdating = true;
+        private void PauseInstance()
+        {
+            conductor.PauseMusic();
+            isUpdating = false;
+        }
+
+        private void ResumeInstance()
+        {
+            conductor.ResumeMusic();
+            isUpdating = true;
+        }
+
+        private void RestartInstance()
+        {
+            SceneTransitionManager.Instance.OnShutterClose += () => {
+                Clear();
+                ApplyChartInstance(currentLevel, currentChart);
+            };
+            SceneTransitionManager.Instance.OnShutterOpen += () => {
+                readyToPlay = true;
+            };
+            SceneTransitionManager.Instance.CloseShutterWithoutSwitchingScene();
+        }
+
+        private void QuitInstance()
+        {
+            Clear();
+            SceneTransitionManager.Instance.ReturnFromPlayScene(null);
+        }
+
+        public static int GetResumeTimingHint()
+        {
+            int currentTime = ReceptorTime + Conductor.FullOffset;
+            if (currentTime < 0) return 0; //Song not started
+
+            EntityManager em = instance.world.EntityManager;
+            EntityQueryDesc query = new EntityQueryDesc()
+            {
+                All = new ComponentType[] {typeof(ChartTime)}
+            };
+
+            NativeArray<ChartTime> chartTimes = em.CreateEntityQuery(query).ToComponentDataArray<ChartTime>(Allocator.Temp);
+            if (chartTimes.Length == 0) return 0;
+
+            int minTime = int.MaxValue;
+            for (int i = 0; i < chartTimes.Length; i++)
+            {
+                int time = chartTimes[i].value;
+                if (time < minTime && time > currentTime)
+                    minTime = time;
+            }
+
+            chartTimes.Dispose();
+
+            return minTime - currentTime;
         }
         #endregion
 
@@ -243,11 +362,12 @@ namespace ArcCore.Gameplay
         void OnDestroy()
         {
             instance = null;
-            arcGroupHeldState.Dispose();
+            // arcGroupHeldState.Dispose();
         }
 
         void Update()
         {
+            //TEMPORARY
             Skin.Instance.BlendAll(blendStyle);
         }
     }
