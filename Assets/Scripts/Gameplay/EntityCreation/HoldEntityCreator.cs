@@ -7,13 +7,14 @@ using ArcCore.Gameplay.Components.Tags;
 using ArcCore.Gameplay.Parsing.Data;
 using ArcCore.Gameplay.Parsing;
 using ArcCore.Utilities;
-using ArcCore.Utilities.Extensions;
+using ArcCore.Gameplay.Utilities;
 
 namespace ArcCore.Gameplay.EntityCreation
 {
     public class HoldEntityCreator
     {
         private Entity holdNoteEntityPrefab;
+        private ScopingChunk scopingChunk;
         private EntityManager em;
 
         public HoldEntityCreator(World world, GameObject holdNotePrefab)
@@ -22,6 +23,7 @@ namespace ArcCore.Gameplay.EntityCreation
             var gocs = GameObjectConversionSettings.FromWorld(world, null);
 
             holdNoteEntityPrefab = gocs.ConvertToNote(holdNotePrefab, em);
+            scopingChunk = new ScopingChunk(em.GetChunk(holdNoteEntityPrefab).Archetype.ChunkCapacity);
         }
 
         public void CreateEntities(IChartParser parser)
@@ -60,6 +62,8 @@ namespace ArcCore.Gameplay.EntityCreation
                 em.SetComponentData(holdEntity, new ChartLane(hold.track));
                 em.SetComponentData(holdEntity, new AppearTime(appearTime));
                 em.SetComponentData(holdEntity, new DestroyOnTiming(hold.endTiming + Constants.FarWindow));
+
+                em.SetSharedComponentData(holdEntity, new ChunkAppearTime(scopingChunk.AddAppearTiming(appearTime)));
 
                 if (flag.HasFlag(TimingGroupFlag.Autoplay))
                     em.AddComponent(holdEntity, typeof(Autoplay));

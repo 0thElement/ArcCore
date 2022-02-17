@@ -2,8 +2,9 @@
 using Unity.Transforms;
 using UnityEngine;
 using System.Reflection;
+using ArcCore.Gameplay.Components.Tags;
 
-namespace ArcCore.Utilities.Extensions
+namespace ArcCore.Gameplay.Utilities
 {
     public static class ECSExtensions
     {
@@ -33,6 +34,7 @@ namespace ArcCore.Utilities.Extensions
         {
             Entity en = gocSettings.ConvertToEntity(obj);
             entityManager.AddComponent<Disabled>(en);
+            entityManager.AddSharedComponentData<ChunkAppearTime>(en, new ChunkAppearTime(0));
             return en;
         }
 

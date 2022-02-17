@@ -5,7 +5,7 @@ using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Parsing.Data;
 using ArcCore.Gameplay.Parsing;
 using ArcCore.Utilities;
-using ArcCore.Utilities.Extensions;
+using ArcCore.Gameplay.Utilities;
 
 namespace ArcCore.Gameplay.EntityCreation
 {
@@ -13,6 +13,7 @@ namespace ArcCore.Gameplay.EntityCreation
     public class BeatlineEntityCreator
     {
         private Entity beatlineEntityPrefab;
+        private ScopingChunk scopingChunk;
         private EntityManager em;
 
         public BeatlineEntityCreator(World world, GameObject beatlinePrefab)
@@ -21,6 +22,7 @@ namespace ArcCore.Gameplay.EntityCreation
             var gocs = GameObjectConversionSettings.FromWorld(world, null);
 
             beatlineEntityPrefab = gocs.ConvertToNote(beatlinePrefab, em);
+            scopingChunk = new ScopingChunk(em.GetChunk(beatlineEntityPrefab).Archetype.ChunkCapacity);
         }
 
         public void CreateEntities(IChartParser parser)
@@ -95,6 +97,7 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(lineEntity, new FloorPosition(floorpos));
             em.SetComponentData(lineEntity, new AppearTime(appearTime));
             em.SetComponentData(lineEntity, new DestroyOnTiming(disappearTime));
+            em.SetSharedComponentData(lineEntity, new ChunkAppearTime(scopingChunk.AddAppearTiming(appearTime)));
         }
     }
 

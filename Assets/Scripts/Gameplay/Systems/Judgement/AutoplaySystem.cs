@@ -5,7 +5,7 @@ using Unity.Collections;
 using ArcCore.Gameplay.Data;
 using Unity.Mathematics;
 using ArcCore.Utilities;
-using ArcCore.Utilities.Extensions;
+using ArcCore.Gameplay.Utilities;
 
 namespace ArcCore.Gameplay.Systems
 {

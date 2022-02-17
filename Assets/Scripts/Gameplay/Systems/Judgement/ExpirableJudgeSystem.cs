@@ -5,7 +5,7 @@ using Unity.Entities;
 using ArcCore.Gameplay.Data;
 using Unity.Mathematics;
 using ArcCore.Utilities;
-using ArcCore.Utilities.Extensions;
+using ArcCore.Gameplay.Utilities;
 
 namespace ArcCore.Gameplay.Systems
 {
@@ -124,7 +124,7 @@ namespace ArcCore.Gameplay.Systems
             ).Run();
 
             //Arc
-            Entities.WithNone<ChartLane>().ForEach(
+            Entities.WithAll<WithinJudgeRange>().WithNone<ChartLane>().ForEach(
                 (Entity en, ref ChartIncrTime chartIncrTime, in DestroyOnTiming destroyTime, in ArcGroupID groupID) =>
                 {
                     if (currentTime >= destroyTime.value)

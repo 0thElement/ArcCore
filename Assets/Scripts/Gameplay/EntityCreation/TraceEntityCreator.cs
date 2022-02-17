@@ -9,7 +9,7 @@ using ArcCore.Gameplay.Parsing;
 using ArcCore.Gameplay.Objects.Particle;
 using ArcCore.Gameplay.Data;
 using ArcCore.Utilities;
-using ArcCore.Utilities.Extensions;
+using ArcCore.Gameplay.Utilities;
 
 namespace ArcCore.Gameplay.EntityCreation
 {
@@ -18,6 +18,9 @@ namespace ArcCore.Gameplay.EntityCreation
         private Entity traceNoteEntityPrefab;
         private Entity traceShadowEntityPrefab;
         private Entity headTraceNoteEntityPrefab;
+        private ScopingChunk traceNoteScopingChunk;
+        private ScopingChunk traceShadowScopingChunk;
+        private ScopingChunk headTraceNoteScopingChunk;
 
         private GameObject traceApproachIndicatorPrefab;
 
@@ -37,6 +40,10 @@ namespace ArcCore.Gameplay.EntityCreation
 
             em.ExposeLocalToWorld(traceNoteEntityPrefab);
             em.ExposeLocalToWorld(traceShadowEntityPrefab);
+
+            traceNoteScopingChunk = new ScopingChunk(em.GetChunk(traceNoteEntityPrefab).Archetype.ChunkCapacity);
+            traceShadowScopingChunk = new ScopingChunk(em.GetChunk(traceShadowEntityPrefab).Archetype.ChunkCapacity);
+            headTraceNoteScopingChunk = new ScopingChunk(em.GetChunk(headTraceNoteEntityPrefab).Archetype.ChunkCapacity);
         }
 
         public void CreateEntities(IChartParser parser)
@@ -76,6 +83,8 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(traceEntity, new ChartTime(time));
             em.SetComponentData(traceEntity, new ChartEndTime(endTime));
             em.SetComponentData(traceEntity, new ArcGroupID(groupID));
+            
+            em.SetSharedComponentData(traceEntity, new ChunkAppearTime(traceNoteScopingChunk.AddAppearTiming(appearTime)));
 
             if (time < endTime && !flag.HasFlag(TimingGroupFlag.NoInput))
             {
@@ -98,6 +107,8 @@ namespace ArcCore.Gameplay.EntityCreation
                 em.SetComponentData(traceShadowEntity, new AppearTime(appearTime));
                 em.SetComponentData(traceShadowEntity, new DestroyOnTiming(endTime));
                 em.SetComponentData(traceShadowEntity, new ChartTime(time));
+                
+                em.SetSharedComponentData(traceShadowEntity, new ChunkAppearTime(traceShadowScopingChunk.AddAppearTiming(appearTime)));
             }
         }
 
@@ -120,6 +131,8 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(headEntity, new TimingGroup(trace.timingGroup));
             em.SetComponentData(headEntity, new AppearTime(appearTime));
             em.SetComponentData(headEntity, new DestroyOnTiming(trace.timing));
+            
+            em.SetSharedComponentData(headEntity, new ChunkAppearTime(headTraceNoteScopingChunk.AddAppearTiming(appearTime)));
 
             //TODO: shadow for head segment?
         }

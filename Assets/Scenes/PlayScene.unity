@@ -151,7 +151,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83d629ad90c623c429de9909ad35eccc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  audioSource: {fileID: 72529308}
   receptorTime: 0
   songLength: 0
   chartOffset: 0

@@ -1,14 +1,13 @@
 ﻿using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
-using Unity.Rendering;
 using UnityEngine;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Tags;
 using ArcCore.Gameplay.Parsing.Data;
 using ArcCore.Gameplay.Parsing;
 using ArcCore.Utilities;
-using ArcCore.Utilities.Extensions;
+using ArcCore.Gameplay.Utilities;
 
 namespace ArcCore.Gameplay.EntityCreation
 {
@@ -18,6 +17,10 @@ namespace ArcCore.Gameplay.EntityCreation
         private Entity arcTapNoteEntityPrefab;
         private Entity connectionLineEntityPrefab;
         private Entity shadowEntityPrefab;
+        private ScopingChunk tapNoteScopingChunk;
+        private ScopingChunk arcTapNoteScopingChunk;
+        private ScopingChunk connectionLineScopingChunk;
+        private ScopingChunk shadowScopingChunk;
         private EntityManager em;
         private IChartParser parser;
 
@@ -35,6 +38,11 @@ namespace ArcCore.Gameplay.EntityCreation
             arcTapNoteEntityPrefab     = gocs.ConvertToNote(arcTapNotePrefab, em);
             connectionLineEntityPrefab = gocs.ConvertToNote(connectionLinePrefab, em);
             shadowEntityPrefab         = gocs.ConvertToNote(shadowPrefab, em);
+
+            tapNoteScopingChunk = new ScopingChunk(em.GetChunk(tapNoteEntityPrefab).Archetype.ChunkCapacity);
+            arcTapNoteScopingChunk = new ScopingChunk(em.GetChunk(arcTapNoteEntityPrefab).Archetype.ChunkCapacity);
+            connectionLineScopingChunk = new ScopingChunk(em.GetChunk(connectionLineEntityPrefab).Archetype.ChunkCapacity);
+            shadowScopingChunk = new ScopingChunk(em.GetChunk(shadowEntityPrefab).Archetype.ChunkCapacity);
         }
 
         public void CreateEntities(IChartParser parser)
@@ -105,6 +113,8 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(tapEntity, new AppearTime(appearTime));
             em.SetComponentData(tapEntity, new ChartTime(tap.timing));
             em.SetComponentData(tapEntity, new ChartLane(tap.track));
+            
+            em.SetSharedComponentData(tapEntity, new ChunkAppearTime(tapNoteScopingChunk.AddAppearTiming(appearTime)));
 
             if (flag.HasFlag(TimingGroupFlag.Autoplay))
                 em.AddComponent(tapEntity, typeof(Autoplay));
@@ -140,6 +150,8 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(tapEntity, new AppearTime(appearTime));
             em.SetComponentData(tapEntity, new ChartTime(arctap.timing));
             em.SetComponentData(tapEntity, new ChartPosition(Conversion.GetWorldPos(arctap.position)));
+            
+            em.SetSharedComponentData(tapEntity, new ChunkAppearTime(arcTapNoteScopingChunk.AddAppearTiming(appearTime)));
 
             if (flag.HasFlag(TimingGroupFlag.Autoplay))
                 em.AddComponent(tapEntity, typeof(Autoplay));
@@ -156,6 +168,8 @@ namespace ArcCore.Gameplay.EntityCreation
                 em.SetComponentData(shadowEntity, new TimingGroup(arctap.timingGroup));
                 em.SetComponentData(shadowEntity, new Translation() { Value = new float3(x, 0, z) });
                 em.SetComponentData(shadowEntity, new FloorPosition(floorpos));
+                
+                em.SetSharedComponentData(shadowEntity, new ChunkAppearTime(shadowScopingChunk.AddAppearTiming(appearTime)));
             }
 
             PlayManager.ScoreHandler.tracker.noteCount++;
@@ -188,6 +202,8 @@ namespace ArcCore.Gameplay.EntityCreation
             em.AddComponentData(lineEntity, new FloorPosition(floorpos));
             em.SetComponentData(lineEntity, new TimingGroup(arctap.timingGroup));
             em.SetComponentData(lineEntity, new AppearTime(appearTime));
+            
+            em.SetSharedComponentData(lineEntity, new ChunkAppearTime(connectionLineScopingChunk.AddAppearTiming(appearTime)));
 
             em.SetSharedComponentData(lineEntity, Skin.Instance.connectionLineRenderMesh);
 

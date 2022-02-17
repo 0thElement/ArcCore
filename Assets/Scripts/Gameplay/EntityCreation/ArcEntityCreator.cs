@@ -11,7 +11,7 @@ using ArcCore.Gameplay.Parsing.Data;
 using ArcCore.Gameplay.Parsing;
 using ArcCore.Gameplay.Data;
 using ArcCore.Utilities;
-using ArcCore.Utilities.Extensions;
+using ArcCore.Gameplay.Utilities;
 
 namespace ArcCore.Gameplay.EntityCreation
 {
@@ -25,6 +25,11 @@ namespace ArcCore.Gameplay.EntityCreation
         private Entity headArcNoteEntityPrefab;
         private Entity heightIndicatorEntityPrefab;
         private Entity arcShadowEntityPrefab;
+        private ScopingChunk arcNoteScopingChunk;
+        private ScopingChunk headArcNoteScopingChunk;
+        private ScopingChunk heightIndicatorScopingChunk;
+        private ScopingChunk arcShadowScopingChunk;
+        private ScopingChunk arcJudgeScopingChunk;
 
         private GameObject arcApproachIndicatorPrefab;
         private GameObject arcParticlePrefab;
@@ -63,6 +68,7 @@ namespace ArcCore.Gameplay.EntityCreation
                 //Chart time
                 ComponentType.ReadOnly<ChartTime>(),
                 ComponentType.ReadOnly<DestroyOnTiming>(),
+                ComponentType.ReadOnly<ChunkAppearTime>(),
                 //Judge time
                 ComponentType.ReadWrite<ChartIncrTime>(),
                 //Color
@@ -76,6 +82,12 @@ namespace ArcCore.Gameplay.EntityCreation
             headMesh   = headArcNotePrefab.    GetComponent<MeshFilter>().sharedMesh;
             heightMesh = heightIndicatorPrefab.GetComponent<MeshFilter>().sharedMesh;
             shadowMesh = arcShadowPrefab.      GetComponent<MeshFilter>().sharedMesh;
+
+            arcNoteScopingChunk = new ScopingChunk(em.GetChunk(arcNoteEntityPrefab).Archetype.ChunkCapacity);
+            headArcNoteScopingChunk = new ScopingChunk(em.GetChunk(headArcNoteEntityPrefab).Archetype.ChunkCapacity);
+            heightIndicatorScopingChunk = new ScopingChunk(em.GetChunk(heightIndicatorEntityPrefab).Archetype.ChunkCapacity);
+            arcShadowScopingChunk = new ScopingChunk(em.GetChunk(arcShadowEntityPrefab).Archetype.ChunkCapacity);
+            arcJudgeScopingChunk = new ScopingChunk(arcJudgeArchetype.ChunkCapacity);
         }
 
         public void CreateEntities(IChartParser parser, out int arcGroupCount)
@@ -138,6 +150,8 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(arcInstEntity, new ChartTime(timing));
             em.SetComponentData(arcInstEntity, new ChartEndTime(endTiming));
 
+            em.SetSharedComponentData(arcInstEntity, new ChunkAppearTime(arcNoteScopingChunk.AddAppearTiming(appearTime)));
+
             if (timing < endTiming && !flag.HasFlag(TimingGroupFlag.NoShadow))
             {
                 Entity arcShadowEntity = em.Instantiate(arcShadowEntityPrefab);
@@ -162,6 +176,8 @@ namespace ArcCore.Gameplay.EntityCreation
                 em.SetComponentData(arcShadowEntity, new DestroyOnTiming(endTiming + Constants.HoldLostWindow));
                 em.SetComponentData(arcShadowEntity, new ArcGroupID(groupId));
                 em.SetComponentData(arcShadowEntity, new ChartTime(timing));
+
+                em.SetSharedComponentData(arcShadowEntity, new ChunkAppearTime(arcShadowScopingChunk.AddAppearTiming(appearTime)));
             }
         }
 
@@ -197,6 +213,8 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(heightEntity, new TimingGroup(arc.timingGroup));
             em.SetComponentData(heightEntity, new AppearTime(appearTime));
             em.SetComponentData(heightEntity, new DestroyOnTiming(arc.timing));
+
+            em.SetSharedComponentData(heightEntity, new ChunkAppearTime(heightIndicatorScopingChunk.AddAppearTiming(appearTime)));
         }
 
         protected override void CreateHeadSegment(ArcRaw arc, int groupID, TimingGroupFlag flag)
@@ -224,6 +242,8 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(headEntity, new DestroyOnTiming(arc.timing));
             em.SetComponentData(headEntity, new ArcGroupID(groupID));
 
+            em.SetSharedComponentData(headEntity, new ChunkAppearTime(headArcNoteScopingChunk.AddAppearTiming(appearTime)));
+
             //TODO: Shadow for headseg??
         }
 
@@ -239,6 +259,8 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(en, new ArcData(arc));
             em.SetComponentData(en, new ArcGroupID(groupId));
             em.SetComponentData(en, new DestroyOnTiming(arc.endTiming + Constants.HoldLostWindow));
+
+            em.SetSharedComponentData(en, new ChunkAppearTime(arcJudgeScopingChunk.AddAppearTiming(arc.timing)));
 
             em.SetComponentData(en, ChartIncrTime.FromBpm(arc.timing, arc.endTiming, startBpm, out int comboCount));
 
