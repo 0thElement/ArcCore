@@ -92,7 +92,7 @@ namespace ArcCore.Gameplay.EntityCreation
                 ArcIndicator indicator = new ArcIndicator(
                     Object.Instantiate(arcApproachIndicatorPrefab),
                     Object.Instantiate(arcParticlePrefab),
-                    groupIdEndPoint.time + 60,
+                    groupIdEndPoint.time,
                     groupIdEndPoint.color
                 );
                 indicatorList.Add(indicator);

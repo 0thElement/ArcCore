@@ -31,6 +31,7 @@ namespace ArcCore.Gameplay.Systems
 
             //Arc and trace segments
             JobHandle arcBodies = Entities
+                .WithAll<WithinJudgeRange>()
                 .WithNone<Translation, IsTraceBodies>()
                 .ForEach(
                     (in ArcGroupID groupID, in LocalToWorld lcw, in ChartTime chartTime, in ChartEndTime endTime, in Cutoff cutoff) =>
@@ -89,7 +90,7 @@ namespace ArcCore.Gameplay.Systems
             PlayManager.ArcIndicatorHandler.CheckForDisable();
             
             Entities
-                .WithAll<IsTraceBodies>()
+                .WithAll<IsTraceBodies, WithinJudgeRange>()
                 .WithNone<Translation>()
                 .ForEach(
                     (in ArcGroupID groupID, in LocalToWorld lcw, in ChartTime chartTime, in ChartEndTime endTime) =>

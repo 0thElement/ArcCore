@@ -12,6 +12,8 @@ namespace ArcCore.Gameplay.Objects.Particle
         private Transform particleTransform;
         private Transform diamondTransform;
 
+        private bool enabled = false;
+
         public ArcIndicator(GameObject diamondObj, GameObject particleObj, int endTime, int arcColor)
         {
             this.EndTime = endTime;
@@ -26,6 +28,8 @@ namespace ArcCore.Gameplay.Objects.Particle
 
         public void Enable()
         {
+            if (enabled) return;
+            enabled = true;
             particleTransform.gameObject.SetActive(true);
             diamondTransform.gameObject.SetActive(true);
         }
@@ -33,12 +37,15 @@ namespace ArcCore.Gameplay.Objects.Particle
         public void Disable()
         {
             StopParticle();
+            enabled = false;
             particleTransform.gameObject.SetActive(false);
             diamondTransform.gameObject.SetActive(false);
         }
 
         public void Update(float3 position)
         {
+            if (PlayManager.ReceptorTime > EndTime) return;
+
             Enable();
             float dist = Mathf.Abs(position.z) / 100;
 

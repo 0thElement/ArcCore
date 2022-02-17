@@ -119,6 +119,7 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(headEntity, new Translation() { Value = new float3(x, y, z) });
             em.SetComponentData(headEntity, new TimingGroup(trace.timingGroup));
             em.SetComponentData(headEntity, new AppearTime(appearTime));
+            em.SetComponentData(headEntity, new DestroyOnTiming(trace.timing));
 
             //TODO: shadow for head segment?
         }
