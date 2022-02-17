@@ -2,18 +2,21 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using ArcCore.Gameplay.Parsing.Data;
 using ArcCore.Gameplay.Data;
+using ArcCore.Gameplay.Parsing;
 
 namespace ArcCore.Gameplay.EntityCreation
 {
     public abstract class ArclikeEntityCreator
     {
-        protected int CreateArclike(List<ArcRaw> arcs)
+        protected int CreateArclike(IChartParser parser, List<ArcRaw> arcs)
         {
             arcs.Sort((item1, item2) => { return item1.timing.CompareTo(item2.timing); });
             var connectedArcsIdEndpoint = new List<ArcPointData>();
 
             foreach (ArcRaw arc in arcs)
             {
+                TimingGroupFlag flag = parser.GetTimingGroupFlag(arc.timingGroup);
+
                 //Precalc and assign a connected group id to avoid having to figure out connection during gameplay
                 ArcPointData arcStartPoint = (arc.timingGroup, arc.timing, arc.startX, arc.startY, arc.color);
                 ArcPointData arcEndPoint = (arc.timingGroup, arc.endTiming, arc.endX, arc.endY, arc.color);
@@ -35,12 +38,12 @@ namespace ArcCore.Gameplay.EntityCreation
                 if (isHeadArc)
                 {
                     connectedArcsIdEndpoint.Add(arcEndPoint);
-                    CreateHeadSegment(arc, arcId);
+                    CreateHeadSegment(arc, arcId, flag);
                 }
 
                 if (isHeadArc || arc.startY != arc.endY)
                 {
-                    CreateHeightIndicator(arc);
+                    CreateHeightIndicator(arc, flag);
                 }
 
                 float startBpm = PlayManager.Conductor.GetTimingEventFromTiming(arc.timing, arc.timingGroup).bpm;
@@ -60,7 +63,7 @@ namespace ArcCore.Gameplay.EntityCreation
                             Conversion.GetWorldY(arc.endY),
                             PlayManager.Conductor.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                         );
-                    CreateSegment(arc, tstart, tend, arc.timing, arc.timing, arcId);
+                    CreateSegment(arc, tstart, tend, arc.timing, arc.timing, arcId, flag);
                     continue;
                 }
 
@@ -93,7 +96,7 @@ namespace ArcCore.Gameplay.EntityCreation
                         PlayManager.Conductor.GetFloorPositionFromTiming(toTiming, arc.timingGroup)
                     );
 
-                    CreateSegment(arc, start, end, fromTiming, toTiming, arcId);
+                    CreateSegment(arc, start, end, fromTiming, toTiming, arcId, flag);
                 }
 
                 fromTiming = toTiming;
@@ -106,8 +109,8 @@ namespace ArcCore.Gameplay.EntityCreation
                     PlayManager.Conductor.GetFloorPositionFromTiming(arc.endTiming, arc.timingGroup)
                 );
 
-                CreateSegment(arc, start, end, fromTiming, toTiming, arcId);
-                CreateJudgeEntity(arc, arcId, startBpm);
+                CreateSegment(arc, start, end, fromTiming, toTiming, arcId, flag);
+                CreateJudgeEntity(arc, arcId, startBpm, flag);
 
             }
             SetupIndicators(connectedArcsIdEndpoint);
@@ -115,10 +118,10 @@ namespace ArcCore.Gameplay.EntityCreation
             return connectedArcsIdEndpoint.Count;
         }
 
-        protected abstract void CreateSegment(ArcRaw arc, float3 start, float3 end, int timing, int endTiming, int groupId);
-        protected abstract void CreateHeightIndicator(ArcRaw arc);
-        protected abstract void CreateHeadSegment(ArcRaw arc, int groupID);
-        protected abstract void CreateJudgeEntity(ArcRaw arc, int groupId, float startBpm);
+        protected abstract void CreateSegment(ArcRaw arc, float3 start, float3 end, int timing, int endTiming, int groupId, TimingGroupFlag flag);
+        protected abstract void CreateHeightIndicator(ArcRaw arc, TimingGroupFlag flag);
+        protected abstract void CreateHeadSegment(ArcRaw arc, int groupID, TimingGroupFlag flag);
+        protected abstract void CreateJudgeEntity(ArcRaw arc, int groupId, float startBpm, TimingGroupFlag flag);
         protected abstract void SetupIndicators(List<ArcPointData> connectedArcsIdEndpoint);
 
     }

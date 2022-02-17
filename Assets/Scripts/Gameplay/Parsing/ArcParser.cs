@@ -29,7 +29,7 @@ namespace ArcCore.Gameplay.Parsing
         public List<CameraEvent> Cameras { get; private set; } = new List<CameraEvent>();
         public List<int> CameraResets { get; private set; } = new List<int>();
         public int ChartOffset { get; private set; }
-        public List<TimingGroupFlag> TimingGroupFlags { get; private set; } = new List<TimingGroupFlag>();
+        public List<TimingGroupFlag> TimingGroupFlags { get; private set; } = new List<TimingGroupFlag>() { TimingGroupFlag.None };
         public int MaxArcColor { get; set; }
         public List<(ScenecontrolData, TextScenecontrolData)> TextScenecontrolData { get; private set; } 
             = new List<(ScenecontrolData, TextScenecontrolData)>();
@@ -56,6 +56,15 @@ namespace ArcCore.Gameplay.Parsing
             {
                 case "no_input":
                     result = TimingGroupFlag.NoInput;
+                    break;
+                case "no_shadow":
+                    result = TimingGroupFlag.NoShadow;
+                    break;
+                case "no_height_indicator":
+                    result = TimingGroupFlag.NoHeightIndicator;
+                    break;
+                case "autoplay":
+                    result = TimingGroupFlag.Autoplay;
                     break;
                 default:
                     result = TimingGroupFlag.None;
@@ -489,6 +498,11 @@ namespace ArcCore.Gameplay.Parsing
             timingGroupHasTrace = false;
 
             Timings.Add(new List<TimingRaw>());
+        }
+
+        public TimingGroupFlag GetTimingGroupFlag(int group)
+        {
+            return TimingGroupFlags[group];
         }
     }
 }

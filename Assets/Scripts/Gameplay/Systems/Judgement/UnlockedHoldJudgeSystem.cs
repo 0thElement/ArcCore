@@ -18,7 +18,7 @@ namespace ArcCore.Gameplay.Systems
 
             var particleBuffer = PlayManager.ParticleBuffer;
 
-            Entities.WithNone<HoldLocked, PastJudgeRange>().ForEach(
+            Entities.WithNone<NoInput, HoldLocked, PastJudgeRange>().ForEach(
                 (Entity en, ref ChartIncrTime chartIncrTime, in ChartLane lane) =>
                 {
                     if (chartIncrTime.time < currentTime + Constants.HoldLostWindow && tracksHeld[lane.lane] > 0)

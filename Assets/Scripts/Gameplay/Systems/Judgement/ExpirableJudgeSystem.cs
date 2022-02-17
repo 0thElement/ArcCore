@@ -24,7 +24,7 @@ namespace ArcCore.Gameplay.Systems
             var particleBuffer = PlayManager.ParticleBuffer;
 
             //- TAPS -//
-            Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime, ArcTapShadowReference>().ForEach(
+            Entities.WithAll<WithinJudgeRange>().WithNone<NoInput, ChartIncrTime, ArcTapShadowReference>().ForEach(
                 (Entity en, in ChartTime chartTime, in ChartLane cl) =>
                 {
                     if (currentTime - Constants.FarWindow > chartTime.value)
@@ -44,7 +44,7 @@ namespace ArcCore.Gameplay.Systems
             ).Run();
 
             //- ARCTAPS -//
-            Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime>().ForEach(
+            Entities.WithAll<WithinJudgeRange>().WithNone<NoInput, ChartIncrTime>().ForEach(
                 (Entity en, in ChartTime chartTime, in ArcTapShadowReference sdRef, in ChartPosition cp) =>
                 {
                     if (currentTime - Constants.FarWindow > chartTime.value)
@@ -65,7 +65,7 @@ namespace ArcCore.Gameplay.Systems
             ).Run();
 
             //- HOLDS -//
-            Entities.WithAll<WithinJudgeRange, ChartTime>().ForEach(
+            Entities.WithAll<WithinJudgeRange, ChartTime>().WithNone<NoInput>().ForEach(
                 (Entity en, ref ChartIncrTime chartIncrTime, in ChartLane cl) =>
                 {
                     if (currentTime - Constants.HoldLostWindow > chartIncrTime.time)
@@ -82,7 +82,7 @@ namespace ArcCore.Gameplay.Systems
 
             //- ARCS -//
             var arcGroupHeldState = PlayManager.ArcGroupHeldState;
-            Entities.WithAll<WithinJudgeRange>().ForEach(
+            Entities.WithAll<WithinJudgeRange>().WithNone<NoInput>().ForEach(
                 (Entity en, ref ChartIncrTime chartIncrTime, in ArcGroupID groupID) =>
                 {
                     if (chartIncrTime.time < currentTime - Constants.HoldLostWindow && arcGroupHeldState[groupID.value] != GroupState.Held)

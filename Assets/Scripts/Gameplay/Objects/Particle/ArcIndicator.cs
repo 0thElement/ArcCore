@@ -12,7 +12,7 @@ namespace ArcCore.Gameplay.Objects.Particle
         private Transform particleTransform;
         private Transform diamondTransform;
 
-        public ArcIndicator(GameObject diamondObj, GameObject particleObj, int endTime)
+        public ArcIndicator(GameObject diamondObj, GameObject particleObj, int endTime, int arcColor)
         {
             this.EndTime = endTime;
             diamondObj.SetActive(false);

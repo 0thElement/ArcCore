@@ -6,6 +6,7 @@ using Unity.Mathematics;
 using Unity.Rendering;
 using UnityEngine;
 using ArcCore.Gameplay.Components;
+using ArcCore.Gameplay.Components.Tags;
 using ArcCore.Gameplay.Parsing.Data;
 using ArcCore.Gameplay.Parsing;
 using ArcCore.Gameplay.Data;
@@ -79,7 +80,7 @@ namespace ArcCore.Gameplay.EntityCreation
 
         public void CreateEntities(IChartParser parser, out int arcGroupCount)
         {
-            arcGroupCount = CreateArclike(parser.Arcs);
+            arcGroupCount = CreateArclike(parser, parser.Arcs);
         }
 
         protected override void SetupIndicators(List<ArcPointData> connectedArcsIdEndpoint)
@@ -91,14 +92,15 @@ namespace ArcCore.Gameplay.EntityCreation
                 ArcIndicator indicator = new ArcIndicator(
                     Object.Instantiate(arcApproachIndicatorPrefab),
                     Object.Instantiate(arcParticlePrefab),
-                    groupIdEndPoint.time + 60
+                    groupIdEndPoint.time + 60,
+                    groupIdEndPoint.color
                 );
                 indicatorList.Add(indicator);
             }
             PlayManager.ArcIndicatorHandler.Initialize(indicatorList);
         }
 
-        protected override void CreateSegment(ArcRaw arc, float3 start, float3 end, int timing, int endTiming, int groupId)
+        protected override void CreateSegment(ArcRaw arc, float3 start, float3 end, int timing, int endTiming, int groupId, TimingGroupFlag flag)
         {
             Entity arcInstEntity = em.Instantiate(arcNoteEntityPrefab);
 
@@ -136,7 +138,7 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(arcInstEntity, new ChartTime(timing));
             em.SetComponentData(arcInstEntity, new ChartEndTime(endTiming));
 
-            if (timing < endTiming)
+            if (timing < endTiming && !flag.HasFlag(TimingGroupFlag.NoShadow))
             {
                 Entity arcShadowEntity = em.Instantiate(arcShadowEntityPrefab);
                 em.SetSharedComponentData<RenderMesh>(arcShadowEntity, Skin.Instance.arcShadowRenderMesh);
@@ -163,8 +165,10 @@ namespace ArcCore.Gameplay.EntityCreation
             }
         }
 
-        protected override void CreateHeightIndicator(ArcRaw arc)
+        protected override void CreateHeightIndicator(ArcRaw arc, TimingGroupFlag flag)
         {
+            if (flag.HasFlag(TimingGroupFlag.NoHeightIndicator)) return;
+
             Entity heightEntity = em.Instantiate(heightIndicatorEntityPrefab);
 
             em.SetSharedComponentData(heightEntity, Skin.Instance.arcHeightRenderMeshes[arc.color]);
@@ -195,7 +199,7 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(heightEntity, new DestroyOnTiming(arc.timing));
         }
 
-        protected override void CreateHeadSegment(ArcRaw arc, int groupID)
+        protected override void CreateHeadSegment(ArcRaw arc, int groupID, TimingGroupFlag flag)
         {
             Entity headEntity = em.Instantiate(headArcNoteEntityPrefab);
 
@@ -219,10 +223,13 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(headEntity, new AppearTime(appearTime));
             em.SetComponentData(headEntity, new DestroyOnTiming(arc.timing));
             em.SetComponentData(headEntity, new ArcGroupID(groupID));
+
+            //TODO: Shadow for headseg??
         }
 
-        protected override void CreateJudgeEntity(ArcRaw arc, int groupId, float startBpm)
+        protected override void CreateJudgeEntity(ArcRaw arc, int groupId, float startBpm, TimingGroupFlag flag)
         {
+            if (flag.HasFlag(TimingGroupFlag.NoInput)) return; //I'm not sure if this is going to work
 
             Entity en = em.CreateEntity(arcJudgeArchetype);
 
@@ -234,6 +241,9 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(en, new DestroyOnTiming(arc.endTiming + Constants.HoldLostWindow));
 
             em.SetComponentData(en, ChartIncrTime.FromBpm(arc.timing, arc.endTiming, startBpm, out int comboCount));
+
+            if (flag.HasFlag(TimingGroupFlag.Autoplay))
+                em.AddComponent(en, typeof(Autoplay));
             
             PlayManager.ScoreHandler.tracker.noteCount += comboCount;
         }

@@ -24,7 +24,7 @@ namespace ArcCore.Gameplay.Systems
             {
                 if (arcColorFsmArray[color].IsRedArc()) continue;
 
-                Entities.WithSharedComponentFilter<ArcColorID>(new ArcColorID(color)).WithAll<WithinJudgeRange>().ForEach(
+                Entities.WithSharedComponentFilter<ArcColorID>(new ArcColorID(color)).ForEach(
                     (Entity en, ref ChartIncrTime chartIncrTime, in ArcGroupID groupID) =>
                     {
                         if (chartIncrTime.time < currentTime + Constants.HoldLostWindow && arcGroupHeldState[groupID.value] == GroupState.Held)

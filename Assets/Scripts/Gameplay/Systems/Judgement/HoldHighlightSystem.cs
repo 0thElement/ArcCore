@@ -32,11 +32,11 @@ namespace ArcCore.Gameplay.Systems
                         }
                     }
                 ).WithoutBurst().Run();
-                
+
             Entities
                 .WithSharedComponentFilter<RenderMesh>(highlightRenderMesh)
                 .WithAll<Translation, ChartIncrTime>()
-                .WithNone<PastJudgeRange, HoldLocked>()
+                .WithNone<PastJudgeRange, HoldLocked, Autoplay>()
                 .ForEach( 
                     (Entity en, in ChartLane lane) =>
                     {
@@ -49,7 +49,17 @@ namespace ArcCore.Gameplay.Systems
             
             Entities
                 .WithSharedComponentFilter<RenderMesh>(initialRenderMesh)
-                .WithAll<Translation, ChartIncrTime>().WithNone<PastJudgeRange, HoldLocked>().ForEach( 
+                .WithAll<Autoplay>().ForEach(
+                    (Entity en, in ChartTime time) =>
+                    {
+                        if (time.value <= currentTime)
+                            PlayManager.CommandBuffer.SetSharedComponent<RenderMesh>(en, highlightRenderMesh);
+                    }
+            ).WithoutBurst().Run();
+
+            Entities
+                .WithSharedComponentFilter<RenderMesh>(initialRenderMesh)
+                .WithAll<Translation, ChartIncrTime>().WithNone<PastJudgeRange, HoldLocked, Autoplay>().ForEach( 
                 (Entity en, in ChartLane lane, in ChartTime time) =>
                 {
                     if (tracksHeld[lane.lane] <= 0 && time.value <= currentTime - Constants.FarWindow)
@@ -62,6 +72,7 @@ namespace ArcCore.Gameplay.Systems
                     }
                 }
             ).WithoutBurst().Run();
+
         }
     }
 }

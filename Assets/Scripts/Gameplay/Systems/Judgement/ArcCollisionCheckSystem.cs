@@ -59,7 +59,9 @@ namespace ArcCore.Gameplay.Systems
                 if (touchLifted) 
                     colorState.Execute(ArcColorFSM.Event.Lift);
                 
-                Entities.WithSharedComponentFilter(new ArcColorID(color)).WithAll<ChartIncrTime,WithinJudgeRange>().ForEach(
+                Entities.WithSharedComponentFilter(new ArcColorID(color))
+                        .WithAll<ChartIncrTime, WithinJudgeRange>()
+                        .WithNone<Autoplay>().ForEach(
                     
                     (in ArcData arcData, in ArcGroupID groupID) =>
                     {
@@ -123,13 +125,13 @@ namespace ArcCore.Gameplay.Systems
 
                 accumulativeArcX += colorCumulativeX;
 
-// #if DEBUG
-//                 s += $"Color: {color} -> finger: {colorState.FingerId} & state: {statesString[(int)colorState._state]} \n";
-// #endif
-            }
-// #if DEBUG
-//             PlayManager.DebugText.text = s;
-// #endif
+#if DEBUG
+                s += $"Color: {color} -> finger: {colorState.FingerId} & state: {statesString[(int)colorState._state]} \n";
+#endif
+         }
+#if DEBUG
+            PlayManager.DebugText.text = s;
+#endif
             PlayManager.GameplayCamera.AccumulativeArcX = accumulativeArcX;
         }
     }

@@ -45,7 +45,7 @@ namespace ArcCore.Gameplay.Systems
                 if (touch.TrackValid)
                 {
                     //- TAPS -//
-                    Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime, ArcTapShadowReference>().ForEach(
+                    Entities.WithAll<WithinJudgeRange>().WithNone<NoInput, ChartIncrTime, Autoplay>().ForEach(
                         (Entity en, in ChartTime chartTime, in ChartLane cl) =>
                         {
                             if (chartTime.value < minTime && touch.track == cl.lane)
@@ -59,7 +59,7 @@ namespace ArcCore.Gameplay.Systems
                     ).Run();
 
                     //- LOCKED HOLDS -//
-                    Entities.WithAll<WithinJudgeRange, ChartIncrTime, HoldLocked>().ForEach(
+                    Entities.WithAll<WithinJudgeRange, ChartIncrTime, HoldLocked>().WithNone<NoInput, Autoplay>().ForEach(
                         (Entity en, ref ChartTime chartTime, in ChartLane cl) =>
                         {
                             if (chartTime.value < minTime && touch.track == cl.lane)
@@ -76,7 +76,7 @@ namespace ArcCore.Gameplay.Systems
                 if (touch.InputPlaneValid)
                 {
                     //- ARCTAPS -//
-                    Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime>().WithoutBurst().ForEach(
+                    Entities.WithAll<WithinJudgeRange>().WithNone<ChartIncrTime, NoInput, Autoplay>().ForEach(
                         (Entity en, in ChartTime chartTime, in ChartPosition cp) =>
                         {
                             if (chartTime.value < minTime && 

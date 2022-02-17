@@ -10,7 +10,6 @@ using ArcCore.Gameplay.Objects.Particle;
 using ArcCore.Gameplay.Data;
 using ArcCore.Utilities;
 using ArcCore.Utilities.Extensions;
-using Unity.Entities.Serialization;
 
 namespace ArcCore.Gameplay.EntityCreation
 {
@@ -42,10 +41,10 @@ namespace ArcCore.Gameplay.EntityCreation
 
         public void CreateEntities(IChartParser parser)
         {
-            CreateArclike(parser.Traces);
+            CreateArclike(parser, parser.Traces);
         }
 
-        protected override void CreateSegment(ArcRaw arc, float3 start, float3 end, int time, int endTime, int groupID)
+        protected override void CreateSegment(ArcRaw arc, float3 start, float3 end, int time, int endTime, int groupID, TimingGroupFlag flag)
         {
             Entity traceEntity = em.Instantiate(traceNoteEntityPrefab);
 
@@ -78,7 +77,7 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(traceEntity, new ChartEndTime(endTime));
             em.SetComponentData(traceEntity, new ArcGroupID(groupID));
 
-            if (time < endTime)
+            if (time < endTime && !flag.HasFlag(TimingGroupFlag.NoInput))
             {
                 Entity traceShadowEntity = em.Instantiate(traceShadowEntityPrefab);
 
@@ -102,7 +101,7 @@ namespace ArcCore.Gameplay.EntityCreation
             }
         }
 
-        protected override void CreateHeadSegment(ArcRaw trace, int _)
+        protected override void CreateHeadSegment(ArcRaw trace, int _, TimingGroupFlag flag)
         {
             Entity headEntity = em.Instantiate(headTraceNoteEntityPrefab);
 
@@ -120,6 +119,8 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(headEntity, new Translation() { Value = new float3(x, y, z) });
             em.SetComponentData(headEntity, new TimingGroup(trace.timingGroup));
             em.SetComponentData(headEntity, new AppearTime(appearTime));
+
+            //TODO: shadow for head segment?
         }
         protected override void SetupIndicators(List<ArcPointData> connectedArcsIdEndpoint)
         {
@@ -132,7 +133,7 @@ namespace ArcCore.Gameplay.EntityCreation
             }
             PlayManager.TraceIndicatorHandler.Initialize(indicatorList);
         }
-        protected override void CreateHeightIndicator(ArcRaw arc) {}
-        protected override void CreateJudgeEntity(ArcRaw arc, int groupId, float startBpm) {}
+        protected override void CreateHeightIndicator(ArcRaw arc, TimingGroupFlag flag) {}
+        protected override void CreateJudgeEntity(ArcRaw arc, int groupId, float startBpm, TimingGroupFlag flag) {}
     }
 }

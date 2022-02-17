@@ -4,6 +4,7 @@ using Unity.Mathematics;
 using Unity.Rendering;
 using UnityEngine;
 using ArcCore.Gameplay.Components;
+using ArcCore.Gameplay.Components.Tags;
 using ArcCore.Gameplay.Parsing.Data;
 using ArcCore.Gameplay.Parsing;
 using ArcCore.Utilities;
@@ -18,6 +19,7 @@ namespace ArcCore.Gameplay.EntityCreation
         private Entity connectionLineEntityPrefab;
         private Entity shadowEntityPrefab;
         private EntityManager em;
+        private IChartParser parser;
 
         public TapEntityCreator(
             World world,
@@ -37,6 +39,7 @@ namespace ArcCore.Gameplay.EntityCreation
 
         public void CreateEntities(IChartParser parser)
         {
+            this.parser = parser;
             var taps    = parser.Taps;
             var arctaps = parser.Arctaps;
 
@@ -53,7 +56,7 @@ namespace ArcCore.Gameplay.EntityCreation
                 TapRaw tap = taps[tapIndex];
                 ArctapRaw arctap = arctaps[arcTapIndex];
 
-                if (tap.timing == arctap.timing)
+                if (tap.timing == arctap.timing && tap.timingGroup == arctap.timingGroup)
                 {
                     Entity tapEntity    = CreateTapEntity(tap);
                     Entity arctapEntity = CreateArcTapEntity(arctap);
@@ -84,6 +87,7 @@ namespace ArcCore.Gameplay.EntityCreation
         public Entity CreateTapEntity(TapRaw tap)
         {
             Entity tapEntity = em.Instantiate(tapNoteEntityPrefab);
+            TimingGroupFlag flag = parser.GetTimingGroupFlag(tap.timingGroup);
 
             float x = Conversion.TrackToX(tap.track);
             const float y = 0;
@@ -102,6 +106,12 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(tapEntity, new ChartTime(tap.timing));
             em.SetComponentData(tapEntity, new ChartLane(tap.track));
 
+            if (flag.HasFlag(TimingGroupFlag.Autoplay))
+                em.AddComponent(tapEntity, typeof(Autoplay));
+
+            if (flag.HasFlag(TimingGroupFlag.NoInput))
+                em.AddComponent(tapEntity, typeof(NoInput));
+
             em.SetSharedComponentData(tapEntity, Skin.Instance.tapRenderMesh);
 
             PlayManager.ScoreHandler.tracker.noteCount++;
@@ -112,6 +122,7 @@ namespace ArcCore.Gameplay.EntityCreation
         public Entity CreateArcTapEntity(ArctapRaw arctap)
         {
             Entity tapEntity = em.Instantiate(arcTapNoteEntityPrefab);
+            TimingGroupFlag flag = parser.GetTimingGroupFlag(arctap.timingGroup);
 
             float x = Conversion.GetWorldX(arctap.position.x);
             float y = Conversion.GetWorldY(arctap.position.y);
@@ -130,13 +141,22 @@ namespace ArcCore.Gameplay.EntityCreation
             em.SetComponentData(tapEntity, new ChartTime(arctap.timing));
             em.SetComponentData(tapEntity, new ChartPosition(Conversion.GetWorldPos(arctap.position)));
 
+            if (flag.HasFlag(TimingGroupFlag.Autoplay))
+                em.AddComponent(tapEntity, typeof(Autoplay));
+
+            if (flag.HasFlag(TimingGroupFlag.NoInput))
+                em.AddComponent(tapEntity, typeof(NoInput));
+
             em.SetSharedComponentData(tapEntity, Skin.Instance.arctapRenderMesh);
 
-            Entity shadowEntity = em.Instantiate(shadowEntityPrefab);
-            em.SetComponentData(tapEntity, new ArcTapShadowReference(shadowEntity));
-            em.SetComponentData(shadowEntity, new TimingGroup(arctap.timingGroup));
-            em.SetComponentData(shadowEntity, new Translation() { Value = new float3(x, 0, z) });
-            em.SetComponentData(shadowEntity, new FloorPosition(floorpos));
+            if (!flag.HasFlag(TimingGroupFlag.NoShadow))
+            {
+                Entity shadowEntity = em.Instantiate(shadowEntityPrefab);
+                em.SetComponentData(tapEntity, new ArcTapShadowReference(shadowEntity));
+                em.SetComponentData(shadowEntity, new TimingGroup(arctap.timingGroup));
+                em.SetComponentData(shadowEntity, new Translation() { Value = new float3(x, 0, z) });
+                em.SetComponentData(shadowEntity, new FloorPosition(floorpos));
+            }
 
             PlayManager.ScoreHandler.tracker.noteCount++;
 
@@ -146,6 +166,7 @@ namespace ArcCore.Gameplay.EntityCreation
         public void CreateConnection(TapRaw tap, ArctapRaw arctap, Entity tapEntity, Entity arcTapEntity)
         {
             Entity lineEntity = em.Instantiate(connectionLineEntityPrefab);
+            TimingGroupFlag flag = parser.GetTimingGroupFlag(tap.timingGroup);
 
             float floorpos = PlayManager.Conductor.GetFloorPositionFromTiming(arctap.timing, arctap.timingGroup);
 

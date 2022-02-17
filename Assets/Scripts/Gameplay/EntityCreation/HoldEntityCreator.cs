@@ -3,6 +3,7 @@ using Unity.Transforms;
 using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Gameplay.Components;
+using ArcCore.Gameplay.Components.Tags;
 using ArcCore.Gameplay.Parsing.Data;
 using ArcCore.Gameplay.Parsing;
 using ArcCore.Utilities;
@@ -33,6 +34,7 @@ namespace ArcCore.Gameplay.EntityCreation
             {
                 //Main entity
                 Entity holdEntity = em.Instantiate(holdNoteEntityPrefab);
+                TimingGroupFlag flag = parser.GetTimingGroupFlag(hold.timingGroup);
 
                 float x = Conversion.TrackToX(hold.track);
                 const float y = 0;
@@ -58,6 +60,12 @@ namespace ArcCore.Gameplay.EntityCreation
                 em.SetComponentData(holdEntity, new ChartLane(hold.track));
                 em.SetComponentData(holdEntity, new AppearTime(appearTime));
                 em.SetComponentData(holdEntity, new DestroyOnTiming(hold.endTiming + Constants.FarWindow));
+
+                if (flag.HasFlag(TimingGroupFlag.Autoplay))
+                    em.AddComponent(holdEntity, typeof(Autoplay));
+
+                if (flag.HasFlag(TimingGroupFlag.NoInput))
+                    em.AddComponent(holdEntity, typeof(NoInput));
 
                 em.SetSharedComponentData(holdEntity, Skin.Instance.holdInitialRenderMesh);
 

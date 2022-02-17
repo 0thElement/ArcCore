@@ -21,5 +21,7 @@ namespace ArcCore.Gameplay.Parsing
         int MaxArcColor { get; }
         List<(ScenecontrolData, TextScenecontrolData)> TextScenecontrolData { get; }
         List<(ScenecontrolData, SpriteScenecontrolData)> SpriteScenecontrolData { get; }
+
+        TimingGroupFlag GetTimingGroupFlag(int group);
     }
 }
