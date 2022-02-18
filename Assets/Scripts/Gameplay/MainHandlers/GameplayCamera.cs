@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using ArcCore.Gameplay.Parsing.Data;
 using Unity.Mathematics;
-using ArcCore.Gameplay.Mathematics;
+using ArcCore.Gameplay.Utilities.Mathematics;
 using ArcCore.Utilities.Extensions;
 using ArcCore.Gameplay.Parsing;
 

@@ -5797,6 +5797,7 @@ Transform:
   - {fileID: 2077348794}
   - {fileID: 1146195278}
   - {fileID: 1796058526}
+  - {fileID: 663255895}
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -6302,6 +6303,36 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 629329310}
   m_CullTransparentMesh: 0
+--- !u!1 &663255894
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 663255895}
+  m_Layer: 0
+  m_Name: Indicators
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &663255895
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 663255894}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 478726824}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &714797368
 GameObject:
   m_ObjectHideFlags: 0
@@ -6772,7 +6803,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -6870,6 +6901,8 @@ MonoBehaviour:
   highlightDuration: 0.5
   highlightAlpha: 0.5
   horizontalLinePrefab: {fileID: 810017893650666070, guid: 863d5b0fae81e4a4ab8b37387c0f0c1b,
+    type: 3}
+  debugArcVisualPrefab: {fileID: 5232781691942377345, guid: 6d67700fdb6442e41b8c028e3c2d7c7d,
     type: 3}
 --- !u!1 &1080012803
 GameObject:
@@ -17196,6 +17229,7 @@ MonoBehaviour:
   gameplayCamera: {fileID: 963194229}
   scenecontrolHandler: {fileID: 1339030119}
   particlePool: {fileID: 360237167}
+  indicatorParent: {fileID: 663255895}
   background: {fileID: 800735914}
   jacket: {fileID: 320868923}
   title: {fileID: 1979236724}

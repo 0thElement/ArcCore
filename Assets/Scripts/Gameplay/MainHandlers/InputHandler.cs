@@ -1,9 +1,9 @@
-// #define UPD
+#define DEBUG
 
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
-using ArcCore.Gameplay.Mathematics;
+using ArcCore.Gameplay.Utilities.Mathematics;
 using ArcCore.Gameplay.Data;
 using System.Collections.Generic;
 using System.Collections;
@@ -86,31 +86,35 @@ namespace ArcCore.Gameplay.Behaviours
 
             PollInput();
 
-            inputVisualFeedback.DisableLines();
+            inputVisualFeedback.Reset();
             for (int i = 0; i < MaxTouches; i++)
             {
                 var t = touchPoints[i];
                 if (t.fingerId == TouchPoint.NullId)
                     continue;
 
-                if (t.InputPlaneValid && t.inputPosition.Value.y > 2f)
-                {
-                    inputVisualFeedback.HorizontalLineAt(t.inputPosition.Value.y, i);
-                }
                 if (t.TrackValid)
                 {
                     inputVisualFeedback.HighlightLane(t.track - 1);
                 }
                 
-#if UPD
-                if(t.InputPlaneValid)
+#if DEBUG
+                if (t.InputPlaneValid)
                 {
-                    Utility.utils.DebugDrawIptRect(t.InputPlane);
+                    for (int c = 0; c <= PlayManager.MaxArcColor; c++)
+                    {
+                        if (PlayManager.ArcColorFsm[c].FingerId == t.fingerId)
+                        {
+                            inputVisualFeedback.DebugArcState(t.inputPosition.Value, PlayManager.ArcColorFsm[c]);
+                            continue;
+                        }
+                        inputVisualFeedback.DebugArcState(t.inputPosition.Value, null);
+                    }
                 }
-
-                if(t.TrackValid)
+#else
+                if (t.InputPlaneValid && t.inputPosition.Value.y > 2f)
                 {
-                    Debug.DrawRay(new Vector3(Utility.Conversion.TrackToX(t.track), 0.01f, 0), Vector3.back * 150, Color.red);
+                    inputVisualFeedback.HorizontalLineAt(t.inputPosition.Value.y, i);
                 }
 #endif
             }

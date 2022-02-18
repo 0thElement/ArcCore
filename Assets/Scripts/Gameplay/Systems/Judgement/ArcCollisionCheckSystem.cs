@@ -11,6 +11,7 @@ namespace ArcCore.Gameplay.Systems
     {
 #if DEBUG
         string[] statesString = new string[] {"Await", "AwaitLift", "Listening", "Lifted", "LiftedRed", "Red", "Grace"};
+        string[] debugColor = new string[] {"#92FFFA", "#FF7878", "#76FF6E"};
 #endif
         protected override void OnUpdate()
         {
@@ -28,14 +29,11 @@ namespace ArcCore.Gameplay.Systems
 
 #if DEBUG
             string s = "";
-
             for (int i=0; i < touchArray.Length; i++)
             {
-                if (touchArray[i].InputPlaneValid)
-                    s+= $"touch: {touchArray[i].fingerId} {touchArray[i].inputPosition.Value}\n";
+                s += touchArray[i].fingerId + "\n";
             }
 #endif
-
             for (int color = 0; color <= PlayManager.MaxArcColor; color++)
             {
                 ArcColorFSM colorState = PlayManager.ArcColorFsm[color];
@@ -124,7 +122,6 @@ namespace ArcCore.Gameplay.Systems
                     colorState.Execute(ArcColorFSM.Event.WrongFinger);
 
                 accumulativeArcX += colorCumulativeX;
-
 #if DEBUG
                 s += $"Color: {color} -> finger: {colorState.FingerId} & state: {statesString[(int)colorState._state]} \n";
 #endif

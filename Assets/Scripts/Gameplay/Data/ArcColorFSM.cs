@@ -15,24 +15,24 @@ namespace ArcCore.Gameplay.Data
             Listening,
             //The assigned finger is no longer touching the screen
             Lifted,
-            //Lifted and a finger is trying to touch this color
+            //Lifted and a finger is trying to touch this Color
             LiftedRed,
-            //Wrong finger held this color
+            //Wrong finger held this Color
             Red,
             //Grace period where any finger can hold any arc
             Grace
         }
 
         public enum Event {
-            //A finger hit this color
+            //A finger hit this Color
             Collide,
             //The associated finger is no longer touching the screen
             Lift,
-            //Wrong finger hit this color
+            //Wrong finger hit this Color
             WrongFinger,
             //Global timer went past the schedule
             Scheduled,
-            //No arcs of this color is present in the judge range
+            //No arcs of this Color is present in the judge range
             Rest,
             //Opposite of above
             Unrest,
@@ -55,7 +55,7 @@ namespace ArcCore.Gameplay.Data
                 return Mathf.Clamp(result, 0, 1);
             }
         }
-        private int color;
+        public int Color { get; private set; }
         private int fingerId = TouchPoint.NullId;
         public int FingerId
         {
@@ -65,7 +65,7 @@ namespace ArcCore.Gameplay.Data
         public ArcColorFSM(int color)
         {
             schedule = 0;
-            this.color = color;
+            this.Color = color;
             state = State.Await;
             fsm = new Action<int>[7,7] {
                              //Collide , Lift   , WrongFinger, Scheduled, Rest     , Unrest, Grace

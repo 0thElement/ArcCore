@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ArcCore.Gameplay.Mathematics
+namespace ArcCore.Gameplay.Utilities.Mathematics
 {
     /// <summary>
     /// NOT ieee754 compliant... yet!

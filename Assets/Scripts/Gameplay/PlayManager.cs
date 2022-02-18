@@ -30,12 +30,14 @@ namespace ArcCore.Gameplay
         public GameplayCamera gameplayCamera;
         public ScenecontrolHandler scenecontrolHandler;
         public ParticlePool particlePool;
+        public Transform indicatorParent;
         
         public static Conductor Conductor => instance.conductor;
         public static ScoreHandler ScoreHandler => instance.scoreHandler;
         public static InputHandler InputHandler => instance.inputHandler;
         public static GameplayCamera GameplayCamera => instance.gameplayCamera;
         public static ParticlePool ParticlePool => instance.particlePool;
+        public static Transform IndicatorParent => instance.indicatorParent;
 
         [Header("Chart")]
         public Image background; 
@@ -362,7 +364,7 @@ namespace ArcCore.Gameplay
         void OnDestroy()
         {
             instance = null;
-            // arcGroupHeldState.Dispose();
+            arcGroupHeldState.Dispose();
         }
 
         void Update()

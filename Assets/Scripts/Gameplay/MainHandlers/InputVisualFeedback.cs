@@ -1,6 +1,8 @@
 using UnityEngine;
 using Unity.Mathematics;
 using ArcCore.Utilities;
+using ArcCore.Gameplay.Data;
+using ArcCore.Storage;
 
 namespace ArcCore.Gameplay.Behaviours
 {
@@ -28,6 +30,10 @@ namespace ArcCore.Gameplay.Behaviours
         /// </summary>
         [SerializeField] private GameObject horizontalLinePrefab;
 
+        [Header("Debug")]
+        [SerializeField] private GameObject debugArcVisualPrefab;
+        private SpriteRenderer[] debugArcVisual;
+
         private void Awake()
         {
             horizontalLines = new GameObject[InputHandler.MaxTouches];
@@ -35,6 +41,13 @@ namespace ArcCore.Gameplay.Behaviours
             {
                 horizontalLines[i] = Instantiate(horizontalLinePrefab, transform);
             }
+#if DEBUG
+            debugArcVisual = new SpriteRenderer[InputHandler.MaxTouches];
+            for (int i=0; i<10; i++)
+            {
+                debugArcVisual[i] = Instantiate(debugArcVisualPrefab, transform).GetComponent<SpriteRenderer>();
+            }
+#endif
         }
 
         private void Update()
@@ -74,9 +87,27 @@ namespace ArcCore.Gameplay.Behaviours
         /// <summary>
         /// Disable all lines.
         /// </summary>
-        public void DisableLines()
+        public void Reset()
         {
             for (int i=0; i<10; i++) horizontalLines[i].SetActive(false);
+#if DEBUG
+            for (int i=0; i<10; i++) debugArcVisual[i].gameObject.SetActive(false);
+#endif
         }
+
+#if DEBUG
+        public void DebugArcState(float2 position, ArcColorFSM fsm)
+        {
+            if (fsm == null) return;
+            int color = fsm.Color;
+            debugArcVisual[color].gameObject.SetActive(true);
+            debugArcVisual[color].transform.position = new Vector3(position.x, position.y, 0);
+
+            Color c = new Color(0,0,0,0);
+            if (fsm != null)
+                c = Settings.ArcColors[color];
+            debugArcVisual[color].color = c;
+        }
+#endif
     }
 }

@@ -142,7 +142,9 @@ namespace ArcCore.Gameplay.EntityCreation
 
             foreach (var groupIdEndPoint in connectedArcsIdEndpoint)
             {
-                TraceIndicator indicator = new TraceIndicator(Object.Instantiate(traceApproachIndicatorPrefab), groupIdEndPoint.time);
+                TraceIndicator indicator = new TraceIndicator(
+                    Object.Instantiate(traceApproachIndicatorPrefab, PlayManager.IndicatorParent),
+                    groupIdEndPoint.time);
                 indicatorList.Add(indicator);
             }
             PlayManager.TraceIndicatorHandler.Initialize(indicatorList);

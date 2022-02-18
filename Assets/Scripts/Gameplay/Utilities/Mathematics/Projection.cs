@@ -3,7 +3,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Utilities;
 
-namespace ArcCore.Gameplay.Mathematics
+namespace ArcCore.Gameplay.Utilities.Mathematics
 {
     public static class Projection
     {

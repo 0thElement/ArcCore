@@ -102,8 +102,8 @@ namespace ArcCore.Gameplay.EntityCreation
             foreach (var groupIdEndPoint in connectedArcsIdEndpoint)
             {
                 ArcIndicator indicator = new ArcIndicator(
-                    Object.Instantiate(arcApproachIndicatorPrefab),
-                    Object.Instantiate(arcParticlePrefab),
+                    Object.Instantiate(arcApproachIndicatorPrefab, PlayManager.IndicatorParent),
+                    Object.Instantiate(arcParticlePrefab, PlayManager.IndicatorParent),
                     groupIdEndPoint.time,
                     groupIdEndPoint.color
                 );

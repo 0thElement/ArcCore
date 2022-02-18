@@ -3,7 +3,7 @@ using ArcCore.Gameplay.Components.Tags;
 using Unity.Entities;
 using ArcCore.Gameplay.Data;
 using Unity.Mathematics;
-using ArcCore.Gameplay.Mathematics;
+using ArcCore.Gameplay.Utilities.Mathematics;
 using ArcCore.Utilities;
 using ArcCore.Gameplay.Utilities;
 
@@ -32,6 +32,7 @@ namespace ArcCore.Gameplay.Systems
             JudgeType minJType = JudgeType.Lost;
             var commandBuffer = PlayManager.CommandBuffer;
 
+            //TODO: Save min entity and skip them the next touchpoints;
             var touchPoints = PlayManager.InputHandler.GetEnumerator();
             while (touchPoints.MoveNext())
             {
