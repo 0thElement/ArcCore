@@ -18,11 +18,11 @@ namespace ArcCore.Gameplay.Systems
             var particleBuffer = PlayManager.ParticleBuffer;
 
             var arcGroupHeldState = PlayManager.ArcGroupHeldState;
-            var arcColorFsmArray  = PlayManager.ArcColorFsm;
+            var ArcColorStateArray  = PlayManager.ArcColorState;
 
             for (int color = 0; color <= PlayManager.MaxArcColor; color ++) 
             {
-                if (arcColorFsmArray[color].IsRedArc()) continue;
+                if (!ArcColorStateArray[color].AcceptsInput(currentTime)) continue;
 
                 Entities.WithSharedComponentFilter<ArcColorID>(new ArcColorID(color)).ForEach(
                     (Entity en, ref ChartIncrTime chartIncrTime, in ArcGroupID groupID) =>

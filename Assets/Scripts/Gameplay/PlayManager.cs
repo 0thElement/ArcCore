@@ -122,9 +122,9 @@ namespace ArcCore.Gameplay
         private int maxArcColor;
 
         public static NativeArray<GroupState> ArcGroupHeldState => instance.arcGroupHeldState;
-        public static List<ArcColorFSM> ArcColorFsm => instance.arcColorFsm;
+        public static List<ArcColorState> ArcColorState => instance.arcColorState;
         private NativeArray<GroupState> arcGroupHeldState;
-        private List<ArcColorFSM> arcColorFsm;
+        private List<ArcColorState> arcColorState;
 
         private IndicatorHandler arcIndicatorHandler = new IndicatorHandler();
         private IndicatorHandler traceIndicatorHandler = new IndicatorHandler();
@@ -155,6 +155,7 @@ namespace ArcCore.Gameplay
             instance = this;
             isUpdating = false;
             readyToPlay = false;
+            Application.targetFrameRate = 120;
             scoreHandler.ResetScores();
         }
 
@@ -184,10 +185,10 @@ namespace ArcCore.Gameplay
             arcGroupHeldState = new NativeArray<GroupState>(arcGroupCount, Allocator.Persistent);
 
             maxArcColor = parser.MaxArcColor;
-            arcColorFsm = new List<ArcColorFSM>();
+            arcColorState = new List<ArcColorState>();
             for (int i = 0; i <= maxArcColor; i++)
             {
-                arcColorFsm.Add(new ArcColorFSM(i));
+                arcColorState.Add(new ArcColorState(i));
             }
         }
 
@@ -365,6 +366,7 @@ namespace ArcCore.Gameplay
         {
             instance = null;
             arcGroupHeldState.Dispose();
+            Application.targetFrameRate = -1;
         }
 
         void Update()

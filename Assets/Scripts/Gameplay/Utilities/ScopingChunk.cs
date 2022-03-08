@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace ArcCore.Utilities
+namespace ArcCore.Gameplay.Utilities
 {
     public class ScopingChunk
     {

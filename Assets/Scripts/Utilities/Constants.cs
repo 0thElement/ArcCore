@@ -16,7 +16,7 @@ namespace ArcCore.Utilities
         public const int FarWindow      = 100;
         public const int LostWindow     = 120;
         public const int HoldLostWindow = 250;
-        public const int ArcRedArcWindow = 1000;
+        public const int ArcRedArcWindow = 500;
         public const int ArcGraceDuration = 1000;
 
         public const float LaneWidth     = 2.125f;

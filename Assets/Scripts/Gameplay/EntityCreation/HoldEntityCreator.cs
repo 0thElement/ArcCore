@@ -76,7 +76,8 @@ namespace ArcCore.Gameplay.EntityCreation
                 float startBpm = PlayManager.Conductor.GetTimingEventFromTiming(hold.timing, hold.timingGroup).bpm;
                 em.SetComponentData(holdEntity, ChartIncrTime.FromBpm(hold.timing, hold.endTiming, startBpm, out int comboCount));
 
-                PlayManager.ScoreHandler.tracker.noteCount += comboCount;
+                if (!flag.HasFlag(TimingGroupFlag.NoInput))
+                    PlayManager.ScoreHandler.tracker.noteCount += comboCount;
             }
         }
     }

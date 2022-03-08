@@ -27,14 +27,14 @@ namespace ArcCore.Gameplay.Systems
 
             int currentTime = PlayManager.ReceptorTime;
             var arcGroupHeldState = PlayManager.ArcGroupHeldState;
-            var arcColorFsmArray = PlayManager.ArcColorFsm;
+            var ArcColorStateArray = PlayManager.ArcColorState;
 
             //Arc segments
             for (int color=0; color <= PlayManager.MaxArcColor; color++)
             {
                 (initial, highlight, grayout, head, height) = Skin.Instance.GetArcRenderMeshVariants(color);
 
-                float redmix = arcColorFsmArray[color].redmix;
+                float redmix = ArcColorStateArray[color].Redmix(currentTime);
                 initial.material.SetFloat(redmixShaderId, redmix);
                 highlight.material.SetFloat(redmixShaderId, redmix);
                 grayout.material.SetFloat(redmixShaderId, redmix);

@@ -39,10 +39,10 @@ namespace ArcCore.Storage
         /// </summary>
         public static int GetSpeedModifiedTime(int timing) => (int)(timing / SongSpeed);
 
-        public const float DefaultChartSpeed = 1;
+        public const float DefaultChartSpeed = 5;
         public static float ChartSpeed
         {
-            get => Preferences.Get("chart_speed", DefaultSongSpeed);
+            get => Preferences.Get("chart_speed", DefaultChartSpeed);
             set => Preferences.Set("chart_speed", value);
         }
 

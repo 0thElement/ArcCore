@@ -96,7 +96,7 @@ namespace ArcCore.Gameplay.Behaviours
         }
 
 #if DEBUG
-        public void DebugArcState(float2 position, ArcColorFSM fsm)
+        public void DebugArcState(float2 position, ArcColorState fsm)
         {
             if (fsm == null) return;
             int color = fsm.Color;

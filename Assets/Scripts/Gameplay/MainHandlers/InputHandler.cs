@@ -103,9 +103,9 @@ namespace ArcCore.Gameplay.Behaviours
                 {
                     for (int c = 0; c <= PlayManager.MaxArcColor; c++)
                     {
-                        if (PlayManager.ArcColorFsm[c].FingerId == t.fingerId)
+                        if (PlayManager.ArcColorState[c].FingerId == t.fingerId)
                         {
-                            inputVisualFeedback.DebugArcState(t.inputPosition.Value, PlayManager.ArcColorFsm[c]);
+                            inputVisualFeedback.DebugArcState(t.inputPosition.Value, PlayManager.ArcColorState[c]);
                             continue;
                         }
                         inputVisualFeedback.DebugArcState(t.inputPosition.Value, null);

@@ -4,7 +4,8 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "ArcCore.Storage",
-        "ArcCore.Utilities"
+        "ArcCore.Utilities",
+        "ArcCore.Gameplay"
     ],
     "includePlatforms": [
         "Editor"

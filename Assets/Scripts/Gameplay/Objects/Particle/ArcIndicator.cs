@@ -44,7 +44,11 @@ namespace ArcCore.Gameplay.Objects.Particle
 
         public void Update(float3 position)
         {
-            if (PlayManager.ReceptorTime > EndTime) return;
+            if (PlayManager.ReceptorTime > EndTime)
+            {
+                Disable();
+                return;
+            }
 
             Enable();
             float dist = Mathf.Abs(position.z) / 100;

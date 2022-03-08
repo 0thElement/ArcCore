@@ -2,6 +2,7 @@ using Unity.Entities;
 using UnityEngine;
 using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Tags;
+using ArcCore.Gameplay.Utilities;
 using ArcCore.Utilities;
 using System.Collections.Generic;
 
@@ -56,7 +57,7 @@ namespace ArcCore.Gameplay.Systems
 
             List<int> chunkAppearTimes = ScopingChunk.AllChunkAppearTimes;
 
-            while (chunkAppearTimes[chunkIndexCache] <= currentTime)
+            while (chunkIndexCache < chunkAppearTimes.Count && chunkAppearTimes[chunkIndexCache] <= currentTime)
             {
                 chunkQuery.SetSharedComponentFilter(new ChunkAppearTime(chunkAppearTimes[chunkIndexCache]));
                 EntityManager.AddComponent<ChunkAppeared>(chunkQuery);

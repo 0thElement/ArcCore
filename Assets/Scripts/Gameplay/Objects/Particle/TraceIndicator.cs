@@ -32,7 +32,11 @@ namespace ArcCore.Gameplay.Objects.Particle
 
         public void Update(float3 position)
         {
-            if (PlayManager.ReceptorTime > EndTime) return;
+            if (PlayManager.ReceptorTime > EndTime) 
+            {
+                Disable();
+                return;
+            }
 
             Enable();
             position.z = 0;

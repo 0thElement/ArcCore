@@ -3,6 +3,7 @@ using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Tags;
 using Unity.Entities;
 using ArcCore.Gameplay.Data;
+using Unity.Mathematics;
 
 namespace ArcCore.Gameplay.Systems
 {
@@ -36,16 +37,11 @@ namespace ArcCore.Gameplay.Systems
 #endif
             for (int color = 0; color <= PlayManager.MaxArcColor; color++)
             {
-                ArcColorFSM colorState = PlayManager.ArcColorFsm[color];
-                colorState.CheckSchedule();
+                ArcColorState colorState = PlayManager.ArcColorState[color];
 
                 float colorCumulativeX = 0;
 
-                bool collided = false;
-                bool wrongFinger = false;
                 bool touchLifted = true;
-                bool existEntities = false;
-
                 for (int i=0; i < touchArray.Length; i++)
                 {
                     if (touchArray[i].fingerId == colorState.FingerId)
@@ -55,8 +51,11 @@ namespace ArcCore.Gameplay.Systems
                     }
                 }
                 if (touchLifted) 
-                    colorState.Execute(ArcColorFSM.Event.Lift);
+                {
+                    colorState.Lift(currentTime);
+                }
                 
+                bool existEntities = false;
                 Entities.WithSharedComponentFilter(new ArcColorID(color))
                         .WithAll<ChartIncrTime, WithinJudgeRange>()
                         .WithNone<Autoplay>().ForEach(
@@ -66,35 +65,55 @@ namespace ArcCore.Gameplay.Systems
                         existEntities = true;
                         bool groupHeld = false;
 
-                        for (int i=0; i < touchArray.Length; i++)
+                        if (colorState.CanAssignNewInput(currentTime))
                         {
-                            TouchPoint currentTouch = touchArray[i];
-                            if (!currentTouch.InputPlaneValid) continue;
+                            //Find nearest input and try to assign if input actually collides
+                            //(and if input is not alerady assigned to another color)
+                            float minDistSqr = float.MaxValue;
+                            int nearestFinger = TouchPoint.NullId;
 
-                            if (arcData.CollideWith(currentTime, currentTouch.InputPlane))
+                            for (int i = 0; i < touchArray.Length; i++)
                             {
-                                //only assign this touch if it's not already holding another color
-                                //i can't think of a better way to do this
-                                if (colorState.IsAwaiting())
-                                {
-                                    bool canAssign = true;
-                                    for (int c=0; c <= PlayManager.MaxArcColor; c++)
-                                    {
-                                        if (c!=color && PlayManager.ArcColorFsm[c].FingerId == currentTouch.fingerId)
-                                        {
-                                            canAssign = false;
-                                            break;    
-                                        }
-                                    }
-                                    if (canAssign) 
-                                        colorState.Execute(ArcColorFSM.Event.Collide, currentTouch.fingerId);
-                                }
+                                TouchPoint touch = touchArray[i];
+                                if (!touch.InputPlaneValid) continue;
 
-                                collided = true;
-                                if (colorState.IsValidId(currentTouch.fingerId))
-                                    groupHeld = true;
-                                else
-                                    wrongFinger = true;
+                                float distSqr = touch.InputPlane.Center.DistanceSquared(arcData.GetPosAt(currentTime));
+                                if (distSqr < minDistSqr && arcData.CollideWith(currentTime, touch.InputPlane))
+                                {
+                                    //Check if touch is assigned to any other color
+                                    bool canAssign = ArcColorState.GetAssignedColorOfFingerId(touch.fingerId) == null;
+                                    if (canAssign) 
+                                    {
+                                        minDistSqr = distSqr;
+                                        nearestFinger = touch.fingerId;
+                                    }
+                                    else
+                                    {
+                                        colorState.RedArc(currentTime);
+                                    }
+                                }
+                            }
+
+                            if (nearestFinger != TouchPoint.NullId)
+                            {
+                                colorState.Hit(nearestFinger, currentTime);
+                                groupHeld = true;
+                            }
+                        }
+                        else
+                        {
+                            //Loop through each input and update colorState
+                            for (int i = 0; i < touchArray.Length; i++)
+                            {
+                                TouchPoint touch = touchArray[i];
+                                if (arcData.CollideWith(currentTime, touch.InputPlane))
+                                {
+                                    if (colorState.Hit(touchArray[i].fingerId, currentTime))
+                                    {
+                                        groupHeld = true;
+                                        break;
+                                    }
+                                }
                             }
                         }
 
@@ -112,18 +131,13 @@ namespace ArcCore.Gameplay.Systems
                 ).WithoutBurst().Run();
 
                 if (existEntities)
-                    colorState.Execute(ArcColorFSM.Event.Unrest);
+                    colorState.Unrest(currentTime);
                 else
-                    colorState.Execute(ArcColorFSM.Event.Rest);
-
-                if (collided)
-                    colorState.Execute(ArcColorFSM.Event.Collide);
-                if (!collided && wrongFinger)
-                    colorState.Execute(ArcColorFSM.Event.WrongFinger);
+                    colorState.Rest(currentTime);
 
                 accumulativeArcX += colorCumulativeX;
 #if DEBUG
-                s += $"Color: {color} -> finger: {colorState.FingerId} & state: {statesString[(int)colorState._state]} \n";
+                s += $"Color: {color} -> finger: {colorState.FingerId}\n";
 #endif
          }
 #if DEBUG

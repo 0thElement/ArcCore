@@ -124,7 +124,8 @@ namespace ArcCore.Gameplay.EntityCreation
 
             em.SetSharedComponentData(tapEntity, Skin.Instance.tapRenderMesh);
 
-            PlayManager.ScoreHandler.tracker.noteCount++;
+            if (!flag.HasFlag(TimingGroupFlag.NoInput))
+                PlayManager.ScoreHandler.tracker.noteCount++;
             
             return tapEntity;
         }
@@ -172,7 +173,8 @@ namespace ArcCore.Gameplay.EntityCreation
                 em.SetSharedComponentData(shadowEntity, new ChunkAppearTime(shadowScopingChunk.AddAppearTiming(appearTime)));
             }
 
-            PlayManager.ScoreHandler.tracker.noteCount++;
+            if (!flag.HasFlag(TimingGroupFlag.NoInput))
+                PlayManager.ScoreHandler.tracker.noteCount++;
 
             return tapEntity;
         }

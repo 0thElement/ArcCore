@@ -2,7 +2,6 @@ using ArcCore.Gameplay.Components;
 using ArcCore.Gameplay.Components.Tags;
 using Unity.Collections;
 using Unity.Entities;
-using ArcCore.Gameplay.Data;
 using Unity.Mathematics;
 using UnityEngine;
 using ArcCore.Utilities;
@@ -60,9 +59,9 @@ namespace ArcCore.Gameplay.Systems
 
         private void ActivateGrace()
         {
-            foreach (var fsm in PlayManager.ArcColorFsm)
+            foreach (var fsm in PlayManager.ArcColorState)
             {
-                fsm.Execute(ArcColorFSM.Event.Grace);
+                fsm.Grace(PlayManager.ReceptorTime);
             }
         }
     }
