@@ -7,6 +7,7 @@ using System.IO.Compression;
 using ArcCore.Storage.Data;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace ArcCore.Storage
 {
@@ -29,7 +30,7 @@ namespace ArcCore.Storage
         //though is this really the best way to do this wtf
         #endregion
 
-        #region Actions
+        #region Startup
         public static void OnAppStart()
         {
             //IMPORT DEFAULT ARCCOREPKG IF DB DOES NOT EXIST
@@ -37,18 +38,15 @@ namespace ArcCore.Storage
             {
                 if (Directory.Exists(FileStatics.FileStoragePath)) Directory.Delete(FileStatics.FileStoragePath, true);
                 Database.Initialize();
-#if UNITY_ANDROID && !UNITY_EDITOR
-                //this is complicated... we should put the pkg in a streaming asset but android is really fussy about it
-                //let's worry about this later
-                throw new Error("fuck android");
-#else
-                //Temporary
-                using (FileStream fs = File.OpenRead(FileStatics.DefaultPackagePath))
+                if (Application.platform == RuntimePlatform.Android)
                 {
-                    Debug.Log("Importing from " + FileStatics.DefaultPackagePath);
-                    AddLevelArchive(new ZipArchive(fs));
+                    Debug.Log("Detected Android platform. Using UnityWebRequest to fetch default package");
+                    LoadDefaultPackageAndroid(FileStatics.DefaultPackagePath);
                 }
-#endif
+                else
+                {
+                    ImportLevelArchiveFile(FileStatics.DefaultPackagePath);
+                }
             }
             else
             {
@@ -57,19 +55,54 @@ namespace ArcCore.Storage
             }
         }
 
-        public static void AddLevelArchive(ZipArchive archive)
+        private static async void LoadDefaultPackageAndroid(string path)
+        {
+            //Fetch data from within obb with UnityWebRequest
+            UnityWebRequest www = UnityWebRequest.Get(path);
+            await www.SendWebRequest();
+
+            if (!string.IsNullOrWhiteSpace(www.error))
+            {
+                throw new System.Exception($"Cannot load default package");
+            }
+
+            //Copy to temporary path
+            byte[] data = www.downloadHandler.data;
+            string copyPath = Path.Combine(FileStatics.TempPath, FileStatics.DefaultPackage);
+            using (FileStream fs = new FileStream(copyPath, FileMode.OpenOrCreate, FileAccess.Write))
+            {
+                fs.Write(data, 0, data.Length);
+            }
+            
+            //Import copied file
+            ImportLevelArchiveFile(copyPath);
+            File.Delete(copyPath);
+        }
+        #endregion
+
+        #region Actions
+        public static void ImportLevelArchiveFile(string path)
+        {
+            using (FileStream fs = File.OpenRead(path))
+            {
+                Debug.Log("Importing package from " + path);
+                ImportLevelArchive(new ZipArchive(fs));
+            }
+        }
+
+        public static void ImportLevelArchive(ZipArchive archive)
         {
             importError = "";
-            archive.ExtractToDirectory(FileStatics.TempPath);
+            archive.ExtractToDirectory(FileStatics.TempImportPath);
 
             //try catch to prevent memory leakage
             try
             {
-                ImportDirectory(new DirectoryInfo(FileStatics.TempPath));
+                ImportDirectory(new DirectoryInfo(FileStatics.TempImportPath));
             }
             catch (Exception e)
             {
-                Directory.Delete(FileStatics.TempPath, true);
+                Directory.Delete(FileStatics.TempImportPath, true);
                 importError = e.ToString();
                 throw e;
             }
@@ -133,7 +166,7 @@ namespace ArcCore.Storage
         }
         #endregion
 
-        #region Callback
+        #region Callback for conflict resolver
         public static IEnumerable<List<IArccoreInfo>> GetConflicts()
         {
             foreach (string id in pendingConflicts.Keys)

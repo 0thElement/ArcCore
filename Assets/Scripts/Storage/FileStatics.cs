@@ -38,6 +38,8 @@ namespace ArcCore.Storage
             DatabasePath = Path.Combine(RootPath, Database),
             FileStoragePath = Path.Combine(RootPath, FileStorage),
             DefaultPackagePath = Path.Combine(Application.streamingAssetsPath, DefaultPackage),
-            TempPath = Application.temporaryCachePath;
+            TempPath = Application.temporaryCachePath,
+            TempImportPath = Path.Combine(Application.temporaryCachePath, "import"),
+            LanConnectionPath = Path.Combine(Application.temporaryCachePath, "lan");
     }
 }
